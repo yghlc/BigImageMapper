@@ -39,8 +39,10 @@ export PYTHONPATH=$PYTHONPATH:${tf_research_dir}/slim
 
 # Go to datasets folder and download PASCAL VOC 2012 segmentation dataset.
 DATASET_DIR="datasets"
-#cd "${WORK_DIR}/${DATASET_DIR}"
-bash ${deeplab_dir}/datasets/download_and_convert_voc2012.sh
+cp ${deeplab_dir}/datasets/remove_gt_colormap.py .
+cp ${deeplab_dir}/datasets/build_voc2012_data.py .
+cp ${deeplab_dir}/datasets/download_and_convert_voc2012.sh .
+bash download_and_convert_voc2012.sh
 
 # Go back to original directory.
 #cd "${CURRENT_DIR}"
