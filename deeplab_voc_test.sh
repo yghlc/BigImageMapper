@@ -4,6 +4,9 @@
 # test training and inference of deeplab v3+ using VOC2012 dataset
 # modified from "tensorflow/models/research/deeplab/local_test.sh"
 
+#set GPU on Cryo06
+CUDA_VISIBLE_DEVICES=1
+
 tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
 WORK_DIR="/home/hlc/Data/2018_IEEE_GRSS_Data_Fusion/deeplabv4_1"
 deeplab_dir=${tf_research_dir}/deeplab
@@ -28,7 +31,9 @@ set -e
 #cd ..
 
 # Update PYTHONPATH.
+export PYTHONPATH=$PYTHONPATH:${tf_research_dir}
 export PYTHONPATH=$PYTHONPATH:${tf_research_dir}/slim
+
 
 # Set up the working environment.
 #CURRENT_DIR=$(pwd)
@@ -39,13 +44,16 @@ export PYTHONPATH=$PYTHONPATH:${tf_research_dir}/slim
 
 # Go to datasets folder and download PASCAL VOC 2012 segmentation dataset.
 DATASET_DIR="datasets"
+mkdir -p ${DATASET_DIR}
+cd ${DATASET_DIR}
 cp ${deeplab_dir}/datasets/remove_gt_colormap.py .
 cp ${deeplab_dir}/datasets/build_voc2012_data.py .
+cp ${deeplab_dir}/datasets/build_data.py .
 cp ${deeplab_dir}/datasets/download_and_convert_voc2012.sh .
 bash download_and_convert_voc2012.sh
 
 # Go back to original directory.
-#cd "${CURRENT_DIR}"
+cd "${WORK_DIR}"
 
 # Set up the working directories.
 PASCAL_FOLDER="pascal_voc_seg"
@@ -73,7 +81,7 @@ cd "${WORK_DIR}"
 PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord"
 
 # Train 10 iterations.
-NUM_ITERATIONS=2000
+NUM_ITERATIONS=100
 python "${deeplab_dir}"/train.py \
   --logtostderr \
   --train_split="trainval" \
