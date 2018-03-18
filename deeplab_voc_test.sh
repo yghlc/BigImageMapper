@@ -5,7 +5,7 @@
 # modified from "tensorflow/models/research/deeplab/local_test.sh"
 
 #set GPU on Cryo06
-CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=1
 
 tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
 WORK_DIR="/home/hlc/Data/2018_IEEE_GRSS_Data_Fusion/deeplabv4_1"
@@ -102,7 +102,7 @@ python "${deeplab_dir}"/train.py \
 
 # Run evaluation. This performs eval over the full val split (1449 images) and
 # will take a while.
-# Using the provided checkpoint, one should expect mIOU=82.20%.
+# Using the provided checkpoint, one should expect mIOU=82.20%. (can read this on TensorBoard)
 python "${deeplab_dir}"/eval.py \
   --logtostderr \
   --eval_split="val" \
