@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-# try to repeat the auther's result
+# try to repeat the author's result
 # train from the pre-trained model only use ImageNet
 # I only have a samll GPU, so it is hard to repeat the author's,
 # but I hope have close result and watch the training process
@@ -88,10 +88,11 @@ PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord"
 
 
 # Train 10 iterations.
-NUM_ITERATIONS=30000
+NUM_ITERATIONS=60000
 python "${deeplab_dir}"/train.py \
   --logtostderr \
   --train_split="trainval" \
+  --base_learning_rate=0.007 \
   --model_variant="xception_65" \
   --atrous_rates=6 \
   --atrous_rates=12 \
@@ -100,9 +101,9 @@ python "${deeplab_dir}"/train.py \
   --decoder_output_stride=4 \
   --train_crop_size=513 \
   --train_crop_size=513 \
-  --train_batch_size=4 \
+  --train_batch_size=6 \
   --training_number_of_steps="${NUM_ITERATIONS}" \
-  --fine_tune_batch_norm=true \
+  --fine_tune_batch_norm=False \
   --tf_initial_checkpoint="${INIT_FOLDER}/xception/model.ckpt" \
   --train_logdir="${TRAIN_LOGDIR}" \
   --dataset_dir="${PASCAL_DATASET}"

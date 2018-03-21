@@ -217,11 +217,14 @@ def _convert_dataset(dataset_patches,train=True):
     Raises:
       RuntimeError: If loaded image and label have different shape.
     """
+    # notes: http://warmspringwinds.github.io/tensorflow/tf-slim/2016/12/21/tfrecords-guide/
+    # notes: https://gist.github.com/swyoon/8185b3dcf08ec728fb22b99016dd533f
+
     num_images = len(dataset_patches)
     num_per_shard = int(math.ceil(num_images / float(_NUM_SHARDS)))
 
     # use the first image name as dataset_name
-    org_img = dataset_patches[0][0][0]
+    org_img = dataset_patches[0][0].org_img
     dataset_name = os.path.splitext(os.path.basename(org_img))[0]
 
     if train:
@@ -252,14 +255,14 @@ def _convert_dataset(dataset_patches,train=True):
                         #     FLAGS.image_folder, filenames[i] + '.' + FLAGS.image_format)
                         # image_data = tf.gfile.FastGFile(image_filename, 'r').read()
                         # height, width = image_reader.read_image_dims(image_data)
-                        image_shape = image_data.shape()
+                        image_shape = image_data.shape
                         height, width = image_shape[1],image_shape[2]
                         # # Read the semantic segmentation annotation.
                         # seg_filename = os.path.join(
                         #     FLAGS.semantic_segmentation_folder,
                         #     filenames[i] + '.' + FLAGS.label_format)
                         # seg_data = tf.gfile.FastGFile(seg_filename, 'r').read()
-                        label_shape = label_data.shape()
+                        label_shape = label_data.shape
                         label_height, label_width = image_shape[1],image_shape[2]
                         # seg_height, seg_width = label_reader.read_image_dims(seg_data)
                         if height != label_height or width != label_width:
@@ -315,6 +318,8 @@ def main(unused_argv):
     overlay_y = parameters.get_digit_parameters("", "train_pixel_overlay_y", None, 'int')
 
     patches = make_dataset(data_root, list_txt, patch_w, patch_h, overlay_x,overlay_y, train=FLAGS.is_training)
+
+    os.system("mkdir -p " + FLAGS.output_dir)
 
     #convert images
     _convert_dataset(patches,train=FLAGS.is_training)
