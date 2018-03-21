@@ -83,3 +83,6 @@ done < "list/train_aug.txt"
 mkdir list/old_txt
 mv list/*.txt list/old_txt/.
 mv $output_txt list/.
+
+# copy the training data for elevation
+cp list/$output_txt val.txt
