@@ -5,7 +5,7 @@
 para_file=para.ini
 para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
 
-eo_dir=/home/hlc/codes/PycharmProjects/DeeplabforRS
+eo_dir=/docker/codes/PycharmProjects/Landuse_DL
 root=$(python2 ${para_py} -p ${para_file} working_root)
 
 # current folder (without path)
@@ -25,7 +25,7 @@ overlay=$(python2 ${para_py} -p ${para_file} train_pixel_overlay_x)     # the ov
 trainImg_dir=$(python2 ${para_py} -p ${para_file} input_train_dir)
 labelImg_dir=$(python2 ${para_py} -p ${para_file} input_label_dir)
 
-for img in ${trainImg_dir}/*.tif
+for img in ${trainImg_dir}/*.png
 do
 ${eo_dir}/split_image.py -W ${patch_w} -H ${patch_h}  -e ${overlay} -o  ${root}/${test_dir}/split_images $img
 done
@@ -36,12 +36,50 @@ done
 
 
 #prepare list files
-find ${root}/${test_dir}/split_images/*.tif > list/image_list.txt
-find ${root}/${test_dir}/split_labels/*.tif > list/label_list.txt
+find ${root}/${test_dir}/split_images/*.png > list/image_list.txt
+find ${root}/${test_dir}/split_labels/*.png > list/label_list.txt
 
 paste list/image_list.txt list/label_list.txt | awk ' { print $1 " " $2 }' > list/temp.txt
 cp list/temp.txt list/train_aug.txt
 cp list/image_list.txt list/val.txt
 list/extract_fileid.sh list/val
 
+##################################
+# rename the label images
+output_txt=trainval.txt
+rm $output_txt
 
+while IFS= read -r line
+do
+#show the line
+echo $line
+
+#split the image and the label path
+path=($line)
+image_path=${path[0]}
+label_path=${path[1]}
+
+#echo $image_path
+#echo $label_path
+
+#get the new name of the label
+#DIR=$(dirname "${input}")
+filename=$(basename "$image_path")
+filename_no_ext="${filename%.*}"
+#extension="${filename##*.}"
+
+DIR=$(dirname "${label_path}")
+
+mv $label_path $DIR/${filename}
+
+#mv corresponding xml file
+mv ${label_path}.aux.xml $DIR/${filename}.aux.xml
+
+#output file name without extension
+echo $filename_no_ext >> $output_txt
+
+done < "list/train_aug.txt"
+
+mkdir list/old_txt
+mv list/*.txt list/old_txt/.
+mv $output_txt list/.

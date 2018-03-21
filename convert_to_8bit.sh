@@ -15,9 +15,10 @@ function convert_to8bit() {
     extension="${filename##*.}"
     filename="${filename%.*}"
 
-    output=${DIR}/${filename}_8bit.tif
+    output=${DIR}/${filename}_8bit.png
 
-    gdal_translate -ot Byte -scale ${minValue} ${maxValue} 0 255 ${input} ${output}
+    # use PNG because tensorflow does not support TIF
+    gdal_translate -of PNG -ot Byte -scale ${minValue} ${maxValue} 0 255 ${input} ${output}
 }
 
 # function of converting to 8bit using gdal_translate with max and min value.
