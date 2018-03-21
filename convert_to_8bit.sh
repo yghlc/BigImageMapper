@@ -35,7 +35,8 @@ function convert_to16bit() {
 
     output=${DIR}/${filename}_16bit.png
 
-    gdal_translate -of PNG -ot Int16 -scale ${minValue} ${maxValue} 0 255 ${input} ${output}
+    # PNG driver doesn't support data type Int16. Only eight bit (Byte) and sixteen bit (UInt16) bands supported. Defaulting to Byte
+    gdal_translate -of PNG -ot UInt16 -scale ${minValue} ${maxValue} 0 255 ${input} ${output}
 }
 
 
