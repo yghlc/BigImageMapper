@@ -5,7 +5,7 @@
 para_file=para.ini
 para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
 
-eo_dir=/docker/codes/PycharmProjects/Landuse_DL
+eo_dir=~/codes/PycharmProjects/Landuse_DL
 root=$(python2 ${para_py} -p ${para_file} working_root)
 
 # current folder (without path)
