@@ -7,8 +7,8 @@
 # but I hope have close result and watch the training process
 # modified from "tensorflow/models/research/deeplab/local_test.sh"
 
-#set GPU on Cryo06
-export CUDA_VISIBLE_DEVICES=1
+para_file=para.ini
+para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
 # test dir:"/home/hlc/Data/2018_IEEE_GRSS_Data_Fusion/deeplabv4_2_lidar",
@@ -46,7 +46,8 @@ export PYTHONPATH=$PYTHONPATH:${tf_research_dir}/slim
 #python "${WORK_DIR}"/model_test.py -v
 
 # Set up the working directories.
-EXP_FOLDER="exp"
+expr_name=$(python2 ${para_py} -p ${para_file} expr_name)
+EXP_FOLDER=${expr_name}
 
 INIT_FOLDER="${WORK_DIR}/${EXP_FOLDER}/init_models"
 TRAIN_LOGDIR="${WORK_DIR}/${EXP_FOLDER}/train"
@@ -71,9 +72,10 @@ cd "${WORK_DIR}"
 
 DATASET="${WORK_DIR}/tfrecord"
 
-
+batch_size=$(python2 ${para_py} -p ${para_file} batch_size)
+iteration_num=$(python2 ${para_py} -p ${para_file} iteration_num)
 # Train 10 iterations.
-NUM_ITERATIONS=30000
+NUM_ITERATIONS=${iteration_num}
 python "${deeplab_dir}"/train.py \
   --logtostderr \
   --train_split="trainval" \
@@ -86,7 +88,7 @@ python "${deeplab_dir}"/train.py \
   --decoder_output_stride=4 \
   --train_crop_size=513 \
   --train_crop_size=513 \
-  --train_batch_size=6 \
+  --train_batch_size=${batch_size} \
   --training_number_of_steps="${NUM_ITERATIONS}" \
   --fine_tune_batch_norm=False \
   --tf_initial_checkpoint="${INIT_FOLDER}/xception/model.ckpt" \
