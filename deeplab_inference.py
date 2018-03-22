@@ -44,6 +44,9 @@ import tensorflow as tf
 if tf.__version__ < '1.5.0':
     raise ImportError('Please upgrade your tensorflow installation to v1.5.0 or newer!')
 
+HOME = os.path.expanduser('~')
+basicCodes_path = HOME + '/codes/PycharmProjects/DeeplabforRS'
+sys.path.append(basicCodes_path)
 
 tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
 deeplab_dir=os.path.join(tf_research_dir,"deeplab")
