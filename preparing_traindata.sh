@@ -85,4 +85,4 @@ mv list/*.txt list/old_txt/.
 mv $output_txt list/.
 
 # copy the training data for elevation
-cp list/$output_txt val.txt
+cp list/$output_txt list/val.txt
