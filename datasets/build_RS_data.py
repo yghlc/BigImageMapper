@@ -95,6 +95,57 @@ def read_patch(patch_obj):
 
         return data
 
+def save_patch_oneband_8bit(patch_obj,img_data,save_path):
+    """
+    save a patch of image, currently support oneband with 8bit
+    :param patch_obj: the patch object, contain the boundary and original (reference) image path
+    :param img_data: numpy array of a new image, could be one band or multi band
+    :param save_path: Save file path
+    :return: True if sucessufully, False otherwise
+    """
+
+    # reference image path
+    org_img_path = patch_obj.org_img
+    dataset_name = os.path.splitext(os.path.basename(org_img_path))[0]
+
+    # save the segmentation map
+    boundary = patch_obj.boundary
+    # boundary = [item[0] for item in boundary]
+    xsize = boundary[2]
+    ysize = boundary[3]
+
+    # check width and height
+    height,width = img_data.shape
+    if xsize != width or ysize != height:
+        basic.outputlogMessage("Error, the Size of the saved numpy array is different from the original patch")
+        return False
+
+    window = ((boundary[1], boundary[1] + ysize), (boundary[0], boundary[0] + xsize))
+
+    # img.save('inf_result/'+fName+'.png')
+    with rasterio.open(org_img_path) as org:
+        profile = org.profile
+        new_transform = org.window_transform(window)
+    # calculate new transform and update profile (transform, width, height)
+
+    profile.update(dtype=rasterio.uint8, count=1, transform=new_transform, width=xsize, height=ysize)
+    # set the block size, it should be a multiple of 16 (TileLength must be a multiple of 16)
+    if profile.has_key('blockxsize') and profile['blockxsize'] > xsize:
+        if xsize % 16 == 0:
+            profile.update(blockxsize=xsize)
+        else:
+            profile.update(blockxsize=16)  # profile.update(blockxsize=16)
+    if profile.has_key('blockysize') and profile['blockysize'] > ysize:
+        if ysize % 16 == 0:
+            profile.update(blockysize=ysize)
+        else:
+            profile.update(blockysize=16)  # profile.update(blockxsize=16)
+
+
+    with rasterio.open(save_path, "w", **profile) as dst:
+        dst.write(img_data, 1)
+
+
 def check_input_image_and_label(image_path, label_path):
     """
     check the input image and label, they should have same width, height, and projection
