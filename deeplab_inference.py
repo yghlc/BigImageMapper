@@ -18,17 +18,9 @@
 # * Pillow
 # * numpy
 
-import collections
 import os
-import StringIO
 import sys
-import tarfile
-import tempfile
-import urllib
 
-from IPython import display
-from ipywidgets import interact
-from ipywidgets import interactive
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
 import numpy as np
@@ -63,41 +55,15 @@ import get_dataset_colormap
 
 
 # ## Select and download models
-
 # ## Load model in TensorFlow
 
 _FROZEN_GRAPH_NAME = 'frozen_inference_graph'
-
-
 class DeepLabModel(object):
     """Class to load deeplab model and run inference."""
     
     INPUT_TENSOR_NAME = 'ImageTensor:0'
     OUTPUT_TENSOR_NAME = 'SemanticPredictions:0'
     INPUT_SIZE = 513
-
-    # def __init__(self, tarball_path):
-    #     """Creates and loads pretrained deeplab model."""
-    #     self.graph = tf.Graph()
-    #
-    #     graph_def = None
-    #     # Extract frozen graph from tar archive.
-    #     tar_file = tarfile.open(tarball_path)
-    #     for tar_info in tar_file.getmembers():
-    #         if _FROZEN_GRAPH_NAME in os.path.basename(tar_info.name):
-    #             file_handle = tar_file.extractfile(tar_info)
-    #             graph_def = tf.GraphDef.FromString(file_handle.read())
-    #             break
-    #
-    #     tar_file.close()
-    #
-    #     if graph_def is None:
-    #         raise RuntimeError('Cannot find inference graph in tar archive.')
-    #
-    #     with self.graph.as_default():
-    #         tf.import_graph_def(graph_def, name='')
-    #
-    #     self.sess = tf.Session(graph=self.graph)
 
     def __init__(self, frozen_graph_path):
         """Creates and loads pretrained deeplab model."""
@@ -136,11 +102,6 @@ class DeepLabModel(object):
         return resized_image, seg_map
 
 
-#model = DeepLabModel(download_path) # this input a tarball
-frozen_graph_path = os.path.join(WORK_DIR,expr_name,'export','frozen_inference_graph.pb')
-if os.path.isfile(frozen_graph_path) is False:
-    raise RuntimeError('the file of inference graph is not exist, file path:'+frozen_graph_path)
-model = DeepLabModel(frozen_graph_path)
 
 # ## Helper methods
 
@@ -195,14 +156,13 @@ def vis_segmentation(image, seg_map):
 
 
 # ## Run on sample images
-
 # Note that we are using single scale inference in the demo for fast
 # computation, so the results may slightly differ from the visualizations
 # in README, which uses multi-scale and left-right flipped inputs.
 
 IMAGE_DIR = os.path.join(WORK_DIR,'split_images')
 
-def run_demo_image(image_name):
+def run_demo_image(model,image_name):
     try:
         image_path = os.path.join(IMAGE_DIR, image_name)
         orignal_im = Image.open(image_path)
@@ -214,11 +174,22 @@ def run_demo_image(image_name):
     
     vis_segmentation(resized_im, seg_map)
 
-image_name=['UH17_GI1F051_TR_8bit_p_0.png', 'UH17_GI1F051_TR_8bit_p_6.png', 'UH17_GI1F051_TR_8bit_p_14.png']
-for image in image_name:
-    run_demo_image(image)
 
 
+def main(unused_argv):
+
+    # model = DeepLabModel(download_path) # this input a tarball
+    frozen_graph_path = os.path.join(WORK_DIR, expr_name, 'export', 'frozen_inference_graph.pb')
+    if os.path.isfile(frozen_graph_path) is False:
+        raise RuntimeError('the file of inference graph is not exist, file path:' + frozen_graph_path)
+    model = DeepLabModel(frozen_graph_path)
+
+    image_name = ['UH17_GI1F051_TR_8bit_p_0.png', 'UH17_GI1F051_TR_8bit_p_6.png', 'UH17_GI1F051_TR_8bit_p_14.png']
+    for image in image_name:
+        run_demo_image(model,image)
+
+if __name__ == '__main__':
+    tf.app.run()
 
 
 
