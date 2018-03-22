@@ -144,11 +144,18 @@ model = DeepLabModel(frozen_graph_path)
 
 # ## Helper methods
 
+# LABEL_NAMES = np.asarray([
+#     'background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle',
+#     'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog',
+#     'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa',
+#     'train', 'tv'
+# ])
+
 LABEL_NAMES = np.asarray([
-    'background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle',
-    'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog',
-    'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa',
-    'train', 'tv'
+    'Unclassified', 'Healthy grass', 'Stressed grass', 'Artificial turf', 'Evergreen trees', 'Deciduous trees',
+    'Bare earth', 'Water', 'Residential buildings', 'Non-residential buildings', 'Roads', 'Sidewalks', 'Crosswalks',
+    'Major thoroughfares', 'Highways', 'Railways', 'Paved parking lots', ' Unpaved parking lots', 'Cars',
+    'Trains', 'Stadium seats'
 ])
 
 FULL_LABEL_MAP = np.arange(len(LABEL_NAMES)).reshape(len(LABEL_NAMES), 1)
