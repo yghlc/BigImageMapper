@@ -39,9 +39,9 @@
 
 
 import math
-import sys
+import sys,os
 import time
-
+import numpy as np
 from osgeo import gdal
 
 try:
@@ -52,6 +52,11 @@ except:
 __version__ = '$id$'[5:-1]
 verbose = 0
 quiet = 0
+
+#The number of class, that is the band number in the first output
+num_class = 21
+output_band_num = num_class
+import rasterio
 
 
 # =============================================================================
@@ -64,33 +69,46 @@ def raster_copy( s_fh, s_xoff, s_yoff, s_xsize, s_ysize, s_band_n,
               % (s_xoff, s_yoff, s_xsize, s_ysize,
              t_xoff, t_yoff, t_xsize, t_ysize ))
 
-    if nodata is not None:
-        return raster_copy_with_nodata(
-            s_fh, s_xoff, s_yoff, s_xsize, s_ysize, s_band_n,
-            t_fh, t_xoff, t_yoff, t_xsize, t_ysize, t_band_n,
-            nodata )
+    # if nodata is not None:
+    #     return raster_copy_with_nodata(
+    #         s_fh, s_xoff, s_yoff, s_xsize, s_ysize, s_band_n,
+    #         t_fh, t_xoff, t_yoff, t_xsize, t_ysize, t_band_n,
+    #         nodata )
 
     s_band = s_fh.GetRasterBand( s_band_n )
-    m_band = None
-    # Works only in binary mode and doesn't take into account
-    # intermediate transparency values for compositing.
-    if s_band.GetMaskFlags() != gdal.GMF_ALL_VALID:
-        m_band = s_band.GetMaskBand()
-    elif s_band.GetColorInterpretation() == gdal.GCI_AlphaBand:
-        m_band = s_band
-    if m_band is not None:
-        return raster_copy_with_mask(
-            s_fh, s_xoff, s_yoff, s_xsize, s_ysize, s_band_n,
-            t_fh, t_xoff, t_yoff, t_xsize, t_ysize, t_band_n,
-            m_band )
+    # m_band = None
+    # # Works only in binary mode and doesn't take into account
+    # # intermediate transparency values for compositing.
+    # if s_band.GetMaskFlags() != gdal.GMF_ALL_VALID:
+    #     m_band = s_band.GetMaskBand()
+    # elif s_band.GetColorInterpretation() == gdal.GCI_AlphaBand:
+    #     m_band = s_band
+    # if m_band is not None:
+    #     return raster_copy_with_mask(
+    #         s_fh, s_xoff, s_yoff, s_xsize, s_ysize, s_band_n,
+    #         t_fh, t_xoff, t_yoff, t_xsize, t_ysize, t_band_n,
+    #         m_band )
 
     s_band = s_fh.GetRasterBand( s_band_n )
     t_band = t_fh.GetRasterBand( t_band_n )
 
-    data = s_band.ReadRaster( s_xoff, s_yoff, s_xsize, s_ysize,
-                             t_xsize, t_ysize, t_band.DataType )
-    t_band.WriteRaster( t_xoff, t_yoff, t_xsize, t_ysize,
-                        data, t_xsize, t_ysize, t_band.DataType )
+    # data = s_band.ReadRaster( s_xoff, s_yoff, s_xsize, s_ysize,
+    #                          t_xsize, t_ysize, t_band.DataType )
+
+    # read as numpy array
+    data = s_band.ReadAsArray(s_xoff, s_yoff, s_xsize, s_ysize,t_xsize, t_ysize)
+    # print(data.shape)
+
+    for num in range(1,num_class+1):
+
+        t_band = t_fh.GetRasterBand(num)
+        data_dst = t_band.ReadAsArray(t_xoff, t_yoff, t_xsize, t_ysize)
+
+        # update this band
+        data_dst[ np.where(data==num-1)] += 1
+        t_band.WriteArray(data_dst, t_xoff, t_yoff)
+        # t_band.WriteRaster( t_xoff, t_yoff, t_xsize, t_ysize,
+        #                 data_dst, t_xsize, t_ysize, t_band.DataType )
 
     return 0
 
@@ -473,6 +491,8 @@ def main( argv=None ):
         else:
             bands = file_infos[0].bands
 
+        # the band number is the same as the class number
+        bands = output_band_num
 
         t_fh = Driver.Create( out_file, xsize, ysize, bands,
                               band_type, create_options )
@@ -530,6 +550,9 @@ def main( argv=None ):
             fi.report()
 
         if separate == 0 :
+            if bands != 1:
+                # print("only support input file of one band")
+                bands = min(file_infos[0].bands, t_fh.RasterCount)
             for band in range(1, bands+1):
                 fi.copy_into( t_fh, band, band, nodata )
         else:
@@ -543,6 +566,26 @@ def main( argv=None ):
 
     # Force file to be closed.
     t_fh = None
+
+    # convert to one band
+    path_noext, ext = os.path.splitext(out_file)
+    back_up_path = path_noext +"_backup"+ext
+    os.system('mv '+out_file +' '+ back_up_path)
+    with rasterio.open(back_up_path) as src:
+        # read all data
+        prob_data = src.read()
+        profile = src.profile
+
+    #convert ot one band
+    class_num,height,width=prob_data.shape
+    # classified_map = np.zeros((height,width))
+
+    classified_map = np.argmax(prob_data,axis=0)
+
+    profile.update(dtype=rasterio.uint8, count=1)
+
+    with rasterio.open(out_file, 'w', **profile) as dst:
+        dst.write(classified_map.astype(rasterio.uint8), 1)
 
 if __name__ == '__main__':
     sys.exit(main())

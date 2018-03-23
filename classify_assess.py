@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # Filename: split_image
 """
@@ -49,9 +48,29 @@ def main(options, args):
     label_1d = read_oneband_image_to_1dArray(label_image)
     classified_results_1d = read_oneband_image_to_1dArray(classified_results)
 
+    #ignore background
+    back_ground_index = np.where(label_1d==0)
+    # back_ground_index = np.where(classified_results_1d == 0)
+    label_1d = np.delete(label_1d,back_ground_index)
+    classified_results_1d = np.delete(classified_results_1d, back_ground_index)
+
     accuracy = metrics.accuracy_score(label_1d,classified_results_1d,normalize=True)*100
 
     print("accuracy: %.2f %%"%accuracy)
+
+    confusion_matrix = metrics.confusion_matrix(label_1d, classified_results_1d)
+    #print("confusion matrix:")
+    #print(str(confusion_matrix))
+
+    sum_trace = np.trace(confusion_matrix)
+    sum_all = np.sum(confusion_matrix)
+    overall_accuracy = sum_trace*100.0/sum_all
+    print("overall accuracy: %.2f %%" % overall_accuracy)
+
+
+
+    # report = metrics.classification_report(label_1d,classified_results_1d)
+    # print(report)
     # print("precision (tp/(tp+fp)) score: %.4f %%" % precision)
     # print("f1 score: %.4f %%" % f1)
 
