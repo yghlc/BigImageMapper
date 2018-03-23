@@ -74,17 +74,24 @@ DATASET="${WORK_DIR}/tfrecord"
 
 batch_size=$(python2 ${para_py} -p ${para_file} batch_size)
 iteration_num=$(python2 ${para_py} -p ${para_file} iteration_num)
+base_learning_rate=$(python2 ${para_py} -p ${para_file} base_learning_rate)
+
+output_stride=$(python2 ${para_py} -p ${para_file} output_stride)
+atrous_rates1=$(python2 ${para_py} -p ${para_file} atrous_rates1)
+atrous_rates2=$(python2 ${para_py} -p ${para_file} atrous_rates2)
+atrous_rates3=$(python2 ${para_py} -p ${para_file} atrous_rates3)
+
 # Train 10 iterations.
 NUM_ITERATIONS=${iteration_num}
 python "${deeplab_dir}"/train.py \
   --logtostderr \
   --train_split="trainval" \
-  --base_learning_rate=0.007 \
+  --base_learning_rate=${base_learning_rate} \
   --model_variant="xception_65" \
-  --atrous_rates=6 \
-  --atrous_rates=12 \
-  --atrous_rates=18 \
-  --output_stride=16 \
+  --atrous_rates=${atrous_rates1} \
+  --atrous_rates=${atrous_rates2} \
+  --atrous_rates=${atrous_rates3} \
+  --output_stride=${output_stride} \
   --decoder_output_stride=4 \
   --train_crop_size=513 \
   --train_crop_size=513 \
@@ -102,10 +109,10 @@ python "${deeplab_dir}"/eval.py \
   --logtostderr \
   --eval_split="val" \
   --model_variant="xception_65" \
-  --atrous_rates=6 \
-  --atrous_rates=12 \
-  --atrous_rates=18 \
-  --output_stride=16 \
+  --atrous_rates=${atrous_rates1} \
+  --atrous_rates=${atrous_rates2} \
+  --atrous_rates=${atrous_rates3} \
+  --output_stride=${output_stride} \
   --decoder_output_stride=4 \
   --eval_crop_size=513 \
   --eval_crop_size=513 \
@@ -115,21 +122,21 @@ python "${deeplab_dir}"/eval.py \
   --max_number_of_evaluations=1
 
 # Visualize the results.
-python "${deeplab_dir}"/vis.py \
-  --logtostderr \
-  --vis_split="val" \
-  --model_variant="xception_65" \
-  --atrous_rates=6 \
-  --atrous_rates=12 \
-  --atrous_rates=18 \
-  --output_stride=16 \
-  --decoder_output_stride=4 \
-  --vis_crop_size=513 \
-  --vis_crop_size=513 \
-  --checkpoint_dir="${TRAIN_LOGDIR}" \
-  --vis_logdir="${VIS_LOGDIR}" \
-  --dataset_dir="${DATASET}" \
-  --max_number_of_iterations=1
+#python "${deeplab_dir}"/vis.py \
+#  --logtostderr \
+#  --vis_split="val" \
+#  --model_variant="xception_65" \
+#  --atrous_rates=6 \
+#  --atrous_rates=12 \
+#  --atrous_rates=18 \
+#  --output_stride=16 \
+#  --decoder_output_stride=4 \
+#  --vis_crop_size=513 \
+#  --vis_crop_size=513 \
+#  --checkpoint_dir="${TRAIN_LOGDIR}" \
+#  --vis_logdir="${VIS_LOGDIR}" \
+#  --dataset_dir="${DATASET}" \
+#  --max_number_of_iterations=1
 
 # Export the trained checkpoint.
 CKPT_PATH="${TRAIN_LOGDIR}/model.ckpt-${NUM_ITERATIONS}"
