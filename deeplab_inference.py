@@ -58,6 +58,11 @@ tf.app.flags.DEFINE_string(
     './inf_results',
     'Path to save inference results.')
 
+tf.app.flags.DEFINE_string(
+    'frozen_graph',
+    'frozen_inference_graph.pb',
+    'File name of frozen inference graph')
+
 tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
 deeplab_dir=os.path.join(tf_research_dir,"deeplab")
 
@@ -73,7 +78,8 @@ import get_dataset_colormap
 # ## Select and download models
 # ## Load model in TensorFlow
 
-_FROZEN_GRAPH_NAME = 'frozen_inference_graph'
+# _FROZEN_GRAPH_NAME = 'frozen_inference_graph'
+
 class DeepLabModel(object):
     """Class to load deeplab model and run inference."""
     
@@ -266,7 +272,7 @@ def inf_remoteSensing_image(model,image_path=None):
 def main(unused_argv):
 
     # model = DeepLabModel(download_path) # this input a tarball
-    frozen_graph_path = os.path.join(WORK_DIR, expr_name, 'export', 'frozen_inference_graph.pb')
+    frozen_graph_path = os.path.join(WORK_DIR, expr_name, 'export', FLAGS.frozen_graph)
     if os.path.isfile(frozen_graph_path) is False:
         raise RuntimeError('the file of inference graph is not exist, file path:' + frozen_graph_path)
     model = DeepLabModel(frozen_graph_path)
