@@ -22,6 +22,69 @@ import rasterio
 
 from collections import Counter
 
+def replace_zero_pixel_with_0_other_1(one_band_image):
+    """
+    create a mask
+    :param one_band_image: 
+    :return: 
+    """
+
+    band, height,width = one_band_image.shape
+    one_band_image = one_band_image.reshape(height,width)
+
+    #copy the image value
+    new_image = 1*one_band_image
+
+    # copy the image value
+    new_image = 1 * one_band_image
+
+    rows, cols = np.where(one_band_image != 0)
+    count = len(rows)
+    print("Number of non-zero pixel at 1st stage:" + str(count))
+    if count != len(cols):
+        print(count != len(cols))
+        return False
+
+    # filter each pixel
+    for i in range(0, count):
+        row = rows[i]
+        col = cols[i]
+        new_image[row, col] = 1
+
+    test = 1
+
+    return new_image
+
+
+def replace_zero_pixel_with_255(one_band_image):
+    """
+    replace zeros as 255 for deeplab 
+    :param one_band_image: 
+    :return: 
+    """
+    band, height,width = one_band_image.shape
+    one_band_image = one_band_image.reshape(height,width)
+
+    #copy the image value
+    new_image = 1*one_band_image
+
+    rows,cols = np.where(one_band_image==0)
+    count = len(rows)
+    print("Number of zero pixel at 1st stage:"+str(count))
+    if count!=len(cols):
+        print(count!=len(cols))
+        return False
+
+    # filter each pixel
+    for i in range(0,count):
+        row = rows[i]
+        col = cols[i]
+        new_image[row,col] = 255
+
+    test = 1
+
+    return new_image
+
 def replace_zero_pixel(one_band_image):
 
     band, height,width = one_band_image.shape
@@ -108,9 +171,11 @@ def remove_zero_pixel(image_path,output_path):
         print("error, read map failed")
         return False
 
-    result = replace_zero_pixel(clas_map)
-    # result = 1*clas_map
-    # result = result.reshape(512,512)
+    # result = replace_zero_pixel(clas_map)
+    result = replace_zero_pixel_with_255(clas_map)
+
+    # result = replace_zero_pixel_with_0_other_1(clas_map)
+
 
     if result is False:
         return False

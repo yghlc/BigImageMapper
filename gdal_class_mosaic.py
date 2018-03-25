@@ -54,7 +54,7 @@ verbose = 0
 quiet = 0
 
 #The number of class, that is the band number in the first output
-num_class = 21
+num_class = 20
 output_band_num = num_class
 import rasterio
 
@@ -105,7 +105,7 @@ def raster_copy( s_fh, s_xoff, s_yoff, s_xsize, s_ysize, s_band_n,
         data_dst = t_band.ReadAsArray(t_xoff, t_yoff, t_xsize, t_ysize)
 
         # update this band
-        data_dst[ np.where(data==num-1)] += 1
+        data_dst[ np.where(data== num )] += 1  # band one for class one (20 classes)
         t_band.WriteArray(data_dst, t_xoff, t_yoff)
         # t_band.WriteRaster( t_xoff, t_yoff, t_xsize, t_ysize,
         #                 data_dst, t_xsize, t_ysize, t_band.DataType )
@@ -581,6 +581,7 @@ def main( argv=None ):
     # classified_map = np.zeros((height,width))
 
     classified_map = np.argmax(prob_data,axis=0)
+    classified_map = classified_map + 1 # because start from 0
 
     profile.update(dtype=rasterio.uint8, count=1)
 

@@ -98,6 +98,8 @@ class DeepLabModel(object):
         if graph_def is None:
             raise RuntimeError('Error, Cannot Open inference graph.')
 
+        # print(graph_def)
+
         with self.graph.as_default():
             tf.import_graph_def(graph_def, name='')
 
@@ -239,6 +241,7 @@ def inf_remoteSensing_image(model,image_path=None):
         return False
 
     patch_num = len(data_patches)
+    print('total number of patches: %d'%patch_num)
 
     for idx in range(0,patch_num):
 

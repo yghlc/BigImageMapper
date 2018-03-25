@@ -48,6 +48,9 @@ def main(options, args):
     label_1d = read_oneband_image_to_1dArray(label_image)
     classified_results_1d = read_oneband_image_to_1dArray(classified_results)
 
+    if label_1d is None or classified_results_1d is None:
+        return
+
     #ignore background
     back_ground_index = np.where(label_1d==0)
     # back_ground_index = np.where(classified_results_1d == 0)

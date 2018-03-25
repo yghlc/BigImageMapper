@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 trail=$1
+iteration_num=$2
 
-para_file=para.ini
+#para_file=para.ini
+para_file=$3
 para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
 WORK_DIR=$(pwd)
 tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
@@ -20,7 +22,7 @@ TRAIN_LOGDIR="${WORK_DIR}/${EXP_FOLDER}/train"
 EXPORT_DIR="${WORK_DIR}/${EXP_FOLDER}/export"
 
 batch_size=$(python2 ${para_py} -p ${para_file} batch_size)
-iteration_num=$(python2 ${para_py} -p ${para_file} iteration_num)
+#iteration_num=$(python2 ${para_py} -p ${para_file} iteration_num)
 base_learning_rate=$(python2 ${para_py} -p ${para_file} base_learning_rate)
 
 output_stride=$(python2 ${para_py} -p ${para_file} output_stride)
@@ -34,17 +36,39 @@ NUM_ITERATIONS=${iteration_num}
 CKPT_PATH="${TRAIN_LOGDIR}/model.ckpt-${NUM_ITERATIONS}"
 EXPORT_PATH="${EXPORT_DIR}/frozen_inference_graph_${trail}.pb"
 
+# multi-scale
 python "${deeplab_dir}"/export_model.py \
   --logtostderr \
   --checkpoint_path="${CKPT_PATH}" \
   --export_path="${EXPORT_PATH}" \
   --model_variant="xception_65" \
-  --atrous_rates=12 \
-  --atrous_rates=24 \
-  --atrous_rates=36 \
-  --output_stride=8 \
+  --atrous_rates=${atrous_rates1} \
+  --atrous_rates=${atrous_rates2} \
+  --atrous_rates=${atrous_rates3} \
+  --output_stride=${output_stride} \
   --decoder_output_stride=4 \
   --num_classes=21 \
   --crop_size=513 \
   --crop_size=513 \
-  --inference_scales=1.0
+  --inference_scales=0.5 \
+   --inference_scales=0.75 \
+   --inference_scales=1.0 \
+   --inference_scales=1.25 \
+   --inference_scales=1.5 \
+   --inference_scales=1.75
+
+# single-scale
+#python "${deeplab_dir}"/export_model.py \
+#  --logtostderr \
+#  --checkpoint_path="${CKPT_PATH}" \
+#  --export_path="${EXPORT_PATH}" \
+#  --model_variant="xception_65" \
+#  --atrous_rates=${atrous_rates1} \
+#  --atrous_rates=${atrous_rates2} \
+#  --atrous_rates=${atrous_rates3} \
+#  --output_stride=${output_stride} \
+#  --decoder_output_stride=4 \
+#  --num_classes=21 \
+#  --crop_size=513 \
+#  --crop_size=513 \
+#   --inference_scales=1.0

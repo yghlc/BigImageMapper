@@ -152,7 +152,7 @@ python "${deeplab_dir}"/export_model.py \
   --atrous_rates=18 \
   --output_stride=16 \
   --decoder_output_stride=4 \
-  --num_classes=21 \
+  --num_classes=20 \
   --crop_size=513 \
   --crop_size=513 \
   --inference_scales=1.0

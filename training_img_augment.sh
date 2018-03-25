@@ -34,6 +34,13 @@ ${augscript} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
 
 # have same list, so we don't need to update again
 #update_listfile
+# replace the 0 pixel as 255
+for png in $(ls *_R*.png); do
+    ${eo_dir}/remove_zero_pixels.py $png temp.png
+    mv temp.png $png
+done
+
+
 cd ..
 
 # copy the training data for elevation
