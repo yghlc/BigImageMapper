@@ -266,7 +266,7 @@ def inf_remoteSensing_image(model,image_path=None):
         # save segmentation map
         file_name = os.path.splitext(os.path.basename(org_img))[0] + '_' + str(idx)+'_pred'
         # print(file_name)
-        save_path = os.path.join(FLAGS.inf_output_dir,file_name+'.png')
+        save_path = os.path.join(FLAGS.inf_output_dir,file_name+'.tif')
         if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
             return False
 
