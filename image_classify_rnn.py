@@ -13,9 +13,20 @@ import sys,os
 from optparse import OptionParser
 
 import numpy as np
-import random
-
 import rasterio
+
+
+###-------------------------- set gpu using tf ---------------------------
+import tensorflow as tf
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+session = tf.Session(config=config)
+###-------------------  start importing keras module ---------------------
+
+import keras
+
+
+
 
 def read_oneband_image_to_1dArray(image_path):
 
@@ -82,6 +93,11 @@ def split_data(x_all, y_all, test_percent=0.01):
 
     return (x_train, y_train), (x_test, y_test)
 
+def build_train_rnn_model(x_train, y_train,x_test, y_test):
+
+
+
+    pass
 
 def main(options, args):
 
@@ -110,6 +126,9 @@ def main(options, args):
 
     print("%.2f %% are unclassified (no observation)"%(len(back_ground_index[0])*100.0/pixel_count))
     print('after removing non-ground truth pixels',label_1d.shape, multiBand_value_2d.shape)
+
+    # split train and test dataset
+    (x_train, y_train), (x_test, y_test) = split_data(multiBand_value_2d, label_1d, test_percent=0.1)
 
 
 
