@@ -25,7 +25,7 @@ session = tf.Session(config=config)
 
 import keras
 
-
+num_classes = 20
 
 
 def read_oneband_image_to_1dArray(image_path):
