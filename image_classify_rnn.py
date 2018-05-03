@@ -30,6 +30,8 @@ from keras.layers import Input, Dense, TimeDistributed
 from keras.models import Model
 from keras.layers import LSTM
 
+import matplotlib.pyplot as plt
+
 #we only have 20 classes, however, class index start from 1, so use 21. We should ignore the "0" class in the end
 num_classes = 21
 
@@ -117,7 +119,12 @@ def split_data(x_all, y_all, test_percent=0.01):
 def build_train_rnn_model(x_shape):
 
     model = Sequential()
-    model.add(LSTM(hidden_units,input_shape=x_shape,return_sequences=True))
+    # model.add(LSTM(hidden_units, input_shape=x_shape))
+    model.add(LSTM(hidden_units,input_shape=x_shape,return_sequences=True)) #,return_sequences=True
+
+    model.add(LSTM(hidden_units, return_sequences=True))
+    model.add(LSTM(hidden_units, return_sequences=True))
+    model.add(LSTM(hidden_units, return_sequences=True))
 
     model.add(LSTM(hidden_units))
 
@@ -188,7 +195,7 @@ def main(options, args):
     model.summary()
 
     # Training.
-    model.fit(x_train, y_train,
+    history = model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
               verbose=1,
@@ -200,8 +207,28 @@ def main(options, args):
     print('Test loss:', scores[0])
     print('Test accuracy:', scores[1])
 
-
-
+    # list all data in history
+    print(history.history.keys())
+    # summarize history for accuracy
+    plt.figure(0)
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    # plt.show()
+    plt.savefig('acc_his_%d.png'%random.randint(1,1000),dpi=300)
+    # summarize history for loss
+    plt.figure(1)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    # plt.show()
+    plt.savefig('loss_his_%d.png'%random.randint(1,1000),dpi=300)
 
 
 
