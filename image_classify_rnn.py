@@ -30,9 +30,11 @@ from keras.layers import Input, Dense, TimeDistributed
 from keras.models import Model
 from keras.layers import LSTM
 
-num_classes = 20
+#we only have 20 classes, however, class index start from 1, so use 21. We should ignore the "0" class in the end
+num_classes = 21
+
 hidden_units = 128
-batch_size = 128
+batch_size = 2048
 
 epochs = 200
 
@@ -112,11 +114,14 @@ def split_data(x_all, y_all, test_percent=0.01):
 
     return (x_train, y_train), (x_test, y_test)
 
-def build_train_rnn_model():
+def build_train_rnn_model(x_shape):
 
     model = Sequential()
-    model.add(LSTM(hidden_units))
+    model.add(LSTM(hidden_units,input_shape=x_shape))
     model.add(Dense(num_classes, activation='sigmoid'))
+
+    # complie model
+    model.compile(loss='categorical_crossentropy',optimizer='rmsprop',metrics=['accuracy'])
 
     return model
 
@@ -151,6 +156,13 @@ def main(options, args):
 
     # split train and test dataset
     (x_train, y_train), (x_test, y_test) = split_data(multiBand_value_2d, label_1d, test_percent=0.1)
+
+    x_train = x_train.reshape(x_train.shape[0],x_train.shape[1],1)
+    x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], 1)
+
+    y_train = keras.utils.to_categorical(y_train,num_classes)
+    y_test = keras.utils.to_categorical(y_test,num_classes)
+
     print('x_train shape:', x_train.shape)
     print(x_train.shape[0],y_train.shape[0], 'train samples')
     print(x_test.shape[0],x_test.shape[0], 'test samples')
@@ -165,9 +177,9 @@ def main(options, args):
     bands = x_train.shape[1:]
 
     # 2D input.
-    x = Input(shape=(bands))
+    # x = Input(shape=(bands))
 
-    model = build_train_rnn_model()
+    model = build_train_rnn_model((bands))
 
     # Training.
     model.fit(x_train, y_train,
@@ -178,7 +190,7 @@ def main(options, args):
 
     # Evaluation.
     # verbose: 0 or 1. Verbosity mode. 0 = silent, 1 = progress bar.
-    scores = model.evaluate(x_test, y_test, verbose=1)
+    scores = model.evaluate(x_test, y_test, verbose=0)
     print('Test loss:', scores[0])
     print('Test accuracy:', scores[1])
 
