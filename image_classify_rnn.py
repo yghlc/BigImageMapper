@@ -117,7 +117,7 @@ def split_data(x_all, y_all, test_percent=0.01):
 def build_train_rnn_model(x_shape):
 
     model = Sequential()
-    model.add(LSTM(hidden_units,input_shape=x_shape))
+    model.add(LSTM(hidden_units,input_shape=x_shape,return_sequences=True))
 
     model.add(LSTM(hidden_units))
 
