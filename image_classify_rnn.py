@@ -118,6 +118,9 @@ def build_train_rnn_model(x_shape):
 
     model = Sequential()
     model.add(LSTM(hidden_units,input_shape=x_shape))
+
+    model.add(LSTM(hidden_units))
+
     model.add(Dense(num_classes, activation='sigmoid'))
 
     # complie model
@@ -180,6 +183,9 @@ def main(options, args):
     # x = Input(shape=(bands))
 
     model = build_train_rnn_model((bands))
+
+    # output network structure
+    model.summary()
 
     # Training.
     model.fit(x_train, y_train,
