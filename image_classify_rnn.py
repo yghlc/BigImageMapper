@@ -13,6 +13,7 @@ import sys,os
 from optparse import OptionParser
 
 import numpy as np
+import random
 import rasterio
 
 
@@ -24,9 +25,16 @@ session = tf.Session(config=config)
 ###-------------------  start importing keras module ---------------------
 
 import keras
+from keras.models import Sequential
+from keras.layers import Input, Dense, TimeDistributed
+from keras.models import Model
+from keras.layers import LSTM
 
 num_classes = 20
+hidden_units = 128
+batch_size = 128
 
+epochs = 200
 
 def read_oneband_image_to_1dArray(image_path):
 
@@ -83,21 +91,35 @@ def split_data(x_all, y_all, test_percent=0.01):
     test_count = int(total_count*test_percent)
 
     # random select the test sample
-    test_index = np.random.randint(0,total_count,size=test_count)
+    # bug: np.random.randint could output some duplicated number, which causes not consist amount when using np.delete
+    # test_index = np.random.randint(0,total_count,size=test_count)
+    test_index = random.sample(range(total_count), test_count)
+    # test_index = np.array(range(0,test_count))
+    # test_index = sorted(test_index)
 
     x_test = x_all[test_index]
     y_test = y_all[test_index]
+    # print(len(test_index), min(test_index),max(test_index),'size, minimum, and maximum of of test_index')
 
     x_train = np.delete(x_all,test_index,axis=0)
     y_train = np.delete(y_all,test_index,axis=0)
 
+    # print(x_all.shape[0], 'total count before splitting')
+    # print(x_train.shape[0]+x_test.shape[0],'total count after splitting')
+    #
+    # print(x_train.shape[0],y_train.shape[0], 'train samples (x,y)')
+    # print(x_test.shape[0],y_test.shape[0], 'test samples (x,y)')
+
     return (x_train, y_train), (x_test, y_test)
 
-def build_train_rnn_model(x_train, y_train,x_test, y_test):
+def build_train_rnn_model():
 
+    model = Sequential()
+    model.add(LSTM(hidden_units))
+    model.add(Dense(num_classes, activation='sigmoid'))
 
+    return model
 
-    pass
 
 def main(options, args):
 
@@ -129,6 +151,37 @@ def main(options, args):
 
     # split train and test dataset
     (x_train, y_train), (x_test, y_test) = split_data(multiBand_value_2d, label_1d, test_percent=0.1)
+    print('x_train shape:', x_train.shape)
+    print(x_train.shape[0],y_train.shape[0], 'train samples')
+    print(x_test.shape[0],x_test.shape[0], 'test samples')
+
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
+
+    # the original data is UINT16, the maximum value is around 45048 for this dataset, but use the simple way here
+    x_train /= 65536
+    x_test /= 65536
+
+    bands = x_train.shape[1:]
+
+    # 2D input.
+    x = Input(shape=(bands))
+
+    model = build_train_rnn_model()
+
+    # Training.
+    model.fit(x_train, y_train,
+              batch_size=batch_size,
+              epochs=epochs,
+              verbose=1,
+              validation_data=(x_test, y_test))
+
+    # Evaluation.
+    # verbose: 0 or 1. Verbosity mode. 0 = silent, 1 = progress bar.
+    scores = model.evaluate(x_test, y_test, verbose=1)
+    print('Test loss:', scores[0])
+    print('Test accuracy:', scores[1])
+
 
 
 
@@ -137,7 +190,7 @@ def main(options, args):
 
 
 if __name__ == "__main__":
-    usage = "usage: %prog [options] label_image multi spectral images"
+    usage = "usage: %prog [options] label_image multi_spectral_images"
     parser = OptionParser(usage=usage, version="1.0 2018-4-10")
     parser.description = 'Introduction: classification multi-spectral remote sensing images using RNN '
 
