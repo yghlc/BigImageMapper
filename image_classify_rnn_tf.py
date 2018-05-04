@@ -125,7 +125,7 @@ def build_train_rnn_model(x_shape):
 
     model.add(tf.keras.layers.LSTM(hidden_units))
 
-    model.add(tf.keras.layers.Dense(num_classes, activation='sigmoid'))
+    model.add(tf.keras.layers.Dense(num_classes, activation='softmax'))
 
     # complie model
     model.compile(loss='categorical_crossentropy',optimizer='rmsprop',metrics=['accuracy'])

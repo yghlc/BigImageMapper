@@ -133,7 +133,7 @@ def build_train_rnn_model(x_shape):
     model.add(LSTM(hidden_units))
     model.add(Dropout(0.5))
 
-    model.add(Dense(num_classes, activation='sigmoid'))
+    model.add(Dense(num_classes, activation='softmax'))
 
     # complie model
     model.compile(loss='categorical_crossentropy',optimizer='rmsprop',metrics=['accuracy'])
