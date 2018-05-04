@@ -26,11 +26,13 @@ session = tf.Session(config=config)
 
 import keras
 from keras.models import Sequential
-from keras.layers import Input, Dense, TimeDistributed
+from keras.layers import Input, Dense, TimeDistributed, Dropout
 from keras.models import Model
 from keras.layers import LSTM
 
 import matplotlib.pyplot as plt
+import datetime
+import time
 
 #we only have 20 classes, however, class index start from 1, so use 21. We should ignore the "0" class in the end
 num_classes = 21
@@ -121,12 +123,15 @@ def build_train_rnn_model(x_shape):
     model = Sequential()
     # model.add(LSTM(hidden_units, input_shape=x_shape))
     model.add(LSTM(hidden_units,input_shape=x_shape,return_sequences=True)) #,return_sequences=True
-
+    model.add(Dropout(0.5))
     model.add(LSTM(hidden_units, return_sequences=True))
+    model.add(Dropout(0.5))
     model.add(LSTM(hidden_units, return_sequences=True))
+    model.add(Dropout(0.5))
     model.add(LSTM(hidden_units, return_sequences=True))
-
+    model.add(Dropout(0.5))
     model.add(LSTM(hidden_units))
+    model.add(Dropout(0.5))
 
     model.add(Dense(num_classes, activation='sigmoid'))
 
@@ -137,6 +142,8 @@ def build_train_rnn_model(x_shape):
 
 
 def main(options, args):
+
+    t0 = time.time()
 
     label_image = args[0]
     multi_spec_image_path = args[1]
@@ -209,6 +216,7 @@ def main(options, args):
 
     # list all data in history
     print(history.history.keys())
+    datetime_str = datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
     # summarize history for accuracy
     plt.figure(0)
     plt.plot(history.history['acc'])
@@ -218,7 +226,7 @@ def main(options, args):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     # plt.show()
-    plt.savefig('acc_his_%d.png'%random.randint(1,1000),dpi=300)
+    plt.savefig('acc_his_%s_%d.png'%(datetime_str,random.randint(1,1000)),dpi=300)
     # summarize history for loss
     plt.figure(1)
     plt.plot(history.history['loss'])
@@ -228,9 +236,12 @@ def main(options, args):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     # plt.show()
-    plt.savefig('loss_his_%d.png'%random.randint(1,1000),dpi=300)
+    plt.savefig('loss_his_%s_%d.png'%(datetime_str,random.randint(1,1000)),dpi=300)
 
 
+    t1 = time.time()
+    total = t1 - t0
+    print('complete, total time cost: %.2f seconds /%.2f minutes' % (total,total/60.0))
 
 
 
