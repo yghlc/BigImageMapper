@@ -26,7 +26,7 @@ session = tf.Session(config=config)
 
 import keras
 from keras.models import Sequential
-from keras.layers import Input, Dense, TimeDistributed
+from keras.layers import Input, Dense, TimeDistributed, Dropout
 from keras.models import Model
 from keras.layers import LSTM
 
@@ -123,12 +123,15 @@ def build_train_rnn_model(x_shape):
     model = Sequential()
     # model.add(LSTM(hidden_units, input_shape=x_shape))
     model.add(LSTM(hidden_units,input_shape=x_shape,return_sequences=True)) #,return_sequences=True
-
+    model.add(Dropout(0.5))
     model.add(LSTM(hidden_units, return_sequences=True))
+    model.add(Dropout(0.5))
     model.add(LSTM(hidden_units, return_sequences=True))
+    model.add(Dropout(0.5))
     model.add(LSTM(hidden_units, return_sequences=True))
-
+    model.add(Dropout(0.5))
     model.add(LSTM(hidden_units))
+    model.add(Dropout(0.5))
 
     model.add(Dense(num_classes, activation='sigmoid'))
 
