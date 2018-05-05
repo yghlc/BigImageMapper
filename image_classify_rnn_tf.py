@@ -301,6 +301,7 @@ def main(options, args):
               format(epoch + 1, train_loss, train_acc, val_loss,val_acc, time.time() - t_epoch)
         print(out_str)
         f_obj.writelines(out_str+'\n')
+        f_obj.flush()
 
         history['acc'].append(train_acc)
         history['val_acc'].append(val_acc)
