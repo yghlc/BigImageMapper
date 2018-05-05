@@ -241,7 +241,7 @@ def main(options, args):
 
     t1 = time.time()
     total = t1 - t0
-    print('complete, total time cost: %.2f seconds /%.2f minutes' % (total,total/60.0))
+    print('complete, total time cost: %.2f seconds or %.2f minutes or %.2f hours' % (total,total/60.0,total/3600.0))
 
 
 

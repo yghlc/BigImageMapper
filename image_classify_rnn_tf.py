@@ -113,24 +113,25 @@ def split_data(x_all, y_all, test_percent=0.01):
 
     return (x_train, y_train), (x_test, y_test)
 
-def build_train_rnn_model(x_shape):
+# def build_train_rnn_model(x_shape):
+#
+#     model = tf.keras.models.Sequential()
+#     # model.add(LSTM(hidden_units, input_shape=x_shape))
+#     model.add(tf.keras.layers.LSTM(hidden_units,input_shape=x_shape,return_sequences=True)) #,return_sequences=True
+#
+#     model.add(tf.keras.layers.LSTM(hidden_units, return_sequences=True))
+#     model.add(tf.keras.layers.LSTM(hidden_units, return_sequences=True))
+#     model.add(tf.keras.layers.LSTM(hidden_units, return_sequences=True))
+#
+#     model.add(tf.keras.layers.LSTM(hidden_units))
+#
+#     model.add(tf.keras.layers.Dense(num_classes, activation='softmax'))
+#
+#     # complie model
+#     model.compile(loss='categorical_crossentropy',optimizer='rmsprop',metrics=['accuracy'])
+#
+#     return model
 
-    model = tf.keras.models.Sequential()
-    # model.add(LSTM(hidden_units, input_shape=x_shape))
-    model.add(tf.keras.layers.LSTM(hidden_units,input_shape=x_shape,return_sequences=True)) #,return_sequences=True
-
-    model.add(tf.keras.layers.LSTM(hidden_units, return_sequences=True))
-    model.add(tf.keras.layers.LSTM(hidden_units, return_sequences=True))
-    model.add(tf.keras.layers.LSTM(hidden_units, return_sequences=True))
-
-    model.add(tf.keras.layers.LSTM(hidden_units))
-
-    model.add(tf.keras.layers.Dense(num_classes, activation='softmax'))
-
-    # complie model
-    model.compile(loss='categorical_crossentropy',optimizer='rmsprop',metrics=['accuracy'])
-
-    return model
 
 
 def main(options, args):
@@ -183,26 +184,12 @@ def main(options, args):
 
     bands = x_train.shape[1:]
 
-    # 2D input.
-    # x = Input(shape=(bands))
+    ## start tensorflow codes here
 
-    model = build_train_rnn_model((bands))
 
-    # output network structure
-    model.summary()
 
-    # Training.
-    history = model.fit(x_train, y_train,
-              batch_size=batch_size,
-              epochs=epochs,
-              verbose=1,
-              validation_data=(x_test, y_test))
 
-    # Evaluation.
-    # verbose: 0 or 1. Verbosity mode. 0 = silent, 1 = progress bar.
-    scores = model.evaluate(x_test, y_test, verbose=0)
-    print('Test loss:', scores[0])
-    print('Test accuracy:', scores[1])
+
 
     # list all data in history
     print(history.history.keys())
