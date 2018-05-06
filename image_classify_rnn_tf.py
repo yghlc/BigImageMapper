@@ -149,7 +149,7 @@ def lstm_layer(hidden_units,keep_prob):
     # layer = tf.contrib.rnn.LSTMCell(hidden_units)
 
     # dropout, only apply to the output units
-    cell = tf.contrib.rnn.DropoutWrapper(layer, output_keep_prob=keep_prob)
+    cell = tf.contrib.rnn.DropoutWrapper(layer, input_keep_prob=keep_prob,output_keep_prob=keep_prob, state_keep_prob=keep_prob)
     return layer
 
 def multi_lstm_layers(hidden_units,keep_prob,layer_num):
@@ -258,7 +258,7 @@ def main(options, args):
 
     # loss and evaluation
     # cross_entropy = -tf.reduce_mean(y_input*tf.log(y_pre))
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_pre,labels=y_input))
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=y_pre,labels=y_input))
     # train_op = tf.train.AdadeltaOptimizer(learning_rate=learn_rate).minimize(cross_entropy)
     train_op = tf.train.RMSPropOptimizer(learning_rate=learn_rate).minimize(cross_entropy)
 
