@@ -26,6 +26,8 @@ config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
 ###-------------------  start importing keras module ---------------------
 
+from tensorflow.contrib import rnn
+
 
 import matplotlib.pyplot as plt
 import datetime
@@ -38,9 +40,9 @@ num_classes = 21
 learn_rate = 0.001
 hidden_units = 128
 batch_size = 2048
-lstm_layer_num = 5
+lstm_layer_num = 1
 
-epoches = 200
+epoches = 300
 
 def read_oneband_image_to_1dArray(image_path):
 
@@ -215,62 +217,101 @@ def main(options, args):
     bands = list(x_train.shape[1:])
     band_num = x_train.shape[1]
 
+    ##############################################################
     ## start tensorflow codes here
-    X_input = tf.placeholder(tf.float32, [None, band_num,1])
-    # X_input = tf.reshape(X_input,[-1,band_num,1])
-    y_input = tf.placeholder(tf.float32, [None, num_classes])
+    num_units = hidden_units
+    n_classes = num_classes
+
+    time_steps = band_num
+    n_input = 1
+    learning_rate = learn_rate
 
     # batch size can be changed during the last step in one epoch
     batch_size_v = tf.placeholder(tf.int32, [])
-    keep_prob_v = tf.placeholder(tf.float32, [])   # keep_prob_v is different when training and prediction
+    # keep_prob_v = tf.placeholder(tf.float32, [])   # keep_prob_v is different when training and prediction
 
-    mulit_lstm = multi_lstm_layers(hidden_units,keep_prob_v,lstm_layer_num)
+    # weights and biases of appropriate shape to accomplish above task
+    out_weights = tf.Variable(tf.random_normal([num_units, n_classes]))
+    out_bias = tf.Variable(tf.random_normal([n_classes]))
 
-    # init_state = mulit_lstm.zero_state(batch_size_v, dtype=tf.float32)
+    # defining placeholders
+    # input image placeholder
+    x = tf.placeholder("float", [None, time_steps, n_input])
+    # input label placeholder
+    y = tf.placeholder("float", [None, n_classes])
 
+    # processing the input tensor from [batch_size,n_steps,n_input] to "time_steps" number of [batch_size,n_input] tensors
+    input = tf.unstack(x, time_steps, 1)
 
-    # outputs = []
-    # state = init_state
-    # with tf.variable_scope('RNN'):`
-    #     for step in range(band_num):
-    #         (cell_output, state) = mulit_lstm(X_input[:, step,:], state)
-    #         outputs.append(cell_output)
-    # h_state = outputs[-1]
+    # defining the network
+    lstm_layer = rnn.BasicLSTMCell(num_units, forget_bias=1)
+    outputs, _ = rnn.static_rnn(lstm_layer, input, dtype="float32")
 
-    # outputs, state = tf.nn.dynamic_rnn(mulit_lstm, inputs=X_input, time_major=False,dtype=tf.float32) #initial_state=init_state,
+    # converting last output of dimension [batch_size,num_units] to [batch_size,n_classes] by out_weight multiplication
+    prediction = tf.matmul(outputs[-1], out_weights) + out_bias
 
-    x = tf.unstack(X_input, band_num, 1)
-    # print(x)
-    outputs, state = tf.nn.static_rnn(mulit_lstm, x, dtype=tf.float32)
-    # h_state = state[-1][1]
-    h_state = outputs[-1]
+    # loss_function
+    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=y))
+    # optimization
+    opt = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
 
+    # model evaluation
+    correct_prediction = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-    # weight and bias
-    W = tf.Variable(tf.truncated_normal([hidden_units, num_classes], stddev=0.1), dtype=tf.float32)
-    bias = tf.Variable(tf.constant(0.1, shape=[num_classes]), dtype=tf.float32)
-    # W = tf.Variable(tf.random_normal([hidden_units, num_classes]))
-    # bias = tf.Variable(tf.random_normal([num_classes]))
-    # y_pre = tf.nn.softmax(tf.matmul(h_state, W) + bias)
-    # #it seems that we have two softmax layer (softmax and softmax_cross_entropy_with_logits), make the loss don't decrease
+    # initialize variables
+    init = tf.global_variables_initializer()
+    # train_dataset = tf.data.Dataset.zip((x_train,y_train))
+    # train_dataset = tf.data.Dataset.from_tensor_slices((x_train,y_train))
+    # train_dataset = train_dataset.batch(batch_size)
     #
-    y_pre = tf.matmul(h_state, W) + bias
+    # train_dataset = train_dataset.repeat(epoches)
+    # iterator = train_dataset.make_one_shot_iterator()
 
-    # loss and evaluation
-    # cross_entropy = -tf.reduce_mean(y_input*tf.log(y_pre))
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_pre,labels=y_input))
-    # train_op = tf.train.AdadeltaOptimizer(learning_rate=learn_rate).minimize(cross_entropy)
-    train_op = tf.train.RMSPropOptimizer(learning_rate=learn_rate).minimize(cross_entropy)
+    # with tf.Session() as sess:
+    #     sess.run(init)
+    #     iter = 1
+    #
+    #     iter_per_epoch = train_samples_num/batch_size
+    #
+    #     while iter < 10000:
+    #         # batch_x, batch_y = mnist.train.next_batch(batch_size=batch_size)
+    #         # batch_x, batch_y = iterator.get_next()
+    #
+    #         # batch_x = batch_x.reshape((batch_size, time_steps, n_input))
+    #         # batch_x = sess.run(batch_x)
+    #         # batch_y = sess.run(batch_y)
+    #
+    #         read_iter = iter%iter_per_epoch
+    #         batch_x = x_train[read_iter*batch_size:(read_iter+1)*batch_size]
+    #         batch_y = y_train[read_iter * batch_size:(read_iter + 1) * batch_size]
+    #
+    #
+    #         sess.run(opt, feed_dict={x: batch_x, y: batch_y})
+    #
+    #         if iter % 10 == 0:
+    #             acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
+    #             los = sess.run(loss, feed_dict={x: batch_x, y: batch_y})
+    #             print("For iter ", iter)
+    #             print("Accuracy ", acc)
+    #             print("Loss ", los)
+    #             print("__________________")
+    #
+    #         iter = iter + 1
+    #
+    #     # calculating test accuracy
+    #     test_data = x_test
+    #     test_label = y_test
+    #     print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: test_data, y: test_label}))
 
-    correct_pre = tf.equal(tf.argmax(y_pre,1),tf.argmax(y_input,1))
-    accuracy = tf.reduce_mean(tf.cast(correct_pre,tf.float32))
+
 
     session.run(tf.global_variables_initializer())
 
-    history = {'loss':[],'val_loss':[],'acc':[],'val_acc':[]}
+    history = {'loss': [], 'val_loss': [], 'acc': [], 'val_acc': []}
 
     datetime_str = datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
-    f_obj = open("%s_loss.txt"%datetime_str,"w")
+    f_obj = open("%s_loss.txt" % datetime_str, "w")
 
     for epoch in range(epoches):
         t_epoch = time.time()
@@ -279,47 +320,48 @@ def main(options, args):
         val_loss = 0.0
         val_acc = 0.0
 
-        #shuffle train data
-        x_train,y_train = sklearn.utils.shuffle(x_train,y_train)
+        # shuffle train data
+        x_train, y_train = sklearn.utils.shuffle(x_train, y_train)
 
-        batch_num = train_samples_num/batch_size
-        batch_last_size = train_samples_num%batch_size
-        if batch_last_size>0:
+        batch_num = train_samples_num / batch_size
+        batch_last_size = train_samples_num % batch_size
+        if batch_last_size > 0:
             batch_num += 1
         # train
         for iter in range(batch_num):
             temp_batch_size = batch_size
-            if iter== batch_num-1:
+            if iter == batch_num - 1:
                 temp_batch_size = batch_last_size
-                X_batch = x_train[iter*batch_size:]
-                y_batch = y_train[iter*batch_size:]
-                # continue
+                X_batch = x_train[iter * batch_size:]
+                y_batch = y_train[iter * batch_size:]
+                continue
                 # print(X_batch.shape,y_batch.shape)
             else:
-                X_batch = x_train[iter*batch_size:(iter+1)*batch_size]
-                y_batch = y_train[iter*batch_size:(iter+1)*batch_size]
+                X_batch = x_train[iter * batch_size:(iter + 1) * batch_size]
+                y_batch = y_train[iter * batch_size:(iter + 1) * batch_size]
                 # print(X_batch.shape, y_batch.shape)
 
-            cost, acc, _ = session.run([cross_entropy, accuracy, train_op],
-                                feed_dict={X_input: X_batch, y_input: y_batch, keep_prob_v: 0.5, batch_size_v: temp_batch_size})
+            cost, acc, _ = session.run([loss, accuracy, opt],
+                                       feed_dict={x: X_batch, y: y_batch,
+                                                  batch_size_v: temp_batch_size})
             train_loss += cost
             train_acc += acc
-            print("iter {}, train loss={:.6f}, acc={:.6f}".format(iter+1,cost,acc))
+            print("iter {}, train loss={:.6f}, acc={:.6f}".format(iter + 1, cost, acc))
 
         train_loss /= batch_num
         train_acc /= batch_num
         # test
-        X_batch, y_batch = x_test,y_test
+        X_batch, y_batch = x_test, y_test
 
-        _cost, _acc = session.run([cross_entropy, accuracy],
-                                feed_dict={X_input: X_batch, y_input: y_batch, keep_prob_v: 1.0,
-                                                  batch_size_v: test_samples_num})
+        _cost, _acc = session.run([loss, accuracy],
+                                  feed_dict={x: X_batch, y: y_batch,
+                                             batch_size_v: test_samples_num})
         val_acc = _acc
         val_loss = _cost
-        out_str = "epoch {}, train loss={:.6f}, acc={:.6f}; test loss={:.6f}, acc={:.6f}; time cost: {:.2f} seconds".\
-              format(epoch + 1, train_loss, train_acc, val_loss,val_acc, time.time() - t_epoch)
+        out_str = "epoch {}, train loss={:.6f}, acc={:.6f}; test loss={:.6f}, acc={:.6f}; time cost: {:.2f} seconds". \
+            format(epoch + 1, train_loss, train_acc, val_loss, val_acc, time.time() - t_epoch)
         print(out_str)
-        f_obj.writelines(out_str+'\n')
+        f_obj.writelines(out_str + '\n')
         f_obj.flush()
 
         history['acc'].append(train_acc)
@@ -341,7 +383,7 @@ def main(options, args):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     # plt.show()
-    plt.savefig('%s_acc_his_%d.png'%(datetime_str,random.randint(1,1000)),dpi=300)
+    plt.savefig('%s_acc_his_%d.png' % (datetime_str, random.randint(1, 1000)), dpi=300)
     # summarize history for loss
     plt.figure(1)
     plt.plot(history['loss'])
@@ -351,14 +393,12 @@ def main(options, args):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     # plt.show()
-    plt.savefig('%s_loss_his_%d.png'%(datetime_str,random.randint(1,1000)),dpi=300)
-
+    plt.savefig('%s_loss_his_%d.png' % (datetime_str, random.randint(1, 1000)), dpi=300)
 
     t1 = time.time()
     total = t1 - t0
-    print('complete, total time cost: %.2f seconds or %.2f minutes or %.2f hours' % (total,total/60.0,total/3600.0))
-
-
+    print(
+    'complete, total time cost: %.2f seconds or %.2f minutes or %.2f hours' % (total, total / 60.0, total / 3600.0))
 
 
 
