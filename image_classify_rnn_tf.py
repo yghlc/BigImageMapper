@@ -272,6 +272,9 @@ def main(options, args):
     datetime_str = datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
     f_obj = open("%s_loss.txt"%datetime_str,"w")
 
+    # TODO: classify on the entire HSI mapping results 9 May 2018
+    saver = tf.train.Saver()
+
     for epoch in range(epoches):
         t_epoch = time.time()
         train_loss = 0.0
@@ -326,6 +329,9 @@ def main(options, args):
         history['val_acc'].append(val_acc)
         history['loss'].append(train_loss)
         history['val_loss'].append(val_loss)
+
+        if epoch%10==0 and epoch !=0:
+            saver.save(session,'hyperRNN')
 
     f_obj.close()
 
