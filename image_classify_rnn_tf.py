@@ -37,7 +37,7 @@ import sklearn
 num_classes = 21
 learn_rate = 0.001
 hidden_units = 128
-batch_size = 2048
+batch_size =  2048 #256 2048
 lstm_layer_num = 5
 
 epoches = 200
@@ -158,6 +158,118 @@ def multi_lstm_layers(hidden_units,keep_prob,layer_num):
                                              state_is_tuple=True)
     return mlstm_cell
 
+
+def inference(image_path,train_log_folder,save_path):
+    """
+    inference 
+    :param image_path: the image for inference 
+    :param train_log_folder:  the folder containing meta and checkpoint file
+    :return: 
+    """
+    # get the lastest tensorflow file
+    saver = tf.train.import_meta_graph(os.path.join(train_log_folder,'hyperRNN-177600.meta'))
+    saver.restore(session,tf.train.latest_checkpoint(train_log_folder))
+
+    # read the image
+    multiBand_value_2d = read_multiband_image_to_2dArray(image_path)
+    if multiBand_value_2d is None:
+        return False
+    x_inf_input = multiBand_value_2d.reshape(multiBand_value_2d.shape[0], multiBand_value_2d.shape[1], 1)
+
+    print(x_inf_input.shape[0], x_inf_input.shape[0], 'train samples')
+    x_inf_input = x_inf_input.astype('float32')
+    x_inf_input /= 65536
+    band_num = x_inf_input.shape[1]
+    input_sample_num = x_inf_input.shape[0]
+
+    # inference
+    X_input = tf.get_default_graph().get_tensor_by_name('xInput:0')
+    batch_size_v = tf.get_default_graph().get_tensor_by_name('batch_size_v:0')
+    # keep_prob_v = tf.get_default_graph().get_tensor_by_name('Placeholder:0')  # this should be the name of keep_prob_v
+    # keep_prob_v = tf.get_default_graph().get_tensor_by_name('keep_prob_v:0')  # it seems that dropout don't have a effect
+    # keep_prob_v: 1.0
+    y_pre = tf.get_default_graph().get_tensor_by_name('prediction/class_output:0')
+
+    # session.run(tf.global_variables_initializer())  #bug, we should not call this one
+
+    # f_obj = open('node_name.txt','w')
+    # for node in tf.get_default_graph().as_graph_def().node:
+    #     # print(node)
+    #     print(node.name)
+    #     f_obj.write(node.name+'\n')
+    #
+    # f_obj.close()
+
+    class_output = []
+
+    batch_num = input_sample_num / batch_size
+    batch_last_size = input_sample_num % batch_size
+    if batch_last_size > 0:
+        batch_num += 1
+    # train
+    for iter in range(batch_num):
+        temp_batch_size = batch_size
+        if iter == batch_num - 1:
+            temp_batch_size = batch_last_size
+            X_batch = x_inf_input[iter * batch_size:]
+            # y_batch = x_inf_input[iter * batch_size:]
+            # continue
+            # print(X_batch.shape,y_batch.shape)
+        else:
+            X_batch = x_inf_input[iter * batch_size:(iter + 1) * batch_size]
+            # y_batch = x_inf_input[iter * batch_size:(iter + 1) * batch_size]
+            # print(X_batch.shape, y_batch.shape)
+
+        #y_pre_out, x, batch_size_out,keep_prob_out = session.run([y_pre, X_input,batch_size_v,keep_prob_v],
+        #feed_dict={X_input: X_batch,batch_size_v:temp_batch_size,keep_prob_v:1.0})
+
+        y_pre_out, x, batch_size_out = session.run([y_pre, X_input,batch_size_v],
+        feed_dict={X_input: X_batch,batch_size_v:temp_batch_size})
+
+        # print("keep_prob_out:",keep_prob_out)
+
+        # class_output.append(np.argmax(y_pre_out, 1)[0])
+        class_output.extend(np.argmax(y_pre_out, 1))
+        # print(list(np.argmax(y_pre_out, 1)))
+        print('inference on %d / %d' % (iter + 1, batch_num))
+
+        # sys.exit(0)
+
+    # for idx,sample in enumerate(x_inf_input):
+    #     # if idx > 5:
+    #     #     break
+    #     if idx%1000 ==0:
+    #         print('inference on %d / %d'%(idx+1, input_sample_num))
+    #     # print(idx,sample)
+    #     sample = sample.reshape(1,sample.shape[0],sample.shape[1]) # reshape, batch size is 1, however, batchSize=1 is too slow
+    #     y_pre_out, x = session.run([y_pre,X_input],feed_dict={X_input:sample})
+    #
+    #     # print(x)
+    #     # print(y_pre_out)
+    #     # print(tf.argmax(y_pre_out,1))
+    #     # print(np.argmax(y_pre_out,1))  #output the maximum class number
+    #     class_output.append(np.argmax(y_pre_out,1)[0])
+
+    # print(class_output)
+
+    # save results
+    with rasterio.open(image_path) as img_obj:
+        # read the all bands (only have one band)
+        # indexes = img_obj.indexes
+        profile = img_obj.profile
+        width = img_obj.width
+        height = img_obj.height
+
+        class_output_save = np.asarray(class_output)
+        class_output_save = class_output_save.reshape(height,width)
+        profile.update(dtype=rasterio.uint8,count=1)
+        with rasterio.open(save_path, "w", **profile) as dst:
+            dst.write(class_output_save.astype(rasterio.uint8), 1)
+            print('save result in %s'%save_path)
+
+
+    pass
+
 def main(options, args):
 
     t0 = time.time()
@@ -216,13 +328,13 @@ def main(options, args):
     band_num = x_train.shape[1]
 
     ## start tensorflow codes here
-    X_input = tf.placeholder(tf.float32, [None, band_num,1])
+    X_input = tf.placeholder(tf.float32, [None, band_num,1],name='xInput')
     # X_input = tf.reshape(X_input,[-1,band_num,1])
-    y_input = tf.placeholder(tf.float32, [None, num_classes])
+    y_input = tf.placeholder(tf.float32, [None, num_classes],name='yInput')
 
     # batch size can be changed during the last step in one epoch
-    batch_size_v = tf.placeholder(tf.int32, [])
-    keep_prob_v = tf.placeholder(tf.float32, [])   # keep_prob_v is different when training and prediction
+    batch_size_v = tf.placeholder(tf.int32, [],name='batch_size_v')
+    keep_prob_v = tf.placeholder(tf.float32, [],name='keep_prob_v')   # keep_prob_v is different when training and prediction
 
     mulit_lstm = multi_lstm_layers(hidden_units,keep_prob_v,lstm_layer_num)
 
@@ -254,7 +366,9 @@ def main(options, args):
     # y_pre = tf.nn.softmax(tf.matmul(h_state, W) + bias)
     # #it seems that we have two softmax layer (softmax and softmax_cross_entropy_with_logits), make the loss don't decrease
     #
-    y_pre = tf.matmul(h_state, W) + bias
+    with tf.variable_scope('prediction'):
+        y_pre = tf.add(tf.matmul(h_state, W), bias,name='class_output')
+
 
     # loss and evaluation
     # cross_entropy = -tf.reduce_mean(y_input*tf.log(y_pre))
@@ -272,8 +386,8 @@ def main(options, args):
     datetime_str = datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
     f_obj = open("%s_loss.txt"%datetime_str,"w")
 
-    # TODO: classify on the entire HSI mapping results 9 May 2018
-    saver = tf.train.Saver()
+    # save the model to the disk, only keep the last three snapshot
+    saver = tf.train.Saver(max_to_keep=3)
 
     for epoch in range(epoches):
         t_epoch = time.time()
@@ -330,8 +444,8 @@ def main(options, args):
         history['loss'].append(train_loss)
         history['val_loss'].append(val_loss)
 
-        if epoch%10==0 and epoch !=0:
-            saver.save(session,'hyperRNN')
+        # if epoch%10==0 and epoch !=0:
+        saver.save(session,'train_log/hyperRNN',global_step=(epoch+1)*batch_num)
 
     f_obj.close()
 
@@ -382,4 +496,11 @@ if __name__ == "__main__":
     #     basic.outputlogMessage('error, parameter file is required')
     #     sys.exit(2)
 
-    main(options, args)
+    # main(options, args)
+
+    # inference('HSI/2018_IEEE_GRSS_DFC_HSI_TR', 'train_log','class_output.tif')
+    # inference('HSI/2018_IEEE_GRSS_DFC_HSI_TR_0.5m.tif', 'train_log', 'class_output_0.5m_dropout_1.0.tif')
+
+    inference('/DATA3/hlc/Data/2018_IEEE_GRSS_Data_Fusion/2018IEEE_Contest/Phase2/FullHSIDataset/20170218_UH_CASI_S4_NAD83_0.5m.tif',
+              'train_log', 'class_output_all_area_0.5m.tif')
+
