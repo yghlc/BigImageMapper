@@ -79,9 +79,9 @@ def main(options, args):
 
 
 if __name__ == "__main__":
-    usage = "usage: %prog [options] label_image multi_spectral_images"
+    usage = "usage: %prog [options] input_image output_image"
     parser = OptionParser(usage=usage, version="1.0 2018-4-10")
-    parser.description = 'Introduction: classification multi-spectral remote sensing images using RNN '
+    parser.description = 'Introduction: Sharpen Planet images, only for one or three bands'
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2 or len(args) < 1:
