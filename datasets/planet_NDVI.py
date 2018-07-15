@@ -53,6 +53,11 @@ def main(options, args):
 
     print("save to %s"%output_file)
 
+    # for display
+    import matplotlib.pyplot as plt
+    png = os.path.splitext(output_file)[0]+'.png'
+    plt.imsave(png, ndvi, cmap=plt.cm.summer)
+
 if __name__ == "__main__":
     usage = "usage: %prog [options] input_image  output"
     parser = OptionParser(usage=usage, version="1.0 2018-7-15")
