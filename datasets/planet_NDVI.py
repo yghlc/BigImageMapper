@@ -22,6 +22,8 @@ def main(options, args):
     image_file = args[0]
     output_file = args[1]
 
+    print('input images:%s'%image_file)
+
     # Load red and NIR bands - note all PlanetScope 4-band images have band order BGRN
     with rasterio.open(image_file) as src:
         band_red = src.read(3)
@@ -29,9 +31,9 @@ def main(options, args):
     with rasterio.open(image_file) as src:
         band_nir = src.read(4)
 
-    # reflectance values was scaled by 10,000
-    band_red = band_red/10000
-    band_nir = band_nir/10000
+    # # reflectance values was scaled by 10,000, not necessary
+    # band_red = band_red/10000.0
+    # band_nir = band_nir/10000.0
 
     # Allow division by zero
     numpy.seterr(divide='ignore', invalid='ignore')
@@ -49,6 +51,7 @@ def main(options, args):
     with rasterio.open(output_file, 'w', **kwargs) as dst:
         dst.write_band(1, ndvi.astype(rasterio.float32))
 
+    print("save to %s"%output_file)
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] input_image  output"
