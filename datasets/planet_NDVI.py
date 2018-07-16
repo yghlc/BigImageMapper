@@ -56,7 +56,8 @@ def main(options, args):
     # for display
     import matplotlib.pyplot as plt
     png = os.path.splitext(output_file)[0]+'.png'
-    plt.imsave(png, ndvi, cmap=plt.cm.summer)
+    # plt.imsave(png, ndvi, cmap=plt.cm.summer,vmin=0, vmax=0.3)  # set ndvi range [-1,1]
+    plt.imsave(png, ndvi, cmap=plt.cm.jet, vmin=0.1, vmax=0.3)
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] input_image  output"
