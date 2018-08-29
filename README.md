@@ -1,10 +1,16 @@
 # Landuse_DL
-Land use classification from remote sensing images using Deep Learning
+Land use classification or landform delineation from remote sensing images using Deep Learning
 
 March 2018:
-    using the data from 2018_IEEE_GRSS_Data_Fusion. Also submitted the result. codes in "grss_data_fusion"
+    Land use classification using the data from 2018_IEEE_GRSS_Data_Fusion. Also submitted the result. codes in "grss_data_fusion". 
+    The method utilized Deeplab V4(+3), a semantic segmentation algorithm, to classify land use (20 classes). 
     
-July 2018:
-    Planet images
+August 2018:
+    Delineate retrogressive thaw slumps from Planet CubeSat images.
+    
+    
+    
+    
+    
     
  
