@@ -74,6 +74,50 @@ def get_planet_cloud_mask_file(mask_file):
     return output_cloud_mask
 
 
+def apply_could_mask(input_tif,mask_file,output):
+
+    ## get could mask
+    if os.path.isfile(mask_file) is False:
+        raise IOError("%s not exist" % mask_file)
+
+    # Load the mask file
+    with rasterio.open(mask_file) as src:
+        if src.dtypes[0] != rasterio.uint8:
+            raise ValueError("Only support unit8, but input is %s" % str(src.dtypes[0]))
+        mask_band = src.read(1)
+
+        # get cloud mask
+    mask_shape = mask_band.shape
+    mask_unpackbits = np.unpackbits(mask_band.reshape(mask_shape[0], mask_shape[1], 1), axis=2)
+
+    # the second bit is cloud cover (from back)
+    could_mask = mask_unpackbits[:, :, -2:-1]
+
+    could_mask = could_mask.reshape(mask_shape[0], mask_shape[1])
+    # Invert 0 and 1 in a binary array
+    could_mask = 1 - could_mask
+
+    ## apply the mask
+
+    # Load the mask file
+    with rasterio.open(input_tif) as input_src:
+        # read all bands
+        input_bands = input_src.read()
+
+    ## save the file
+    kwargs = input_src.meta
+    with rasterio.open(output, 'w', **kwargs) as dst:
+        # dst.write_band(1, could_mask)
+        for idx,band in enumerate(input_bands):
+            # apply mask
+            band = band*could_mask
+            # save
+            dst.write_band(idx+1, band)
+
+
+    pass
+
+
 def main(options, args):
     input_tif = args[0]
 
@@ -83,14 +127,23 @@ def main(options, args):
         output = get_output_name(input_tif)
 
     mask_file = get_mask_file_name(input_tif)
-    cloud_mask_file = get_planet_cloud_mask_file(mask_file) #mask_file
 
-    if os.path.isfile(cloud_mask_file):
-        args_list = ['gdal_calc.py','-A',cloud_mask_file,'-B',input_tif,'-outfile='+output,'--calc="A*B"']
-        ps = subprocess.Popen(args_list)
-        returncode = ps.wait()
-        if os.path.isfile(output):
-            print('masked and saved to %s'%output)
+    apply_could_mask(input_tif,mask_file,output)
+
+    # cloud_mask_file = get_planet_cloud_mask_file(mask_file) #mask_file
+
+    # if os.path.isfile(cloud_mask_file):
+        # args_list = ['gdal_calc.py','-A',cloud_mask_file,'-B',input_tif,'--debug',
+        #              '--overwrite','--outfile='+output,'--calc="A*B"']
+        # ps = subprocess.Popen(args_list)
+        # returncode = ps.wait()
+        # if os.path.isfile(output):
+        #     print('masked and saved to %s'%output)
+
+        #
+
+    pass
+
 
 
 if __name__ == "__main__":
