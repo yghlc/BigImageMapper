@@ -6,6 +6,11 @@ __pycache__/
 # Pycharm folder
 .idea
 
+processLog.txt*
+split_image_info.txt*
+
+TFrecord
+
 # C extensions
 *.so
 
