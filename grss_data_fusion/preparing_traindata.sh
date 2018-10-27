@@ -58,7 +58,7 @@ list/extract_fileid.sh list/val
 ##################################
 # rename the label images
 output_txt=trainval.txt
-if [ -f output_txt ]; then
+if [ -f $output_txt ]; then
     rm $output_txt
 fi
 
