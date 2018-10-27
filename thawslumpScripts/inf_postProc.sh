@@ -34,7 +34,6 @@ inf_dir=inf_${testid}
 SECONDS=0
 
 
-para_file=para.ini
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 #rm -r ${inf_dir}
