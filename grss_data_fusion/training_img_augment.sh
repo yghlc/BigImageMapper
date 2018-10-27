@@ -24,22 +24,22 @@ function update_listfile() {
     mv "trainval.txt" ../.
 }
 
-#augment training images
-cd split_images
-${augscript} -d ./ -e .png ../list/trainval.txt -o ./
-
-update_listfile
-cd ..
-
-#augment training lables
-cd split_labels
-${augscript} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
+##augment training images
+#cd split_images
+#${augscript} -d ./ -e .png ../list/trainval.txt -o ./
+#
+#update_listfile
+#cd ..
+#
+##augment training lables
+#cd split_labels
+#${augscript} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
 
 # have same list, so we don't need to update again
 #update_listfile
 # replace the 0 pixel as 255
 for png in $(ls *_R*.png); do
-    ${eo_dir}/remove_zero_pixels.py $png temp.png
+    ${eo_dir}/grss_data_fusion/remove_zero_pixels.py $png temp.png
     mv temp.png $png
 done
 
