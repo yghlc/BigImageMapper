@@ -1,6 +1,9 @@
 #!/bin/bash
 
-para_file=para.ini
+
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
 para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 eo_dir=/home/hlc/codes/PycharmProjects/Landuse_DL

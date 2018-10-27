@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 
+# Exit immediately if a command exits with a non-zero status.
+set -e
 
+para_file=$1
+if [ ! -f $para_file ]; then
+   echo "File ${para_file} not exists in current folder: ${PWD}"
+   exit 1
+fi
 
-para_file=para.ini
 para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
@@ -27,11 +33,11 @@ labelImg_dir=$(python2 ${para_py} -p ${para_file} input_label_dir)
 
 for img in ${trainImg_dir}/*.png
 do
-${eo_dir}/split_image.py -W ${patch_w} -H ${patch_h}  -e ${overlay} -o  ${root}/${test_dir}/split_images $img
+${eo_dir}/grss_data_fusion/split_image.py -W ${patch_w} -H ${patch_h}  -e ${overlay} -o  ${root}/${test_dir}/split_images $img
 done
 for img in ${labelImg_dir}/*.tif
 do
-${eo_dir}/split_image.py -W ${patch_w} -H ${patch_h}  -e ${overlay} -o ${root}/${test_dir}/split_labels $img
+${eo_dir}/grss_data_fusion/split_image.py -W ${patch_w} -H ${patch_h}  -e ${overlay} -o ${root}/${test_dir}/split_labels $img
 done
 
 
