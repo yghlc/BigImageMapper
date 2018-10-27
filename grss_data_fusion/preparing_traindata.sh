@@ -17,8 +17,13 @@ root=$(python2 ${para_py} -p ${para_file} working_root)
 # current folder (without path)
 test_dir=${PWD##*/}
 
-rm -r ${root}/${test_dir}/split_images
-rm -r ${root}/${test_dir}/split_labels
+if [ -d "${root}/${test_dir}/split_images" ]; then
+    rm -r ${root}/${test_dir}/split_images
+fi
+if [ -d "${root}/${test_dir}/split_labels" ]; then
+    rm -r ${root}/${test_dir}/split_labels
+fi
+
 mkdir  ${root}/${test_dir}/split_images ${root}/${test_dir}/split_labels
 
 #### preparing training images
