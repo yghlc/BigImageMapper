@@ -35,7 +35,7 @@ sys.path.append(basicCodes_path)
 import parameters
 
 landuse_path = HOME + '/codes/PycharmProjects/Landuse_DL'
-sys.path.append(basicCodes_path)
+sys.path.append(landuse_path)
 import datasets.build_RS_data as build_RS_data
 
 # set GPU on Cryo06, it seem this code not works
