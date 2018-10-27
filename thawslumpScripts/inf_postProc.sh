@@ -43,7 +43,7 @@ python ${eo_dir}/grss_data_fusion/deeplab_inference.py --frozen_graph=${frozen_g
 
 duration=$SECONDS
 echo "$(date): time cost of inference: ${duration} seconds">>"time_cost.txt"
-$SECONDS=0
+SECONDS=0
 
 # merge patches
 ### post processing
