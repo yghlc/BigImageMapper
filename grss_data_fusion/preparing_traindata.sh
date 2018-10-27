@@ -36,14 +36,14 @@ overlay=$(python2 ${para_py} -p ${para_file} train_pixel_overlay_x)     # the ov
 trainImg_dir=$(python2 ${para_py} -p ${para_file} input_train_dir)
 labelImg_dir=$(python2 ${para_py} -p ${para_file} input_label_dir)
 
-for img in ${trainImg_dir}/*.png
-do
-${eo_dir}/grss_data_fusion/split_image.py -W ${patch_w} -H ${patch_h}  -e ${overlay} -o  ${root}/${test_dir}/split_images $img
-done
-for img in ${labelImg_dir}/*.tif
-do
-${eo_dir}/grss_data_fusion/split_image.py -W ${patch_w} -H ${patch_h}  -e ${overlay} -o ${root}/${test_dir}/split_labels $img
-done
+#for img in ${trainImg_dir}/*.png
+#do
+#${eo_dir}/grss_data_fusion/split_image.py -W ${patch_w} -H ${patch_h}  -e ${overlay} -o  ${root}/${test_dir}/split_images $img
+#done
+#for img in ${labelImg_dir}/*.tif
+#do
+#${eo_dir}/grss_data_fusion/split_image.py -W ${patch_w} -H ${patch_h}  -e ${overlay} -o ${root}/${test_dir}/split_labels $img
+#done
 
 
 #prepare list files
@@ -58,7 +58,7 @@ list/extract_fileid.sh list/val
 ##################################
 # rename the label images
 output_txt=trainval.txt
-if [ ! -f $para_file ]; then
+if [ -f $para_file ]; then
     rm $output_txt
 fi
 
