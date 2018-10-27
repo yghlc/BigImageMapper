@@ -6,6 +6,8 @@
 #email:huanglingcao@gmail.com
 #add time: 26 October, 2018
 
+# Exit immediately if a command exits with a non-zero status.
+set -e
 
 # input a parameter: the path of para_file (e.g., para.ini)
 para_file=$1
@@ -37,7 +39,7 @@ para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 #rm -r ${inf_dir}
 
-python ${eo_dir}/deeplab_inference.py --frozen_graph=${frozen_graph} --inf_output_dir=${inf_dir}
+python ${eo_dir}/grss_data_fusion/deeplab_inference.py --frozen_graph=${frozen_graph} --inf_output_dir=${inf_dir}
 
 duration=$SECONDS
 echo "$(date): time cost of inference: ${duration} seconds">>"time_cost.txt"
