@@ -26,7 +26,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from PIL import Image
 
-import build_RS_data as build_RS_data
+import datasets.build_RS_data as build_RS_data
 
 HOME = os.path.expanduser('~')
 basicCodes_path = HOME + '/codes/PycharmProjects/DeeplabforRS'
