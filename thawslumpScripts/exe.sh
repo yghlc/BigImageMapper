@@ -8,6 +8,9 @@
 #add time: 26 October, 2018
 
 
+#MAKE SURE the /usr/bin/python, which is python2 on Cryo06
+export PATH=/usr/bin:$PATH
+
 # Exit immediately if a command exits with a non-zero status.
 set -e
 

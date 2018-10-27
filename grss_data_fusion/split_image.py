@@ -24,8 +24,8 @@ def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj
 
     """
 
-    count_x = int(image_width)/int(patch_w)
-    count_y = int(image_height)/int(patch_h)
+    count_x = int(image_width/patch_w)
+    count_y = int(image_height/patch_h)
 
     leftW = int(image_width)%int(patch_w)
     leftH = int(image_height)%int(patch_h)
