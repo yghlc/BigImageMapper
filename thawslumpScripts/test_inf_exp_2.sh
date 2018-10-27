@@ -17,7 +17,7 @@ para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 #rm -r ${inf_dir}
 
-python ${eo_dir}/deeplab_inference.py --frozen_graph=frozen_inference_graph_iter60000.pb --inf_output_dir=${inf_dir}
+python ${eo_dir}/grss_data_fusion/deeplab_inference.py --frozen_graph=frozen_inference_graph_iter60000.pb --inf_output_dir=${inf_dir}
 
 
 # merge patches

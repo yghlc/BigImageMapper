@@ -6,7 +6,7 @@ para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
 eo_dir=/home/hlc/codes/PycharmProjects/Landuse_DL
 
 #eo_dir=$(python2 ${para_py} -p ${para_file} codes_dir)
-augscript=${eo_dir}/image_augment.py
+augscript=${eo_dir}/grss_data_fusion/image_augment.py
 
 SECONDS=0
 
