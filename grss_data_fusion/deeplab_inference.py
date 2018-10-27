@@ -26,13 +26,17 @@ from matplotlib import pyplot as plt
 import numpy as np
 from PIL import Image
 
-import datasets.build_RS_data as build_RS_data
+
 
 HOME = os.path.expanduser('~')
 basicCodes_path = HOME + '/codes/PycharmProjects/DeeplabforRS'
 sys.path.append(basicCodes_path)
 
 import parameters
+
+landuse_path = HOME + '/codes/PycharmProjects/Landuse_DL'
+sys.path.append(basicCodes_path)
+import datasets.build_RS_data as build_RS_data
 
 # set GPU on Cryo06, it seem this code not works
 #os.system("export CUDA_VISIBLE_DEVICES=0")
