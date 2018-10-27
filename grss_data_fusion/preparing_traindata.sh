@@ -94,7 +94,7 @@ echo $filename_no_ext >> $output_txt
 
 done < "list/train_aug.txt"
 
-`# use "mkdir -p" instead "mkdir", "mkdir -p" will not raise errors if the folder already exist
+# use "mkdir -p" instead "mkdir", "mkdir -p" will not raise errors if the folder already exist
 mkdir -p list/old_txt
 mv list/*.txt list/old_txt/.
 mv $output_txt list/.
