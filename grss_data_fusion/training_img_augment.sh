@@ -25,15 +25,15 @@ function update_listfile() {
 }
 
 #augment training images
-#cd split_images
-#${augscript} -d ./ -e .png ../list/trainval.txt -o ./
-#
-#update_listfile
-#cd ..
+cd split_images
+${augscript} -d ./ -e .png ../list/trainval.txt -o ./
+
+update_listfile
+cd ..
 
 #augment training lables
 cd split_labels
-#${augscript} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
+${augscript} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
 
 # have same list, so we don't need to update again
 #update_listfile
