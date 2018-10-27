@@ -24,15 +24,15 @@ function update_listfile() {
     mv "trainval.txt" ../.
 }
 
-##augment training images
+#augment training images
 #cd split_images
 #${augscript} -d ./ -e .png ../list/trainval.txt -o ./
 #
 #update_listfile
 #cd ..
-#
-##augment training lables
-#cd split_labels
+
+#augment training lables
+cd split_labels
 #${augscript} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
 
 # have same list, so we don't need to update again
