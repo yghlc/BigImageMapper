@@ -28,7 +28,7 @@ frozen_graph=frozen_inference_graph_${trail}.pb
 
 testid=$(basename $PWD)_${expr_name}_${trail}
 output=${testid}.tif
-inf_dir=inf_${testid}
+inf_dir=inf_results
 
 
 SECONDS=0
@@ -64,3 +64,4 @@ cd ..
 
 duration=$SECONDS
 echo "$(date): time cost of post processing: ${duration} seconds">>"time_cost.txt"
+
