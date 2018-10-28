@@ -42,7 +42,7 @@ ${deeplabRS}/prepare_raster.py -p ${para_file} ${shp_file} ${label_raster}
 #rm temp.tif
 
 out_dir=$(dirname label_raster)
-cd out_dir
+cd $out_dir
     rm *_AllClass.tif
     rm *_oneClass.tif
 cd -
