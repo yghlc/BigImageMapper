@@ -41,7 +41,8 @@ ${deeplabRS}/prepare_raster.py -p ${para_file} ${shp_file} ${label_raster}
 #gdal_calc.py -A temp.tif  --outfile=${out_raster} --calc="A==1"  --debug --type='Byte' --overwrite
 #rm temp.tif
 
-out_dir=$(dirname label_raster)
+out_dir=$(dirname $label_raster)
+echo $out_dir
 cd $out_dir
     rm *_AllClass.tif
     rm *_oneClass.tif
