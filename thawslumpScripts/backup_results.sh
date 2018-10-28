@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#introduction: Copy the results of mapping thaw slumps base on DeeplabV3+
+#
+#authors: Huang Lingcao
+#email:huanglingcao@gmail.com
+#add time: 27 October, 2018
+
 para_file=$1
 if [ ! -f $para_file ]; then
    echo "File ${para_file} not exists in current folder: ${PWD}"
