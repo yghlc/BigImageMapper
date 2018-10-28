@@ -30,6 +30,9 @@ testid=$(basename $PWD)_${expr_name}_${trail}
 output=${testid}.tif
 inf_dir=inf_results
 
+if [ -d "$inf_dir" ]; then
+    rm -r $inf_dir
+fi
 
 SECONDS=0
 
