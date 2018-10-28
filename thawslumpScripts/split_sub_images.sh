@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+echo $(basename $0) : "split sub-images and sub-labels"
+#introduction: split sub-images and sub-labels
+
+#authors: Huang Lingcao
+#email:huanglingcao@gmail.com
+#add time: 28 October, 2018
+
+
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
@@ -65,32 +73,32 @@ fi
 
 while IFS= read -r line
 do
-#show the line
-echo $line
+    #show the line
+    echo $line
 
-#split the image and the label path
-path=($line)
-image_path=${path[0]}
-label_path=${path[1]}
+    #split the image and the label path
+    path=($line)
+    image_path=${path[0]}
+    label_path=${path[1]}
 
-#echo $image_path
-#echo $label_path
+    #echo $image_path
+    #echo $label_path
 
-#get the new name of the label
-#DIR=$(dirname "${input}")
-filename=$(basename "$image_path")
-filename_no_ext="${filename%.*}"
-#extension="${filename##*.}"
+    #get the new name of the label
+    #DIR=$(dirname "${input}")
+    filename=$(basename "$image_path")
+    filename_no_ext="${filename%.*}"
+    #extension="${filename##*.}"
 
-DIR=$(dirname "${label_path}")
+    DIR=$(dirname "${label_path}")
 
-mv $label_path $DIR/${filename}
+    mv $label_path $DIR/${filename}
 
-#mv corresponding xml file
-mv ${label_path}.aux.xml $DIR/${filename}.aux.xml
+    #mv corresponding xml file
+    mv ${label_path}.aux.xml $DIR/${filename}.aux.xml
 
-#output file name without extension
-echo $filename_no_ext >> $output_txt
+    #output file name without extension
+    echo $filename_no_ext >> $output_txt
 
 done < "list/train_aug.txt"
 
