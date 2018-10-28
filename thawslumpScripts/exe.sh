@@ -10,6 +10,8 @@
 
 #MAKE SURE the /usr/bin/python, which is python2 on Cryo06
 export PATH=/usr/bin:$PATH
+# python2 on Cryo03, tensorflow 1.6
+export PATH=/home/hlc/programs/anaconda2/bin:$PATH
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
@@ -22,6 +24,8 @@ cd -
 ## modify according to test requirement or environment
 #set GPU on Cryo06
 export CUDA_VISIBLE_DEVICES=1
+#set GPU on Cryo03
+export CUDA_VISIBLE_DEVICES=0,1
 gpu_num=1
 para_file=para.ini
 
