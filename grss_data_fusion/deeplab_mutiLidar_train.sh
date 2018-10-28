@@ -7,7 +7,10 @@
 # but I hope have close result and watch the training process
 # modified from "tensorflow/models/research/deeplab/local_test.sh"
 
-para_file=para.ini
+# the path of the parameter files
+para_file=$1
+# the number of gpu want to use
+gpu_num=$2
 para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
@@ -100,7 +103,8 @@ python "${deeplab_dir}"/train.py \
   --fine_tune_batch_norm=False \
   --tf_initial_checkpoint="${INIT_FOLDER}/xception/model.ckpt" \
   --train_logdir="${TRAIN_LOGDIR}" \
-  --dataset_dir="${DATASET}"
+  --dataset_dir="${DATASET}" \
+  --num_clones=${gpu_num}
 
 # Run evaluation. This performs eval over the full val split (1449 images) and
 # will take a while.

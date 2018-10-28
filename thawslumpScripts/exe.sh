@@ -22,6 +22,7 @@ cd -
 ## modify according to test requirement or environment
 #set GPU on Cryo06
 export CUDA_VISIBLE_DEVICES=1
+gpu_num=1
 para_file=para.ini
 
 ################################################
@@ -47,7 +48,7 @@ SECONDS=0
 ################################################
 ## training
 
-${eo_dir}/grss_data_fusion/deeplab_mutiLidar_train.sh
+${eo_dir}/grss_data_fusion/deeplab_mutiLidar_train.sh ${para_file} ${gpu_num}
 
 duration=$SECONDS
 echo "$(date): time cost of training: ${duration} seconds">>"time_cost.txt"
