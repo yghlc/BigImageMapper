@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+echo $(basename $0) : "remove previous data or results to run again"
 #introduction: remove previous data or results to run again
 #authors: Huang Lingcao
 #email:huanglingcao@gmail.com

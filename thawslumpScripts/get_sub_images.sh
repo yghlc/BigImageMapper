@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+echo $(basename $0) : "extract sub-images and sub-labels for a given shape file (training polygons)"
 #introduction: extract sub-images and sub-labels for a given shape file (training polygons)
 #               The training data already,
 #               if there are multiple files, then modify para.ini (using sed), run this again,

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo $(basename $0) : "Create the ground truth images for a shape file (containing training polygons)"
 #introduction: Create the ground truth images for a shape file (containing training polygons)
 #               if there are multiple files, then modify para.ini (using sed), run this one again
 #authors: Huang Lingcao
