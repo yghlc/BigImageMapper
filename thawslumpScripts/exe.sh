@@ -26,14 +26,19 @@ cd -
 export CUDA_VISIBLE_DEVICES=1
 #set GPU on Cryo03
 export CUDA_VISIBLE_DEVICES=0,1
-gpu_num=1
+gpu_num=2
 para_file=para.ini
 
 ################################################
 SECONDS=0
-## get a ground truth raster if it did not exists or the corresponding shape file gets update
-#TODO: insert a script
+# remove previous data or results if necessary
+${eo_dir}/thawslumpScripts/remove_previous_data.sh ${para_file}
 
+# get a ground truth raster if it did not exists or the corresponding shape file gets update
+${eo_dir}/thawslumpScripts/get_ground_truth_raster.sh ${para_file}
+
+#extract sub_images based on the training polgyons
+${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
 
 ################################################
 ## preparing training images.
