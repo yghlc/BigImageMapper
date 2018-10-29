@@ -30,17 +30,12 @@ testid=$(basename $PWD)_${expr_name}_${trail}
 output=${testid}.tif
 inf_dir=inf_results
 
+SECONDS=0
+
+#  remove the old results and inference
 if [ -d "$inf_dir" ]; then
     rm -r $inf_dir
 fi
-
-SECONDS=0
-
-
-para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
-
-#rm -r ${inf_dir}
-
 python ${eo_dir}/grss_data_fusion/deeplab_inference.py --frozen_graph=${frozen_graph} --inf_output_dir=${inf_dir}
 
 duration=$SECONDS
