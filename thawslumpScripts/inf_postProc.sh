@@ -52,7 +52,7 @@ SECONDS=0
 cd ${inf_dir}
 
     #python ${eo_dir}/gdal_class_mosaic.py -o ${output} -init 0 *_pred.tif
-    gdal_merge.py -init 0 -n 0 -a_nodata 0 -o ${output} *_pred.tif
+    gdal_merge.py -init 0 -n 0 -a_nodata 0 -o ${output} *.tif
     #mv ${output} ../.
 
     gdal_polygonize.py -8 ${output} -b 1 -f "ESRI Shapefile" ${testid}.shp
