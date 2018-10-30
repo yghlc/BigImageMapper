@@ -238,43 +238,50 @@ def inf_remoteSensing_image(model,image_path=None):
             f_obj.writelines(image_path)
             FLAGS.inf_list_file = 'saved_inf_list.txt'
 
-    data_patches = build_RS_data.make_dataset(inf_image_dir,FLAGS.inf_list_file,
+    data_patches_2d = build_RS_data.make_dataset(inf_image_dir,FLAGS.inf_list_file,
                 patch_w,patch_h,overlay_x,overlay_y,train=False)
 
-    if len(data_patches)< 1:
+    if len(data_patches_2d)< 1:
         return False
 
-    patch_num = len(data_patches)
-    print('total number of patches: %d'%patch_num)
+    total_patch_count = 0
+    for img_idx, aImage_patches in enumerate(data_patches_2d):
+        patch_num = len(aImage_patches)
+        total_patch_count += patch_num
+        print('number of patches on Image %d: %d' % (img_idx,patch_num))
+    print('total number of patches: %d'%total_patch_count)
 
-    for idx in range(0,patch_num):
+    for img_idx, aImage_patches in enumerate(data_patches_2d):
 
-        img_patch = data_patches[idx]
-        org_img = img_patch.org_img
+        print('start inference on Image  %d' % img_idx)
 
-        # img_name_noext = os.path.splitext(os.path.basename(img_patch.org_img))[0]+'_'+str(idx)
+        for (idx,img_patch) in enumerate(aImage_patches):
 
-        # get segmentation map
-        # each patch should not exceed INPUT_SIZE(513), or it will be resized.
-        img_data = build_RS_data.read_patch(img_patch)
-        print('inference at patch:%4d, shape:(%d,%d,%d)'%(idx,img_data.shape[0],img_data.shape[1],img_data.shape[2]))
+            org_img = img_patch.org_img
 
-        # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
-        # img.save('test_readpatch_before_run.png')
+            # img_name_noext = os.path.splitext(os.path.basename(img_patch.org_img))[0]+'_'+str(idx)
 
-        seg_map = model.run_rsImg_patch(img_data)
+            # get segmentation map
+            # each patch should not exceed INPUT_SIZE(513), or it will be resized.
+            img_data = build_RS_data.read_patch(img_patch)
+            print('inference at Image:%d patch:%4d, shape:(%d,%d,%d)'%(img_idx,idx,img_data.shape[0],img_data.shape[1],img_data.shape[2]))
 
-        # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
-        # img.save('test_readpatch.png')
+            # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
+            # img.save('test_readpatch_before_run.png')
 
-        # save segmentation map
-        # file_name = os.path.splitext(os.path.basename(org_img))[0] + '_' + str(idx)+'_pred'
-        file_name =  str(idx) # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
-        #TODO: need to separate the patches of different images
-        # print(file_name)
-        save_path = os.path.join(FLAGS.inf_output_dir,file_name+'.tif')
-        if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
-            return False
+            seg_map = model.run_rsImg_patch(img_data)
+
+            # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
+            # img.save('test_readpatch.png')
+
+            # save segmentation map
+            # file_name = os.path.splitext(os.path.basename(org_img))[0] + '_' + str(idx)+'_pred'
+            file_name = "I%d_%d.tif"%(img_idx,idx) # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+
+            # print(file_name)
+            save_path = os.path.join(FLAGS.inf_output_dir,file_name+'.tif')
+            if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
+                return False
 
 
 

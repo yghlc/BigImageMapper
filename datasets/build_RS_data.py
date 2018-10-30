@@ -191,7 +191,7 @@ def make_dataset(root,list_txt,patch_w,patch_h,adj_overlay_x,adj_overlay_y,train
     :param patch_h: the height of the expected patch
     :param adj_overlay: the extended distance (in pixel) to adjacent patch, make each patch has overlay with adjacent patch
     :param train:  indicate training or inference
-    :return: dataset (list)
+    :return: dataset (2D list), 1st dimension is for images, 2nd dimension is for all patches in the corresponding image
     """
     dataset = []
 
@@ -221,6 +221,7 @@ def make_dataset(root,list_txt,patch_w,patch_h,adj_overlay_x,adj_overlay_y,train
             # split the image and label
             patch_boundary = split_image.sliding_window(width, height, patch_w, patch_h, adj_overlay_x,adj_overlay_y)
 
+            patches_of_a_image = []
             for patch in patch_boundary:
                 # need to handle the patch with smaller size, also deeplab can handle this
                 # remove the patch small than model input size
@@ -228,7 +229,9 @@ def make_dataset(root,list_txt,patch_w,patch_h,adj_overlay_x,adj_overlay_y,train
                 #     continue
                 img_patch = patchclass(img_path,patch)
                 label_patch = patchclass(label_path,patch)
-                dataset.append([img_patch, label_patch])
+                patches_of_a_image.append([img_patch, label_patch])
+
+            dataset.append(patches_of_a_image)
 
     else:
         for line in files_list:
@@ -246,13 +249,16 @@ def make_dataset(root,list_txt,patch_w,patch_h,adj_overlay_x,adj_overlay_y,train
             # split the image and label
             patch_boundary = split_image.sliding_window(width, height, patch_w, patch_h, adj_overlay_x,adj_overlay_y)
 
+            patches_of_a_image = []
             for patch in patch_boundary:
                 # need to handle the patch with smaller size
                 # if patch[2] < crop_width or patch[3] < crop_height:   # xSize < 480 or ySize < 480
                 #     continue
                 img_patch = patchclass(img_path,patch)
 
-                dataset.append(img_patch)
+                patches_of_a_image.append(img_patch)
+
+            dataset.append(patches_of_a_image)
 
     return dataset
 
@@ -373,7 +379,8 @@ def main(unused_argv):
     os.system("mkdir -p " + FLAGS.output_dir)
 
     #convert images
-    _convert_dataset(patches,train=FLAGS.is_training)
+    patches_1d = [item for alist in patches for item in alist]  # convert 2D list to 1D
+    _convert_dataset(patches_1d,train=FLAGS.is_training)
     pass
 
 
