@@ -245,15 +245,20 @@ def run_demo_image(model,image_name):
     
     vis_segmentation(resized_im, seg_map)
 
-def inference_one_patch(img_idx,idx,img_patch,model):
+def inference_one_patch(img_idx,idx,org_img_path,boundary,model):
     """
     inference one patch
     :param img_idx: index of the image
     :param idx: index of the patch on the image
-    :param img_patch: patch
+    :param org_img_path: org image path
+    :param boundary: the patch boundary
     :param model: Deeplab model
     :return:
     """
+    # due to multiprocessing:  the Pickle.PicklingError: Can't pickle <type 'module'>: attribute lookup __builtin__.module failed
+    # recreate the class instance
+    img_patch = build_RS_data.patchclass(org_img_path,boundary)
+
     img_data = build_RS_data.read_patch(img_patch)
     print('inference at Image:%d patch:%4d, shape:(%d,%d,%d)'%(img_idx,idx,img_data.shape[0],img_data.shape[1],img_data.shape[2]))
 
@@ -312,7 +317,7 @@ def inf_remoteSensing_image(model,image_path=None):
         # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
         theadPool = Pool(num_cores)  # multi processes
 
-        parameters_list = [(img_idx,idx,img_patch,model) for (idx,img_patch) in enumerate(aImage_patches)]
+        parameters_list = [(img_idx,idx,img_patch.org_img,img_patch.boundary,model) for (idx,img_patch) in enumerate(aImage_patches)]
         results = theadPool.map(inference_one_patch, parameters_list)
         print('result_list',results )
 
