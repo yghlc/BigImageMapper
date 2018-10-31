@@ -145,6 +145,54 @@ def save_patch_oneband_8bit(patch_obj,img_data,save_path):
     with rasterio.open(save_path, "w", **profile) as dst:
         dst.write(img_data, 1)
 
+def split_patches_into_batches(patches, batch_size):
+    """
+    split the patches of an image to many small group (batch).
+    In each group, the patches should have the same width and height
+    :param patches: a 1-d list of patches
+    :param batch_size: batch_size, e.g., 4, or 5 depends on the GPU memory
+    :return: a 2D list, contains all the groups
+    """
+    # check input value
+    assert len(patches) > 0
+    assert batch_size > 0
+
+    batches = []
+
+    # ensure the patch is still in the original sequence.
+    # each batch, has the patches with size width and height (or band?)
+    # therefore, each the size of each batch <= batch_size, but cannot know its value
+
+    # group the patches based on the requirement above
+    patch_count = len(patches)
+    currentIdx = 0
+
+    while(currentIdx < patch_count):
+
+        a_batch = [patches[currentIdx]] # get the first patch
+        boundary_1st = patches[currentIdx].boundary
+        # width and height of the first patch
+        width = boundary_1st[2]
+        height = boundary_1st[3]
+
+        while(len(a_batch) < batch_size):
+            # get the next patch
+            patch_obj = patches[currentIdx + 1]
+
+            # check its width and height
+            boundary = patch_obj.boundary
+            xsize = boundary[2]  # width
+            ysize = boundary[3]  # height
+            if xsize!=width or ysize!=height:
+                break
+            else:
+                a_batch.append(patch_obj)
+                currentIdx += 1
+
+        batches.append(a_batch)
+
+    return batches
+
 
 def check_input_image_and_label(image_path, label_path):
     """
