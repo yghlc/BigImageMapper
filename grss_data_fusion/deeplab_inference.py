@@ -256,7 +256,7 @@ def inference_one_patch(img_idx,idx,org_img_path,boundary,model):
     :return:
     """
     # due to multiprocessing:  the Pickle.PicklingError: Can't pickle <type 'module'>: attribute lookup __builtin__.module failed
-    # recreate the class instance
+    # recreate the class instance, but there is a model from tensorflow, so it sill not work
     img_patch = build_RS_data.patchclass(org_img_path,boundary)
 
     img_data = build_RS_data.read_patch(img_patch)
@@ -310,16 +310,17 @@ def inf_remoteSensing_image(model,image_path=None):
 
         print('start inference on Image  %d' % img_idx)
 
-        ## parallel inference patches
-        # use multiple thread
-        num_cores = multiprocessing.cpu_count()
-        print('number of thread %d' % num_cores)
-        # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
-        theadPool = Pool(num_cores)  # multi processes
-
-        parameters_list = [(img_idx,idx,img_patch.org_img,img_patch.boundary,model) for (idx,img_patch) in enumerate(aImage_patches)]
-        results = theadPool.map(inference_one_patch, parameters_list)
-        print('result_list',results )
+        # ## parallel inference patches
+        ## but it turns out not work due to the Pickle.PicklingError
+        # # use multiple thread
+        # num_cores = multiprocessing.cpu_count()
+        # print('number of thread %d' % num_cores)
+        # # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
+        # theadPool = Pool(num_cores)  # multi processes
+        #
+        # parameters_list = [(img_idx,idx,img_patch.org_img,img_patch.boundary,model) for (idx,img_patch) in enumerate(aImage_patches)]
+        # results = theadPool.map(inference_one_patch, parameters_list)
+        # print('result_list',results )
 
         ## inference patches batch by batch, but it turns out that the frozen graph only accept one patch each time
         ## Oct 30,2018
@@ -352,35 +353,35 @@ def inf_remoteSensing_image(model,image_path=None):
         #
         #         idx += 1
 
-        ## inference patches one by one, but it is too slow
-        ## Oct 30,2018
-        # for (idx,img_patch) in enumerate(aImage_patches):
-        #
-        #     org_img = img_patch.org_img
-        #
-        #     # img_name_noext = os.path.splitext(os.path.basename(img_patch.org_img))[0]+'_'+str(idx)
-        #
-        #     # get segmentation map
-        #     # each patch should not exceed INPUT_SIZE(513), or it will be resized.
-        #     img_data = build_RS_data.read_patch(img_patch)
-        #     print('inference at Image:%d patch:%4d, shape:(%d,%d,%d)'%(img_idx,idx,img_data.shape[0],img_data.shape[1],img_data.shape[2]))
-        #
-        #     # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
-        #     # img.save('test_readpatch_before_run.png')
-        #
-        #     seg_map = model.run_rsImg_patch(img_data)
-        #
-        #     # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
-        #     # img.save('test_readpatch.png')
-        #
-        #     # save segmentation map
-        #     # file_name = os.path.splitext(os.path.basename(org_img))[0] + '_' + str(idx)+'_pred'
-        #     file_name = "I%d_%d"%(img_idx,idx) # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
-        #
-        #     # print(file_name)
-        #     save_path = os.path.join(FLAGS.inf_output_dir,file_name+'.tif')
-        #     if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
-        #         return False
+        # inference patches one by one, but it is too slow
+        # Oct 30,2018
+        for (idx,img_patch) in enumerate(aImage_patches):
+
+            org_img = img_patch.org_img
+
+            # img_name_noext = os.path.splitext(os.path.basename(img_patch.org_img))[0]+'_'+str(idx)
+
+            # get segmentation map
+            # each patch should not exceed INPUT_SIZE(513), or it will be resized.
+            img_data = build_RS_data.read_patch(img_patch)
+            print('inference at Image:%d patch:%4d, shape:(%d,%d,%d)'%(img_idx,idx,img_data.shape[0],img_data.shape[1],img_data.shape[2]))
+
+            # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
+            # img.save('test_readpatch_before_run.png')
+
+            seg_map = model.run_rsImg_patch(img_data)
+
+            # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
+            # img.save('test_readpatch.png')
+
+            # save segmentation map
+            # file_name = os.path.splitext(os.path.basename(org_img))[0] + '_' + str(idx)+'_pred'
+            file_name = "I%d_%d"%(img_idx,idx) # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+
+            # print(file_name)
+            save_path = os.path.join(FLAGS.inf_output_dir,file_name+'.tif')
+            if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
+                return False
 
 
 
