@@ -144,11 +144,15 @@ class DeepLabModel(object):
             seg_map: multiple seg_map
         """
 
+        ## error: ValueError: Cannot feed value of shape (2, 480, 320, 3) for Tensor u'ImageTensor:0', which has shape '(1, ?, ?, 3)'
+        ## it turns out that self.INPUT_TENSOR_NAME only accept one image each time.  Oct 30 2018.
+
         # input shape is '(ncount, ?, ?, 3)'
-        image_tran = np.transpose(multi_images,(0,2,3,1))
+        # image_tran = np.transpose(multi_images,(0,2,3,1))
+        image_tran_list = [np.transpose(image,(1,2,0)) for image in multi_images ]
         batch_seg_map = self.sess.run(
             self.OUTPUT_TENSOR_NAME,
-            feed_dict={self.INPUT_TENSOR_NAME: [image_tran]})
+            feed_dict={self.INPUT_TENSOR_NAME: image_tran_list})
         # seg_map = batch_seg_map[0]
         return batch_seg_map
         # return seg_map
@@ -289,10 +293,10 @@ def inf_remoteSensing_image(model,image_path=None):
             for img_patch in a_batch_of_patches:
                 img_data = build_RS_data.read_patch(img_patch)
                 multi_image_data.append(img_data)
-            multi_images = np.stack(multi_image_data, axis=0)
+            # multi_images = np.stack(multi_image_data, axis=0)
 
             # inference them
-            a_batch_seg_map = model.run_rsImg_multi_patches(multi_images)
+            a_batch_seg_map = model.run_rsImg_multi_patches(multi_image_data)
 
             #save
             for (seg_map,img_patch) in zip(a_batch_seg_map,a_batch_of_patches):

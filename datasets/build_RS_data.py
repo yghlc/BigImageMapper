@@ -158,6 +158,7 @@ def split_patches_into_batches(patches, batch_size):
     assert batch_size > 0
 
     batches = []
+    print('splitting patches to small batches (groups), wait a moment')
 
     # ensure the patch is still in the original sequence.
     # each batch, has the patches with size width and height (or band?)
@@ -175,9 +176,11 @@ def split_patches_into_batches(patches, batch_size):
         width = boundary_1st[2]
         height = boundary_1st[3]
 
-        while(len(a_batch) < batch_size):
+        currentIdx += 1
+
+        while(len(a_batch) < batch_size and currentIdx < patch_count):
             # get the next patch
-            patch_obj = patches[currentIdx + 1]
+            patch_obj = patches[currentIdx]
 
             # check its width and height
             boundary = patch_obj.boundary
