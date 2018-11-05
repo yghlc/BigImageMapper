@@ -42,7 +42,7 @@ if tf.__version__ < '1.5.0':
     raise ImportError('Please upgrade your tensorflow installation to v1.5.0 or newer!')
 
 
-tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
+tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/yghlc_tf_model/research"
 deeplab_dir=os.path.join(tf_research_dir,"deeplab")
 
 WORK_DIR="/home/hlc/Data/2018_IEEE_GRSS_Data_Fusion/deeplabv4_1"
