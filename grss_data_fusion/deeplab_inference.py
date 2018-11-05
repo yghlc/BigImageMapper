@@ -73,7 +73,7 @@ tf.app.flags.DEFINE_string(
     'frozen_inference_graph.pb',
     'File name of frozen inference graph')
 
-tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
+tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/yghlc_tf_model/research"
 deeplab_dir=os.path.join(tf_research_dir,"deeplab")
 
 # current folder, usually is where I run the codes

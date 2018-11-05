@@ -17,7 +17,7 @@ fi
 
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 WORK_DIR=$(pwd)
-tf_research_dir=~/codes/PycharmProjects/tensorflow/models/research
+tf_research_dir=~/codes/PycharmProjects/tensorflow/yghlc_tf_model/research
 deeplab_dir=${tf_research_dir}/deeplab
 
 # Update PYTHONPATH.

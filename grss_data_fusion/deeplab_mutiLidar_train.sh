@@ -13,7 +13,7 @@ para_file=$1
 gpu_num=$2
 para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
 
-tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
+tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/yghlc_tf_model/research"
 # test dir:"/home/hlc/Data/2018_IEEE_GRSS_Data_Fusion/deeplabv4_2_lidar",
 # go to the folder first
 WORK_DIR=$(pwd)

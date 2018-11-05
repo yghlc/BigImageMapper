@@ -10,7 +10,7 @@
 #set GPU on Cryo06
 export CUDA_VISIBLE_DEVICES=1
 
-tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/models/research"
+tf_research_dir="/home/hlc/codes/PycharmProjects/tensorflow/yghlc_tf_model/research"
 WORK_DIR="/home/hlc/Data/2018_IEEE_GRSS_Data_Fusion/deeplabv4_1"
 deeplab_dir=${tf_research_dir}/deeplab
 
