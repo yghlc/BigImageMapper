@@ -59,9 +59,9 @@ tf.app.flags.DEFINE_string(
     'file containing lists for remote sensing and label images')
 
 tf.app.flags.DEFINE_integer(
-    'batch_size',
+    'inf_batch_size',
     1,
-    'the number of each patches input to the model each time')
+    'the number of each patches input to the model each time when inference')
 
 tf.app.flags.DEFINE_string(
     'inf_output_dir',
@@ -153,7 +153,7 @@ class DeepLabModel(object):
         # image_tran_list = [np.transpose(image,(1,2,0)) for image in multi_images ]
         batch_seg_map = self.sess.run(
             self.OUTPUT_TENSOR_NAME,
-            feed_dict={self.INPUT_TENSOR_NAME: [image_tran]})
+            feed_dict={self.INPUT_TENSOR_NAME: image_tran})
         # seg_map = batch_seg_map[0]
         return batch_seg_map
         # return seg_map
@@ -322,66 +322,77 @@ def inf_remoteSensing_image(model,image_path=None):
         # results = theadPool.map(inference_one_patch, parameters_list)
         # print('result_list',results )
 
-        # # inference patches batch by batch, but it turns out that the frozen graph only accept one patch each time
-        # # Oct 30,2018
-        # # split to many batches (groups)
-        # idx = 0     #index of all patches on this image
-        # patch_batches = build_RS_data.split_patches_into_batches(aImage_patches,FLAGS.batch_size)
-        # for a_batch_of_patches in patch_batches:
-        #
-        #     # read image data and stack at 0 dimension
-        #     multi_image_data = []
-        #     for img_patch in a_batch_of_patches:
-        #         img_data = build_RS_data.read_patch(img_patch)
-        #         multi_image_data.append(img_data)
-        #     multi_images = np.stack(multi_image_data, axis=0)
-        #
-        #     # inference them
-        #     a_batch_seg_map = model.run_rsImg_multi_patches(multi_images)
-        #
-        #     #save
-        #     for (seg_map,img_patch) in zip(a_batch_seg_map,a_batch_of_patches):
-        #         print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
-        #               (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
-        #
-        #         # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
-        #         file_name = "I%d_%d" % (img_idx, idx)
-        #
-        #         save_path = os.path.join(FLAGS.inf_output_dir, file_name + '.tif')
-        #         if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
-        #             return False
-        #
-        #         idx += 1
-
-        # inference patches one by one, but it is too slow
+        # inference patches batch by batch, but it turns out that the frozen graph only accept one patch each time
         # Oct 30,2018
-        for (idx,img_patch) in enumerate(aImage_patches):
+        # split to many batches (groups)
+        idx = 0     #index of all patches on this image
+        patch_batches = build_RS_data.split_patches_into_batches(aImage_patches,FLAGS.inf_batch_size)
 
-            org_img = img_patch.org_img
+        for a_batch_of_patches in patch_batches:
 
-            # img_name_noext = os.path.splitext(os.path.basename(img_patch.org_img))[0]+'_'+str(idx)
+            # Since it required a constant of batch size for the frozen graph, we copy (duplicate) the first patch
+            org_patch_num = len(a_batch_of_patches)
+            while len(a_batch_of_patches) < FLAGS.inf_batch_size:
+                a_batch_of_patches.append(a_batch_of_patches[0])
 
-            # get segmentation map
-            # each patch should not exceed INPUT_SIZE(513), or it will be resized.
-            img_data = build_RS_data.read_patch(img_patch)
-            print('inference at Image:%d patch:%4d, shape:(%d,%d,%d)'%(img_idx,idx,img_data.shape[0],img_data.shape[1],img_data.shape[2]))
+            # read image data and stack at 0 dimension
+            multi_image_data = []
+            for img_patch in a_batch_of_patches:
+                img_data = build_RS_data.read_patch(img_patch)
+                multi_image_data.append(img_data)
+            multi_images = np.stack(multi_image_data, axis=0)
 
-            # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
-            # img.save('test_readpatch_before_run.png')
+            # inference them
+            a_batch_seg_map = model.run_rsImg_multi_patches(multi_images)
 
-            seg_map = model.run_rsImg_patch(img_data)
+            #save
+            for num,(seg_map,img_patch) in enumerate(zip(a_batch_seg_map,a_batch_of_patches)):
 
-            # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
-            # img.save('test_readpatch.png')
+                # ignore the duplicated ones
+                if num >= org_patch_num:
+                    break
 
-            # save segmentation map
-            # file_name = os.path.splitext(os.path.basename(org_img))[0] + '_' + str(idx)+'_pred'
-            file_name = "I%d_%d"%(img_idx,idx) # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+                print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
+                      (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
 
-            # print(file_name)
-            save_path = os.path.join(FLAGS.inf_output_dir,file_name+'.tif')
-            if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
-                return False
+                # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+                file_name = "I%d_%d" % (img_idx, idx)
+
+                save_path = os.path.join(FLAGS.inf_output_dir, file_name + '.tif')
+                if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
+                    return False
+
+                idx += 1
+
+        # # inference patches one by one, but it is too slow
+        # # Oct 30,2018
+        # for (idx,img_patch) in enumerate(aImage_patches):
+        #
+        #     org_img = img_patch.org_img
+        #
+        #     # img_name_noext = os.path.splitext(os.path.basename(img_patch.org_img))[0]+'_'+str(idx)
+        #
+        #     # get segmentation map
+        #     # each patch should not exceed INPUT_SIZE(513), or it will be resized.
+        #     img_data = build_RS_data.read_patch(img_patch)
+        #     print('inference at Image:%d patch:%4d, shape:(%d,%d,%d)'%(img_idx,idx,img_data.shape[0],img_data.shape[1],img_data.shape[2]))
+        #
+        #     # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
+        #     # img.save('test_readpatch_before_run.png')
+        #
+        #     seg_map = model.run_rsImg_patch(img_data)
+        #
+        #     # img = Image.fromarray(np.transpose(img_data,(1,2,0)), 'RGB')
+        #     # img.save('test_readpatch.png')
+        #
+        #     # save segmentation map
+        #     # file_name = os.path.splitext(os.path.basename(org_img))[0] + '_' + str(idx)+'_pred'
+        #     file_name = "I%d_%d"%(img_idx,idx) # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+        #
+        #     # print(file_name)
+        #     save_path = os.path.join(FLAGS.inf_output_dir,file_name+'.tif')
+        #     if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
+        #         return False
 
 
 

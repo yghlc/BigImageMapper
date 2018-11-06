@@ -39,7 +39,8 @@ atrous_rates3=$(python2 ${para_py} -p ${para_file} atrous_rates3)
 
 # read the saved iteration_num from para.ini or assigned a value
 NUM_ITERATIONS=$(python2 ${para_py} -p ${para_file} export_iteration_num)
-
+# read batch size for inference
+inf_batch_size=$(python2 ${para_py} -p ${para_file} inf_batch_size)
 
 trail=iter${NUM_ITERATIONS}
 
@@ -62,6 +63,7 @@ python "${deeplab_dir}"/export_model.py \
   --output_stride=${output_stride} \
   --decoder_output_stride=4 \
   --num_classes=21 \
+  --inf_batch_size=${inf_batch_size} \
   --crop_size=513 \
   --crop_size=513 \
   --inference_scales=0.5 \
@@ -83,6 +85,7 @@ python "${deeplab_dir}"/export_model.py \
   --output_stride=${output_stride} \
   --decoder_output_stride=4 \
   --num_classes=21 \
+  --inf_batch_size=${inf_batch_size} \
   --crop_size=513 \
   --crop_size=513 \
    --inference_scales=1.0
