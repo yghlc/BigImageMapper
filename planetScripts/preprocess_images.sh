@@ -19,7 +19,7 @@ gdal_translate -b 3 -b 2 -b 1  ${output}_8bit.tif ${output}_8bit_rgb.tif
 
 # sharpen the image
 code_dir=~/codes/PycharmProjects/Landuse_DL
-/usr/bin/python ${code_dir}/datasets/prePlanetImage.py ${output}_8bit_rgb.tif ${output}_8bit_rgb_sharpen.tif
+/usr/bin/python ${code_dir}/planetScripts/prePlanetImage.py ${output}_8bit_rgb.tif ${output}_8bit_rgb_sharpen.tif
 
 # to other format
 gdal_translate -of KMLSUPEROVERLAY ${output}_8bit_rgb_sharpen.tif  ${output}_8bit_rgb.kmz
@@ -27,7 +27,7 @@ gdal_translate -of JPEG ${output}_8bit_rgb_sharpen.tif ${output}_8bit_rgb_sharpe
 #gdal_translate -of PNG ${output}_8bit_rgb_sharpen.tif ${output}_8bit_rgb_sharpen.png
 
 # calculate NDVI
-/usr/bin/python ${code_dir}/datasets/planet_NDVI.py ${output}.tif ${output}_NDVI.tif
+/usr/bin/python ${code_dir}/planetScripts/planet_NDVI.py ${output}.tif ${output}_NDVI.tif
 
 # calculate NDWI
-/usr/bin/python ${code_dir}/datasets/planet_NDWI.py ${output}.tif ${output}_NDWI.tif
+/usr/bin/python ${code_dir}/planetScripts/planet_NDWI.py ${output}.tif ${output}_NDWI.tif
