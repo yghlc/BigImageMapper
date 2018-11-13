@@ -44,7 +44,8 @@ import skimage.color
 
 # check python version
 from distutils.version import LooseVersion
-if LooseVersion(sys.version) > LooseVersion('3.4') is False:
+print(sys.version)
+if (LooseVersion(sys.version) > LooseVersion('3.4')) is False:
     raise EnvironmentError('Require Python version > 3.4')
 
 
@@ -55,9 +56,9 @@ if LooseVersion(sys.version) > LooseVersion('3.4') is False:
 # I submitted a pull request https://github.com/cocodataset/cocoapi/pull/50
 # If the PR is merged then use the original repo.
 # Note: Edit PythonAPI/Makefile and replace "python" with "python3".
-from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
-from pycocotools import mask as maskUtils
+# from pycocotools.coco import COCO
+# from pycocotools.cocoeval import COCOeval
+# from pycocotools import mask as maskUtils
 
 # Root directory of the project
 HOME = os.path.expanduser('~')
@@ -91,7 +92,7 @@ class PlanetConfig(Config):
     # Give the configuration a recognizable name
     NAME = "planet"
 
-    # We use a GPU with 12GB memory, which can fit two images.
+    # We use a GPU with 12GB memory, which can fit two images for 1024*2014.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 2 #??
 
@@ -102,6 +103,22 @@ class PlanetConfig(Config):
     NUM_CLASSES = 1 + 1  # only one class. i.e. thaw slumps
 
     #add more
+    # the large side, and that determines the image shape, the size of the split images < 480 by 480
+    IMAGE_MIN_DIM = 512
+    IMAGE_MAX_DIM = 512
+
+    # Use smaller anchors because our image and objects are small on Planet image
+    RPN_ANCHOR_SCALES = (16, 32, 64, 128, 256)  # anchor side in pixels, it seem  only accept five values
+
+    # Reduce training ROIs per image because the images are small and have
+    # few objects. Aim to allow ROI sampling to pick 33% positive ROIs.
+    TRAIN_ROIS_PER_IMAGE = 32
+
+    # Use a small epoch since the data is simple
+    STEPS_PER_EPOCH = 1000
+
+    # use small validation steps since the epoch is small
+    VALIDATION_STEPS = 5
 
 
 ############################################################
@@ -235,9 +252,9 @@ if __name__ == '__main__':
     parser.add_argument("command",
                         metavar="<command>",
                         help="'train' or 'evaluate' on Planet CubeSat images")
-    parser.add_argument('--dataset', required=True,
-                        metavar="/path/to/planet/",
-                        help='Directory of the Planet CubeSat images')
+    # parser.add_argument('--dataset', required=True,
+    #                     metavar="/path/to/planet/",
+    #                     help='Directory of the Planet CubeSat images')
     parser.add_argument('--para_file', required=True,
                         default='para.ini',
                         metavar="para.ini",
@@ -261,12 +278,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print("Command: ", args.command)
     print("Model: ", args.model)
-    print("Dataset: ", args.dataset)
+    # print("Dataset: ", args.dataset)
     print("the parameter file: ", args.para_file)
     # print("Logs: ", args.logs)
     # print("Auto Download: ", args.download)
 
     expr_name = parameters.get_string_parameters(args.para_file, 'expr_name')
+    if os.path.isdir(expr_name) is False:
+        os.mkdir(expr_name)
 
     # Which weights to start with?
     # init_with = "coco"  # imagenet, coco, or last
@@ -283,7 +302,7 @@ if __name__ == '__main__':
 
 
     # Directory to save logs and model checkpoints,
-    logs_dir = os.path.join(curr_dir, expr_name,"logs")
+    logs_dir = os.path.join(curr_dir, expr_name)
 
 
     # Configurations
@@ -293,6 +312,7 @@ if __name__ == '__main__':
         class InferenceConfig(PlanetConfig):
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
+            NUM_CLASSES = 2  # have the same class number
             GPU_COUNT = 1
             IMAGES_PER_GPU = 1
             DETECTION_MIN_CONFIDENCE = 0
@@ -321,7 +341,11 @@ if __name__ == '__main__':
 
     # Load weights
     print("Loading weights ", model_path)
-    model.load_weights(model_path, by_name=True)
+    # Load weights trained on MS COCO, but skip layers that
+    # are different due to the different number of classes
+    # See README for instructions to download the COCO weights
+    model.load_weights(model_path, by_name=True, exclude = ["mrcnn_class_logits", "mrcnn_bbox_fc",
+               "mrcnn_bbox", "mrcnn_mask"])
 
     # Train or evaluate
     if args.command == "train":
