@@ -52,7 +52,8 @@ SECONDS=0
 #${eo_dir}/thawslumpScripts/split_sub_images.sh ${para_file}
 ##${eo_dir}/thawslumpScripts/training_img_augment.sh
 
-#TODO: separate the images to training and validation portion.
+##separate the images to training and validation portion, add "-s" to shuffle the list before splitting
+#${eo_dir}/datasets/train_test_split.py list/trainval.txt
 
 
 #exit

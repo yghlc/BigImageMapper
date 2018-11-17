@@ -137,9 +137,9 @@ class PlanetDataset(utils.Dataset):
 
         # Add images in the image_dir
         if subset=='train':
-            images_list = 'list/train.txt'
+            images_list = 'list/train_list.txt'
         elif subset == 'val':
-            images_list = 'list/val.txt'
+            images_list = 'list/val_list.txt'
         else:
             raise ValueError("'{}' is not recognized. Use 'train' or 'val' ".format(subset))
 
@@ -148,8 +148,8 @@ class PlanetDataset(utils.Dataset):
 
         for i, image_name in enumerate(filenames):
             # source, image_id, path, **kwargs
-            image_path = os.path.join(os.path.abspath(image_dir),image_name,'.png')
-            label_path = os.path.join(os.path.abspath(label_dir),image_name,'.png')
+            image_path = os.path.join(os.path.abspath(image_dir),image_name+'.png')
+            label_path = os.path.join(os.path.abspath(label_dir),image_name+'.png')
             self.add_image("planet", image_id=i, path=image_path,
                            label_path = label_path, patch=image_name)
 
@@ -179,11 +179,14 @@ class PlanetDataset(utils.Dataset):
         label_path = image_info['label_path']
 
         # Load image
-        label = skimage.io.imread(self.image_info[image_id]['path'])
+        label = skimage.io.imread(label_path)
         # The label is a one band, 8 bit image
-        if label.ndim != 1:
+        if label.ndim != 2: # one band images only have a shape of (height, width), instead of (height, width, nband)
             raise ValueError('The band count of label must be 1')
+        if label.dtype != np.uint8:
+            raise ValueError('The label image should have data type of uint8')
 
+        height, width = label.shape
         unique_ids, counts = np.unique(label, return_counts=True)
 
         # create the mask for each class (excluding the background)
@@ -195,7 +198,7 @@ class PlanetDataset(utils.Dataset):
             # and end up rounded out. Skip those objects.
             if count < 1:
                 continue
-            m = np.zeros([image_info["height"], image_info["width"]], dtype=bool)
+            m = np.zeros([height, width], dtype=bool)
 
             m[label == id] = True
 
