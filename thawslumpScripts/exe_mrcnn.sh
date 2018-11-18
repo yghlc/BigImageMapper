@@ -63,7 +63,7 @@ SECONDS=0
 ################################################
 ## training
 
-python3 ${eo_dir}/thawslumpScripts/thawS_rs_maskrcnn.py train \
+/home/hlc/programs/anaconda3/bin/python3 ${eo_dir}/thawslumpScripts/thawS_rs_maskrcnn.py train \
     --para_file=${para_file} \
     --model='coco'
 
