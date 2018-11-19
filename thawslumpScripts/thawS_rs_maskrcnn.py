@@ -372,7 +372,7 @@ if __name__ == '__main__':
 
         ## # Validation dataset
         dataset_val = PlanetDataset()
-        dataset_train.load_Planet('split_images', 'split_labels', 'val')
+        dataset_val.load_Planet('split_images', 'split_labels', 'val')
         dataset_val.prepare()
 
         # Image Augmentation
