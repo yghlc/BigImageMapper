@@ -299,7 +299,7 @@ if __name__ == '__main__':
     if os.path.isdir(expr_name) is False:
         os.mkdir(expr_name)
 
-    NO_DATA = parameters.get_digit_parameters(args.para_file, 'dst_nodata', 'int')
+    NO_DATA = parameters.get_digit_parameters(args.para_file, 'dst_nodata',None, 'int')
 
     # Which weights to start with?
     # init_with = "coco"  # imagenet, coco, or last
