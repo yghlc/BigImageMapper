@@ -13,6 +13,9 @@ export PATH=/usr/bin:$PATH
 # python2 on Cryo03, tensorflow 1.6
 export PATH=/home/hlc/programs/anaconda2/bin:$PATH
 
+## cudnn 7.1.4 for tensorflow 1.12
+export LD_LIBRARY_PATH=~/programs/cudnn-9.0-linux-x64-v7.1/cuda/lib64:$LD_LIBRARY_PATH
+
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
