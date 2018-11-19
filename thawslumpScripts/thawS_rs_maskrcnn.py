@@ -48,7 +48,7 @@ print(sys.version)
 if (LooseVersion(sys.version) > LooseVersion('3.4')) is False:
     raise EnvironmentError('Require Python version > 3.4')
 
-
+NO_DATA = 255
 
 # Download and install the Python COCO tools from https://github.com/waleedka/coco
 # That's a fork from the original https://github.com/pdollar/coco with a bug
@@ -186,13 +186,16 @@ class PlanetDataset(utils.Dataset):
         if label.dtype != np.uint8:
             raise ValueError('The label image should have data type of uint8')
 
+        # set nodata pixels to background, that is 0
+        label [label == NO_DATA ] = 0
+
         height, width = label.shape
         unique_ids, counts = np.unique(label, return_counts=True)
         if len(unique_ids) > PlanetConfig.NUM_CLASSES:
             raise ValueError(str(unique_ids)+' its count is: %d but number of classes is: %d'
                              %(len(unique_ids),PlanetConfig.NUM_CLASSES))
         if max(unique_ids) >=  PlanetConfig.NUM_CLASSES:
-            raise ValueError(str(unique_ids) + ' the maximum of id is greater than the number of classes is: %d'
+            raise ValueError(str(unique_ids) + ' the maximum of id is greater than () the number of classes is: %d'
                              % (PlanetConfig.NUM_CLASSES))
 
         # create the mask for each class (excluding the background)
@@ -295,6 +298,8 @@ if __name__ == '__main__':
     expr_name = parameters.get_string_parameters(args.para_file, 'expr_name')
     if os.path.isdir(expr_name) is False:
         os.mkdir(expr_name)
+
+    NO_DATA = parameters.get_digit_parameters(args.para_file, 'dst_nodata', 'int')
 
     # Which weights to start with?
     # init_with = "coco"  # imagenet, coco, or last
