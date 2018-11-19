@@ -97,7 +97,7 @@ class PlanetConfig(Config):
     IMAGES_PER_GPU = 2 #??
 
     # Uncomment to train on 8 GPUs (default is 1)
-    # GPU_COUNT = 8
+    GPU_COUNT = 1
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # only one class. i.e. thaw slumps
@@ -299,7 +299,17 @@ if __name__ == '__main__':
     if os.path.isdir(expr_name) is False:
         os.mkdir(expr_name)
 
+
     NO_DATA = parameters.get_digit_parameters(args.para_file, 'dst_nodata',None, 'int')
+
+    # modify default setting according to different machine
+    gpu_count = parameters.get_digit_parameters(args.para_file, 'gpu_count', None, 'int')
+    images_per_gpu = parameters.get_digit_parameters(args.para_file, 'images_per_gpu', None, 'int')
+    PlanetConfig.GPU_COUNT = gpu_count
+    PlanetConfig.IMAGES_PER_GPU  = images_per_gpu
+
+
+
 
     # Which weights to start with?
     # init_with = "coco"  # imagenet, coco, or last

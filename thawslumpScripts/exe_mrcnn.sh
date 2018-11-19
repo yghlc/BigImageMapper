@@ -35,7 +35,12 @@ export CUDA_VISIBLE_DEVICES=1
 #set GPU on Cryo03
 export CUDA_VISIBLE_DEVICES=0,1
 gpu_num=2
-para_file=para.ini
+para_file=para_mrcnn.ini
+
+if [ ! -f $para_file ]; then
+   echo "File ${para_file} not exists in current folder: ${PWD}"
+   exit 1
+fi
 
 ################################################
 SECONDS=0
