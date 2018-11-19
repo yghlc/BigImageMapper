@@ -188,7 +188,7 @@ class PlanetDataset(utils.Dataset):
 
         height, width = label.shape
         unique_ids, counts = np.unique(label, return_counts=True)
-        if len(unique_ids) != PlanetConfig.NUM_CLASSES:
+        if len(unique_ids) > PlanetConfig.NUM_CLASSES:
             raise ValueError(str(unique_ids)+'its count is: %d but number of classes is: %d'
                              %(len(unique_ids),PlanetConfig.NUM_CLASSES))
 
