@@ -479,7 +479,10 @@ if __name__ == '__main__':
         r = results[0]
         visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
                                      ['BG','thawslump'], r['scores'], ax=get_ax())
-
+        log('rois:',r['rois'])
+        log('masks:',r['masks'])
+        log('class_ids:',r['class_ids'])
+        log('scores',r['scores'])
 
 
         pass
