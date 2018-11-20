@@ -478,7 +478,7 @@ if __name__ == '__main__':
         results = model.detect([image_data], verbose=1)
         r = results[0]
         visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
-                                     ['thawslump'], r['scores'], ax=get_ax())
+                                     ['BG','thawslump'], r['scores'], ax=get_ax())
 
 
 
