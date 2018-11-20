@@ -446,6 +446,7 @@ if __name__ == '__main__':
 
         # Test on a random image
         image_id = random.choice(dataset_val.image_ids)
+        print(dataset_val.image_reference(image_id))
         original_image, image_meta, gt_class_id, gt_bbox, gt_mask = modellib.load_image_gt(dataset_val,
                                                 config,image_id,use_mini_mask=False)
 
