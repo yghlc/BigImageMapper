@@ -83,7 +83,9 @@ SECONDS=0
 
 ################################################
 ## inference and post processing, including output "time_cost.txt"
-#${eo_dir}/thawslumpScripts/thawS_rs_maskrcnn.py ????
+~/programs/anaconda3/bin/python3 ${eo_dir}/thawslumpScripts/thawS_rs_maskrcnn.py inference \
+    --para_file=${para_file} \
+    --model='last'
 
 
 ################################################
