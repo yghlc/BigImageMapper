@@ -51,6 +51,9 @@ if (LooseVersion(sys.version) > LooseVersion('3.4')) is False:
     raise EnvironmentError('Require Python version > 3.4')
 
 NO_DATA = 255
+para_file = 'para_mrcnn.ini'
+inf_list_file = 'saved_inf_list.txt'
+inf_output_dir = 'inf_results'
 
 # Download and install the Python COCO tools from https://github.com/waleedka/coco
 # That's a fork from the original https://github.com/pdollar/coco with a bug
@@ -79,6 +82,10 @@ from mrcnn.model import log
 # path of DeeplabforRS
 codes_dir2 = HOME +'/codes/PycharmProjects/DeeplabforRS'
 sys.path.insert(0, codes_dir2)
+
+landuse_path = HOME + '/codes/PycharmProjects/Landuse_DL'
+sys.path.append(landuse_path)
+import datasets.build_RS_data as build_RS_data
 
 import parameters
 
@@ -253,6 +260,92 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     """
 
 
+def inf_remoteSensing_image(model,image_path=None):
+    '''
+    input a remote sensing image, then split to many small patches, inference each patch and merge than at last
+    :param model: trained model
+    :param image_path:
+    :return: False if unsuccessful.
+    '''
+
+    # split images
+    inf_image_dir=parameters.get_string_parameters(para_file,'inf_images_dir')
+
+    patch_w = parameters.get_digit_parameters(para_file, "inf_patch_width", None, 'int')
+    patch_h = parameters.get_digit_parameters(para_file, "inf_patch_height", None, 'int')
+    overlay_x = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_x", None, 'int')
+    overlay_y = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_y", None, 'int')
+
+    inf_batch_size = parameters.get_digit_parameters(para_file, "inf_batch_size", None, 'int')
+
+    if image_path is not None:
+        with open('saved_inf_list.txt','w') as f_obj:
+            f_obj.writelines(image_path)
+            inf_list_file = 'saved_inf_list.txt'
+
+    data_patches_2d = build_RS_data.make_dataset(inf_image_dir,inf_list_file,
+                patch_w,patch_h,overlay_x,overlay_y,train=False)
+
+    if len(data_patches_2d)< 1:
+        return False
+
+    total_patch_count = 0
+    for img_idx, aImage_patches in enumerate(data_patches_2d):
+        patch_num = len(aImage_patches)
+        total_patch_count += patch_num
+        print('number of patches on Image %d: %d' % (img_idx,patch_num))
+    print('total number of patches: %d'%total_patch_count)
+
+    for img_idx, aImage_patches in enumerate(data_patches_2d):
+
+        print('start inference on Image  %d' % img_idx)
+
+        idx = 0     #index of all patches on this image
+        patch_batches = build_RS_data.split_patches_into_batches(aImage_patches,inf_batch_size)
+
+        for a_batch_of_patches in patch_batches:
+
+            # Since it required a constant of batch size for the frozen graph, we copy (duplicate) the first patch
+            org_patch_num = len(a_batch_of_patches)
+            while len(a_batch_of_patches) < inf_batch_size:
+                a_batch_of_patches.append(a_batch_of_patches[0])
+
+            # read image data and stack at 0 dimension
+            multi_image_data = []
+            for img_patch in a_batch_of_patches:
+                img_data = build_RS_data.read_patch(img_patch)
+                multi_image_data.append(img_data)
+            # multi_images = np.stack(multi_image_data, axis=0)
+
+            # inference them
+            results = model.detect(multi_image_data, verbose=0)
+            # r = results[0]
+            # visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
+            #                             ['BG', 'thawslump'], r['scores'], ax=get_ax())
+
+            #save
+            for num,(mrcc_r,img_patch) in enumerate(zip(results,a_batch_of_patches)):
+
+                # ignore the duplicated ones
+                if num >= org_patch_num:
+                    break
+
+                ???? here
+                seg_map = mrcc_r['masks']  # shape: (height, width, 1)
+                seg_map = np.squeeze(seg_map) # shape: (height, width)
+
+                print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
+                      (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
+
+                # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+                file_name = "I%d_%d" % (img_idx, idx)
+
+                save_path = os.path.join(inf_output_dir, file_name + '.tif')
+                if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
+                    return False
+
+                idx += 1
+
 
 ############################################################
 #  Training
@@ -278,6 +371,16 @@ if __name__ == '__main__':
     parser.add_argument('--model', required=True,
                         metavar="/path/to/weights.h5",
                         help="Path to init weights .h5 file or 'coco'")
+    parser.add_argument('--inf_list_file',required=False,
+                        default='saved_inf_list.txt',
+                        metavar='saved_inf_list.txt',
+                        help='a file contains lists of remote sensing images for inference'
+                        )
+    parser.add_argument('--inf_output_dir',required=False,
+                        default='inf_results',
+                        metavar='inf_results',
+                        help='the folder to save image patches of inference results'
+                        )
     # parser.add_argument('--logs', required=False,
     #                     default=DEFAULT_LOGS_DIR,
     #                     metavar="/path/to/logs/",
@@ -296,8 +399,14 @@ if __name__ == '__main__':
     print("Model: ", args.model)
     # print("Dataset: ", args.dataset)
     print("the parameter file: ", args.para_file)
+
     # print("Logs: ", args.logs)
     # print("Auto Download: ", args.download)
+
+    para_file = args.para_file
+    inf_list_file = args.inf_list_file
+    inf_output_dir = args.inf_output_dir
+
 
     expr_name = parameters.get_string_parameters(args.para_file, 'expr_name')
     if os.path.isdir(expr_name) is False:
