@@ -38,6 +38,8 @@ import time
 import numpy as np
 import imgaug  # https://github.com/aleju/imgaug (pip3 install imgaug)
 
+import random
+
 # import skimage
 import skimage.io
 import skimage.color
@@ -71,6 +73,8 @@ curr_dir = os.getcwd()
 sys.path.append(codes_dir)  # To find local version of the library
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
+from mrcnn import visualize
+from mrcnn.model import log
 
 # path of DeeplabforRS
 codes_dir2 = HOME +'/codes/PycharmProjects/DeeplabforRS'
@@ -309,14 +313,8 @@ if __name__ == '__main__':
     PlanetConfig.IMAGES_PER_GPU  = images_per_gpu
 
 
-
-
     # Which weights to start with?
     # init_with = "coco"  # imagenet, coco, or last
-    # Path to trained weights file
-    # PLANET_MODEL_PATH = os.path.join(curr_dir,expr_name, "mask_rcnn_planet.h5")
-
-
 
     # Local path to trained weights file
     COCO_MODEL_PATH = os.path.join(curr_dir,expr_name, "mask_rcnn_coco.h5")
@@ -368,8 +366,12 @@ if __name__ == '__main__':
     # Load weights trained on MS COCO, but skip layers that
     # are different due to the different number of classes
     # See README for instructions to download the COCO weights
-    model.load_weights(model_path, by_name=True, exclude = ["mrcnn_class_logits", "mrcnn_bbox_fc",
-               "mrcnn_bbox", "mrcnn_mask"])
+    if args.model.lower() == "coco" and args.command == "train":
+        model.load_weights(model_path, by_name=True, exclude = ["mrcnn_class_logits", "mrcnn_bbox_fc",
+                   "mrcnn_bbox", "mrcnn_mask"])
+    else:
+        model.load_weights(model_path, by_name=True)
+
 
     # Train or evaluate
     if args.command == "train":
@@ -417,7 +419,58 @@ if __name__ == '__main__':
                     layers='all',
                     augmentation=augmentation)
     elif args.command == "evaluate":
-        'inference'
+        pass
+    elif args.command == "inference":
+        # inference on a small image (e.g., a patch on a RS image ) and visualize.
+
+        import matplotlib.pyplot as plt
+        def get_ax(rows=1, cols=1, size=8):
+            """Return a Matplotlib Axes array to be used in
+            all visualizations in the notebook. Provide a
+            central point to control graph sizes.
+
+            Change the default size attribute to control the size
+            of rendered images
+            """
+            _, ax = plt.subplots(rows, cols, figsize=(size * cols, size * rows))
+            return ax
+
+        dataset_train = PlanetDataset()
+        dataset_train.load_Planet('split_images','split_labels','train')
+        dataset_train.prepare()
+
+        ## # Validation dataset
+        dataset_val = PlanetDataset()
+        dataset_val.load_Planet('split_images', 'split_labels', 'val')
+        dataset_val.prepare()
+
+        # Test on a random image
+        image_id = random.choice(dataset_val.image_ids)
+        original_image, image_meta, gt_class_id, gt_bbox, gt_mask = modellib.load_image_gt(dataset_val,
+                                                config,image_id,use_mini_mask=False)
+
+        log("original_image", original_image)
+        log("image_meta", image_meta)
+        log("gt_class_id", gt_class_id)
+        log("gt_bbox", gt_bbox)
+        log("gt_mask", gt_mask)
+
+        visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id,
+                                    dataset_train.class_names, figsize=(8, 8))
+
+        # In[13]:
+        # original_image is a numpy array (height, width, bands)
+        results = model.detect([original_image], verbose=1)
+
+        r = results[0]
+        visualize.display_instances(original_image, r['rois'], r['masks'], r['class_ids'],
+                                    dataset_val.class_names, r['scores'], ax=get_ax())
+
+        pass
+    elif args.command == "inference_rsImg":
+        # inference on a RS image
+
+
         pass
 
     else:
