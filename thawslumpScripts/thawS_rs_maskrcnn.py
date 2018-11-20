@@ -267,7 +267,7 @@ if __name__ == '__main__':
         description='Train Mask R-CNN on Planet CubeSat images .')
     parser.add_argument("command",
                         metavar="<command>",
-                        help="'train' or 'evaluate' on Planet CubeSat images")
+                        help="'train', 'evaluate', or 'inference' on Planet CubeSat images")
     # parser.add_argument('--dataset', required=True,
     #                     metavar="/path/to/planet/",
     #                     help='Directory of the Planet CubeSat images')
@@ -423,6 +423,7 @@ if __name__ == '__main__':
     elif args.command == "inference":
         # inference on a small image (e.g., a patch on a RS image ) and visualize.
 
+        ## randomly pick a image patch from validation subset
         import matplotlib.pyplot as plt
         def get_ax(rows=1, cols=1, size=8):
             """Return a Matplotlib Axes array to be used in
@@ -434,46 +435,68 @@ if __name__ == '__main__':
             """
             _, ax = plt.subplots(rows, cols, figsize=(size * cols, size * rows))
             return ax
+        #
+        # dataset_train = PlanetDataset()
+        # dataset_train.load_Planet('split_images','split_labels','train')
+        # dataset_train.prepare()
+        #
+        # ## # Validation dataset
+        # dataset_val = PlanetDataset()
+        # dataset_val.load_Planet('split_images', 'split_labels', 'val')
+        # dataset_val.prepare()
+        #
+        # # Test on a random image
+        # image_id = random.choice(dataset_val.image_ids)
+        # print(dataset_val.image_reference(image_id))
+        # original_image, image_meta, gt_class_id, gt_bbox, gt_mask = modellib.load_image_gt(dataset_val,
+        #                                         config,image_id,use_mini_mask=False)
+        #
+        # log("original_image", original_image)
+        # log("image_meta", image_meta)
+        # log("gt_class_id", gt_class_id)
+        # log("gt_bbox", gt_bbox)
+        # log("gt_mask", gt_mask)
+        #
+        # visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id,
+        #                             dataset_train.class_names, figsize=(8, 8))
+        #
+        # # In[13]:
+        # # original_image is a numpy array (height, width, bands),
+        # # its size is IMAGE_MIN_DIM by IMAGE_MAX_DIM when using modellib.load_image_gt
+        # results = model.detect([original_image], verbose=1)
+        #
+        # r = results[0]
+        # # r['masks'] have the same height and width of original_image
+        # visualize.display_instances(original_image, r['rois'], r['masks'], r['class_ids'],
+        #                             dataset_val.class_names, r['scores'], ax=get_ax())
 
-        dataset_train = PlanetDataset()
-        dataset_train.load_Planet('split_images','split_labels','train')
-        dataset_train.prepare()
 
-        ## # Validation dataset
-        dataset_val = PlanetDataset()
-        dataset_val.load_Planet('split_images', 'split_labels', 'val')
-        dataset_val.prepare()
-
-        # Test on a random image
-        image_id = random.choice(dataset_val.image_ids)
-        print(dataset_val.image_reference(image_id))
-        original_image, image_meta, gt_class_id, gt_bbox, gt_mask = modellib.load_image_gt(dataset_val,
-                                                config,image_id,use_mini_mask=False)
-
-        log("original_image", original_image)
-        log("image_meta", image_meta)
-        log("gt_class_id", gt_class_id)
-        log("gt_bbox", gt_bbox)
-        log("gt_mask", gt_mask)
-
-        visualize.display_instances(original_image, gt_bbox, gt_mask, gt_class_id,
-                                    dataset_train.class_names, figsize=(8, 8))
-
-        # In[13]:
-        # original_image is a numpy array (height, width, bands)
-        results = model.detect([original_image], verbose=1)
-
+        # test one image:
+        img_path = "20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt_37_class_1_p_4.png"
+        # Load image
+        image_data = skimage.io.imread(os.path.join('split_images',img_path))
+        results = model.detect([image_data], verbose=1)
         r = results[0]
-        visualize.display_instances(original_image, r['rois'], r['masks'], r['class_ids'],
-                                    dataset_val.class_names, r['scores'], ax=get_ax())
+        visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
+                                     'thawslump', r['scores'], ax=get_ax())
+
+
 
         pass
     elif args.command == "inference_rsImg":
         # inference on a RS image
+
+        # split the image
+
+
+        # detection
+
+
+        # save
 
 
         pass
 
     else:
         print("'{}' is not recognized. "
-              "Use 'train' or 'evaluate' ".format(args.command))
+              "Use 'train', 'evaluate', 'inference', or 'inference_rsImg' ".format(args.command))
