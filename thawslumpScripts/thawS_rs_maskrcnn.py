@@ -52,7 +52,7 @@ if (LooseVersion(sys.version) > LooseVersion('3.4')) is False:
 
 NO_DATA = 255
 para_file = 'para_mrcnn.ini'
-inf_list_file = 'saved_inf_list.txt'
+inf_list_file = 'inf_image_list.txt'
 inf_output_dir = 'inf_results'
 
 # Download and install the Python COCO tools from https://github.com/waleedka/coco
@@ -280,9 +280,9 @@ def inf_remoteSensing_image(model,image_path=None):
 
     global inf_list_file
     if image_path is not None:
-        with open('saved_inf_list.txt','w') as f_obj:
+        with open('inf_image_list.txt','w') as f_obj:
             f_obj.writelines(image_path)
-            inf_list_file = 'saved_inf_list.txt'
+            inf_list_file = 'inf_image_list.txt'
 
     data_patches_2d = build_RS_data.make_dataset(inf_image_dir,inf_list_file,
                 patch_w,patch_h,overlay_x,overlay_y,train=False)
@@ -378,8 +378,8 @@ if __name__ == '__main__':
                         metavar="/path/to/weights.h5",
                         help="Path to init weights .h5 file or 'coco'")
     parser.add_argument('--inf_list_file',required=False,
-                        default='saved_inf_list.txt',
-                        metavar='saved_inf_list.txt',
+                        default='inf_image_list.txt',
+                        metavar='inf_image_list.txt',
                         help='a file contains lists of remote sensing images for inference'
                         )
     parser.add_argument('--inf_output_dir',required=False,
