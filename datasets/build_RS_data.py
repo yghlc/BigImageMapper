@@ -8,8 +8,6 @@ modified from build_voc2012_data.py
 add time: 18 March, 2018
 """
 
-from __future__ import absolute_import
-
 import glob
 import math
 import os.path

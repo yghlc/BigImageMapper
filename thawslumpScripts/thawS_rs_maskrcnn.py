@@ -84,8 +84,8 @@ codes_dir2 = HOME +'/codes/PycharmProjects/DeeplabforRS'
 sys.path.insert(0, codes_dir2)
 
 landuse_path = HOME + '/codes/PycharmProjects/Landuse_DL'
-sys.path.append(landuse_path)
-import datasets.build_RS_data as build_RS_data
+sys.path.append(landuse_path+'/datasets')
+import build_RS_data as build_RS_data
 
 import parameters
 
