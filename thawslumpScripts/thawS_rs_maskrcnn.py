@@ -330,9 +330,14 @@ def inf_remoteSensing_image(model,image_path=None):
                 if num >= org_patch_num:
                     break
 
-                ???? here
-                seg_map = mrcc_r['masks']  # shape: (height, width, 1)
-                seg_map = np.squeeze(seg_map) # shape: (height, width)
+
+                # convert mask to a map of classification
+                masks = mrcc_r['masks'] # shape: (height, width, num_classes?)
+                height, width, nclass = masks.shape
+
+                seg_map = np.zeros((height, width),dtype=np.uint8)
+                for n_id in range(0,nclass):
+                    seg_map[ masks[:,:,n_id] == True ] = n_id + 1
 
                 print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
                       (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
@@ -598,14 +603,9 @@ if __name__ == '__main__':
     elif args.command == "inference_rsImg":
         # inference on a RS image
 
-        # split the image
-
-
-        # detection
-
-
-        # save
-
+        if not os.path.isdir(inf_output_dir):
+            os.system('mkdir -p ' + inf_output_dir)
+        inf_remoteSensing_image(model)
 
         pass
 
