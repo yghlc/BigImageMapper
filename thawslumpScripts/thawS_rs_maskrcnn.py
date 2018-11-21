@@ -278,6 +278,7 @@ def inf_remoteSensing_image(model,image_path=None):
 
     inf_batch_size = parameters.get_digit_parameters(para_file, "inf_batch_size", None, 'int')
 
+    global inf_list_file
     if image_path is not None:
         with open('saved_inf_list.txt','w') as f_obj:
             f_obj.writelines(image_path)
