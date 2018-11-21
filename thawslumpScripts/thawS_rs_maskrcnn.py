@@ -314,7 +314,8 @@ def inf_remoteSensing_image(model,image_path=None):
             # read image data and stack at 0 dimension
             multi_image_data = []
             for img_patch in a_batch_of_patches:
-                img_data = build_RS_data.read_patch(img_patch)
+                img_data = build_RS_data.read_patch(img_patch) # (nband, height,width)
+                img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
                 multi_image_data.append(img_data)
             # multi_images = np.stack(multi_image_data, axis=0)
 
