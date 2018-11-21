@@ -71,9 +71,7 @@ SECONDS=0
 ################################################
 ## training
 
-~/programs/anaconda3/bin/python3 ${eo_dir}/thawslumpScripts/thawS_rs_maskrcnn.py train \
-    --para_file=${para_file} \
-    --model='coco'
+~/programs/anaconda3/bin/python3 ${eo_dir}/thawslumpScripts/thawS_rs_maskrcnn.py train --para_file=${para_file} --model='coco'
 
 duration=$SECONDS
 echo "$(date): time cost of training: ${duration} seconds">>"time_cost.txt"
