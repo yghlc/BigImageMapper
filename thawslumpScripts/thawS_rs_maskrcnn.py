@@ -103,6 +103,9 @@ class PlanetConfig(Config):
     # Give the configuration a recognizable name
     NAME = "planet"
 
+    # Backbone network architecture
+    BACKBONE = "resnet101"
+
     # We use a GPU with 12GB memory, which can fit two images for 1024*2014.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 2 #??
@@ -430,6 +433,8 @@ if __name__ == '__main__':
     images_per_gpu = parameters.get_digit_parameters(args.para_file, 'images_per_gpu', None, 'int')
     PlanetConfig.GPU_COUNT = gpu_count
     PlanetConfig.IMAGES_PER_GPU  = images_per_gpu
+
+    PlanetConfig.BACKBONE = parameters.get_string_parameters(args.para_file, 'BACKBONE')
 
 
     # Which weights to start with?
