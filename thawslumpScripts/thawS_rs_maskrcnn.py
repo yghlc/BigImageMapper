@@ -319,6 +319,9 @@ def inf_remoteSensing_image(model,image_path=None):
                 multi_image_data.append(img_data)
             # multi_images = np.stack(multi_image_data, axis=0)
 
+            # modify the BATCH_Size
+            model.config.BATCH_SIZE = len(multi_image_data)
+
             # inference them
             results = model.detect(multi_image_data, verbose=0)
             # r = results[0]
