@@ -44,6 +44,8 @@ import random
 import skimage.io
 import skimage.color
 
+import cv2
+
 # check python version
 from distutils.version import LooseVersion
 print(sys.version)
@@ -191,9 +193,10 @@ class PlanetDataset(utils.Dataset):
         # Build mask of shape [height, width, instance_count] and list
         # of class IDs that correspond to each channel of the mask.
         label_path = image_info['label_path']
+        print(label_path)
 
         # Load image
-        label = skimage.io.imread(label_path)
+        label = cv2.imread(label_path, cv2.IMREAD_UNCHANGED) #skimage.io.imread(label_path)
         # The label is a one band, 8 bit image
         if label.ndim != 2: # one band images only have a shape of (height, width), instead of (height, width, nband)
             raise ValueError('The band count of label must be 1')
@@ -212,21 +215,55 @@ class PlanetDataset(utils.Dataset):
             raise ValueError(str(unique_ids) + ' the maximum of id is greater than () the number of classes is: %d'
                              % (PlanetConfig.NUM_CLASSES))
 
-        # create the mask for each class (excluding the background)
-        for id, count in zip(unique_ids,counts):
-            # ignore background
-            if id==0:
-                continue
-            # Some objects are so small that they're less than 1 pixel area
-            # and end up rounded out. Skip those objects.
-            if count < 1:
-                continue
-            m = np.zeros([height, width], dtype=bool)
+        # # create the mask for each class (excluding the background)
+        # for id, count in zip(unique_ids,counts):
+        #     # ignore background
+        #     if id==0:
+        #         continue
+        #     # Some objects are so small that they're less than 1 pixel area
+        #     # and end up rounded out. Skip those objects.
+        #     if count < 1:
+        #         continue
+        #     m = np.zeros([height, width], dtype=bool)
+        #
+        #     m[label == id] = True
+        #
+        #     instance_masks.append(m)
+        #     class_ids.append(id)
 
-            m[label == id] = True
+        # image_data = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        # height, width = image_data.shape
 
-            instance_masks.append(m)
-            class_ids.append(id)
+        # test_idx = image_data != 0
+        # image_data[image_data != 0] = 255
+        # cv2.imwrite('mask_255.tif', image_data)
+
+        # if no objects on this images
+        if max(unique_ids) == 0:
+            # Call super class to return an empty mask
+            return super(PlanetDataset, self).load_mask(image_id)
+        else:
+
+            image, contours, hierarchy = cv2.findContours(label, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+            for idx in range(0, len(contours)):
+                # create seed mask
+                seed_masks = np.zeros((height, width), np.int32)
+                # print('idx:', idx)
+
+                point = contours[idx][0][0]  # [col,row]
+                print('point:', point)
+                id = label[point[1], point[0]] # [row,col]
+                print('class_id:', id)
+                cv2.drawContours(seed_masks, contours, idx, (idx + 1), -1)  # -1 for filling inside
+
+                seed_masks = seed_masks.astype(np.uint8)
+                instance_masks.append(seed_masks)
+                class_ids.append(id)
+
+                # test
+                seed_masks = seed_masks * 100
+                cv2.imwrite('seed_masks_255_%d_inst_%d.tif'%(image_id,idx), seed_masks)
+
 
         # Pack instance masks into an array, if there are objects
         if class_ids:
@@ -300,64 +337,107 @@ def inf_remoteSensing_image(model,image_path=None):
         print('number of patches on Image %d: %d' % (img_idx,patch_num))
     print('total number of patches: %d'%total_patch_count)
 
+    ##  inference multiple image patches at the same time
+    # for img_idx, aImage_patches in enumerate(data_patches_2d):
+    #
+    #     print('start inference on Image  %d' % img_idx)
+    #
+    #     idx = 0     #index of all patches on this image
+    #     patch_batches = build_RS_data.split_patches_into_batches(aImage_patches,inf_batch_size)
+    #
+    #     for a_batch_of_patches in patch_batches:
+    #
+    #         # Since it required a constant of batch size for the frozen graph, we copy (duplicate) the first patch
+    #         org_patch_num = len(a_batch_of_patches)
+    #         while len(a_batch_of_patches) < inf_batch_size:
+    #             a_batch_of_patches.append(a_batch_of_patches[0])
+    #
+    #         # read image data and stack at 0 dimension
+    #         multi_image_data = []
+    #         for img_patch in a_batch_of_patches:
+    #             img_data = build_RS_data.read_patch(img_patch) # (nband, height,width)
+    #             img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
+    #             multi_image_data.append(img_data)
+    #         # multi_images = np.stack(multi_image_data, axis=0)
+    #
+    #         # modify the BATCH_Size
+    #         model.config.BATCH_SIZE = len(multi_image_data)
+    #
+    #         # inference them
+    #         results = model.detect(multi_image_data, verbose=0)
+    #         # r = results[0]
+    #         # visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
+    #         #                             ['BG', 'thawslump'], r['scores'], ax=get_ax())
+    #
+    #         #save
+    #         for num,(mrcc_r,img_patch) in enumerate(zip(results,a_batch_of_patches)):
+    #
+    #             # ignore the duplicated ones
+    #             if num >= org_patch_num:
+    #                 break
+    #
+    #
+    #             # convert mask to a map of classification
+    #             masks = mrcc_r['masks'] # shape: (height, width, num_classes?)
+    #             height, width, nclass = masks.shape
+    #
+    #             seg_map = np.zeros((height, width),dtype=np.uint8)
+    #             for n_id in range(0,nclass):
+    #                 seg_map[ masks[:,:,n_id] == True ] = n_id + 1
+    #
+    #             print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
+    #                   (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
+    #
+    #             # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+    #             file_name = "I%d_%d" % (img_idx, idx)
+    #
+    #             save_path = os.path.join(inf_output_dir, file_name + '.tif')
+    #             if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
+    #                 return False
+    #
+    #             idx += 1
+
+    ##  inference image patches one by one
     for img_idx, aImage_patches in enumerate(data_patches_2d):
 
         print('start inference on Image  %d' % img_idx)
 
-        idx = 0     #index of all patches on this image
-        patch_batches = build_RS_data.split_patches_into_batches(aImage_patches,inf_batch_size)
+        for idx, img_patch in enumerate(aImage_patches):
 
-        for a_batch_of_patches in patch_batches:
+            # debug
+            if not idx in [3359, 3360,3361,3476,3477,3478,3593,3594,3595]:
+                continue
 
-            # Since it required a constant of batch size for the frozen graph, we copy (duplicate) the first patch
-            org_patch_num = len(a_batch_of_patches)
-            while len(a_batch_of_patches) < inf_batch_size:
-                a_batch_of_patches.append(a_batch_of_patches[0])
+            img_data = build_RS_data.read_patch(img_patch)  # (nband, height,width)
 
-            # read image data and stack at 0 dimension
-            multi_image_data = []
-            for img_patch in a_batch_of_patches:
-                img_data = build_RS_data.read_patch(img_patch) # (nband, height,width)
-                img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
-                multi_image_data.append(img_data)
-            # multi_images = np.stack(multi_image_data, axis=0)
+            # test
+            save_path = "I%d_%d_org.tif" % (img_idx, idx)
+            build_RS_data.save_patch(img_patch, img_data, save_path)
 
-            # modify the BATCH_Size
-            model.config.BATCH_SIZE = len(multi_image_data)
+            img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
 
             # inference them
-            results = model.detect(multi_image_data, verbose=0)
-            # r = results[0]
-            # visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
-            #                             ['BG', 'thawslump'], r['scores'], ax=get_ax())
+            results = model.detect([img_data], verbose=0)
+            mrcc_r = results[0]
 
-            #save
-            for num,(mrcc_r,img_patch) in enumerate(zip(results,a_batch_of_patches)):
+            masks = mrcc_r['masks']  # shape: (height, width, num_classes?)
+            height, width, nclass = masks.shape
 
-                # ignore the duplicated ones
-                if num >= org_patch_num:
-                    break
+            seg_map = np.zeros((height, width), dtype=np.uint8)
+            for n_id in range(0, nclass):
+                seg_map[masks[:, :, n_id] == True] = n_id + 1
+
+            print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
+                  (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
+
+            # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+            file_name = "I%d_%d" % (img_idx, idx)
+
+            save_path = os.path.join(inf_output_dir, file_name + '.tif')
+            if build_RS_data.save_patch_oneband_8bit(img_patch, seg_map.astype(np.uint8), save_path) is False:
+                return False
 
 
-                # convert mask to a map of classification
-                masks = mrcc_r['masks'] # shape: (height, width, num_classes?)
-                height, width, nclass = masks.shape
-
-                seg_map = np.zeros((height, width),dtype=np.uint8)
-                for n_id in range(0,nclass):
-                    seg_map[ masks[:,:,n_id] == True ] = n_id + 1
-
-                print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
-                      (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
-
-                # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
-                file_name = "I%d_%d" % (img_idx, idx)
-
-                save_path = os.path.join(inf_output_dir, file_name + '.tif')
-                if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
-                    return False
-
-                idx += 1
 
 
 ############################################################
@@ -449,6 +529,48 @@ if __name__ == '__main__':
 
     # Directory to save logs and model checkpoints,
     logs_dir = os.path.join(curr_dir, expr_name)
+
+    # ####################################################################################
+    # # test OpenCV load mask
+    # image_path = 'test_instance_masks/split_labels/20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt_144_class_1_p_0.png'
+    # image_data = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+    # height,width = image_data.shape
+    #
+    # # test_idx = image_data != 0
+    # # image_data[image_data != 0] = 255
+    # # cv2.imwrite('mask_255.tif', image_data)
+    #
+    # image, contours, hierarchy = cv2.findContours(image_data,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+    #
+    # # create seed mask
+    # seed_masks = np.zeros((height,width),np.int32)
+    # # for idx, contour in enumerate(contours):
+    # #     # for point in contour:
+    # #     #     print(point[0])
+    # #     indexs = [point[0] for point in contour]
+    # #     seed_masks[indexs] = idx +1
+    # # cv2.drawContours(seed_masks, contours, -1, (255), 1) # should I used different color (255)
+    # # cv2.drawContours(seed_masks, contours, -1, (255), -1)  #Negative thickness means that a filled circle is to be drawn.
+    #
+    # for idx in range(0,len(contours)):
+    #     print('idx:',idx)
+    #     cv2.drawContours(seed_masks, contours, idx, (idx +1), -1)
+    #     point = contours[idx][0][0] # [col,row]
+    #     print('point:',point)
+    #     print('class_id:',image_data[point[1],point[0]])  # [row,col]
+    #
+    #
+    # seed_masks = seed_masks * 50
+    # cv2.imwrite('seed_masks_255.tif', seed_masks.astype(np.uint8))
+    #
+    # # get masks using
+    # # markers = cv2.watershed(image_data, seed_masks)
+    # # cv2.imwrite('instance_masks.tif', markers.astype(np.uint8))
+    #
+    # sys.exit(0)
+    # pass
+
+    ####################################################################################
 
 
     # Configurations
@@ -596,9 +718,12 @@ if __name__ == '__main__':
 
 
         # test one image:
-        img_path = "20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt_37_class_1_p_4.png"
-        # Load image
-        image_data = skimage.io.imread(os.path.join('split_images',img_path))
+        # img_path = "20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt_37_class_1_p_4.png"
+        # image_data = skimage.io.imread(os.path.join('split_images', img_path))
+
+        img_path = "I0_3361_org.tif"
+        image_data = skimage.io.imread(img_path)
+
         results = model.detect([image_data], verbose=1)
         r = results[0]
         visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
