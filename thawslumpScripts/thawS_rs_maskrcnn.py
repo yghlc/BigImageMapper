@@ -193,7 +193,7 @@ class PlanetDataset(utils.Dataset):
         # Build mask of shape [height, width, instance_count] and list
         # of class IDs that correspond to each channel of the mask.
         label_path = image_info['label_path']
-        print(label_path)
+        # print(label_path)
 
         # Load image
         label = cv2.imread(label_path, cv2.IMREAD_UNCHANGED) #skimage.io.imread(label_path)
@@ -261,8 +261,8 @@ class PlanetDataset(utils.Dataset):
                 class_ids.append(id)
 
                 # test
-                seed_masks = seed_masks * 100
-                cv2.imwrite('seed_masks_255_%d_inst_%d.tif'%(image_id,idx), seed_masks)
+                # seed_masks = seed_masks * 50
+                cv2.imwrite('seed_masks_255_%d_inst_%d.tif'%(image_id,idx), seed_masks * 50)
 
 
         # Pack instance masks into an array, if there are objects
