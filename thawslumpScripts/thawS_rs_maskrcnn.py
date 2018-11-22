@@ -251,7 +251,7 @@ class PlanetDataset(utils.Dataset):
                 # print('idx:', idx)
 
                 point = contours[idx][0][0]  # [col,row]
-                print('point:', point)
+                # print('point:', point)
                 id = label[point[1], point[0]] # [row,col]
                 print('class_id:', id)
                 cv2.drawContours(seed_masks, contours, idx, (idx + 1), -1)  # -1 for filling inside
@@ -262,7 +262,7 @@ class PlanetDataset(utils.Dataset):
 
                 # test
                 # seed_masks = seed_masks * 50
-                cv2.imwrite('seed_masks_255_%d_inst_%d.tif'%(image_id,idx), seed_masks * 50)
+                # cv2.imwrite('seed_masks_255_%d_inst_%d.tif'%(image_id,idx), seed_masks * 50)
 
 
         # Pack instance masks into an array, if there are objects
