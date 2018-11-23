@@ -253,7 +253,9 @@ class PlanetDataset(utils.Dataset):
                 point = contours[idx][0][0]  # [col,row]
                 # print('point:', point)
                 id = label[point[1], point[0]] # [row,col]
-                print('class_id:', id)
+                # print('class_id:', id)
+                if id not in unique_ids or id==0:
+                    raise ValueError('class_id: %d not in the label images or is zeros (Backgroud)'%id)
                 cv2.drawContours(seed_masks, contours, idx, (idx + 1), -1)  # -1 for filling inside
 
                 seed_masks = seed_masks.astype(np.uint8)
@@ -404,15 +406,15 @@ def inf_remoteSensing_image(model,image_path=None):
 
         for idx, img_patch in enumerate(aImage_patches):
 
-            # debug
-            if not idx in [3359, 3360,3361,3476,3477,3478,3593,3594,3595]:
-                continue
+            # # test debug
+            # if not idx in [3359, 3360,3361,3476,3477,3478,3593,3594,3595]:
+            #     continue
 
             img_data = build_RS_data.read_patch(img_patch)  # (nband, height,width)
 
-            # test
-            save_path = "I%d_%d_org.tif" % (img_idx, idx)
-            build_RS_data.save_patch(img_patch, img_data, save_path)
+            # # test
+            # save_path = "I%d_%d_org.tif" % (img_idx, idx)
+            # build_RS_data.save_patch(img_patch, img_data, save_path)
 
             img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
 
@@ -420,12 +422,16 @@ def inf_remoteSensing_image(model,image_path=None):
             results = model.detect([img_data], verbose=0)
             mrcc_r = results[0]
 
-            masks = mrcc_r['masks']  # shape: (height, width, num_classes?)
-            height, width, nclass = masks.shape
+            # TODO: HOW TO USE SCORE?
+            # mrcc_r['scores']
+            # mrcc_r['rois']
+            masks = mrcc_r['masks']  # shape: (height, width, num_instance)
+            height, width, ncount = masks.shape
+            class_ids = mrcc_r['class_ids']
 
             seg_map = np.zeros((height, width), dtype=np.uint8)
-            for n_id in range(0, nclass):
-                seg_map[masks[:, :, n_id] == True] = n_id + 1
+            for inst in range(0, ncount):  # instance one by one
+                seg_map[masks[:, :, inst] == True] = class_ids[inst]
 
             print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
                   (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
@@ -670,17 +676,17 @@ if __name__ == '__main__':
         # inference on a small image (e.g., a patch on a RS image ) and visualize.
 
         ## randomly pick a image patch from validation subset
-        import matplotlib.pyplot as plt
-        def get_ax(rows=1, cols=1, size=8):
-            """Return a Matplotlib Axes array to be used in
-            all visualizations in the notebook. Provide a
-            central point to control graph sizes.
-
-            Change the default size attribute to control the size
-            of rendered images
-            """
-            _, ax = plt.subplots(rows, cols, figsize=(size * cols, size * rows))
-            return ax
+        # import matplotlib.pyplot as plt
+        # def get_ax(rows=1, cols=1, size=8):
+        #     """Return a Matplotlib Axes array to be used in
+        #     all visualizations in the notebook. Provide a
+        #     central point to control graph sizes.
+        #
+        #     Change the default size attribute to control the size
+        #     of rendered images
+        #     """
+        #     _, ax = plt.subplots(rows, cols, figsize=(size * cols, size * rows))
+        #     return ax
         #
         # dataset_train = PlanetDataset()
         # dataset_train.load_Planet('split_images','split_labels','train')
@@ -718,20 +724,21 @@ if __name__ == '__main__':
 
 
         # test one image:
-        # img_path = "20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt_37_class_1_p_4.png"
-        # image_data = skimage.io.imread(os.path.join('split_images', img_path))
+        img_path = "20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt_37_class_1_p_4.png"
+        image_data = skimage.io.imread(os.path.join('split_images', img_path))
 
-        img_path = "I0_3361_org.tif"
-        image_data = skimage.io.imread(img_path)
+        # img_path = "I0_3361_org.tif"
+        # image_data = skimage.io.imread(img_path)
 
         results = model.detect([image_data], verbose=1)
         r = results[0]
         visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
-                                     ['BG','thawslump'], r['scores'], ax=get_ax())
+                                     ['BG','thawslump'], scores=r['scores'], figsize=(8, 8))
         log('rois:',r['rois'])
         log('masks:',r['masks'])
         log('class_ids:',r['class_ids'])
         log('scores',r['scores'])
+        print('scores:',r['scores'])
 
 
         pass
