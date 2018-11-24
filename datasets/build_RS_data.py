@@ -20,13 +20,15 @@ basicCodes_path = HOME + '/codes/PycharmProjects/DeeplabforRS'
 sys.path.append(basicCodes_path)
 
 # package for remote sensing images
-import rasterio
+import cv2
 from basic_src.RSImage import RSImageclass
 import basic_src.basic as  basic
 import split_image
 import rasterio
 import numpy as np
 import parameters
+
+import json
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -207,6 +209,74 @@ def save_patch_oneband_8bit(patch_obj,img_data,save_path):
 
     with rasterio.open(save_path, "w", **profile) as dst:
         dst.write(img_data, 1)
+
+def save_instances_patch(patch_obj,mrcc_result,save_path):
+    """
+    save all instances on a patch to a file,
+    and covert local coordinates (on patch) to global coordinates (original remote sensing images)
+    :param patch_obj: the patch object, contain the boundary and original (reference) image path
+    :param mrcc_result: results (dict) from mask rcnn
+    :param save_path: Saved file path
+    :return: True if sucessufully, False otherwise
+    """
+
+    org_img_name = os.path.basename(patch_obj.org_img)
+    save_data = {}
+    save_data['org_img'] = org_img_name
+
+    boundary = patch_obj.boundary
+    save_data['patch_boundary'] = {
+        'xoff':boundary[0],
+        'yoff':boundary[1],
+        'xsize':boundary[2],
+        'ysize': boundary[3],
+    }
+
+    save_data['instances'] = []
+    masks = mrcc_result['masks']  # shape: (height, width, num_instance)
+    height, width, ncount = masks.shape
+
+    scores = mrcc_result['scores'].tolist()  # tolist, for json requirement
+    rois = mrcc_result['rois'].tolist()
+    class_ids = mrcc_result['class_ids'].tolist()
+
+    # if there are instances on this patch
+    if ncount > 0:
+
+        # mkdir
+        mask_folder = os.path.splitext(os.path.basename(save_path))[0]+"_masks"
+        mask_dir = os.path.join(os.path.dirname(save_path), mask_folder)
+        os.system('mkdir -p ' + mask_dir)
+
+        for idx in range(ncount):
+            bbox = rois[idx]
+            xsize = bbox[3] - bbox[1]
+            ysize =  bbox[2] - bbox[0]
+            bbox[0] = bbox[0] + boundary[1]     # yoff
+            bbox[1] = bbox[1] + boundary[0]    # xoff
+
+            # save mask to file
+            inst_mask = masks[:, :, idx]
+            mask_name = '%d.tif'%idx
+            mask_save_path = os.path.join(mask_dir,mask_name)
+            cv2.imwrite(mask_save_path, inst_mask*255)
+
+            save_data['instances'].append({
+
+                "class_id": class_ids[idx],
+                "bbox": [bbox[1], bbox[0], xsize, ysize], # xoff, yoff, xsize, ysize
+                "score": scores[idx],
+                "mask": os.path.join(mask_folder,mask_name)
+            })
+
+
+    with open(save_path, 'w') as outfile:
+        json.dump(save_data, outfile,indent=4)
+
+    return True
+
+def load_instances_patch():
+    pass
 
 def split_patches_into_batches(patches, batch_size):
     """

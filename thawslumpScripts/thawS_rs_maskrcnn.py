@@ -400,49 +400,73 @@ def inf_remoteSensing_image(model,image_path=None):
     #             idx += 1
 
     ##  inference image patches one by one
+    # for img_idx, aImage_patches in enumerate(data_patches_2d):
+    #
+    #     print('start inference on Image  %d' % img_idx)
+    #
+    #     for idx, img_patch in enumerate(aImage_patches):
+    #
+    #         # # test debug
+    #         # if not idx in [3359, 3360,3361,3476,3477,3478,3593,3594,3595]:
+    #         #     continue
+    #         # if not idx in [4700, 4817, 4818, 4819, 4934, 4935, 4936, 5051, 5052, 5053]:
+    #         #     continue
+    #         # if not idx in [2602]:  # a false positive
+    #         #     continue
+    #
+    #
+    #         img_data = build_RS_data.read_patch(img_patch)  # (nband, height,width)
+    #
+    #         # test
+    #         # save_path = "I%d_%d_org.tif" % (img_idx, idx)
+    #         # build_RS_data.save_patch(img_patch, img_data, save_path)
+    #
+    #         img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
+    #
+    #         # inference them
+    #         results = model.detect([img_data], verbose=0)
+    #         mrcc_r = results[0]
+    #
+    #         # TODO: HOW TO USE SCORE?
+    #         # mrcc_r['scores']
+    #         # mrcc_r['rois']
+    #         masks = mrcc_r['masks']  # shape: (height, width, num_instance)
+    #         height, width, ncount = masks.shape
+    #         class_ids = mrcc_r['class_ids']
+    #
+    #         seg_map = np.zeros((height, width), dtype=np.uint8)
+    #         for inst in range(0, ncount):  # instance one by one
+    #             seg_map[masks[:, :, inst] == True] = class_ids[inst]
+    #
+    #         print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
+    #               (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
+    #
+    #         # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+    #         file_name = "I%d_%d" % (img_idx, idx)
+    #
+    #         save_path = os.path.join(inf_output_dir, file_name + '.tif')
+    #         if build_RS_data.save_patch_oneband_8bit(img_patch, seg_map.astype(np.uint8), save_path) is False:
+    #             return False
+
+    ##  inference image patches one by one, and save to disks
     for img_idx, aImage_patches in enumerate(data_patches_2d):
-
         print('start inference on Image  %d' % img_idx)
-
         for idx, img_patch in enumerate(aImage_patches):
 
-            # # test debug
-            # if not idx in [3359, 3360,3361,3476,3477,3478,3593,3594,3595]:
-            #     continue
-
             img_data = build_RS_data.read_patch(img_patch)  # (nband, height,width)
-
-            # # test
-            # save_path = "I%d_%d_org.tif" % (img_idx, idx)
-            # build_RS_data.save_patch(img_patch, img_data, save_path)
-
             img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
-
             # inference them
             results = model.detect([img_data], verbose=0)
             mrcc_r = results[0]
 
-            # TODO: HOW TO USE SCORE?
-            # mrcc_r['scores']
-            # mrcc_r['rois']
-            masks = mrcc_r['masks']  # shape: (height, width, num_instance)
-            height, width, ncount = masks.shape
-            class_ids = mrcc_r['class_ids']
-
-            seg_map = np.zeros((height, width), dtype=np.uint8)
-            for inst in range(0, ncount):  # instance one by one
-                seg_map[masks[:, :, inst] == True] = class_ids[inst]
-
             print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
-                  (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
+                  (img_idx, idx, img_patch.boundary[3], img_patch.boundary[2]))  # ysize, xsize
 
             # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
-            file_name = "I%d_%d" % (img_idx, idx)
-
-            save_path = os.path.join(inf_output_dir, file_name + '.tif')
-            if build_RS_data.save_patch_oneband_8bit(img_patch, seg_map.astype(np.uint8), save_path) is False:
+            file_name = "I%d_%d.txt" % (img_idx, idx)
+            save_path = os.path.join(inf_output_dir, file_name)
+            if build_RS_data.save_instances_patch(img_patch,mrcc_r,save_path) is False:
                 return False
-
 
 
 
@@ -724,11 +748,11 @@ if __name__ == '__main__':
 
 
         # test one image:
-        img_path = "20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt_37_class_1_p_4.png"
-        image_data = skimage.io.imread(os.path.join('split_images', img_path))
+        # img_path = "20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt_37_class_1_p_4.png"
+        # image_data = skimage.io.imread(os.path.join('split_images', img_path))
 
-        # img_path = "I0_3361_org.tif"
-        # image_data = skimage.io.imread(img_path)
+        img_path = "I0_2602_org.tif"
+        image_data = skimage.io.imread(img_path)
 
         results = model.detect([image_data], verbose=1)
         r = results[0]
