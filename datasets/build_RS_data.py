@@ -275,8 +275,59 @@ def save_instances_patch(patch_obj,mrcc_result,save_path):
 
     return True
 
-def load_instances_patch():
-    pass
+def load_instances_patch(save_path,bDisplay=False,bReadMaks=True):
+    """
+    load all instances of a patch
+    :param save_path: the json file contain instances
+    :param bDisplay: if True, it will convert global coordinates (original remote sensing images) to
+    local coordinates (on patch) for display
+    :param bReadMaks: if True, it will read the mask file
+    :return:  mrcc_result: results (dict) from mask rcnn or None
+    """
+
+    with open(save_path) as json_file:
+        patch_data = json.load(json_file)
+
+        org_img = patch_data['org_img']
+        patch_boundary = patch_data['patch_boundary']
+        boundary = (patch_boundary['xoff'],patch_boundary['yoff'],patch_boundary['xsize'],patch_boundary['ysize'])
+
+        ## check patch info
+
+        # load instances
+        instances = patch_data['instances']
+        if len(instances) > 0:
+            mrcc_result = {}
+            masks_file = [inst['mask'] for inst in instances ]
+            scores = [inst['score'] for inst in instances ]
+            rois = [inst['bbox'] for inst in instances ]
+            class_ids = [inst['class_id'] for inst in instances]
+
+            # read masks
+            if bReadMaks:
+                patch_dir = os.path.dirname(save_path)
+                mask_list = [ cv2.imread(os.path.join(patch_dir,f_name),cv2.IMREAD_UNCHANGED)  for f_name in masks_file]
+                mask_list = [ (mask/255).astype(np.uint8) for mask in mask_list]  # when save mask,  mask*255 for display
+                masks = np.stack(mask_list, axis=2)
+                mrcc_result['masks'] = masks  # shape: (height, width, num_instance)
+
+            # convert the coordinates
+            if bDisplay:
+                rois = [ [bbox[1] - boundary[1],bbox[0]-boundary[0],
+                          bbox[1] - boundary[1] + bbox[3],
+                          bbox[0] - boundary[0] + bbox[2]] for bbox in rois ]  # (y1, x1, y2, x2, class_id)
+            # test
+            # for roi in rois:
+            #     print(roi)
+
+            mrcc_result['scores'] = np.asarray(scores)  # list to numpy array
+            mrcc_result['rois'] = np.asarray(rois)  # need convert?
+            mrcc_result['class_ids'] = np.asarray(class_ids)
+
+            return mrcc_result
+
+    return None
+
 
 def split_patches_into_batches(patches, batch_size):
     """

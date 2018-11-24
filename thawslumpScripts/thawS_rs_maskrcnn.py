@@ -427,7 +427,6 @@ def inf_remoteSensing_image(model,image_path=None):
     #         results = model.detect([img_data], verbose=0)
     #         mrcc_r = results[0]
     #
-    #         # TODO: HOW TO USE SCORE?
     #         # mrcc_r['scores']
     #         # mrcc_r['rois']
     #         masks = mrcc_r['masks']  # shape: (height, width, num_instance)
@@ -453,7 +452,14 @@ def inf_remoteSensing_image(model,image_path=None):
         print('start inference on Image  %d' % img_idx)
         for idx, img_patch in enumerate(aImage_patches):
 
+            if not idx in [3]:
+                 continue
+
             img_data = build_RS_data.read_patch(img_patch)  # (nband, height,width)
+
+            img_save_path = "I%d_%d_org.tif" % (img_idx, idx)
+            build_RS_data.save_patch(img_patch, img_data, img_save_path)
+
             img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
             # inference them
             results = model.detect([img_data], verbose=0)
@@ -751,11 +757,15 @@ if __name__ == '__main__':
         # img_path = "20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt_37_class_1_p_4.png"
         # image_data = skimage.io.imread(os.path.join('split_images', img_path))
 
-        img_path = "I0_2602_org.tif"
+        img_path = "I0_3_org.tif"
         image_data = skimage.io.imread(img_path)
 
-        results = model.detect([image_data], verbose=1)
-        r = results[0]
+        # results = model.detect([image_data], verbose=1)
+        # r = results[0]
+
+        # test load instance from disks
+        r = build_RS_data.load_instances_patch(os.path.join(inf_output_dir,'I0_3.txt'),bDisplay=True)
+
         visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
                                      ['BG','thawslump'], scores=r['scores'], figsize=(8, 8))
         log('rois:',r['rois'])
