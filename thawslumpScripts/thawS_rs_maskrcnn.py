@@ -301,6 +301,102 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     limit: if not 0, it's the number of images to use for evaluation
     """
 
+def muti_inf_remoteSensing_image(model,image_path=None):
+    '''
+    use multiple scale (different patch size) for inference, then merge them using non_max_suppression
+    :param model: trained model
+    :param image_path:
+    :return:
+    '''
+
+    # get parameters
+    inf_image_dir = parameters.get_string_parameters(para_file, 'inf_images_dir')
+    muti_patch_w = parameters.get_string_parameters(para_file, "muti_inf_patch_width")
+    muti_patch_h = parameters.get_string_parameters(para_file, "muti_inf_patch_height")
+    muti_overlay_x = parameters.get_string_parameters(para_file, "muti_inf_pixel_overlay_x")
+    muti_overlay_y = parameters.get_string_parameters(para_file, "muti_inf_pixel_overlay_y")
+
+    patch_w_list = [int(item) for item in muti_patch_w.split(',')]
+    patch_h_list = [int(item) for item in muti_patch_h.split(',')]
+    overlay_x_list = [int(item) for item in muti_overlay_x.split(',')]
+    overlay_y_list = [int(item) for item in muti_overlay_y.split(',')]
+
+    # inference and save to json files
+    for patch_w,patch_h,overlay_x,overlay_y in zip(patch_w_list,patch_h_list,overlay_x_list,overlay_y_list):
+        inf_rs_image_json(model, patch_w, patch_h, overlay_x, overlay_y, inf_image_dir)
+
+    # load and perform non_max_suppression
+
+
+    # convert results to label images
+
+
+    return True
+
+def inf_rs_image_json(model,patch_w,patch_h,overlay_x,overlay_y,inf_image_dir):
+    """
+    inference on images and save to json files
+    :param model: trained model
+    :param patch_w: split width
+    :param patch_h: split height
+    :param overlay_x: overlay pixels in x direction
+    :param overlay_y: overlay pixels in y direction
+    :param inf_image_dir: the folder contains images for inference
+    :return: True if no error, otherwise, False
+    """
+
+    # global inf_list_file
+    # if image_path is not None:
+    #     with open('inf_image_list.txt','w') as f_obj:
+    #         f_obj.writelines(image_path)
+    #         inf_list_file = 'inf_image_list.txt'
+
+    data_patches_2d = build_RS_data.make_dataset(inf_image_dir,inf_list_file,
+                patch_w,patch_h,overlay_x,overlay_y,train=False)
+
+    if len(data_patches_2d)< 1:
+        return False
+
+    total_patch_count = 0
+    for img_idx, aImage_patches in enumerate(data_patches_2d):
+        patch_num = len(aImage_patches)
+        total_patch_count += patch_num
+        print('number of patches on Image %d: %d' % (img_idx,patch_num))
+    print('total number of patches: %d'%total_patch_count)
+
+    ##  inference image patches one by one, and save to disks
+    for img_idx, aImage_patches in enumerate(data_patches_2d):
+        print('start inference on Image  %d' % img_idx)
+        instances_folder = 'I%d_patches_%d_%d_%d_%d' % (img_idx,patch_w, patch_h, overlay_x, overlay_y)
+        json_dir = os.path.join(inf_output_dir,instances_folder)
+        os.system('mkdir -p ' + json_dir)
+        for idx, img_patch in enumerate(aImage_patches):
+
+            # if not idx in [3]:
+            #      continue
+
+            img_data = build_RS_data.read_patch(img_patch)  # (nband, height,width)
+
+            # test
+            # img_save_path = "I%d_%d_org.tif" % (img_idx, idx)
+            # build_RS_data.save_patch(img_patch, img_data, img_save_path)
+
+            img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
+            # inference them
+            results = model.detect([img_data], verbose=0)
+            mrcc_r = results[0]
+
+            print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
+                  (img_idx, idx, img_patch.boundary[3], img_patch.boundary[2]))  # ysize, xsize
+
+            # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+            file_name = "I%d_%d.txt" % (img_idx, idx)
+            save_path = os.path.join(json_dir, file_name)
+            if build_RS_data.save_instances_patch(img_patch,mrcc_r,save_path) is False:
+                return False
+
+    return True
+
 
 def inf_remoteSensing_image(model,image_path=None):
     '''
@@ -317,6 +413,7 @@ def inf_remoteSensing_image(model,image_path=None):
     patch_h = parameters.get_digit_parameters(para_file, "inf_patch_height", None, 'int')
     overlay_x = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_x", None, 'int')
     overlay_y = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_y", None, 'int')
+
 
     inf_batch_size = parameters.get_digit_parameters(para_file, "inf_batch_size", None, 'int')
 
@@ -399,79 +496,52 @@ def inf_remoteSensing_image(model,image_path=None):
     #
     #             idx += 1
 
-    ##  inference image patches one by one
-    # for img_idx, aImage_patches in enumerate(data_patches_2d):
-    #
-    #     print('start inference on Image  %d' % img_idx)
-    #
-    #     for idx, img_patch in enumerate(aImage_patches):
-    #
-    #         # # test debug
-    #         # if not idx in [3359, 3360,3361,3476,3477,3478,3593,3594,3595]:
-    #         #     continue
-    #         # if not idx in [4700, 4817, 4818, 4819, 4934, 4935, 4936, 5051, 5052, 5053]:
-    #         #     continue
-    #         # if not idx in [2602]:  # a false positive
-    #         #     continue
-    #
-    #
-    #         img_data = build_RS_data.read_patch(img_patch)  # (nband, height,width)
-    #
-    #         # test
-    #         # save_path = "I%d_%d_org.tif" % (img_idx, idx)
-    #         # build_RS_data.save_patch(img_patch, img_data, save_path)
-    #
-    #         img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
-    #
-    #         # inference them
-    #         results = model.detect([img_data], verbose=0)
-    #         mrcc_r = results[0]
-    #
-    #         # mrcc_r['scores']
-    #         # mrcc_r['rois']
-    #         masks = mrcc_r['masks']  # shape: (height, width, num_instance)
-    #         height, width, ncount = masks.shape
-    #         class_ids = mrcc_r['class_ids']
-    #
-    #         seg_map = np.zeros((height, width), dtype=np.uint8)
-    #         for inst in range(0, ncount):  # instance one by one
-    #             seg_map[masks[:, :, inst] == True] = class_ids[inst]
-    #
-    #         print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
-    #               (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
-    #
-    #         # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
-    #         file_name = "I%d_%d" % (img_idx, idx)
-    #
-    #         save_path = os.path.join(inf_output_dir, file_name + '.tif')
-    #         if build_RS_data.save_patch_oneband_8bit(img_patch, seg_map.astype(np.uint8), save_path) is False:
-    #             return False
-
-    ##  inference image patches one by one, and save to disks
+    #  inference image patches one by one
     for img_idx, aImage_patches in enumerate(data_patches_2d):
+
         print('start inference on Image  %d' % img_idx)
+
         for idx, img_patch in enumerate(aImage_patches):
 
-            if not idx in [3]:
-                 continue
+            # # test debug
+            # if not idx in [3359, 3360,3361,3476,3477,3478,3593,3594,3595]:
+            #     continue
+            # if not idx in [4700, 4817, 4818, 4819, 4934, 4935, 4936, 5051, 5052, 5053]:
+            #     continue
+            # if not idx in [2602]:  # a false positive
+            #     continue
+
 
             img_data = build_RS_data.read_patch(img_patch)  # (nband, height,width)
 
-            img_save_path = "I%d_%d_org.tif" % (img_idx, idx)
-            build_RS_data.save_patch(img_patch, img_data, img_save_path)
+            # test
+            # save_path = "I%d_%d_org.tif" % (img_idx, idx)
+            # build_RS_data.save_patch(img_patch, img_data, save_path)
 
             img_data = np.transpose(img_data, (1, 2, 0))  # keras and tf require (height,width,nband)
+
             # inference them
             results = model.detect([img_data], verbose=0)
             mrcc_r = results[0]
 
+            # mrcc_r['scores']
+            # mrcc_r['rois']
+            masks = mrcc_r['masks']  # shape: (height, width, num_instance)
+            height, width, ncount = masks.shape
+            class_ids = mrcc_r['class_ids']
+
+            seg_map = np.zeros((height, width), dtype=np.uint8)
+            for inst in range(0, ncount):  # instance one by one
+                seg_map[masks[:, :, inst] == True] = class_ids[inst]
+
             print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
-                  (img_idx, idx, img_patch.boundary[3], img_patch.boundary[2]))  # ysize, xsize
+                  (img_idx, idx, seg_map.shape[0], seg_map.shape[1]))
 
             # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
-            file_name = "I%d_%d.txt" % (img_idx, idx)
-            save_path = os.path.join(inf_output_dir, file_name)
-            if build_RS_data.save_instances_patch(img_patch,mrcc_r,save_path) is False:
+            file_name = "I%d_%d" % (img_idx, idx)
+
+            save_path = os.path.join(inf_output_dir, file_name + '.tif')
+            if build_RS_data.save_patch_oneband_8bit(img_patch, seg_map.astype(np.uint8), save_path) is False:
                 return False
 
 
@@ -760,11 +830,11 @@ if __name__ == '__main__':
         img_path = "I0_3_org.tif"
         image_data = skimage.io.imread(img_path)
 
-        # results = model.detect([image_data], verbose=1)
-        # r = results[0]
+        results = model.detect([image_data], verbose=1)
+        r = results[0]
 
         # test load instance from disks
-        r = build_RS_data.load_instances_patch(os.path.join(inf_output_dir,'I0_3.txt'),bDisplay=True)
+        # r = build_RS_data.load_instances_patch(os.path.join(inf_output_dir,'I0_3.txt'),bDisplay=True)
 
         visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
                                      ['BG','thawslump'], scores=r['scores'], figsize=(8, 8))
@@ -777,7 +847,7 @@ if __name__ == '__main__':
 
         pass
     elif args.command == "inference_rsImg":
-        # inference on a RS image
+        # inference on RS images
 
         if not os.path.isdir(inf_output_dir):
             os.system('mkdir -p ' + inf_output_dir)
@@ -785,6 +855,15 @@ if __name__ == '__main__':
 
         pass
 
+    elif args.command == "inference_rsImg_multi":
+        # inference on RS images
+
+        if not os.path.isdir(inf_output_dir):
+            os.system('mkdir -p ' + inf_output_dir)
+        muti_inf_remoteSensing_image(model)
+
+        pass
+
     else:
         print("'{}' is not recognized. "
-              "Use 'train', 'evaluate', 'inference', or 'inference_rsImg' ".format(args.command))
+              "Use 'train', 'evaluate', 'inference', 'inference_rsImg', or 'inference_rsImg_multi' ".format(args.command))

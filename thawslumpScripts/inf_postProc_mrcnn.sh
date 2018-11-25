@@ -39,7 +39,7 @@ if [ -d "$inf_dir" ]; then
     rm -r $inf_dir
 fi
 
-~/programs/anaconda3/bin/python3 ${eo_dir}/thawslumpScripts/thawS_rs_maskrcnn.py inference_rsImg \
+~/programs/anaconda3/bin/python3 ${eo_dir}/thawslumpScripts/thawS_rs_maskrcnn.py inference_rsImg_multi \
     --para_file=${para_file} \
     --model='last'
 
