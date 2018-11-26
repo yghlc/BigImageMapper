@@ -45,6 +45,7 @@ import skimage.io
 import skimage.color
 
 import cv2
+import subprocess
 
 # check python version
 from distutils.version import LooseVersion
@@ -90,6 +91,7 @@ sys.path.append(landuse_path+'/datasets')
 import build_RS_data as build_RS_data
 
 import parameters
+from basic_src import io_function
 
 
 ############################################################
@@ -306,7 +308,7 @@ def muti_inf_remoteSensing_image(model,image_path=None):
     use multiple scale (different patch size) for inference, then merge them using non_max_suppression
     :param model: trained model
     :param image_path:
-    :return:
+    :return: True if successful, False otherwise
     '''
 
     # get parameters
@@ -315,6 +317,8 @@ def muti_inf_remoteSensing_image(model,image_path=None):
     muti_patch_h = parameters.get_string_parameters(para_file, "muti_inf_patch_height")
     muti_overlay_x = parameters.get_string_parameters(para_file, "muti_inf_pixel_overlay_x")
     muti_overlay_y = parameters.get_string_parameters(para_file, "muti_inf_pixel_overlay_y")
+
+    nms_iou_threshold = parameters.get_digit_parameters(para_file, "nms_iou_threshold", None, 'float')
 
     patch_w_list = [int(item) for item in muti_patch_w.split(',')]
     patch_h_list = [int(item) for item in muti_patch_h.split(',')]
@@ -325,10 +329,79 @@ def muti_inf_remoteSensing_image(model,image_path=None):
     for patch_w,patch_h,overlay_x,overlay_y in zip(patch_w_list,patch_h_list,overlay_x_list,overlay_y_list):
         inf_rs_image_json(model, patch_w, patch_h, overlay_x, overlay_y, inf_image_dir)
 
-    # load and perform non_max_suppression
+    # load all boxes of images
+    with open(inf_list_file) as file_obj:
+        files_list = file_obj.readlines()
+        for img_idx, image_name in enumerate(files_list):
+            file_pattern = os.path.join(inf_output_dir, 'I%d_patches_*_*_*'%img_idx) # e.g., I0_patches_320_320_80_80
+            proc = subprocess.Popen('ls -d ' + file_pattern, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            profiles, err = proc.communicate()
+            json_folder_list = profiles.split()
+
+            # bytes to str
+            if isinstance(json_folder_list[0],bytes):
+                json_folder_list = [item.decode() for item in json_folder_list]
+
+            print('loading json files of image :%d,  in %s'%(img_idx,','.join(json_folder_list)))
+            # load all the boxes and scores
+            mrcnn_r_list = []   # the results dict from rcnn, contains all the information
+            mask_files = []     # mask file for instance, each box has a mask file
+            boxes = []          # boxes of instance
+            class_ids = []      # class id of each box
+            patch_indices = []  # index of patch, on which contains the box
+            scores = []         # scores of boxes
+            json_files_list = [] # json files of patches
+            for json_folder in json_folder_list:
+                file_list = io_function.get_file_list_by_ext('.txt',json_folder,bsub_folder=False)
+                json_files_list.extend(file_list)
+
+            # load and convert coordinates, don't load mask images in this stage
+            patch_idx = 0
+            for json_file in json_files_list:
+                mrcnn_r = build_RS_data.load_instances_patch(json_file, bNMS=True,bReadMaks=False)
+                mrcnn_r_list.append(mrcnn_r)  # this corresponds to json_files_list
+                if mrcnn_r is not None:     # this will ignore the patches without instances, it is fine hlc 2018-11-25
+                    mask_files.extend(mrcnn_r['masks'])
+                    boxes.extend(mrcnn_r['rois'])
+                    scores.extend(mrcnn_r['scores'])
+                    class_ids.extend(mrcnn_r['class_ids'])
+                    patch_indices.extend([patch_idx]*len(mrcnn_r['rois']))
+                patch_idx += 1
+
+            # Apply non-max suppression
+            keep_idxs = utils.non_max_suppression(np.array(boxes), np.array(scores), nms_iou_threshold)
+            # boxes_keep = [r for i, r in enumerate(boxes) if i in keep_ixs]
+
+            # convert kept patches to label images
+            for idx,keep_idx in enumerate(keep_idxs):
+
+                patch_idx = patch_indices[keep_idx]         # the index in original patches
+
+                # load mask (in the previous step, we did not load masks)
+                mask_file = mask_files[keep_idx]
+                patch_dir = os.path.dirname(json_files_list[patch_idx])
+                org_img_name = mrcnn_r_list[patch_idx]['org_img']
+                b_dict = mrcnn_r_list[patch_idx]['patch_boundary']
+                patch_boundary = (b_dict['xoff'],b_dict['yoff'],b_dict['xsize'],b_dict['ysize'])
+                img_patch = build_RS_data.patchclass(os.path.join(inf_image_dir,org_img_name),patch_boundary)
+
+                # the mask only contains one instances
+                # masks can overlap each others, but instances should not overlap each other
+                # non-instance pixels are zeros,which will be set as non-data when performing gdal_merge.pyg
+                mask = cv2.imread(os.path.join(patch_dir, mask_file), cv2.IMREAD_UNCHANGED)
+                mask [mask == 255] = class_ids[keep_idx]  # when save mask,  mask*255 for display
 
 
-    # convert results to label images
+                print('Save mask of instances:%d on Image:%d , shape:(%d,%d)' %
+                      (idx,img_idx, mask.shape[0], mask.shape[1]))
+
+                # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+                file_name = "I%d_%d" % (img_idx, idx)
+
+                save_path = os.path.join(inf_output_dir, file_name + '.tif')
+                if build_RS_data.save_patch_oneband_8bit(img_patch, mask.astype(np.uint8), save_path) is False:
+                    return False
+
 
 
     return True
@@ -386,7 +459,7 @@ def inf_rs_image_json(model,patch_w,patch_h,overlay_x,overlay_y,inf_image_dir):
             results = model.detect([img_data], verbose=0)
             mrcc_r = results[0]
 
-            print('Save segmentation result of Image:%d patch:%4d, shape:(%d,%d)' %
+            print('Save Instances of Image:%d patch:%4d, shape:(%d,%d) to a json file' %
                   (img_idx, idx, img_patch.boundary[3], img_patch.boundary[2]))  # ysize, xsize
 
             # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
@@ -835,6 +908,9 @@ if __name__ == '__main__':
 
         # test load instance from disks
         # r = build_RS_data.load_instances_patch(os.path.join(inf_output_dir,'I0_3.txt'),bDisplay=True)
+        # r['rois'] = np.array(r['rois'])
+        # r['class_ids'] = np.array(r['class_ids'])
+        # r['scores'] = np.array(r['scores'])
 
         visualize.display_instances(image_data, r['rois'], r['masks'], r['class_ids'],
                                      ['BG','thawslump'], scores=r['scores'], figsize=(8, 8))

@@ -275,16 +275,18 @@ def save_instances_patch(patch_obj,mrcc_result,save_path):
 
     return True
 
-def load_instances_patch(save_path,bDisplay=False,bReadMaks=True):
+def load_instances_patch(save_path,bDisplay=False,bNMS=False,bReadMaks=True):
     """
     load all instances of a patch
     :param save_path: the json file contain instances
     :param bDisplay: if True, it will convert global coordinates (original remote sensing images) to
-    local coordinates (on patch) for display
+    local coordinates (on patch) for display. If bDisplay=True, then bNMS must be False, vise verse.
+    :param bNMS: if True, it will convert (xoff, yoff, xsize, ysize) to (y1, x1, y2, x2).
     :param bReadMaks: if True, it will read the mask file
     :return:  mrcc_result: results (dict) from mask rcnn or None
     """
 
+    assert not (bDisplay is True and bNMS is True)
     with open(save_path) as json_file:
         patch_data = json.load(json_file)
 
@@ -310,19 +312,30 @@ def load_instances_patch(save_path,bDisplay=False,bReadMaks=True):
                 mask_list = [ (mask/255).astype(np.uint8) for mask in mask_list]  # when save mask,  mask*255 for display
                 masks = np.stack(mask_list, axis=2)
                 mrcc_result['masks'] = masks  # shape: (height, width, num_instance)
+            else:
+                # save this one for producing patch label images (for merging using GDAL)
+                mrcc_result['masks'] = masks_file
 
             # convert the coordinates
             if bDisplay:
                 rois = [ [bbox[1] - boundary[1],bbox[0]-boundary[0],
                           bbox[1] - boundary[1] + bbox[3],
-                          bbox[0] - boundary[0] + bbox[2]] for bbox in rois ]  # (y1, x1, y2, x2, class_id)
-            # test
-            # for roi in rois:
-            #     print(roi)
+                          bbox[0] - boundary[0] + bbox[2]] for bbox in rois ]  # local (y1, x1, y2, x2, class_id)
 
-            mrcc_result['scores'] = np.asarray(scores)  # list to numpy array
-            mrcc_result['rois'] = np.asarray(rois)  # need convert?
-            mrcc_result['class_ids'] = np.asarray(class_ids)
+            if bNMS:
+                rois = [ [bbox[1],bbox[0],
+                          bbox[1] + bbox[3],
+                          bbox[0] + bbox[2]] for bbox in rois ]  # global (y1, x1, y2, x2, class_id)
+
+
+            mrcc_result['scores'] = scores  # list to numpy array will be performed outside this function
+            mrcc_result['rois'] = rois
+            mrcc_result['class_ids'] = class_ids
+
+            # save these two for merging process using GDAL
+            mrcc_result['patch_boundary'] = patch_boundary
+            mrcc_result['org_img'] = org_img
+
 
             return mrcc_result
 
