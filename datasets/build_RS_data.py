@@ -327,6 +327,7 @@ def load_instances_patch(save_path,bDisplay=False,bNMS=False,bReadMaks=True):
                           bbox[1] + bbox[3],
                           bbox[0] + bbox[2]] for bbox in rois ]  # global (y1, x1, y2, x2, class_id)
 
+            #TOD: reduce the score of a box which close to the edge of the patches
 
             mrcc_result['scores'] = scores  # list to numpy array will be performed outside this function
             mrcc_result['rois'] = rois
