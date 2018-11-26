@@ -118,7 +118,7 @@ class PlanetConfig(Config):
     GPU_COUNT = 1
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # only one class. i.e. thaw slumps
+    NUM_CLASSES = 1 + 2  # two class. i.e. thaw slumps and "non-thaw-slumps but similar"
 
     #add more
     # the large side, and that determines the image shape, the size of the split images < 480 by 480
@@ -686,6 +686,7 @@ if __name__ == '__main__':
 
 
     NO_DATA = parameters.get_digit_parameters(args.para_file, 'dst_nodata',None, 'int')
+    num_class_noBG = parameters.get_digit_parameters(args.para_file,'NUM_CLASSES_noBG',None, 'int')
 
     # modify default setting according to different machine
     gpu_count = parameters.get_digit_parameters(args.para_file, 'gpu_count', None, 'int')
@@ -694,6 +695,7 @@ if __name__ == '__main__':
     PlanetConfig.IMAGES_PER_GPU  = images_per_gpu
 
     PlanetConfig.BACKBONE = parameters.get_string_parameters(args.para_file, 'BACKBONE')
+    PlanetConfig.NUM_CLASSES = 1 + num_class_noBG
 
 
     # Which weights to start with?
@@ -759,7 +761,7 @@ if __name__ == '__main__':
         class InferenceConfig(PlanetConfig):
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
-            NUM_CLASSES = 2  # have the same class number
+            NUM_CLASSES = 1 + num_class_noBG  # have the same class number
             GPU_COUNT = 1
             IMAGES_PER_GPU = 1
             DETECTION_MIN_CONFIDENCE = 0
