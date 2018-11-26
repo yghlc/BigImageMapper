@@ -46,5 +46,5 @@ out_dir=$(dirname $label_raster)
 echo $out_dir
 cd $out_dir
     rm *_AllClass.tif
-    rm *_oneClass.tif
+    rm *_oneClass.tif || true  # or true: don't exit with error and can continue run
 cd -
