@@ -93,7 +93,7 @@ def scale(image_np, save_dir, input_filename,scale=[0.5,0.75,1.25,1.5]):
     for value in scale:
         scale = iaa.Affine(scale=value)
         images_s = scale.augment_image(image_np)
-        save_path = os.path.join(save_dir, basename + '_S'+str(value) + ext)
+        save_path = os.path.join(save_dir, basename + '_S'+str(value).replace('.','') + ext)
         io.imsave(save_path, images_s)
 
     return True
@@ -199,7 +199,9 @@ def main(options, args):
 
     # print(options.para_file)
     augmentation = parameters.get_string_parameters(options.para_file,'data_augmentation')
-    augmentation = [item.lower() for item in augmentation.split()]
+    augmentation = [item.lower().strip() for item in augmentation.split(',')]
+    # print(augmentation)
+    # sys.exit(1)
 
     if len(augmentation) < 1:
         print ('No requirement of data augmentation')
