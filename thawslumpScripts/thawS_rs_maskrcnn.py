@@ -151,8 +151,8 @@ class PlanetDataset(utils.Dataset):
         class_ids: If provided, only loads images that have the given classes.
         """
         # Add classes
-        self.add_class("planet", 1, "thawslump")    # source, class_id, class_name
-        self.add_class("planet", 2, "thawslump_similar")  # source, class_id, class_name
+        self.add_class("planet_TS", 1, "thawslump")    # source, class_id, class_name
+        self.add_class("planet_noTS", 2, "thawslump_similar")  # source, class_id, class_name
 
         # Add images in the image_dir
         if subset=='train':
@@ -824,7 +824,12 @@ if __name__ == '__main__':
 
         # Image Augmentation
         # Right/Left flip 50% of the time
-        augmentation = imgaug.augmenters.Fliplr(0.5)
+        # augmentation = imgaug.augmenters.Fliplr(0.5)
+        # no_aug_sources = ['planet_noTS']
+
+        # Image augmentation will be performed during preparing image patches
+        augmentation = None
+        no_aug_sources = None
 
         # *** This training schedule is an example. Update to your needs ***
 
@@ -834,7 +839,7 @@ if __name__ == '__main__':
                     learning_rate=config.LEARNING_RATE,
                     epochs=10,  #40
                     layers='heads',
-                    augmentation=augmentation)
+                    augmentation=augmentation,no_augmentation_sources=no_aug_sources)
 
         # Training - Stage 2
         # Finetune layers from ResNet stage 4 and up
@@ -843,7 +848,7 @@ if __name__ == '__main__':
                     learning_rate=config.LEARNING_RATE,
                     epochs=50, #120
                     layers='4+',
-                    augmentation=augmentation)
+                    augmentation=augmentation,no_augmentation_sources=no_aug_sources)
 
         # Training - Stage 3
         # Fine tune all layers
@@ -852,7 +857,7 @@ if __name__ == '__main__':
                     learning_rate=config.LEARNING_RATE / 10,
                     epochs=70, # 160
                     layers='all',
-                    augmentation=augmentation)
+                    augmentation=augmentation,no_augmentation_sources=no_aug_sources)
     elif args.command == "evaluate":
         pass
     elif args.command == "inference":

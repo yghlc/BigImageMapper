@@ -16,6 +16,13 @@ from imgaug import augmenters as iaa
 from skimage import io
 # import skimage.transform
 
+HOME = os.path.expanduser('~')
+
+# path of DeeplabforRS
+codes_dir2 = HOME +'/codes/PycharmProjects/DeeplabforRS'
+sys.path.insert(0, codes_dir2)
+import parameters
+
 def Flip(image_np, save_dir, input_filename):
     """
     Flip image horizontally and vertically
@@ -120,7 +127,32 @@ def blurer(image_np, save_dir, input_filename,is_groud_true,sigma=[1,2]):
 
     return True
 
-def image_augment(img_path,save_dir,is_groud_true):
+def Crop(image_np, save_dir, input_filename,px = [10,30] ):
+    """
+    Crop the original images
+    Args:
+        image_np: image_np:  'images' should be either a 4D numpy array of shape (N, height, width, channels)
+        save_dir: the directory for saving images
+        input_filename: File base name (e.g basename.tif)
+        sigma:
+
+    Returns: True if successful, False otherwise
+
+    """
+
+    file_basename = os.path.basename(input_filename)
+    basename = os.path.splitext(file_basename)[0]
+    ext = os.path.splitext(file_basename)[1]
+
+    for value in px:
+        crop = iaa.Crop(px=value)
+        images_s = crop.augment_image(image_np)
+        save_path = os.path.join(save_dir, basename + '_C'+str(value) + ext)
+        io.imsave(save_path, images_s)
+
+    return True
+
+def image_augment(img_path,save_dir,is_groud_true,augment = None):
     if os.path.isfile(img_path) is False:
         print ("Error, File %s not exist"%img_path)
         return False
@@ -131,16 +163,23 @@ def image_augment(img_path,save_dir,is_groud_true):
     img_test = io.imread(img_path)
     basename = os.path.basename(img_path)
 
-    if Flip(img_test, save_dir, basename) is False:
-        return False
-    if rotate(img_test, save_dir, basename, degree=[45, 90, 135]) is False:   #45, 90, 135
-        return False
-    # scale(img_test,save_dir,basename)
-    if blurer(img_test, save_dir, basename,is_groud_true, sigma=[1, 2]) is False:
-        return False
+    if 'flip' in  augment:
+        if Flip(img_test, save_dir, basename) is False:
+            return False
+    if 'rotate' in augment:
+        if rotate(img_test, save_dir, basename, degree=[45, 90, 135]) is False:   #45, 90, 135
+            return False
+    if 'blur' in augment:
+        if blurer(img_test, save_dir, basename,is_groud_true, sigma=[1, 2]) is False:
+            return False
+    if 'crop' in augment:
+        if Crop(img_test, save_dir, basename, px=[10, 30]) is False:
+            return False
+    if 'scale' in augment:
+        if scale(img_test, save_dir, basename, scale=[0.75,1.25]) is False:
+            return False
 
     return True
-
 
 
 
@@ -158,6 +197,14 @@ def main(options, args):
 
     is_groud_true = options.ground_truth
 
+    # print(options.para_file)
+    augmentation = parameters.get_string_parameters(options.para_file,'data_augmentation')
+    augmentation = [item.lower() for item in augmentation.split()]
+
+    if len(augmentation) < 1:
+        print ('No requirement of data augmentation')
+        return True
+
     img_list_txt = args[0]
     if os.path.isfile(img_list_txt) is False:
         print ("Error, File %s not exist" % img_list_txt)
@@ -169,7 +216,7 @@ def main(options, args):
         file_path  = line.strip()
         file_path = os.path.join(img_dir,file_path+extension)
         print ("Augmentation of image (%d / %d)"%(index,len(files_list)))
-        if image_augment(file_path,out_dir,is_groud_true) is False:
+        if image_augment(file_path,out_dir,is_groud_true,augment=augmentation) is False:
             print ('Error, Failed in image augmentation')
             return False
         index += 1
@@ -181,13 +228,17 @@ def main(options, args):
 if __name__ == "__main__":
     usage = "usage: %prog [options] images_txt"
     parser = OptionParser(usage=usage, version="1.0 2017-7-15")
-    parser.description = 'Introduction: permaform image augmentation '
+    parser.description = 'Introduction: perform image augmentation '
     # parser.add_option("-W", "--s_width",
     #                   action="store", dest="s_width",
     #                   help="the width of wanted patch")
     # parser.add_option("-H", "--s_height",
     #                   action="store", dest="s_height",
     #                   help="the height of wanted patch")
+
+    parser.add_option("-p", "--para_file",
+                      action="store", dest="para_file",
+                      help="the parameters file")
 
     parser.add_option("-g", "--is_ground_truth",
                       action="store_true", dest="ground_truth",default=False,
@@ -211,8 +262,8 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(2)
 
-    # if options.para_file is None:
-    #     basic.outputlogMessage('error, parameter file is required')
-    #     sys.exit(2)
+    if options.para_file is None:
+        print('error, parameter file is required')
+        sys.exit(2)
 
     main(options, args)

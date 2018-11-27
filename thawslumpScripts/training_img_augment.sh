@@ -6,6 +6,13 @@ echo $(basename $0) : "Perform image augmentation"
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+para_file=$1
+if [ ! -f $para_file ]; then
+   echo "File ${para_file} not exists in current folder: ${PWD}"
+   exit 1
+fi
+
+
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
@@ -28,14 +35,14 @@ function update_listfile() {
 
 #augment training images
 cd split_images
-    ${augscript} -d ./ -e .png ../list/trainval.txt -o ./
+    python3 ${augscript} -p ../${para_file} -d ./ -e .png ../list/trainval.txt -o ./
 
     update_listfile
 cd ..
 
 #augment training lables
 cd split_labels
-    ${augscript} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
+    python3 ${augscript} -p ../${para_file} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
 
     # have same list, so we don't need to update again
     #update_listfile

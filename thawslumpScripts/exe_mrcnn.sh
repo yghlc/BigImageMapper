@@ -58,7 +58,7 @@ SECONDS=0
 # there is another script ("build_RS_data.py"), but seem have not finished.  26 Oct 2018 hlc
 
 #${eo_dir}/thawslumpScripts/split_sub_images.sh ${para_file}
-##${eo_dir}/thawslumpScripts/training_img_augment.sh
+##${eo_dir}/thawslumpScripts/training_img_augment.sh ${para_file}
 
 ##separate the images to training and validation portion, add "-s" to shuffle the list before splitting
 #${eo_dir}/datasets/train_test_split.py list/trainval.txt
