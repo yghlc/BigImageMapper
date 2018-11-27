@@ -9,7 +9,7 @@ if [ ! -f $para_file ]; then
    exit 1
 fi
 
-para_py=/home/hlc/codes/PycharmProjects/DeeplabforRS/parameters.py
+para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
 root=$(python2 ${para_py} -p ${para_file} working_root)

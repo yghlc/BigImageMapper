@@ -43,7 +43,7 @@ function convert_to16bit() {
 
 # run this in ~/Data/2018_IEEE_GRSS_Data_Fusion/2018_Release_Phase1/Lidar_GeoTiff_Rasters
 
-cd /home/hlc/Data/2018_IEEE_GRSS_Data_Fusion/2018IEEE_Contest/Phase2/Lidar_GeoTiff_Rasters
+cd ~/Data/2018_IEEE_GRSS_Data_Fusion/2018IEEE_Contest/Phase2/Lidar_GeoTiff_Rasters
 
 #gdal_translate -ot Byte -scale 210 3845 0 255 UH17_GI1F051_TR.tif UH17_GI1F051_TR_8bit.tif
 

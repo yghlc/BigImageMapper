@@ -16,7 +16,7 @@ if [ ! -f $para_file ]; then
    exit 1
 fi
 
-eo_dir=/home/hlc/codes/PycharmProjects/Landuse_DL
+eo_dir=~/codes/PycharmProjects/Landuse_DL
 deeplabRS=~/codes/PycharmProjects/DeeplabforRS
 
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
