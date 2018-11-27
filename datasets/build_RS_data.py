@@ -275,7 +275,7 @@ def save_instances_patch(patch_obj,mrcc_result,save_path):
 
     return True
 
-def load_instances_patch(save_path,bDisplay=False,bNMS=False,bReadMaks=True):
+def load_instances_patch(save_path,bDisplay=False,bNMS=False,bReadMaks=True,final_classes=None):
     """
     load all instances of a patch
     :param save_path: the json file contain instances
@@ -283,6 +283,7 @@ def load_instances_patch(save_path,bDisplay=False,bNMS=False,bReadMaks=True):
     local coordinates (on patch) for display. If bDisplay=True, then bNMS must be False, vise verse.
     :param bNMS: if True, it will convert (xoff, yoff, xsize, ysize) to (y1, x1, y2, x2).
     :param bReadMaks: if True, it will read the mask file
+    :param final_class: the class ids want to keep in the final results
     :return:  mrcc_result: results (dict) from mask rcnn or None
     """
 
@@ -298,6 +299,10 @@ def load_instances_patch(save_path,bDisplay=False,bNMS=False,bReadMaks=True):
 
         # load instances
         instances = patch_data['instances']
+        # only keep the instances with class id in final_class
+        if final_classes is not None:
+            instances = [item for item in instances if item['class_id'] in final_classes]
+
         if len(instances) > 0:
             mrcc_result = {}
             masks_file = [inst['mask'] for inst in instances ]

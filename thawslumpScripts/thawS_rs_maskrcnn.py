@@ -318,6 +318,7 @@ def muti_inf_remoteSensing_image(model,image_path=None):
     muti_patch_h = parameters.get_string_parameters(para_file, "muti_inf_patch_height")
     muti_overlay_x = parameters.get_string_parameters(para_file, "muti_inf_pixel_overlay_x")
     muti_overlay_y = parameters.get_string_parameters(para_file, "muti_inf_pixel_overlay_y")
+    final_keep_classes = parameters.get_string_parameters(para_file, "final_keep_classes")
 
     nms_iou_threshold = parameters.get_digit_parameters(para_file, "nms_iou_threshold", None, 'float')
 
@@ -325,6 +326,10 @@ def muti_inf_remoteSensing_image(model,image_path=None):
     patch_h_list = [int(item) for item in muti_patch_h.split(',')]
     overlay_x_list = [int(item) for item in muti_overlay_x.split(',')]
     overlay_y_list = [int(item) for item in muti_overlay_y.split(',')]
+    if final_keep_classes == '':
+        final_keep_classes = None
+    else:
+        final_keep_classes = [int(item) for item in final_keep_classes.split(',')]
 
     # inference and save to json files
     for patch_w,patch_h,overlay_x,overlay_y in zip(patch_w_list,patch_h_list,overlay_x_list,overlay_y_list):
@@ -359,7 +364,7 @@ def muti_inf_remoteSensing_image(model,image_path=None):
             # load and convert coordinates, don't load mask images in this stage
             patch_idx = 0
             for json_file in json_files_list:
-                mrcnn_r = build_RS_data.load_instances_patch(json_file, bNMS=True,bReadMaks=False)
+                mrcnn_r = build_RS_data.load_instances_patch(json_file, bNMS=True,bReadMaks=False,final_classes=final_keep_classes)
                 mrcnn_r_list.append(mrcnn_r)  # this corresponds to json_files_list
                 if mrcnn_r is not None:     # this will ignore the patches without instances, it is fine hlc 2018-11-25
                     mask_files.extend(mrcnn_r['masks'])
