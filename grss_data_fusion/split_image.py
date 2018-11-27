@@ -107,6 +107,13 @@ def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_o
     # print(('patch Width %d  Height %d'%(patch_w,patch_h)))
     patch_boundary = sliding_window(img_witdh,img_height,patch_w,patch_h,adj_overlay_x,adj_overlay_y)
 
+    # remove duplicated patches
+    patch_boundary_unique = set(patch_boundary)
+    if len(patch_boundary_unique) != len(patch_boundary):
+        print('remove %d duplicated patches of images %s'%(len(patch_boundary)-len(patch_boundary_unique),
+              os.path.basename(input)))
+        patch_boundary = patch_boundary_unique
+
     index = 0
     pre_name = os.path.splitext(os.path.basename(input))[0]
     f_obj = open('split_image_info.txt', 'a+')
