@@ -152,6 +152,7 @@ class PlanetDataset(utils.Dataset):
         """
         # Add classes
         self.add_class("planet", 1, "thawslump")    # source, class_id, class_name
+        self.add_class("planet", 2, "thawslump_similar")  # source, class_id, class_name
 
         # Add images in the image_dir
         if subset=='train':
