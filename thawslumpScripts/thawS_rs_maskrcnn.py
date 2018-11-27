@@ -343,6 +343,8 @@ def muti_inf_remoteSensing_image(model,image_path=None):
             proc = subprocess.Popen('ls -d ' + file_pattern, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             profiles, err = proc.communicate()
             json_folder_list = profiles.split()
+            if len(json_folder_list) < 1:
+                raise IOError('No folder containing json files in %s'%inf_output_dir)
 
             # bytes to str
             if isinstance(json_folder_list[0],bytes):
