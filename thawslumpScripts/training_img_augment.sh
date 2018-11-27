@@ -54,14 +54,14 @@ mv trainval.txt list/.
 
 #augment training images
 cd split_images
-    python3 ${augscript} -p ../${para_file} -d ./ -e .png ../list/trainval.txt -o ./
+    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e .png ../list/trainval.txt -o ./
 
     update_listfile
 cd ..
 
 #augment training lables
 cd split_labels
-    python3 ${augscript} -p ../${para_file} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
+    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
 
     # have same list, so we don't need to update again
     #update_listfile
