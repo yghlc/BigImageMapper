@@ -45,7 +45,7 @@ ${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
 # there is another script ("build_RS_data.py"), but seem have not finished.  26 Oct 2018 hlc
 
 ${eo_dir}/thawslumpScripts/split_sub_images.sh ${para_file}
-${eo_dir}/thawslumpScripts/training_img_augment.sh
+${eo_dir}/thawslumpScripts/training_img_augment.sh ${para_file}
 
 ## convert to TFrecord
 python ${eo_dir}/datasets/build_muti_lidar_data.py

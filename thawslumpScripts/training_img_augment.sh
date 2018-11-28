@@ -20,6 +20,8 @@ eo_dir=~/codes/PycharmProjects/Landuse_DL
 #eo_dir=$(python2 ${para_py} -p ${para_file} codes_dir)
 augscript=${eo_dir}/grss_data_fusion/image_augment.py
 
+ignore_classes=$(python2 ${para_py} -p ${para_file} data_aug_ignore_classes)
+
 SECONDS=0
 
 # Helper function to update the list
@@ -35,7 +37,7 @@ function update_listfile() {
 }
 
 #######################################################
-# don't augmentation class_2
+# don't augmentation ignore classes
 if [ -d "split_images_tmp" ]; then
     rm -r split_images_tmp
 fi
@@ -44,8 +46,8 @@ if [ -d "split_labels_tmp" ]; then
 fi
 mkdir split_images_tmp
 mkdir split_labels_tmp
-mv split_images/*_class_2* split_images_tmp/.
-mv split_labels/*_class_2* split_labels_tmp/.
+mv split_images/*_${ignore_classes}_* split_images_tmp/.
+mv split_labels/*_${ignore_classes}_* split_labels_tmp/.
 cd split_images
 update_listfile
 cd ..
@@ -81,7 +83,7 @@ mv trainval.txt list/.
 cp list/trainval.txt list/val.txt
 
 #######################################################
-# move class_2 back
+# move ignore classes back
 mv split_images_tmp/* split_images/.
 mv split_labels_tmp/* split_labels/.
 cd split_images
