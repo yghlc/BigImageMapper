@@ -27,6 +27,7 @@ expr_name=$(python2 ${para_py} -p ${para_file} expr_name)
 NUM_ITERATIONS=$(python2 ${para_py} -p ${para_file} export_iteration_num)
 trail=iter${NUM_ITERATIONS}
 
+trained_model=$(python2 ${para_py} -p ${para_file} trained_model)
 
 testid=$(basename $PWD)_${expr_name}_${trail}
 output=${testid}.tif
@@ -41,7 +42,7 @@ fi
 
 ~/programs/anaconda3/bin/python3 ${eo_dir}/thawslumpScripts/thawS_rs_maskrcnn.py inference_rsImg_multi \
     --para_file=${para_file} \
-    --model='last'
+    --model=${trained_model}
 
 
 duration=$SECONDS
