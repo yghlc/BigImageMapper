@@ -65,7 +65,7 @@ def main(options, args):
 
 
     if b_diff is False:
-        basic.outputlogMessage('all the patches are equal')
+        basic.outputlogMessage('all the patches are good')
 
 
 
