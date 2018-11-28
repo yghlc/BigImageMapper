@@ -58,9 +58,9 @@ def main(options, args):
             if max_label > num_classes_noBG:
                 b_diff = True
                 basic.outputlogMessage('%s: maximum pixel value (%d) in label images > num_class (%d)'%(file_name,max_label,num_classes_noBG))
-            if len(unique_value) != num_classes_noBG + 1:
+            if len(unique_value) > num_classes_noBG + 1:
                 b_diff = True
-                basic.outputlogMessage('%s: the count of unique pixel value (%s) in label images not equals num_class (%d)' % (
+                basic.outputlogMessage('%s: the count of unique pixel value (%s) in label images is greater than num_class (%d)' % (
                 file_name, str(unique_value), num_classes_noBG))
 
 
