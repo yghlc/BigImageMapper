@@ -709,6 +709,15 @@ if __name__ == '__main__':
     PlanetConfig.GPU_COUNT = gpu_count
     PlanetConfig.IMAGES_PER_GPU  = images_per_gpu
 
+    # Number of training and validation steps per epoch, same as nucleus sample
+    # https://github.com/matterport/Mask_RCNN/issues/1092
+    # https://github.com/matterport/Mask_RCNN/issues/550
+    train_file_count = sum(1 for line in open('list/train_list.txt'))
+    val_file_count = sum(1 for line in open('list/val_list.txt'))
+    batchsize = gpu_count*images_per_gpu
+    PlanetConfig.STEPS_PER_EPOCH = train_file_count // batchsize+ 1
+    PlanetConfig.VALIDATION_STEPS = max(1, val_file_count // batchsize)
+
     PlanetConfig.BACKBONE = parameters.get_string_parameters(args.para_file, 'BACKBONE')
     PlanetConfig.NUM_CLASSES = 1 + num_class_noBG
 
