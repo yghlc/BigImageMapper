@@ -16,6 +16,8 @@ from imgaug import augmenters as iaa
 from skimage import io
 # import skimage.transform
 
+import numpy as np
+
 HOME = os.path.expanduser('~')
 
 # path of DeeplabforRS
@@ -23,13 +25,35 @@ codes_dir2 = HOME +'/codes/PycharmProjects/DeeplabforRS'
 sys.path.insert(0, codes_dir2)
 import parameters
 
-def Flip(image_np, save_dir, input_filename):
+import basic_src.basic as basic
+basic.setlogfile('log_data_augmentation.txt')
+
+# will be update in the main function
+num_classes = 0
+
+def remove_unexpected_ids(img_data, img_name):
+    '''
+    remove unexpected ids after augmentation, it will modify the numpy array
+    :param img_data: numpy array of image, should be one band
+    :param img_name: file name, help for debug
+    :return: True,
+    '''
+
+    unique_value = np.unique(img_data)
+    if len(unique_value) > num_classes:
+        img_data[ img_data > num_classes -1 ] = 0  # unexpected ids are set as zeros (background)
+        basic.outputlogMessage('remove unexpected ids (%s) in %s'%(str(unique_value),img_name))
+
+    return True
+
+def Flip(image_np, save_dir, input_filename,is_groud_true):
     """
     Flip image horizontally and vertically
     Args:
         image_np: image_np:  'images' should be either a 4D numpy array of shape (N, height, width, channels)
         save_dir: the directory for saving images
         file_basename: File base name (e.g basename.tif)
+        is_groud_true:
 
     Returns: True if successful, False otherwise
 
@@ -40,17 +64,21 @@ def Flip(image_np, save_dir, input_filename):
 
     flipper = iaa.Fliplr(1.0)  # always horizontally flip each input image; Fliplr(P) Horizontally flips images with probability P.
     images_lr = flipper.augment_image(image_np)  # horizontally flip image 0
+    if is_groud_true:
+        remove_unexpected_ids(images_lr, input_filename)
     save_path = os.path.join(save_dir,  basename + '_fliplr' + ext)
     io.imsave(save_path, images_lr)
     #
     vflipper = iaa.Flipud(1.0)  # vertically flip each input image with 90% probability
     images_ud = vflipper.augment_image(image_np)  # probably vertically flip image 1
+    if is_groud_true:
+        remove_unexpected_ids(images_ud, input_filename)
     save_path = os.path.join(save_dir, basename + '_flipud' + ext)
     io.imsave(save_path, images_ud)
 
     return True
 
-def rotate(image_np, save_dir, input_filename,degree=[90,180,270]):
+def rotate(image_np, save_dir, input_filename,is_groud_true,degree=[90,180,270]):
     """
     roate image with 90, 180, 270 degree
     Args:
@@ -58,6 +86,7 @@ def rotate(image_np, save_dir, input_filename,degree=[90,180,270]):
         save_dir: the directory for saving images
         input_filename: File base name (e.g basename.tif)
         degree: the degree list for rotation
+        is_groud_true:
 
     Returns: True if successful, False otherwise
 
@@ -69,12 +98,14 @@ def rotate(image_np, save_dir, input_filename,degree=[90,180,270]):
     for angle in degree:
         roate = iaa.Affine(rotate=angle)
         images_r = roate.augment_image(image_np)
+        if is_groud_true:
+            remove_unexpected_ids(images_r, input_filename)
         save_path = os.path.join(save_dir, basename + '_R'+str(angle) + ext)
         io.imsave(save_path, images_r)
 
     return True
 
-def scale(image_np, save_dir, input_filename,scale=[0.5,0.75,1.25,1.5]):
+def scale(image_np, save_dir, input_filename,is_groud_true,scale=[0.5,0.75,1.25,1.5]):
     """
     scale image with 90, 180, 270 degree
     Args:
@@ -82,6 +113,7 @@ def scale(image_np, save_dir, input_filename,scale=[0.5,0.75,1.25,1.5]):
         save_dir: the directory for saving images
         input_filename: File base name (e.g basename.tif)
         scale: the scale list for zoom in or zoom out
+        is_groud_true:
 
     Returns: True is successful, False otherwise
 
@@ -93,6 +125,8 @@ def scale(image_np, save_dir, input_filename,scale=[0.5,0.75,1.25,1.5]):
     for value in scale:
         scale = iaa.Affine(scale=value)
         images_s = scale.augment_image(image_np)
+        if is_groud_true:
+            remove_unexpected_ids(images_s, input_filename)
         save_path = os.path.join(save_dir, basename + '_S'+str(value).replace('.','') + ext)
         io.imsave(save_path, images_s)
 
@@ -127,14 +161,15 @@ def blurer(image_np, save_dir, input_filename,is_groud_true,sigma=[1,2]):
 
     return True
 
-def Crop(image_np, save_dir, input_filename,px = [10,30] ):
+def Crop(image_np, save_dir, input_filename,is_groud_true,px = [10,30] ):
     """
     Crop the original images
     Args:
         image_np: image_np:  'images' should be either a 4D numpy array of shape (N, height, width, channels)
         save_dir: the directory for saving images
         input_filename: File base name (e.g basename.tif)
-        sigma:
+        px:
+        is_groud_true
 
     Returns: True if successful, False otherwise
 
@@ -147,6 +182,8 @@ def Crop(image_np, save_dir, input_filename,px = [10,30] ):
     for value in px:
         crop = iaa.Crop(px=value)
         images_s = crop.augment_image(image_np)
+        if is_groud_true:
+            remove_unexpected_ids(images_s, input_filename)
         save_path = os.path.join(save_dir, basename + '_C'+str(value) + ext)
         io.imsave(save_path, images_s)
 
@@ -164,19 +201,19 @@ def image_augment(img_path,save_dir,is_groud_true,augment = None):
     basename = os.path.basename(img_path)
 
     if 'flip' in  augment:
-        if Flip(img_test, save_dir, basename) is False:
+        if Flip(img_test, save_dir, basename,is_groud_true) is False:
             return False
     if 'rotate' in augment:
-        if rotate(img_test, save_dir, basename, degree=[45, 90, 135]) is False:   #45, 90, 135
+        if rotate(img_test, save_dir, basename,is_groud_true, degree=[45, 90, 135]) is False:   #45, 90, 135
             return False
     if 'blur' in augment:
         if blurer(img_test, save_dir, basename,is_groud_true, sigma=[1, 2]) is False:
             return False
     if 'crop' in augment:
-        if Crop(img_test, save_dir, basename, px=[10, 30]) is False:
+        if Crop(img_test, save_dir, basename,is_groud_true, px=[10, 30]) is False:
             return False
     if 'scale' in augment:
-        if scale(img_test, save_dir, basename, scale=[0.75,1.25]) is False:
+        if scale(img_test, save_dir, basename,is_groud_true, scale=[0.75,1.25]) is False:
             return False
 
     return True
@@ -202,6 +239,10 @@ def main(options, args):
     augmentation = [item.lower().strip() for item in augmentation.split(',')]
     # print(augmentation)
     # sys.exit(1)
+    # number of classes
+    num_classes_noBG = parameters.get_digit_parameters(options.para_file, 'NUM_CLASSES_noBG', None, 'int')
+    global num_classes
+    num_classes = num_classes_noBG + 1
 
     if len(augmentation) < 1:
         print ('No requirement of data augmentation')
