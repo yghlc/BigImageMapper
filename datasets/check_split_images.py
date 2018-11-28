@@ -23,6 +23,7 @@ sys.path.insert(0, codes_dir2)
 import parameters
 import basic_src.basic as basic
 
+basic.setlogfile('check_label_patches.txt')
 
 def main(options, args):
 
