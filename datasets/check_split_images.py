@@ -53,9 +53,15 @@ def main(options, args):
                                                                         str(h_w),str(label_data.shape)))
 
             max_label = np.max(label_data)
+            unique_value = np.unique(label_data)
             if max_label > num_classes_noBG:
                 b_diff = True
-                basic.outputlogMessage('maximum pixel value (%d) in label images > num_class (%d)'%(max_label,num_classes_noBG))
+                basic.outputlogMessage('%s: maximum pixel value (%d) in label images > num_class (%d)'%(file_name,max_label,num_classes_noBG))
+            if len(unique_value) != num_classes_noBG + 1:
+                b_diff = True
+                basic.outputlogMessage('%s: the count of unique pixel value (%s) in label images not equals num_class (%d)' % (
+                file_name, str(unique_value), num_classes_noBG))
+
 
     if b_diff is False:
         basic.outputlogMessage('all the patches are equal')
