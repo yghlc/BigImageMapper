@@ -278,9 +278,11 @@ class PlanetDataset(utils.Dataset):
                     raise ValueError('class_id: %d not in the label images,label:%s'%(id,label_path))
                 if id==0:
                     test_save_path = 'mask_'+ os.path.basename(label_path)
-                    cv2.imwrite(test_save_path %seed_masks * 50)
-                    raise ValueError('class_id: %d is zeros (Background),label:%s'%(id,label_path))
-                    sys.exit(1)
+                    cv2.imwrite(test_save_path, seed_masks * 50)
+                    print('ValueError: class_id: %d is zeros (Background),label:%s'%(id,label_path))
+                    os._exit(1)  # exist all threads
+                    # raise ValueError('class_id: %d is zeros (Background),label:%s'%(id,label_path))
+
 
                 seed_masks = seed_masks.astype(np.uint8)
                 instance_masks.append(seed_masks)
