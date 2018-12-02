@@ -151,10 +151,10 @@ class PlanetDataset(utils.Dataset):
         class_ids: If provided, only loads images that have the given classes.
         """
         # Add classes
-        self.add_class("planet", 1, "thawslump")    # source, class_id, class_name
+        # self.add_class("planet", 1, "thawslump")    # source, class_id, class_name
 
-        # self.add_class("planet_TS", 1, "thawslump")    # source, class_id, class_name
-        # self.add_class("planet_noTS", 2, "thawslump_similar")  # source, class_id, class_name
+        self.add_class("planet_TS", 1, "thawslump")    # source, class_id, class_name
+        self.add_class("planet_noTS", 2, "thawslump_similar")  # source, class_id, class_name
 
         # Add images in the image_dir
         if subset=='train':
@@ -171,13 +171,13 @@ class PlanetDataset(utils.Dataset):
             # source, image_id, path, **kwargs
             image_path = os.path.join(os.path.abspath(image_dir),image_name+'.png')
             label_path = os.path.join(os.path.abspath(label_dir),image_name+'.png')
-            img_source = 'planet'
-            # if image_path.find('class_1')>0:
-            #     img_source = 'planet_TS'
-            # elif image_path.find('class_2')>0:
-            #     img_source = 'planet_noTS'
-            # else:
-            #     raise ValueError('unknow class in file name: %s '%image_name)
+            # img_source = 'planet'
+            if image_path.find('class_1')>0:
+                img_source = 'planet_TS'
+            elif image_path.find('class_2')>0:
+                img_source = 'planet_noTS'
+            else:
+                raise ValueError('unknow class in file name: %s '%image_name)
             self.add_image(img_source, image_id=i, path=image_path,
                            label_path = label_path, patch=image_name)
 
