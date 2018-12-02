@@ -277,7 +277,10 @@ class PlanetDataset(utils.Dataset):
                 if id not in unique_ids:
                     raise ValueError('class_id: %d not in the label images,label:%s'%(id,label_path))
                 if id==0:
+                    test_save_path = 'mask_'+ os.path.basename(label_path)
+                    cv2.imwrite(test_save_path %seed_masks * 50)
                     raise ValueError('class_id: %d is zeros (Background),label:%s'%(id,label_path))
+                    sys.exit(1)
 
                 seed_masks = seed_masks.astype(np.uint8)
                 instance_masks.append(seed_masks)
@@ -286,7 +289,7 @@ class PlanetDataset(utils.Dataset):
                 # test
                 # seed_masks = seed_masks * 50
                 # cv2.imwrite('seed_masks_255_%d_inst_%d.tif'%(image_id,idx), seed_masks * 50)
-                print(id)
+                # print(id)
 
 
         # Pack instance masks into an array, if there are objects
