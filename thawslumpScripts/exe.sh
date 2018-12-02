@@ -70,7 +70,8 @@ ${eo_dir}/grss_data_fusion/export_graph.sh ${para_file}
 
 ################################################
 ## inference and post processing, including output "time_cost.txt"
-${eo_dir}/thawslumpScripts/inf_postProc.sh ${para_file}
+${eo_dir}/thawslumpScripts/inf.sh ${para_file}
+${eo_dir}/thawslumpScripts/postProc.sh ${para_file}
 
 
 ################################################

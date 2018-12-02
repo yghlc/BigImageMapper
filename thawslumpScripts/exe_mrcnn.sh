@@ -81,7 +81,8 @@ SECONDS=0
 
 ################################################
 ## inference and post processing, including output "time_cost.txt"
-${eo_dir}/thawslumpScripts/inf_postProc_mrcnn.sh ${para_file}
+${eo_dir}/thawslumpScripts/inf_mrcnn.sh ${para_file}
+${eo_dir}/thawslumpScripts/postProc.sh ${para_file}
 
 ################################################
 ## backup results
