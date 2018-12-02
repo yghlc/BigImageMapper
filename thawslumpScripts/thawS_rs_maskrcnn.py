@@ -269,13 +269,15 @@ class PlanetDataset(utils.Dataset):
                 pixels = label[seed_masks != 0] # the pixels values in extend of instance
                 # get the majority as class_id
                 counts = np.bincount(pixels)
-                id = np.argmax(counts)
+                id = int(np.argmax(counts))
                 # point = contours[idx][0][0]  # [col,row]
                 # # print('point:', point)
                 # id = label[point[1], point[0]] # [row,col]
                 # print('class_id:', id)
-                if id not in unique_ids or id==0:
-                    raise ValueError('class_id: %d not in the label images or is zeros (Background)'%id)
+                if id not in unique_ids:
+                    raise ValueError('class_id: %d not in the label images,label:%s'%(id,label_path))
+                if id==0:
+                    raise ValueError('class_id: %d is zeros (Background),label:%s'%(id,label_path))
 
                 seed_masks = seed_masks.astype(np.uint8)
                 instance_masks.append(seed_masks)
@@ -284,6 +286,7 @@ class PlanetDataset(utils.Dataset):
                 # test
                 # seed_masks = seed_masks * 50
                 # cv2.imwrite('seed_masks_255_%d_inst_%d.tif'%(image_id,idx), seed_masks * 50)
+                print(id)
 
 
         # Pack instance masks into an array, if there are objects
