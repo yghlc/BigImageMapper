@@ -1,13 +1,12 @@
 #!/bin/bash
 
 echo $(basename $0) : "Perform image augmentation"
-#introduction: split sub-images and sub-labels
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
 para_file=$1
-if [ ! -f $para_file ]; then
+if [ ! -f "$para_file" ]; then
    echo "File ${para_file} not exists in current folder: ${PWD}"
    exit 1
 fi
@@ -38,20 +37,23 @@ function update_listfile() {
 
 #######################################################
 # don't augmentation ignore classes
-if [ -d "split_images_tmp" ]; then
-    rm -r split_images_tmp
+if [ ! -z "$ignore_classes" ]
+    then
+    if [ -d "split_images_tmp" ]; then
+        rm -r split_images_tmp
+    fi
+    if [ -d "split_labels_tmp" ]; then
+        rm -r split_labels_tmp
+    fi
+    mkdir split_images_tmp
+    mkdir split_labels_tmp
+    mv split_images/*_${ignore_classes}_* split_images_tmp/.
+    mv split_labels/*_${ignore_classes}_* split_labels_tmp/.
+    cd split_images
+    update_listfile
+    cd ..
+    mv trainval.txt list/.
 fi
-if [ -d "split_labels_tmp" ]; then
-    rm -r split_labels_tmp
-fi
-mkdir split_images_tmp
-mkdir split_labels_tmp
-mv split_images/*_${ignore_classes}_* split_images_tmp/.
-mv split_labels/*_${ignore_classes}_* split_labels_tmp/.
-cd split_images
-update_listfile
-cd ..
-mv trainval.txt list/.
 #######################################################
 
 #augment training images
@@ -84,13 +86,16 @@ cp list/trainval.txt list/val.txt
 
 #######################################################
 # move ignore classes back
-mv split_images_tmp/* split_images/.
-mv split_labels_tmp/* split_labels/.
-cd split_images
-update_listfile
-cd ..
-mv trainval.txt list/.
-cp list/trainval.txt list/val.txt
+if [ ! -z "$ignore_classes" ]
+    then
+    mv split_images_tmp/* split_images/.
+    mv split_labels_tmp/* split_labels/.
+    cd split_images
+    update_listfile
+    cd ..
+    mv trainval.txt list/.
+    cp list/trainval.txt list/val.txt
+fi
 #######################################################
 
 duration=$SECONDS
