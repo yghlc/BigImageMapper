@@ -275,7 +275,9 @@ class PlanetDataset(utils.Dataset):
                 # id = label[point[1], point[0]] # [row,col]
                 # print('class_id:', id)
                 if id not in unique_ids:
-                    raise ValueError('class_id: %d not in the label images,label:%s'%(id,label_path))
+                    print('ValueError: class_id: %d not in the label images,label:%s'%(id,label_path))
+                    os._exit(1)
+                    # raise ValueError('class_id: %d not in the label images,label:%s'%(id,label_path))
                 if id==0:
                     test_save_path = 'mask_'+ os.path.basename(label_path)
                     cv2.imwrite(test_save_path, seed_masks * 50)
@@ -888,7 +890,7 @@ if __name__ == '__main__':
         print("Fine tune all layers")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE / 10,
-                    epochs=70, # 160
+                    epochs=160, # 70, 160
                     layers='all',
                     augmentation=augmentation,no_augmentation_sources=no_aug_sources)
     elif args.command == "evaluate":
