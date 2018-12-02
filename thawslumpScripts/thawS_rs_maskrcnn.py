@@ -262,13 +262,20 @@ class PlanetDataset(utils.Dataset):
                 seed_masks = np.zeros((height, width), np.int32)
                 # print('idx:', idx)
 
-                point = contours[idx][0][0]  # [col,row]
-                # print('point:', point)
-                id = label[point[1], point[0]] # [row,col]
+                cv2.drawContours(seed_masks, contours, idx, (idx + 1), -1)  # -1 for filling inside
+
+                # read id from the label image, due to the gdal_rasterize issue, so don't use the edge pixel
+                # but use the majority pixels
+                pixels = label[seed_masks != 0] # the pixels values in extend of instance
+                # get the majority as class_id
+                counts = np.bincount(pixels)
+                id = np.argmax(counts)
+                # point = contours[idx][0][0]  # [col,row]
+                # # print('point:', point)
+                # id = label[point[1], point[0]] # [row,col]
                 # print('class_id:', id)
                 if id not in unique_ids or id==0:
-                    raise ValueError('class_id: %d not in the label images or is zeros (Backgroud)'%id)
-                cv2.drawContours(seed_masks, contours, idx, (idx + 1), -1)  # -1 for filling inside
+                    raise ValueError('class_id: %d not in the label images or is zeros (Background)'%id)
 
                 seed_masks = seed_masks.astype(np.uint8)
                 instance_masks.append(seed_masks)
