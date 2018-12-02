@@ -237,6 +237,9 @@ def main(options, args):
     # print(options.para_file)
     augmentation = parameters.get_string_parameters(options.para_file,'data_augmentation')
     augmentation = [item.lower().strip() for item in augmentation.split(',')]
+    if len(augmentation) < 1:
+        print('No input augmentation requirement (e.g. flip)')
+        return True
     # print(augmentation)
     # sys.exit(1)
     # number of classes
