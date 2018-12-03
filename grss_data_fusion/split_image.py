@@ -79,7 +79,7 @@ def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj
 
 
 
-def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_overlay_y=0):
+def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_overlay_y=0,out_format='PNG'):
     """
     split a large image to many separate patches
     Args:
@@ -123,13 +123,17 @@ def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_o
     for patch in patch_boundary:
         # print information
         print(patch)
-        output_path = os.path.join(output_dir,pre_name+'_p_%d.png'%index)
-        args_list = ['gdal_translate','-of','PNG','-srcwin',str(patch[0]),str(patch[1]),str(patch[2]),str(patch[3]), input, output_path]
+        if out_format.upper()=='PNG':
+            output_path = os.path.join(output_dir,pre_name+'_p_%d.png'%index)
+        elif out_format.upper()=='GTIFF':   #GTiff
+            output_path = os.path.join(output_dir, pre_name + '_p_%d.tif' % index)
+        else:
+            raise ValueError("unknow output format:%s"%out_format)
+        args_list = ['gdal_translate','-of',out_format,'-srcwin',str(patch[0]),str(patch[1]),str(patch[2]),str(patch[3]), input, output_path]
         ps = subprocess.Popen(args_list)
         returncode = ps.wait()
         if os.path.isfile(output_path) is False:
-            print('Failed in gdal_translate, return codes: ' + str(returncode))
-            return False
+            raise IOError('Failed in gdal_translate, return codes: ' + str(returncode))
         index = index + 1
 
 
@@ -156,9 +160,11 @@ def main(options, args):
     if os.path.isdir(out_dir) is False:
         os.makedirs(out_dir)
 
+    out_format = options.out_format
+
     image_path = args[0]
 
-    split_image(image_path,out_dir,patch_width,patch_height,adj_overlay,adj_overlay)
+    split_image(image_path,out_dir,patch_width,patch_height,adj_overlay,adj_overlay,out_format)
 
 
     pass
@@ -179,6 +185,9 @@ if __name__ == "__main__":
     parser.add_option("-o", "--out_dir",
                       action="store", dest="out_dir",
                       help="the folder path for saving output files")
+    parser.add_option("-F", "--out_format",
+                      action="store", dest="out_format",default='PNG',
+                      help="the format of output images")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2 or len(args) < 1:
