@@ -29,6 +29,7 @@ SECONDS=0
 # Helper function to update the list
 function update_listfile() {
     # use find instead of ls, to avoid error of "Argument list too long"
+    echo "update_listfile"
     for png in $(find . -maxdepth 1 -type f -name '*.${img_ext}')
     do
         filename=$(basename "$png")
