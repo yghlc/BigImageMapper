@@ -12,6 +12,7 @@ if [ ! -f "$para_file" ]; then
 fi
 
 
+
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
@@ -21,12 +22,14 @@ augscript=${eo_dir}/grss_data_fusion/image_augment.py
 
 ignore_classes=$(python2 ${para_py} -p ${para_file} data_aug_ignore_classes)
 
+img_ext=$(python2 ${para_py} -p ${para_file} split_image_format )
+
 SECONDS=0
 
 # Helper function to update the list
 function update_listfile() {
     # use find instead of ls, to avoid error of "Argument list too long"
-    for png in $(find . -maxdepth 1 -type f -name '*.png')
+    for png in $(find . -maxdepth 1 -type f -name '*.${img_ext}')
     do
         filename=$(basename "$png")
         filename_no_ext="${filename%.*}"
@@ -58,25 +61,18 @@ fi
 
 #augment training images
 cd split_images
-    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e .png ../list/trainval.txt -o ./
+    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e .${img_ext} ../list/trainval.txt -o ./
 
     update_listfile
 cd ..
 
 #augment training lables
 cd split_labels
-    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e .png --is_ground_truth ../list/trainval.txt -o ./
+    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e .${img_ext} --is_ground_truth ../list/trainval.txt -o ./
 
     # have same list, so we don't need to update again
     #update_listfile
 
-    # in the previous version, we replace the 0 pixel as 255, but forget why,
-    # but now, I think it is not necessary
-    # replace the 0 pixel as 255
-#    for png in $(ls *_R*.png); do
-#        ${eo_dir}/grss_data_fusion/remove_zero_pixels.py $png temp.png
-#        mv temp.png $png
-#    done
 
 cd ..
 
