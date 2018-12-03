@@ -237,7 +237,8 @@ def main(options, args):
     # print(options.para_file)
     augmentation = parameters.get_string_parameters(options.para_file,'data_augmentation')
     augmentation = [item.lower().strip() for item in augmentation.split(',')]
-    if len(augmentation) < 1:
+    augmentation = list(filter(None, augmentation))  # remove empty str (in case only have empty string)
+    if len(augmentation) < 1  :
         print('No input augmentation requirement (e.g. flip)')
         return True
     # print(augmentation)
@@ -246,10 +247,6 @@ def main(options, args):
     num_classes_noBG = parameters.get_digit_parameters(options.para_file, 'NUM_CLASSES_noBG', None, 'int')
     global num_classes
     num_classes = num_classes_noBG + 1
-
-    if len(augmentation) < 1:
-        print ('No requirement of data augmentation')
-        return True
 
     img_list_txt = args[0]
     if os.path.isfile(img_list_txt) is False:
