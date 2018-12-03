@@ -64,7 +64,7 @@ SECONDS=0
 #augment training images
 cd split_images
     echo "image augmentation on image patches"
-    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e .${img_ext} ../list/trainval.txt -o ./
+    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e ${img_ext} ../list/trainval.txt -o ./
 
 #    update_listfile
 cd ..
@@ -72,7 +72,7 @@ cd ..
 #augment training lables
 cd split_labels
     echo "image augmentation on label patches"
-    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e .${img_ext} --is_ground_truth ../list/trainval.txt -o ./
+    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e ${img_ext} --is_ground_truth ../list/trainval.txt -o ./
 
     # have same list, so we don't need to update again
     #update_listfile

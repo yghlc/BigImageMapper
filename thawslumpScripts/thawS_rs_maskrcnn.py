@@ -176,10 +176,11 @@ class PlanetDataset(utils.Dataset):
         # dataset = os.path.basename(dataset_split)[:-4]
         filenames = [x.strip('\n') for x in open(images_list, 'r')]
 
+        img_ext = parameters.get_string_parameters(para_file,'split_image_format')
         for i, image_name in enumerate(filenames):
             # source, image_id, path, **kwargs
-            image_path = os.path.join(os.path.abspath(image_dir),image_name+'.png')
-            label_path = os.path.join(os.path.abspath(label_dir),image_name+'.png')
+            image_path = os.path.join(os.path.abspath(image_dir),image_name+img_ext)
+            label_path = os.path.join(os.path.abspath(label_dir),image_name+img_ext)
             # img_source = 'planet'
             if image_path.find('class_1')>0:
                 img_source = 'planet_TS'
@@ -195,6 +196,9 @@ class PlanetDataset(utils.Dataset):
         """Load the specified image and return a [H,W,N] Numpy array. (N is the band count)
         """
         image = build_RS_data.read_image(self.image_info[image_id]['path'])
+
+        # rasterio output (nband, height,width), but keras and tf require (height,width,nband)
+        image = np.transpose(image, (1, 2, 0))  #
 
         # # Load image
         # image = skimage.io.imread(self.image_info[image_id]['path'])
@@ -868,9 +872,12 @@ if __name__ == '__main__':
     # Load weights trained on MS COCO, but skip layers that
     # are different due to the different number of classes
     # See README for instructions to download the COCO weights
-    if args.model.lower() == "coco" and args.command == "train":
-        model.load_weights(model_path, by_name=True, exclude = ["mrcnn_class_logits", "mrcnn_bbox_fc",
-                   "mrcnn_bbox", "mrcnn_mask"])
+    if args.model.lower() == "coco" and args.command == "train" and PlanetConfig.IMAGE_CHANNEL_COUNT==3:
+        model.load_weights(model_path, by_name=True,
+        exclude = ["mrcnn_class_logits", "mrcnn_bbox_fc","mrcnn_bbox", "mrcnn_mask"])
+    elif args.model.lower() == "coco" and args.command == "train" and PlanetConfig.IMAGE_CHANNEL_COUNT!=3:
+        model.load_weights(model_path, by_name=True,
+        exclude=["mrcnn_class_logits", "mrcnn_bbox_fc","mrcnn_bbox", "mrcnn_mask","conv1"])
     else:
         model.load_weights(model_path, by_name=True)
 
@@ -905,7 +912,7 @@ if __name__ == '__main__':
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
                     epochs=10,  #40
-                    layers='heads',
+                    layers='heads',     # this subset includes conv1
                     augmentation=augmentation,no_augmentation_sources=no_aug_sources)
 
         # Training - Stage 2
