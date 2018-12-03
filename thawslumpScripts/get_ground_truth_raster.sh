@@ -14,8 +14,8 @@ echo $(basename $0) : "Create the ground truth images for a shape file (containi
 #export PATH=/home/hlc/programs/anaconda2/bin:$PATH
 
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
+# Exit immediately if a command exits with a non-zero status. E: error trace
+set -eE -o functrace
 
 para_file=$1
 if [ ! -f $para_file ]; then

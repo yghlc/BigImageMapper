@@ -6,8 +6,8 @@
 #email:huanglingcao@gmail.com
 #add time: 26 October, 2018
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
+# Exit immediately if a command exits with a non-zero status. E: error trace
+set -eE -o functrace
 
 # input a parameter: the path of para_file (e.g., para.ini)
 para_file=$1

@@ -8,8 +8,8 @@ echo $(basename $0) : "split sub-images and sub-labels"
 #add time: 28 October, 2018
 
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
+# Exit immediately if a command exits with a non-zero status. E: error trace
+set -eE -o functrace
 
 para_file=$1
 if [ ! -f $para_file ]; then
