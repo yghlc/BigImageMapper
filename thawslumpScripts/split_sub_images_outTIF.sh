@@ -96,7 +96,7 @@ do
     mv $label_path $DIR/${filename}
 
     #mv corresponding xml file
-    mv ${label_path}.aux.xml $DIR/${filename}.aux.xml
+#    mv ${label_path}.aux.xml $DIR/${filename}.aux.xml
 
     #output file name without extension
     echo $filename_no_ext >> $output_txt
