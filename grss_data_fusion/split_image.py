@@ -185,7 +185,7 @@ if __name__ == "__main__":
     parser.add_option("-o", "--out_dir",
                       action="store", dest="out_dir",
                       help="the folder path for saving output files")
-    parser.add_option("-F", "--out_format",
+    parser.add_option("-f", "--out_format",
                       action="store", dest="out_format",default='PNG',
                       help="the format of output images")
 
