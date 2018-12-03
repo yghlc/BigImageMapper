@@ -27,38 +27,38 @@ echo "image format: " ${img_ext}
 
 SECONDS=0
 
-# Helper function to update the list
-function update_listfile() {
-    # use find instead of ls, to avoid error of "Argument list too long"
-    echo "update_listfile"
-    for png in $(find . -maxdepth 1 -type f -name '*.tif')
-    do
-        filename=$(basename "$png")
-        filename_no_ext="${filename%.*}"
-        echo $filename_no_ext >> "trainval.txt"
-    done
-    mv "trainval.txt" ../.
-}
+# Helper function to update the list, apply this in image_augment.py
+#function update_listfile() {
+#    # use find instead of ls, to avoid error of "Argument list too long"
+#    echo "update_listfile"
+#    for png in $(find . -maxdepth 1 -type f -name '*.tif')
+#    do
+#        filename=$(basename "$png")
+#        filename_no_ext="${filename%.*}"
+#        echo $filename_no_ext >> "trainval.txt"
+#    done
+#    mv "trainval.txt" ../.
+#}
 
 #######################################################
-# don't augmentation ignore classes
-if [ ! -z "$ignore_classes" ]
-    then
-    if [ -d "split_images_tmp" ]; then
-        rm -r split_images_tmp
-    fi
-    if [ -d "split_labels_tmp" ]; then
-        rm -r split_labels_tmp
-    fi
-    mkdir split_images_tmp
-    mkdir split_labels_tmp
-    mv split_images/*_${ignore_classes}_* split_images_tmp/.
-    mv split_labels/*_${ignore_classes}_* split_labels_tmp/.
-    cd split_images
-    update_listfile
-    cd ..
-    mv trainval.txt list/.
-fi
+# don't augmentation ignore classes, apply this in image_augment.py
+#if [ ! -z "$ignore_classes" ]
+#    then
+#    if [ -d "split_images_tmp" ]; then
+#        rm -r split_images_tmp
+#    fi
+#    if [ -d "split_labels_tmp" ]; then
+#        rm -r split_labels_tmp
+#    fi
+#    mkdir split_images_tmp
+#    mkdir split_labels_tmp
+#    mv split_images/*_${ignore_classes}_* split_images_tmp/.
+#    mv split_labels/*_${ignore_classes}_* split_labels_tmp/.
+#    cd split_images
+#    update_listfile
+#    cd ..
+#    mv trainval.txt list/.
+#fi
 #######################################################
 
 #augment training images
@@ -66,7 +66,7 @@ cd split_images
     echo "image augmentation on image patches"
     ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e .${img_ext} ../list/trainval.txt -o ./
 
-    update_listfile
+#    update_listfile
 cd ..
 
 #augment training lables
@@ -81,21 +81,21 @@ cd split_labels
 cd ..
 
 # copy the training data for elevation
-mv trainval.txt list/.
+#mv trainval.txt list/.  # done in  image_augment.py
 cp list/trainval.txt list/val.txt
 
 #######################################################
-# move ignore classes back
-if [ ! -z "$ignore_classes" ]
-    then
-    mv split_images_tmp/* split_images/.
-    mv split_labels_tmp/* split_labels/.
-    cd split_images
-    update_listfile
-    cd ..
-    mv trainval.txt list/.
-    cp list/trainval.txt list/val.txt
-fi
+# move ignore classes back, apply this in image_augment.py
+#if [ ! -z "$ignore_classes" ]
+#    then
+#    mv split_images_tmp/* split_images/.
+#    mv split_labels_tmp/* split_labels/.
+#    cd split_images
+#    update_listfile
+#    cd ..
+#    mv trainval.txt list/.
+#    cp list/trainval.txt list/val.txt
+#fi
 #######################################################
 
 duration=$SECONDS

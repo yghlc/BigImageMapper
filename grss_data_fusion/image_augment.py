@@ -26,6 +26,7 @@ sys.path.insert(0, codes_dir2)
 import parameters
 
 import basic_src.basic as basic
+import basic_src.io_function as io_function
 basic.setlogfile('log_data_augmentation.txt')
 
 # will be update in the main function
@@ -248,6 +249,11 @@ def main(options, args):
     global num_classes
     num_classes = num_classes_noBG + 1
 
+    #
+    ignore_classes = parameters.get_string_parameters(options.para_file,'data_aug_ignore_classes')
+    ignore_classes = [item.strip() for item in ignore_classes.split(',')]
+    ignore_classes = list(filter(None, ignore_classes))  # remove empty str (in case only have empty string)
+
     img_list_txt = args[0]
     if os.path.isfile(img_list_txt) is False:
         print ("Error, File %s not exist" % img_list_txt)
@@ -256,6 +262,13 @@ def main(options, args):
     index = 1
     files_list = f_obj.readlines()
     for line in files_list:
+
+        # ignore_classes
+        if len(ignore_classes)>0:
+            found_class = [ line.find(ignore_class) >= 0 for ignore_class in ignore_classes ]
+            if True in found_class:
+                continue
+
         file_path  = line.strip()
         file_path = os.path.join(img_dir,file_path+extension)
         print ("Augmentation of image (%d / %d)"%(index,len(files_list)))
@@ -265,6 +278,13 @@ def main(options, args):
         index += 1
 
     f_obj.close()
+
+    # update img_list_txt
+    new_files = io_function.get_file_list_by_ext(extension,'.',bsub_folder=False)
+    new_files_noext = [ os.path.splitext(os.path.basename(item))[0]+'\n'  for item in new_files]
+    basic.outputlogMessage('save new file list to %s'%img_list_txt)
+    with open(img_list_txt,'w') as f_obj:
+        f_obj.writelines(new_files_noext)
 
 
 
