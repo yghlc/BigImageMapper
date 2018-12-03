@@ -23,6 +23,7 @@ augscript=${eo_dir}/grss_data_fusion/image_augment.py
 ignore_classes=$(python2 ${para_py} -p ${para_file} data_aug_ignore_classes)
 
 img_ext=$(python2 ${para_py} -p ${para_file} split_image_format )
+echo "image format: " ${img_ext}
 
 SECONDS=0
 

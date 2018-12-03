@@ -75,6 +75,25 @@ class patchclass(object):
     def boundary(self):
         return self.boundary
 
+def read_image(path):
+    """
+    read a image with all bands
+    :param path: the path of images
+    :return: return a [H,W,N] Numpy array. (N is the band count)
+    """
+    with rasterio.open(path) as img_obj:
+        # read the all bands
+        indexes = img_obj.indexes
+        data = img_obj.read(indexes)
+
+        # replace the nodata as zeros (means background)
+        # if img_obj.profile.has_key('nodata'):
+        if 'nodata' in img_obj.profile.keys(): # python3 & 2, has_key was removed in python3.x
+            nodata = img_obj.profile['nodata']
+            data[np.where(data==nodata)] = 0
+
+        return data
+
 
 def read_patch(patch_obj):
     """

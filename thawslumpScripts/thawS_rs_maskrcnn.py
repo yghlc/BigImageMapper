@@ -125,6 +125,15 @@ class PlanetConfig(Config):
     IMAGE_MIN_DIM = 512
     IMAGE_MAX_DIM = 512
 
+    ###########################################################################
+    # multiple images band support, it will be updated
+    # number of image band
+    IMAGE_CHANNEL_COUNT = 3
+    # Image mean
+    MEAN_PIXEL = np.array([123.7, 116.8, 103.9])
+    ###########################################################################
+
+
     # Use smaller anchors because our image and objects are small on Planet image
     RPN_ANCHOR_SCALES = (16, 32, 64, 128, 256)  # anchor side in pixels, it seem  only accept five values
 
@@ -181,6 +190,21 @@ class PlanetDataset(utils.Dataset):
             self.add_image(img_source, image_id=i, path=image_path,
                            label_path = label_path, patch=image_name)
 
+
+    def load_image(self, image_id):
+        """Load the specified image and return a [H,W,N] Numpy array. (N is the band count)
+        """
+        image = build_RS_data.read_image(self.image_info[image_id]['path'])
+
+        # # Load image
+        # image = skimage.io.imread(self.image_info[image_id]['path'])
+        # # If grayscale. Convert to RGB for consistency.
+        # if image.ndim != 3:
+        #     image = skimage.color.gray2rgb(image)
+        # # If has an alpha channel, remove it for consistency
+        # if image.shape[-1] == 4:
+        #     image = image[..., :3]
+        return image
 
     def load_mask(self, image_id):
         """Load instance masks for the given image.
@@ -740,6 +764,14 @@ if __name__ == '__main__':
     PlanetConfig.BACKBONE = parameters.get_string_parameters(args.para_file, 'BACKBONE')
     PlanetConfig.NUM_CLASSES = 1 + num_class_noBG
 
+    # band count
+    image_band_count = parameters.get_digit_parameters(args.para_file, 'image_band_count', None, 'int')
+    image_mean_pixel_str = parameters.get_string_parameters(args.para_file, 'image_mean_pixel')
+    image_mean_pixel = [float(item.strip()) for item in image_mean_pixel_str.split(',') ]
+    if len(image_mean_pixel) != image_band_count:
+        raise ValueError('band count (%d) and number of mean pixel values (%s) must match'%(image_band_count,str(image_band_count)))
+    PlanetConfig.IMAGE_CHANNEL_COUNT = image_band_count
+    PlanetConfig.MEAN_PIXEL = np.asarray(image_mean_pixel)
 
     # Which weights to start with?
     # init_with = "coco"  # imagenet, coco, or last
