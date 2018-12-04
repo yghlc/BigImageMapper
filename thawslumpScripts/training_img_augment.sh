@@ -64,7 +64,8 @@ SECONDS=0
 #augment training images
 cd split_images
     echo "image augmentation on image patches"
-    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e ${img_ext} ../list/trainval.txt -o ./
+    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file}  \
+    -d ./ -e ${img_ext} ../list/trainval.txt -o ./ -l ../list/images_including_aug.txt
 
 #    update_listfile
 cd ..
@@ -72,14 +73,15 @@ cd ..
 #augment training lables
 cd split_labels
     echo "image augmentation on label patches"
-    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} -d ./ -e ${img_ext} --is_ground_truth ../list/trainval.txt -o ./
+    ~/programs/anaconda3/bin/python3 ${augscript} -p ../${para_file} \
+    -d ./ -e ${img_ext} --is_ground_truth ../list/trainval.txt -o ./ -l ../list/images_including_aug.txt
 
     # have same list, so we don't need to update again
     #update_listfile
 
 
 cd ..
-
+cp list/images_including_aug.txt list/trainval.txt
 # copy the training data for elevation
 #mv trainval.txt list/.  # done in  image_augment.py
 cp list/trainval.txt list/val.txt

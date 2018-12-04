@@ -282,7 +282,7 @@ def main(options, args):
     # update img_list_txt
     new_files = io_function.get_file_list_by_ext(extension,'.',bsub_folder=False)
     new_files_noext = [ os.path.splitext(os.path.basename(item))[0]+'\n'  for item in new_files]
-    basic.outputlogMessage('save new file list to %s'%img_list_txt)
+    basic.outputlogMessage('save new file list to %s'%options.save_list)
     with open(options.save_list,'w') as f_obj:
         f_obj.writelines(new_files_noext)
 
