@@ -283,7 +283,7 @@ def main(options, args):
     new_files = io_function.get_file_list_by_ext(extension,'.',bsub_folder=False)
     new_files_noext = [ os.path.splitext(os.path.basename(item))[0]+'\n'  for item in new_files]
     basic.outputlogMessage('save new file list to %s'%img_list_txt)
-    with open(img_list_txt,'w') as f_obj:
+    with open(options.save_list,'w') as f_obj:
         f_obj.writelines(new_files_noext)
 
 
@@ -318,6 +318,10 @@ if __name__ == "__main__":
     parser.add_option("-o", "--out_dir",
                       action="store", dest="out_dir",
                       help="the folder path for saving output files")
+
+    parser.add_option("-l", "--save_list",default='images_including_aug.txt',
+                      action="store", dest="save_list",
+                      help="the text file for saving the images after data augmentation")
 
 
     (options, args) = parser.parse_args()
