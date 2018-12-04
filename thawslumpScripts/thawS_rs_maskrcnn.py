@@ -773,7 +773,7 @@ if __name__ == '__main__':
     image_mean_pixel_str = parameters.get_string_parameters(args.para_file, 'image_mean_pixel')
     image_mean_pixel = [float(item.strip()) for item in image_mean_pixel_str.split(',') ]
     if len(image_mean_pixel) != image_band_count:
-        raise ValueError('band count (%d) and number of mean pixel values (%s) must match'%(image_band_count,str(image_band_count)))
+        raise ValueError('band count (%d) and number of mean pixel values (%s) must match'%(image_band_count,str(image_mean_pixel)))
     PlanetConfig.IMAGE_CHANNEL_COUNT = image_band_count
     PlanetConfig.MEAN_PIXEL = np.asarray(image_mean_pixel)
 
