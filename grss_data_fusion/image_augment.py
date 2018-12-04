@@ -279,6 +279,10 @@ def main(options, args):
 
     f_obj.close()
 
+    if index< len(files_list):
+        basic.outputlogMessage('Some of the images belong to %s are ingnore'%','.join(ignore_classes))
+
+
     # update img_list_txt
     new_files = io_function.get_file_list_by_ext(extension,'.',bsub_folder=False)
     new_files_noext = [ os.path.splitext(os.path.basename(item))[0]+'\n'  for item in new_files]
