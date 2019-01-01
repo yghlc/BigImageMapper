@@ -37,10 +37,11 @@ fi
 
 ${deeplabRS}/prepare_raster.py -p ${para_file} ${shp_file} ${label_raster}
 
-#default nodata in output is 255, so set it the 0
-#gdal_translate -a_nodata 254 ${out_raster}  temp.tif
-#gdal_calc.py -A temp.tif  --outfile=${out_raster} --calc="A==1"  --debug --type='Byte' --overwrite
-#rm temp.tif
+#default nodata in output is 255, so set it the 0 using otbcli_ManageNoData
+otbcli_ManageNoData -progress 1 -in ${label_raster} -out temp.tif uint8 -mode changevalue -mode.changevalue.newv 0 -ram 2048
+gdal_edit.py -unsetnodata temp.tif
+rm ${label_raster}
+mv temp.tif ${label_raster}
 
 out_dir=$(dirname $label_raster)
 echo $out_dir

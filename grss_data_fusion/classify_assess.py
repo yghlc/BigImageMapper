@@ -64,8 +64,8 @@ def main(options, args):
     print("accuracy: %.2f %%"%accuracy)
 
     confusion_matrix = metrics.confusion_matrix(label_1d, classified_results_1d)
-    #print("confusion matrix:")
-    #print(str(confusion_matrix))
+    print("confusion matrix:")
+    print(str(confusion_matrix))
 
     sum_trace = np.trace(confusion_matrix)
     sum_all = np.sum(confusion_matrix)
@@ -74,8 +74,9 @@ def main(options, args):
 
 
 
-    # report = metrics.classification_report(label_1d,classified_results_1d)
-    # print(report)
+    report = metrics.classification_report(label_1d,classified_results_1d)
+    print("classification_report:")
+    print(report)
     # print("precision (tp/(tp+fp)) score: %.4f %%" % precision)
     # print("f1 score: %.4f %%" % f1)
 
