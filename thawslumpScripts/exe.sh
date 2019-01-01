@@ -73,6 +73,7 @@ ${eo_dir}/grss_data_fusion/export_graph.sh ${para_file}
 ${eo_dir}/thawslumpScripts/inf.sh ${para_file}
 ${eo_dir}/thawslumpScripts/postProc.sh ${para_file}
 
+${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}
 
 ################################################
 ## backup results

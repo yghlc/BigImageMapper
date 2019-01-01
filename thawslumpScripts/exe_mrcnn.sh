@@ -84,6 +84,8 @@ SECONDS=0
 ${eo_dir}/thawslumpScripts/inf_mrcnn.sh ${para_file}
 ${eo_dir}/thawslumpScripts/postProc.sh ${para_file}
 
+${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}
+
 ################################################
 ## backup results
 ${eo_dir}/thawslumpScripts/backup_results.sh ${para_file} 1
