@@ -33,7 +33,7 @@ SECONDS=0
 
 # these two should have the same size
 label_image=$(python2 ${para_py} -p ${para_file} input_label_image)
-raster_mapped_results=${inf_dir}/output
+raster_mapped_results=${inf_dir}/${output}
 
 # using sk-learn to calculate the total accuracies
 ${eo_dir}/grss_data_fusion/classify_assess.py ${label_image} ${raster_mapped_results}
