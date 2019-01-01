@@ -4,10 +4,11 @@
 # https://www.orfeo-toolbox.org/CookBook/Applications/app_DimensionalityReduction.html
 
 # test
-cd ~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/201805
+#cd ~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/201805
 
-name_pre=20180522_035755_3B_AnalyticMS_SR_mosaic
+#name_pre=20180522_035755_3B_AnalyticMS_SR_mosaic
 #name_pre=20180522_035755_3B_AnalyticMS_SR_mosaic_subPCA
+name_pre=$1
 # Exit immediately if a command exits with a non-zero status. E: error trace
 set -eE -o functrace
 
