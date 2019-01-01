@@ -40,6 +40,8 @@ def main(options, args):
     label_image = args[0]
     classified_results = args[1]
 
+    no_data = options.no_data
+
     print("Classification assessment")
     print("classified_result: " +classified_results)
     print("ground true: "+label_image)
@@ -51,8 +53,8 @@ def main(options, args):
     if label_1d is None or classified_results_1d is None:
         return
 
-    #ignore background
-    back_ground_index = np.where(label_1d==0)
+    #ignore background (no_data area)
+    back_ground_index = np.where(label_1d==no_data)
     # back_ground_index = np.where(classified_results_1d == 0)
     label_1d = np.delete(label_1d,back_ground_index)
     classified_results_1d = np.delete(classified_results_1d, back_ground_index)
@@ -85,6 +87,10 @@ if __name__ == "__main__":
     usage = "usage: %prog [options] label_image classified_result"
     parser = OptionParser(usage=usage, version="1.0 2018-3-22")
     parser.description = 'Introduction: assess the classification results of remote sensing images '
+
+    parser.add_option('-n','--no_data',
+                      action='store',dest='no_data',type=int,default=255,
+                      help="the folder of split image patches ")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2 or len(args) < 1:

@@ -36,7 +36,7 @@ label_image=$(python2 ${para_py} -p ${para_file} input_label_image)
 raster_mapped_results=${inf_dir}/${output}
 
 # using sk-learn to calculate the total accuracies
-${eo_dir}/grss_data_fusion/classify_assess.py ${label_image} ${raster_mapped_results}
+${eo_dir}/grss_data_fusion/classify_assess.py ${label_image} ${raster_mapped_results} -n 255
 
 # using otbcli_ComputeConfusionMatrix to get ConfusionMatrix, then compute total accruacies
 
