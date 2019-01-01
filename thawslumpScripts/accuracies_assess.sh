@@ -40,7 +40,8 @@ ${eo_dir}/grss_data_fusion/classify_assess.py ${label_image} ${raster_mapped_res
 
 # using otbcli_ComputeConfusionMatrix to get ConfusionMatrix, then compute total accruacies
 
-
+otbcli_ComputeConfusionMatrix -progress -in ${raster_mapped_results} -out ConfusionMatrix.csv \
+-ref raster -ref.raster.in ${label_image} -nodatalabel 255 -ram 2048
 
 
 duration=$SECONDS
