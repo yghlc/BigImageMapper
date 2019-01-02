@@ -31,5 +31,6 @@ cp_shapefile ${inf_dir}/${testid} result_backup/${testid}_${test}
 
 cp ${inf_dir}/${para_file} result_backup/${testid}_para_${test}.ini
 cp ${inf_dir}/evaluation_report.txt result_backup/${testid}_eva_report_${test}.txt
+cp otb_acc_log.txt  result_backup/${testid}_otb_acc_${test}.txt
 
 echo "complete: copy result files to result_backup, expriment: $expr_name, iterations: $NUM_ITERATIONS & copyNumber: _$test"
