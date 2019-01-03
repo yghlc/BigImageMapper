@@ -41,7 +41,7 @@ function train_img_aug() {
 }
 
 # spaces are not allow in img_aug_str
-flip, blur, crop, scale, rotate
+#flip, blur, crop, scale, rotate
 # 1
 train_img_aug flip 1
 
