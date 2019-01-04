@@ -173,7 +173,7 @@ class classify_pix_operation(object):
         Cs = [0.001, 0.01, 0.1, 1, 10]
         gammas = [0.001, 0.01, 0.1, 1,2.5, 5]
         param_grid = {'C': Cs, 'gamma': gammas}
-        grid_search_result = model_selection.GridSearchCV(svm.SVC(kernel='rbf'), param_grid, cv=None,n_jobs=8)
+        grid_search_result = model_selection.GridSearchCV(svm.SVC(kernel='rbf'), param_grid, cv=None,n_jobs=-1)
         print(grid_search_result)
 
         # basic.outputlogMessage("grid_search.best_params_:"+str(grid_search_result.best_params_))
