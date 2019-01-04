@@ -44,16 +44,18 @@ function train_kfold_cross_val() {
     cd -
 
     # training on k subset
-    for idx in {1...${kvalue}}; do
+    for idx in $(seq 1 $kvalue); do
         # remove previous trained model (the setting are the same to exp9)
         rm -r exp9 || true
 
         # modified para.ini
         cp para_template_kfold.ini para.ini
-        sed -i -e  s/x_train_polygon_sub/${dir_sub}/${filename_no_ext}_${kvalue}fold_${idx}/g para.ini
+        newline=${dir_sub}/${filename_no_ext}_${kvalue}fold_${idx}.shp
+        sed -i -e  s%x_train_polygon_sub%$newline%g para.ini
         # modified exe.sh
         cp exe_template_kfold.sh exe.sh
-        sed -i -e  s/x_test_num/${kvalue}fold_${idx}_t${test_num}/g exe.sh
+        newline=${kvalue}fold_${idx}_t${test_num}
+        sed -i -e  s%x_test_num%$newline%g exe.sh
 
         # run
         ./exe.sh
