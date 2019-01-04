@@ -23,7 +23,7 @@ deeplabRS=~/codes/PycharmProjects/DeeplabforRS
 para_py=${deeplabRS}/parameters.py
 
 
-train_shp=$(python2 ${para_py} -p ${para_file} training_polygons )
+train_shp=$(python2 ${para_py} -p ${para_file} training_polygons_sub )
 
 label_raster=$(python2 ${para_py} -p ${para_file} input_label_image )
 input_image=$(python2 ${para_py} -p ${para_file} input_image_path)
