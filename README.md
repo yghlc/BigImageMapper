@@ -8,7 +8,13 @@ March 2018:
 August 2018:
     Delineate retrogressive thaw slumps from Planet CubeSat images.
     
+January 2019:
+    Supporting of Mask RCNN
+
+Dependencies:
+    Python package: Numpy, sklearn, rasterio 
     
+    GDAL, OTB
     
     
     
