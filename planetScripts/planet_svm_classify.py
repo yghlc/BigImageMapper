@@ -31,6 +31,11 @@ from sklearn import svm
 #model_selection  # change grid_search to model_selection
 from sklearn import model_selection
 
+from sklearn.externals import joblib  # save and load model
+
+
+model_saved_path = "sk_svm_trained.pkl"
+scaler_saved_path = "scaler_saved.pkl"
 
 def get_output_name(input_tif):
     folder = os.path.dirname(input_tif)
@@ -58,6 +63,7 @@ def read_training_pixels(image_path,label_path):
     with rasterio.open(image_path) as img_obj:
         # read the all bands
         indexes = img_obj.indexes
+        nbands = len(indexes)
         img_data = img_obj.read(indexes)
 
     with rasterio.open(label_path) as img_obj:
@@ -74,7 +80,7 @@ def read_training_pixels(image_path,label_path):
     if img_data.shape[1]!=label_data.shape[1] or img_data.shape[2]!=label_data.shape[2]:
         raise ValueError('the image and label have different size')
 
-    X_arr = img_data.reshape(3,-1)
+    X_arr = img_data.reshape(nbands,-1)
     y_arr = label_data.reshape(-1)
 
     print(X_arr.shape)
@@ -82,6 +88,20 @@ def read_training_pixels(image_path,label_path):
     # sys.exit(1)
 
     return X_arr,y_arr
+
+def read_whole_x_pixels(image_path):
+    with rasterio.open(image_path) as img_obj:
+        # read the all bands
+        indexes = img_obj.indexes
+
+        img_data = img_obj.read(indexes)
+
+        nbands,height,width = img_data.shape
+
+        X_arr = img_data.reshape(nbands, -1)
+        X_arr = np.transpose(X_arr, (1, 0))
+        return X_arr, height,width
+
 
 
 class classify_pix_operation(object):
@@ -153,6 +173,8 @@ class classify_pix_operation(object):
         else:
             basic.outputlogMessage('warning, StandardScaler object already exist, this operation will overwrite it')
             self.__scaler = preprocessing.StandardScaler().fit(X)
+        # save
+        joblib.dump(self.__scaler, scaler_saved_path)
 
     def training_svm_classifier(self,training_X, training_y):
         """
@@ -166,26 +188,38 @@ class classify_pix_operation(object):
             basic.outputlogMessage('warning, classifier already exist, this operation will replace the old one')
             self.__classifier_svm = svm.SVC() #LinearSVC()  #SVC()
 
-        if self.__scaler is not None:
+        if os.path.isfile(scaler_saved_path) and self.__scaler is None:
+            self.__scaler = joblib.load(scaler_saved_path)
             result = self.__scaler.transform(training_X)
             X  = result.tolist()
+        elif self.__scaler is not None:
+            result = self.__scaler.transform(training_X)
+            X  = result.tolist()
+        else:
+            X = training_X
+            basic.outputlogMessage('warning, no pre-processing of data before training')
+
         y = training_y
 
         basic.outputlogMessage('Training data set nsample: %d, nfeature: %d' % (len(X), len(X[0])))
 
-        # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=0)
+        # for test
+        X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.9, random_state=0)
 
         # SVM Parameter Tuning in Scikit Learn using GridSearchCV
 
         # Set the parameters by cross-validation
-        tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-4,0.001, 0.01, 0.1, 1,2.5, 5],
-                             'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]},
-                            {'kernel': ['linear'], 'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]}]
+        # tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-4,0.001, 0.01, 0.1, 1,2.5, 5],
+        #                      'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]},
+        #                     {'kernel': ['linear'], 'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]}]
+
+        # for test
+        tuned_parameters = [{'kernel': ['linear'], 'C': [0.001,  0.1,1, 10]}]
 
         clf = model_selection.GridSearchCV(svm.SVC(), tuned_parameters, cv=5,
-                           scoring='f1' ,n_jobs=-1)
+                           scoring='f1_macro' ,n_jobs=-1,verbose=2)
 
-        clf.fit(X, y)
+        clf.fit(X_train, y_train)
 
         basic.outputlogMessage("Best parameters set found on development set:"+str(clf.best_params_))
         basic.outputlogMessage("Grid scores on development set:" )
@@ -200,6 +234,60 @@ class classify_pix_operation(object):
         # fit_model = self.__classifier_svm.fit(X,y)
         # basic.outputlogMessage(str(fit_model))
 
+        # save the classification model
+        joblib.dump(clf, model_saved_path)
+
+    def prediction_on_a_image(self, input, output):
+        """
+        conduct prediction on a tif image
+        :param input:
+        :param output:
+        :return:
+        """
+
+        # load the saved model
+        if os.path.isfile(model_saved_path) is False:
+            raise IOError('trained model: %s not exist'%model_saved_path)
+
+        clf = joblib.load(model_saved_path)
+
+        # read images
+        X_predit,height,width = read_whole_x_pixels(input)
+
+        if os.path.isfile(scaler_saved_path) and self.__scaler is None:
+            self.__scaler = joblib.load(scaler_saved_path)
+            result = self.__scaler.transform(X_predit)
+            X  = result.tolist()
+        elif self.__scaler is not None:
+            result = self.__scaler.transform(X_predit)
+            X  = result.tolist()
+        else:
+            X = X_predit
+            basic.outputlogMessage('warning, no pre-processing of data before prediction')
+
+        # more method on prediction can be foudn in :
+        # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
+        pre_result = clf.predict(X)
+
+        # save results
+        result_img = pre_result.reshape((height, width))
+
+        with rasterio.open(input) as src_obj:
+            # Set spatial characteristics of the output object to mirror the input
+            kwargs = src_obj.meta
+            kwargs.update(
+                dtype=rasterio.uint8,
+                count=1)
+            # Create the file
+            with rasterio.open(output, 'w', **kwargs) as dst:
+                dst.write_band(1, result_img.astype(rasterio.uint8))
+            basic.outputlogMessage("save to %s" % output)
+
+
+        return True
+
+
+
 
 def main(options, args):
     input_tif = args[0]
@@ -210,28 +298,35 @@ def main(options, args):
     else:
         output = get_output_name(input_tif)
 
+    print('Is_training:', options.ispreprocess)
+    print('Is_training:',options.istraining)
 
     classify_obj = classify_pix_operation()
-    #
-    # #read whole data set for pre-processing
-    X, y = classify_obj.read_training_pixels_from_multi_images('subImages','subLabels')
-    classify_obj.pre_processing(X)
-    #
-    # read training data
-    # (the same as the previous one )
 
-    classify_obj.training_svm_classifier(X,y)
+    if options.ispreprocess:
+        # preprocessing
+        if os.path.isfile(scaler_saved_path) is False:
+            # #read whole data set for pre-processing
+            X,_,_ = read_whole_x_pixels(input_tif)
+            classify_obj.pre_processing(X)
+        else:
+            basic.outputlogMessage('warning, scaled model already exist, skip pre-processing')
 
-    #save train model
-    #
-    # # classify
-    # classify_obj.classify_polygon_svm(shapefile, output_shp)
+    elif options.istraining:
+        # training
+        # read training data
+        X, y = classify_obj.read_training_pixels_from_multi_images('subImages', 'subLabels')
 
-    # classifier_obj = None
+        if os.path.isfile(model_saved_path) is False:
+            classify_obj.training_svm_classifier(X, y)
+        else:
+            basic.outputlogMessage("warning, trained model already exist, skip training")
+
+    else:
+        # prediction
+        classify_obj.prediction_on_a_image(input_tif,output)
 
 
-
-    pass
 
 
 
@@ -239,6 +334,14 @@ if __name__ == "__main__":
     usage = "usage: %prog [options] input_image label_image"
     parser = OptionParser(usage=usage, version="1.0 2019-1-4")
     parser.description = 'Introduction: Using SVM in sklearn library to perform classification on Planet images'
+
+    parser.add_option("-p", "--ispreprocess",
+                      action="store_true", dest="ispreprocess", default=False,
+                      help="to indicate the script will perform pre-processing, if this set, istraining will be ignored")
+
+    parser.add_option("-t", "--istraining",
+                      action="store_true", dest="istraining", default=False,
+                      help="to indicate the script will perform training process")
 
     parser.add_option("-o", "--output",
                       action="store", dest="output",

@@ -16,15 +16,26 @@ log=time_cost.txt
 time_str=`date +%Y_%m_%d_%H_%M_%S`
 echo ${time_str} >> ${log}
 
+eo_dir=~/codes/PycharmProjects/Landuse_DL
+
 #para_file=$1
 para_file=para.ini
 deeplabRS=~/codes/PycharmProjects/DeeplabforRS
 para_py=${deeplabRS}/parameters.py
 train_shp_all=$(python2 ${para_py} -p ${para_file} training_polygons )
 
-# get subImages (using four bands) and subLabels
+# get subImages (using four bands) and subLabels, extract sub_images based on the training polgyons
+# make sure ground truth raster already exist
+${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
 
-# svm training and classification
+#pre-processing for SVM
 
+
+#svm training
+
+#classification
+
+
+# accuracies assessment
 
 
