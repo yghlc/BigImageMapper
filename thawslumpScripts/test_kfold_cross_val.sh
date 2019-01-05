@@ -44,9 +44,11 @@ function train_kfold_cross_val() {
     cd -
 
     # training on k subset
-    for idx in $(seq 1 $kvalue); do
+    for idx in $(seq 3 $kvalue); do
         # remove previous trained model (the setting are the same to exp9)
         rm -r exp9 || true
+
+        echo run training and inference of the ${idx}_th fold >> ${log}
 
         # modified para.ini
         cp para_template_kfold.ini para.ini
