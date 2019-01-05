@@ -109,6 +109,8 @@ class classify_pix_operation(object):
         """
         img_list = io_function.get_file_list_by_ext('.tif',subImg_folder,bsub_folder=False)
         label_list = io_function.get_file_list_by_ext('.tif',subLabel_folder,bsub_folder=False)
+        img_list.sort()
+        label_list.sort()
 
         if len(img_list)<1 or len(label_list) < 1:
             raise IOError('No tif images or labels in folder %s or %s'%(subImg_folder,subLabel_folder))
@@ -169,19 +171,34 @@ class classify_pix_operation(object):
             X  = result.tolist()
         y = training_y
 
+        basic.outputlogMessage('Training data set nsample: %d, nfeature: %d' % (len(X), len(X[0])))
+
+        # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=0)
+
         # SVM Parameter Tuning in Scikit Learn using GridSearchCV
-        Cs = [0.001, 0.01, 0.1, 1, 10]
-        gammas = [0.001, 0.01, 0.1, 1,2.5, 5]
-        param_grid = {'C': Cs, 'gamma': gammas}
-        grid_search_result = model_selection.GridSearchCV(svm.SVC(kernel='rbf'), param_grid, cv=None,n_jobs=-1)
-        print(grid_search_result)
 
-        # basic.outputlogMessage("grid_search.best_params_:"+str(grid_search_result.best_params_))
+        # Set the parameters by cross-validation
+        tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-4,0.001, 0.01, 0.1, 1,2.5, 5],
+                             'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]},
+                            {'kernel': ['linear'], 'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]}]
 
-        basic.outputlogMessage('Training data set nsample: %d, nfeature: %d'%(len(X),len(X[0])))
-        fit_model = self.__classifier_svm.fit(X,y)
+        clf = model_selection.GridSearchCV(svm.SVC(), tuned_parameters, cv=5,
+                           scoring='f1' ,n_jobs=-1)
 
-        basic.outputlogMessage(str(fit_model))
+        clf.fit(X, y)
+
+        basic.outputlogMessage("Best parameters set found on development set:"+str(clf.best_params_))
+        basic.outputlogMessage("Grid scores on development set:" )
+        print()
+        means = clf.cv_results_['mean_test_score']
+        stds = clf.cv_results_['std_test_score']
+        for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+            print("%0.3f (+/-%0.03f) for %r"
+                  % (mean, std * 2, params))
+        # print()
+
+        # fit_model = self.__classifier_svm.fit(X,y)
+        # basic.outputlogMessage(str(fit_model))
 
 
 def main(options, args):
@@ -195,11 +212,11 @@ def main(options, args):
 
 
     classify_obj = classify_pix_operation()
-
-    #read whole data set for pre-processing
+    #
+    # #read whole data set for pre-processing
     X, y = classify_obj.read_training_pixels_from_multi_images('subImages','subLabels')
     classify_obj.pre_processing(X)
-
+    #
     # read training data
     # (the same as the previous one )
 
