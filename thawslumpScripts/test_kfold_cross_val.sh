@@ -36,12 +36,17 @@ function train_kfold_cross_val() {
     filename=$(basename "$train_shp_all")
     filename_no_ext="${filename%.*}"
     dir_sub=${dir}/${kvalue}-fold_cross_val_t${test_num}
-    mkdir -p ${dir_sub}
 
     # will save to ${dir_sub}
-    cd ${dir_sub}
-    ${deeplabRS}/get_trianing_polygons.py ${train_shp_all} ${filename} -k ${kvalue}
-    cd -
+    # if exist, skip
+    if [ ! -d "${dir_sub}" ]; then
+        mkdir -p ${dir_sub}
+        cd ${dir_sub}
+        ${deeplabRS}/get_trianing_polygons.py ${train_shp_all} ${filename} -k ${kvalue}
+        cd -
+    else
+        echo "subset of shapefile already exist, skip creating new" >> ${log}
+    fi
 
     # training on k subset
     for idx in $(seq 3 $kvalue); do
