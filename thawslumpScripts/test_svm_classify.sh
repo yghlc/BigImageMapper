@@ -43,7 +43,7 @@ ${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}  -p
 # make sure ground truth raster already exist
 ${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
 
-rm "sk_svm_trained.pkl"
+rm "sk_svm_trained.pkl" || true
 ${eo_dir}/planetScripts/planet_svm_classify.py -t
 
 ###########pclassification##########
