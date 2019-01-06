@@ -49,7 +49,7 @@ function train_kfold_cross_val() {
     fi
 
     # training on k subset
-    for idx in $(seq 3 $kvalue); do
+    for idx in $(seq 4 $kvalue); do
         # remove previous trained model (the setting are the same to exp9)
         rm -r exp9 || true
 
