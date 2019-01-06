@@ -293,13 +293,6 @@ class classify_pix_operation(object):
 
 
 def main(options, args):
-    input_tif = args[0]
-    # label_img = args[1]
-
-    if options.output is not None:
-        output = options.output
-    else:
-        output = get_output_name(input_tif)
 
     print('Is_preprocessing:', options.ispreprocess)
     print('Is_training:',options.istraining)
@@ -308,6 +301,7 @@ def main(options, args):
 
     if options.ispreprocess:
         # preprocessing
+        input_tif = args[0]
         if os.path.isfile(scaler_saved_path) is False:
             # #read whole data set for pre-processing
             X,_,_ = read_whole_x_pixels(input_tif)
@@ -327,6 +321,11 @@ def main(options, args):
 
     else:
         # prediction
+        input_tif = args[0]
+        if options.output is not None:
+            output = options.output
+        else:
+            output = get_output_name(input_tif)
         classify_obj.prediction_on_a_image(input_tif,output)
 
 
