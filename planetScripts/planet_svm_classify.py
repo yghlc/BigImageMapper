@@ -203,10 +203,10 @@ class classify_pix_operation(object):
 
         basic.outputlogMessage('Training data set nsample: %d, nfeature: %d' % (len(X), len(X[0])))
 
-        X_train = X
-        y_train = y
+        # X_train = X
+        # y_train = y
         # # for test by hlc
-        # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.9, random_state=0)
+        X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.95, random_state=0)
         # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=0)
 
         # SVM Parameter Tuning in Scikit Learn using GridSearchCV
