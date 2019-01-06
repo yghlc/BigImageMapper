@@ -301,7 +301,7 @@ def main(options, args):
     else:
         output = get_output_name(input_tif)
 
-    print('Is_training:', options.ispreprocess)
+    print('Is_preprocessing:', options.ispreprocess)
     print('Is_training:',options.istraining)
 
     classify_obj = classify_pix_operation()
