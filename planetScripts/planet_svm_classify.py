@@ -141,11 +141,11 @@ class classify_pix_operation(object):
         Xs, ys = [],[]
         for img, label in zip(img_list,label_list):
 
-            # test
-            polygon_index_img = os.path.basename(img).split('_')[-3]
-            # print(polygon_index_img)
-            if polygon_index_img not in [str(83), str(86)] :
-                continue
+            # # test by hlc
+            # polygon_index_img = os.path.basename(img).split('_')[-3]
+            # # print(polygon_index_img)
+            # if polygon_index_img not in [str(83), str(86)] :
+            #     continue
 
             X_aImg,y_a = read_training_pixels(img, label)
             Xs.append(X_aImg)
@@ -203,21 +203,24 @@ class classify_pix_operation(object):
 
         basic.outputlogMessage('Training data set nsample: %d, nfeature: %d' % (len(X), len(X[0])))
 
-        # for test
-        X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.9, random_state=0)
+        X_train = X
+        y_train = y
+        # # for test by hlc
+        # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.9, random_state=0)
+        # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=0)
 
         # SVM Parameter Tuning in Scikit Learn using GridSearchCV
 
-        # Set the parameters by cross-validation
-        # tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-4,0.001, 0.01, 0.1, 1,2.5, 5],
-        #                      'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]},
-        #                     {'kernel': ['linear'], 'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]}]
+        # #Set the parameters by cross-validation
+        tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-4,0.001, 0.01, 0.1, 1,2.5, 5],
+                             'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]},
+                            {'kernel': ['linear'], 'C': [0.001, 0.01, 0.1,1, 10, 100, 1000]}]
 
-        # for test
-        tuned_parameters = [{'kernel': ['linear'], 'C': [0.001,  0.1,1, 10]}]
+        # # for test by hlc
+        # tuned_parameters = [{'kernel': ['linear'], 'C': [0.001,  0.1,1, 10]}]
 
         clf = model_selection.GridSearchCV(svm.SVC(), tuned_parameters, cv=5,
-                           scoring='f1_macro' ,n_jobs=-1,verbose=2)
+                           scoring='f1_macro' ,n_jobs=-1,verbose=3)
 
         clf.fit(X_train, y_train)
 
@@ -291,7 +294,7 @@ class classify_pix_operation(object):
 
 def main(options, args):
     input_tif = args[0]
-    label_img = args[1]
+    # label_img = args[1]
 
     if options.output is not None:
         output = options.output
@@ -314,7 +317,7 @@ def main(options, args):
 
     elif options.istraining:
         # training
-        # read training data
+        # read training data (make sure 'subImages', 'subLabels' is under current folder)
         X, y = classify_obj.read_training_pixels_from_multi_images('subImages', 'subLabels')
 
         if os.path.isfile(model_saved_path) is False:
@@ -331,7 +334,7 @@ def main(options, args):
 
 
 if __name__ == "__main__":
-    usage = "usage: %prog [options] input_image label_image"
+    usage = "usage: %prog [options] input_image"
     parser = OptionParser(usage=usage, version="1.0 2019-1-4")
     parser.description = 'Introduction: Using SVM in sklearn library to perform classification on Planet images'
 

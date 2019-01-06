@@ -24,18 +24,26 @@ deeplabRS=~/codes/PycharmProjects/DeeplabforRS
 para_py=${deeplabRS}/parameters.py
 train_shp_all=$(python2 ${para_py} -p ${para_file} training_polygons )
 
-# get subImages (using four bands) and subLabels, extract sub_images based on the training polgyons
+
+##########pre-processing for SVM##########
+input_image=$(python2 ${para_py} -p ${para_file} input_image_path )
+rm "scaler_saved.pkl" || true
+${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}  -p
+
+
+##########svm training##########
+
+# get subImages (using four bands) and subLabels for training, extract sub_images based on the training polygons
 # make sure ground truth raster already exist
 ${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
 
-#pre-processing for SVM
+rm "sk_svm_trained.pkl"
+${eo_dir}/planetScripts/planet_svm_classify.py -t
 
-
-#svm training
-
-#classification
-
+###########pclassification##########
+${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}
 
 # accuracies assessment
+${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}
 
 
