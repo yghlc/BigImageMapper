@@ -39,6 +39,9 @@ ${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}  -p
 
 ##########svm training##########
 
+# remove previous subImages
+${eo_dir}/thawslumpScripts/remove_previous_data.sh ${para_file}
+
 # get subImages (using four bands) and subLabels for training, extract sub_images based on the training polygons
 # make sure ground truth raster already exist
 ${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
