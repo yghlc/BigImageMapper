@@ -351,7 +351,7 @@ if __name__ == "__main__":
                       help="the output file path")
 
     (options, args) = parser.parse_args()
-    if len(sys.argv) < 2 or len(args) < 1:
+    if len(sys.argv) < 2:
         parser.print_help()
         sys.exit(2)
 
