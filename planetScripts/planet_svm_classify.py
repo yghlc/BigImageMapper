@@ -83,8 +83,8 @@ def read_training_pixels(image_path,label_path):
     X_arr = img_data.reshape(nbands,-1)
     y_arr = label_data.reshape(-1)
 
-    print(X_arr.shape)
-    print(y_arr.shape)
+    basic.outputlogMessage(str(X_arr.shape))
+    basic.outputlogMessage(str(y_arr.shape))
     # sys.exit(1)
 
     return X_arr,y_arr
@@ -154,8 +154,8 @@ class classify_pix_operation(object):
         X_pixels = np.concatenate(Xs,axis=1)
         y_pixels = np.concatenate(ys,axis=0)
         X_pixels = np.transpose(X_pixels,(1,0))
-        print(X_pixels.shape)
-        print(y_pixels.shape)
+        basic.outputlogMessage(str(X_pixels.shape))
+        basic.outputlogMessage(str(y_pixels.shape))
 
         return X_pixels, y_pixels
 
@@ -225,14 +225,14 @@ class classify_pix_operation(object):
         clf.fit(X_train, y_train)
 
         basic.outputlogMessage("Best parameters set found on development set:"+str(clf.best_params_))
-        basic.outputlogMessage("Grid scores on development set:" )
-        print()
+        basic.outputlogMessage("Grid scores on development set:\n" )
+
         means = clf.cv_results_['mean_test_score']
         stds = clf.cv_results_['std_test_score']
         for mean, std, params in zip(means, stds, clf.cv_results_['params']):
-            print("%0.3f (+/-%0.03f) for %r"
+            basic.outputlogMessage("%0.3f (+/-%0.03f) for %r"
                   % (mean, std * 2, params))
-        # print()
+
 
         # fit_model = self.__classifier_svm.fit(X,y)
         # basic.outputlogMessage(str(fit_model))
@@ -294,8 +294,8 @@ class classify_pix_operation(object):
 
 def main(options, args):
 
-    print('Is_preprocessing:', options.ispreprocess)
-    print('Is_training:',options.istraining)
+    basic.outputlogMessage('Is_preprocessing:' + str(options.ispreprocess))
+    basic.outputlogMessage('Is_training:' + str(options.istraining))
 
     classify_obj = classify_pix_operation()
 
@@ -326,6 +326,7 @@ def main(options, args):
             output = options.output
         else:
             output = get_output_name(input_tif)
+        basic.outputlogMessage('staring prediction on image:' + str(input_tif))
         classify_obj.prediction_on_a_image(input_tif,output)
 
 
@@ -353,5 +354,7 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         parser.print_help()
         sys.exit(2)
+
+    basic.setlogfile('planet_svm_log.txt')
 
     main(options, args)

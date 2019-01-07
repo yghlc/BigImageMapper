@@ -16,10 +16,13 @@ export PATH=/home/hlc/programs/anaconda2/bin:$PATH
 
 # output log information to time_cost.txt
 #log=test_img_augment_log.txt
-log=time_cost.txt
+log='planet_svm_log.txt'
 #rm ${log} || true   # or true: don't exit with error and can continue run
 
 time_str=`date +%Y_%m_%d_%H_%M_%S`
+
+mv ${log} ${log}_${time_str} || true
+
 echo ${time_str} >> ${log}
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
