@@ -275,8 +275,9 @@ class classify_pix_operation(object):
 
         img_patches = build_RS_data.make_dataset(img_folder, inf_list_txt, patch_w, patch_h, overlay_x, overlay_y,
                                                  train=False)
-
-        for p_idx, img_patch in enumerate(img_patches):
+        # convert images
+        patches_1d = [item for alist in img_patches for item in alist]  # convert 2D list to 1D
+        for p_idx, img_patch in enumerate(patches_1d):
             # read images
             patch_data = build_RS_data.read_patch(img_patch)  # read_whole_x_pixels(input)
 
