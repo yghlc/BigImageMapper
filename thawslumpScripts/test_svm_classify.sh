@@ -57,6 +57,27 @@ ${eo_dir}/planetScripts/planet_svm_classify.py -t
 
 ###########pclassification##########
 ${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}
+filename=$(basename "$input_image")
+filename_no_ext="${filename%.*}"
+inf_dir=${filename_no_ext}
+
+output=${filename_no_ext}_classified.tif
+
+cd ${inf_dir}
+
+    #python ${eo_dir}/gdal_class_mosaic.py -o ${output} -init 0 *_pred.tif
+    gdal_merge.py -init 0 -n 0 -a_nodata 0 -o ${output} *.tif
+    cp ${output} ../.
+
+#    gdal_polygonize.py -8 ${output} -b 1 -f "ESRI Shapefile" ${testid}.shp
+#
+#    # post processing of shapefile
+#    cp ../${para_file}  ${para_file}
+#    min_area=$(python2 ${para_py} -p ${para_file} minimum_gully_area)
+#    min_p_a_r=$(python2 ${para_py} -p ${para_file} minimum_ratio_perimeter_area)
+#    ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} ${testid}.shp ${testid}_post.shp
+
+cd ..
 
 # accuracies assessment
 ${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}

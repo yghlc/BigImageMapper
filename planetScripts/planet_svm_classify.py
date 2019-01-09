@@ -275,45 +275,57 @@ class classify_pix_operation(object):
 
         img_patches = build_RS_data.make_dataset(img_folder, inf_list_txt, patch_w, patch_h, overlay_x, overlay_y,
                                                  train=False)
-        # convert images
-        patches_1d = [item for alist in img_patches for item in alist]  # convert 2D list to 1D
-        for p_idx, img_patch in enumerate(patches_1d):
-            # read images
-            patch_data = build_RS_data.read_patch(img_patch)  # read_whole_x_pixels(input)
 
-            nbands, height, width = patch_data.shape
+        for img_idx, aImg_patches in enumerate(img_patches):
+            inf_output_dir = os.path.splitext(img_name)[0]
+            os.system('mkdir -p '+inf_output_dir)
+            os.system('rm '+inf_output_dir+'/*')
 
-            X_predit = patch_data.reshape(nbands, -1)
-            X_predit = np.transpose(X_predit, (1, 0))
+            for p_idx, img_patch in enumerate(aImg_patches):
+                # read images
+                patch_data = build_RS_data.read_patch(img_patch)  # read_whole_x_pixels(input)
 
-            if os.path.isfile(scaler_saved_path) and self.__scaler is None:
-                self.__scaler = joblib.load(scaler_saved_path)
-                result = self.__scaler.transform(X_predit)
-                X = result.tolist()
-            elif self.__scaler is not None:
-                result = self.__scaler.transform(X_predit)
-                X = result.tolist()
-            else:
-                X = X_predit
-                basic.outputlogMessage('warning, no pre-processing of data before prediction')
+                nbands, height, width = patch_data.shape
 
-            # more method on prediction can be foudn in :
-            # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
-            pre_result = clf.predict(X)
+                X_predit = patch_data.reshape(nbands, -1)
+                X_predit = np.transpose(X_predit, (1, 0))
 
-            # save results
-            result_img = pre_result.reshape((height, width))
+                if os.path.isfile(scaler_saved_path) and self.__scaler is None:
+                    self.__scaler = joblib.load(scaler_saved_path)
+                    result = self.__scaler.transform(X_predit)
+                    X = result.tolist()
+                elif self.__scaler is not None:
+                    result = self.__scaler.transform(X_predit)
+                    X = result.tolist()
+                else:
+                    X = X_predit
+                    basic.outputlogMessage('warning, no pre-processing of data before prediction')
 
-            with rasterio.open(input) as src_obj:
-                # Set spatial characteristics of the output object to mirror the input
-                kwargs = src_obj.meta
-                kwargs.update(
-                    dtype=rasterio.uint8,
-                    count=1)
-                # Create the file
-                with rasterio.open(output, 'w', **kwargs) as dst:
-                    dst.write_band(1, result_img.astype(rasterio.uint8))
-                basic.outputlogMessage("save to %s" % output)
+                # more method on prediction can be foudn in :
+                # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
+                pre_result = clf.predict(X)
+                result_img = pre_result.reshape((height, width))
+
+                # save results
+                print('Save mask of instances:%d on Image:%d , shape:(%d,%d)' %
+                      (p_idx, img_idx, result_img.shape[0], result_img.shape[1]))
+
+                # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+                file_name = "I%d_%d" % (img_idx, p_idx)
+
+                save_path = os.path.join(inf_output_dir, file_name + '.tif')
+                build_RS_data.save_patch_oneband_8bit(img_patch,pre_result.astype(np.uint8),save_path)
+
+                # with rasterio.open(input) as src_obj:
+                #     # Set spatial characteristics of the output object to mirror the input
+                #     kwargs = src_obj.meta
+                #     kwargs.update(
+                #         dtype=rasterio.uint8,
+                #         count=1)
+                #     # Create the file
+                #     with rasterio.open(output, 'w', **kwargs) as dst:
+                #         dst.write_band(1, result_img.astype(rasterio.uint8))
+                #     basic.outputlogMessage("save to %s" % output)
 
         return True
 
