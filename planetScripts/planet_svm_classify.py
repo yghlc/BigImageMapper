@@ -314,7 +314,7 @@ class classify_pix_operation(object):
                 file_name = "I%d_%d" % (img_idx, p_idx)
 
                 save_path = os.path.join(inf_output_dir, file_name + '.tif')
-                build_RS_data.save_patch_oneband_8bit(img_patch,pre_result.astype(np.uint8),save_path)
+                build_RS_data.save_patch_oneband_8bit(img_patch,result_img.astype(np.uint8),save_path)
 
                 # with rasterio.open(input) as src_obj:
                 #     # Set spatial characteristics of the output object to mirror the input
