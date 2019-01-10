@@ -39,6 +39,9 @@ from sklearn.externals import joblib  # save and load model
 
 import datasets.build_RS_data as build_RS_data
 
+import multiprocessing
+from multiprocessing import Pool
+
 model_saved_path = "sk_svm_trained.pkl"
 scaler_saved_path = "scaler_saved.pkl"
 
@@ -109,6 +112,55 @@ def read_whole_x_pixels(image_path):
         X_arr = img_data.reshape(nbands, -1)
         X_arr = np.transpose(X_arr, (1, 0))
         return X_arr, height, width
+
+def inference_one_patch_svm(img_idx,image_count,p_idx,patch_count,inf_output_dir,img_patch,scaler,clf):
+    """
+    inference one patch
+    :param img_idx: index of the image
+    :param idx: index of the patch on the image
+    :param org_img_path: org image path
+    :param boundary: the patch boundary
+    :param model: sk-learn, svm model
+    :return:
+    """
+    # due to multiprocessing:  the Pickle.PicklingError: Can't pickle <type 'module'>: attribute lookup __builtin__.module failed
+    # recreate the class instance, but there is a model from tensorflow, so it sill not work
+
+    # read images
+    patch_data = build_RS_data.read_patch(img_patch)  # read_whole_x_pixels(input)
+
+    nbands, height, width = patch_data.shape
+
+    X_predit = patch_data.reshape(nbands, -1)
+    X_predit = np.transpose(X_predit, (1, 0))
+
+    if os.path.isfile(scaler_saved_path) and scaler is None:
+        scaler = joblib.load(scaler_saved_path)
+        result = scaler.transform(X_predit)
+        X = result.tolist()
+    elif scaler is not None:
+        result = scaler.transform(X_predit)
+        X = result.tolist()
+    else:
+        X = X_predit
+        basic.outputlogMessage('warning, no pre-processing of data before prediction')
+
+    # more method on prediction can be foudn in :
+    # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
+    pre_result = clf.predict(X)
+    result_img = pre_result.reshape((height, width))
+
+    # save results
+    print('Save patch:%d/%d on Image:%d/%d , shape:(%d,%d)' %
+          (p_idx,image_count, img_idx,patch_count, result_img.shape[0], result_img.shape[1]))
+
+    # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+    file_name = "I%d_%d" % (img_idx, p_idx)
+
+    save_path = os.path.join(inf_output_dir, file_name + '.tif')
+    build_RS_data.save_patch_oneband_8bit(img_patch,result_img.astype(np.uint8),save_path)
+
+    return True
 
 
 class classify_pix_operation(object):
@@ -281,40 +333,56 @@ class classify_pix_operation(object):
             os.system('mkdir -p '+inf_output_dir)
             os.system('rm '+inf_output_dir+'/*')
 
-            for p_idx, img_patch in enumerate(aImg_patches):
-                # read images
-                patch_data = build_RS_data.read_patch(img_patch)  # read_whole_x_pixels(input)
+            ## parallel inference patches
+            # but it turns out not work due to the Pickle.PicklingError
+            # use multiple thread
+            num_cores = multiprocessing.cpu_count()
+            print('number of thread %d' % num_cores)
+            # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
+            theadPool = Pool(num_cores)  # multi processes
 
-                nbands, height, width = patch_data.shape
+            # inference_one_patch_svm(img_idx, image_count, p_idx, patch_count, inf_output_dir, img_patch, scaler,clf)
 
-                X_predit = patch_data.reshape(nbands, -1)
-                X_predit = np.transpose(X_predit, (1, 0))
+            parameters_list = [
+                (img_idx, len(img_patches), idx, len(aImg_patches), inf_output_dir, img_patch, self.__scaler, clf)
+                for (idx, img_patch) in enumerate(aImg_patches)]
+            results = theadPool.map(inference_one_patch_svm, parameters_list)
+            print('result_list', results)
 
-                if os.path.isfile(scaler_saved_path) and self.__scaler is None:
-                    self.__scaler = joblib.load(scaler_saved_path)
-                    result = self.__scaler.transform(X_predit)
-                    X = result.tolist()
-                elif self.__scaler is not None:
-                    result = self.__scaler.transform(X_predit)
-                    X = result.tolist()
-                else:
-                    X = X_predit
-                    basic.outputlogMessage('warning, no pre-processing of data before prediction')
-
-                # more method on prediction can be foudn in :
-                # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
-                pre_result = clf.predict(X)
-                result_img = pre_result.reshape((height, width))
-
-                # save results
-                print('Save patch:%d/%d on Image:%d/%d , shape:(%d,%d)' %
-                      (p_idx,len(aImg_patches), img_idx,len(img_patches), result_img.shape[0], result_img.shape[1]))
-
-                # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
-                file_name = "I%d_%d" % (img_idx, p_idx)
-
-                save_path = os.path.join(inf_output_dir, file_name + '.tif')
-                build_RS_data.save_patch_oneband_8bit(img_patch,result_img.astype(np.uint8),save_path)
+            # for p_idx, img_patch in enumerate(aImg_patches):
+                # # read images
+                # patch_data = build_RS_data.read_patch(img_patch)  # read_whole_x_pixels(input)
+                #
+                # nbands, height, width = patch_data.shape
+                #
+                # X_predit = patch_data.reshape(nbands, -1)
+                # X_predit = np.transpose(X_predit, (1, 0))
+                #
+                # if os.path.isfile(scaler_saved_path) and self.__scaler is None:
+                #     self.__scaler = joblib.load(scaler_saved_path)
+                #     result = self.__scaler.transform(X_predit)
+                #     X = result.tolist()
+                # elif self.__scaler is not None:
+                #     result = self.__scaler.transform(X_predit)
+                #     X = result.tolist()
+                # else:
+                #     X = X_predit
+                #     basic.outputlogMessage('warning, no pre-processing of data before prediction')
+                #
+                # # more method on prediction can be foudn in :
+                # # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
+                # pre_result = clf.predict(X)
+                # result_img = pre_result.reshape((height, width))
+                #
+                # # save results
+                # print('Save patch:%d/%d on Image:%d/%d , shape:(%d,%d)' %
+                #       (p_idx,len(aImg_patches), img_idx,len(img_patches), result_img.shape[0], result_img.shape[1]))
+                #
+                # # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+                # file_name = "I%d_%d" % (img_idx, p_idx)
+                #
+                # save_path = os.path.join(inf_output_dir, file_name + '.tif')
+                # build_RS_data.save_patch_oneband_8bit(img_patch,result_img.astype(np.uint8),save_path)
 
                 # with rasterio.open(input) as src_obj:
                 #     # Set spatial characteristics of the output object to mirror the input
