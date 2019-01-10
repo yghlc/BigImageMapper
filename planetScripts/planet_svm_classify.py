@@ -152,7 +152,7 @@ def inference_one_patch_svm(img_idx,image_count,p_idx,patch_count,inf_output_dir
 
     # save results
     print('Save patch:%d/%d on Image:%d/%d , shape:(%d,%d)' %
-          (p_idx,image_count, img_idx,patch_count, result_img.shape[0], result_img.shape[1]))
+          (p_idx,patch_count,img_idx, image_count, result_img.shape[0], result_img.shape[1]))
 
     # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
     file_name = "I%d_%d" % (img_idx, p_idx)
