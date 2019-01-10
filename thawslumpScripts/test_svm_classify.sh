@@ -9,10 +9,13 @@
 set -eE -o functrace
 
 ### using python2 ###
-#MAKE SURE the /usr/bin/python, which is python2 on Cryo06
-export PATH=/usr/bin:$PATH
-# python2 on Cryo03, tensorflow 1.6
-export PATH=/home/hlc/programs/anaconda2/bin:$PATH
+##MAKE SURE the /usr/bin/python, which is python2 on Cryo06
+#export PATH=/usr/bin:$PATH
+## python2 on Cryo03, tensorflow 1.6
+#export PATH=/home/hlc/programs/anaconda2/bin:$PATH
+
+# use python3 to use starmap function in Pool for parallel computing
+export PATH=/home/hlc/programs/anaconda3/bin:$PATH
 
 # output log information to time_cost.txt
 #log=test_img_augment_log.txt
