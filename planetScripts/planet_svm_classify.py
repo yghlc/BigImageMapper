@@ -307,8 +307,8 @@ class classify_pix_operation(object):
                 result_img = pre_result.reshape((height, width))
 
                 # save results
-                print('Save mask of instances:%d on Image:%d , shape:(%d,%d)' %
-                      (p_idx, img_idx, result_img.shape[0], result_img.shape[1]))
+                print('Save patch:%d/%d on Image:%d/%d , shape:(%d,%d)' %
+                      (p_idx,len(aImg_patches), img_idx,len(img_patches), result_img.shape[0], result_img.shape[1]))
 
                 # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
                 file_name = "I%d_%d" % (img_idx, p_idx)
