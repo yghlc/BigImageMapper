@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04 
 MAINTAINER Lingcao Huang
 
 # docker for running tensorflow on Centos (ITSC services)
@@ -8,7 +8,8 @@ MAINTAINER Lingcao Huang
 # Python is ~/programs/anaconda2/bin/
 
 
-#RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git
 #        build-essential \
 #        pkg-config \
 #        m4 \
@@ -48,6 +49,8 @@ RUN useradd -m hlc && echo "hlc:hlc123" | chpasswd && adduser hlc sudo
 USER hlc
 CMD /bin/bash
 WORKDIR /home/hlc
+
+#set env
 
 
 

@@ -5,12 +5,13 @@ docker build -t  ubuntu1604_for_itsc .
 
 
 # create and run container
-#docker run -it -v --name isce_test isce_container
 
 #docker run -it isce_container
-
-docker run -v /home/hlc/programs/docker_isce_v2.2:/home/hlc/programs/isce_v2.2 -it isce_container
-
+# --rm : remove the container on exit
+# by mount home folder, the container can load environment settings in .bashrc
+docker run --rm -v $HOME/:/home/hlc/ -it ubuntu1604_for_itsc
+docker run --rm -v $HOME/:/home/hlc/ -v /docker:/docker -v /DATA3:/DATA3 -v /DATA4:/DATA4 -it ubuntu1604_for_itsc
+nvidia-docker run --rm -v $HOME/:/home/hlc/ -v /docker:/docker -v /DATA3:/DATA3 -v /DATA4:/DATA4 -it ubuntu1604_for_itsc
 
 ### launch a new terminal to the container, e9ef58868d14 is the container by "nvidia-docker ps" or "nvidia-docker ps -a"
 #nvidia-docker exec -it e9ef58868d14 bash
