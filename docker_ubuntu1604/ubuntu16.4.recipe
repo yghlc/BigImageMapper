@@ -1,0 +1,24 @@
+Bootstrap: docker
+OSVersion: ubuntu:16.4
+
+
+
+%help
+    ubuntu:16.4 to support running tensorflow on ITSC services
+
+%labels
+	Maintainer: Lingcao Huang
+	Version v1.0
+
+%environment
+
+
+%setup
+
+%post
+	apt-get update
+	apt-get install -y wget git vim
+	apt-get clean
+
+
+
