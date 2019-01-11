@@ -22,6 +22,10 @@ sudo singularity build ubuntu16.04_itsc_tf.simg ubuntu16.4.recipe
 # it is nice that the container have the same user and home folder on the host machine
 # but it doesn't source ".bashrc". The linked folders also are invalid
 singularity shell ubuntu16.04_itsc_tf.img
+singularity shell ubuntu16.04_itsc_tf.simg
+
+# add --nv (after shell) to support nvidia
+singularity shell --nv  ubuntu16.04_itsc_tf.simg
 
 # IN the container, use "hostname" to show the name of the host machine
 # run a script inside singularity container
