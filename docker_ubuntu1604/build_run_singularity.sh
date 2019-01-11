@@ -24,6 +24,8 @@ sudo singularity build ubuntu16.04_itsc_tf.simg ubuntu16.4.recipe
 singularity shell ubuntu16.04_itsc_tf.img
 singularity shell ubuntu16.04_itsc_tf.simg
 
+# it seem very time, I have to set LD_LIBRARY_PATH before import tensorflow in python, or it complains
+# cannot load libcudnn.so.7, but I have set the LD_LIBRARY_PATH in %environment
 # add --nv (after shell) to support nvidia
 singularity shell --nv  ubuntu16.04_itsc_tf.simg
 
