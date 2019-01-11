@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # it turns out that docker have permission issues (different user inside and outside)
+# even I set user name as "hlc" in the docker. When "git pull" inside docker, permission denied.  hlc Jan 10 2019
 
 #build docker image
 docker build -t  ubuntu1604_for_itsc .
