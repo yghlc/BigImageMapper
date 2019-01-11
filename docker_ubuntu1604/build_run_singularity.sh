@@ -8,40 +8,43 @@
 
 #build singularity docker
 # https://github.com/NIH-HPC/Singularity-Tutorial/tree/master/01-building
+
+# --sandbox option in the command above tells Singularity that we want to
+# build a special type of container for development purposes. Then, ubuntu16.04_itsc_tf.img is a folder
+# the default is to build a squashfs image, it a file
+# build command need "sudo"
 sudo singularity build --sandbox ubuntu16.04_itsc_tf.img ubuntu16.4.recipe
+# build to squashfs format, cannot modified insides
+sudo singularity build ubuntu16.04_itsc_tf.simg ubuntu16.4.recipe
 
 
-# create and run container
+# Using shell to explore and modify containers
+# it is nice that the container have the same user and home folder on the host machine
+# but it doesn't source ".bashrc". The linked folders also are invalid
+singularity shell ubuntu16.04_itsc_tf.img
 
-#docker run -it isce_container
-# --rm : remove the container on exit
-# by mount home folder, the container can load environment settings in .bashrc
-docker run --rm -v $HOME/:/home/hlc/ -it ubuntu1604_for_itsc
-#cryo06
-docker run --rm -v $HOME/:/home/hlc/ -v /docker:/docker -v /DATA3:/DATA3 -v /DATA4:/DATA4 -it ubuntu1604_for_itsc
-nvidia-docker run --rm -v $HOME/:/home/hlc/ -v /docker:/docker -v /DATA3:/DATA3 -v /DATA4:/DATA4 -it ubuntu1604_for_itsc
-#cryo03
-nvidia-docker run --rm -v $HOME/:/home/hlc/ -v /500G:/500G -v /DATA1:/DATA1 -it ubuntu1604_for_itsc
+# IN the container, use "hostname" to show the name of the host machine
+# run a script inside singularity container
+singularity exec ubuntu16.04_itsc_tf.simg hostname
 
-# tag and push to docker hub
-docker tag ubuntu1604_for_itsc ubuntu1604_for_itsc:v1
-docker push ubuntu1604_for_itsc:v1
+# mount folder
+# The --bind/-B option can be specified multiple times,
+# or a comma-delimited string of bind path specifications can be used.
+
+#cryo03:
+export SINGULARITY_BINDPATH=/500G:/500G,/DATA1:/DATA1
+# or
+singularity exec --bind /500G:/500G,/DATA1:/DATA1 ubuntu16.04_itsc_tf.simg ls -l /DATA1
 
 
-### launch a new terminal to the container, e9ef58868d14 is the container by "nvidia-docker ps" or "nvidia-docker ps -a"
-#nvidia-docker exec -it e9ef58868d14 bash
 
-### start the container at the background
-#4cc63f4a50d1 is got by "nvidia-docker ps -q -l"
-#nvidia-docker start e9ef58868d14
 
-### attach to the container
-#nvidia-docker attach e9ef58868d14
 
-### install isce after entering the docker container
-/home/hlc/programs/isce_v2.2/temp/isce-2.2.0/setup
-#./install.sh -p /home/hlc/programs/isce_v2.2
-./install.sh  -v -c /home/hlc/programs/isce_v2.2/SConfigISCE
+
+
+
+
+
 
 
 

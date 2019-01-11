@@ -12,7 +12,9 @@ OSVersion: ubuntu:16.4
 	Version v1.0
 
 %environment
-
+    export PATH=$PATH:~/programs/OTB-6.6.1-Linux64/bin:~/programs/anaconda2/bin
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/programs/cuda-9.0/lib64:~/programs/cuDNN_7.0/cuda/lib64
+    #export LC_ALL=C
 
 %setup
 
@@ -20,6 +22,7 @@ OSVersion: ubuntu:16.4
 	apt-get update
 	apt-get install -y wget git vim
 	apt-get clean
+	mkdir
 
 
 
