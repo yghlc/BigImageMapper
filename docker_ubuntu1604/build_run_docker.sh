@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# it turns out that docker have permission issues (different user inside and outside)
+
 #build docker image
 docker build -t  ubuntu1604_for_itsc .
 
@@ -10,8 +12,16 @@ docker build -t  ubuntu1604_for_itsc .
 # --rm : remove the container on exit
 # by mount home folder, the container can load environment settings in .bashrc
 docker run --rm -v $HOME/:/home/hlc/ -it ubuntu1604_for_itsc
+#cryo06
 docker run --rm -v $HOME/:/home/hlc/ -v /docker:/docker -v /DATA3:/DATA3 -v /DATA4:/DATA4 -it ubuntu1604_for_itsc
 nvidia-docker run --rm -v $HOME/:/home/hlc/ -v /docker:/docker -v /DATA3:/DATA3 -v /DATA4:/DATA4 -it ubuntu1604_for_itsc
+#cryo03
+nvidia-docker run --rm -v $HOME/:/home/hlc/ -v /500G:/500G -v /DATA1:/DATA1 -it ubuntu1604_for_itsc
+
+# tag and push to docker hub
+docker tag ubuntu1604_for_itsc ubuntu1604_for_itsc:v1
+docker push ubuntu1604_for_itsc:v1
+
 
 ### launch a new terminal to the container, e9ef58868d14 is the container by "nvidia-docker ps" or "nvidia-docker ps -a"
 #nvidia-docker exec -it e9ef58868d14 bash

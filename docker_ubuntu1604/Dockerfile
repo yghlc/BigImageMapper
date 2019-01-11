@@ -45,10 +45,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 #RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # need to create a user: hlc
-RUN useradd -m hlc && echo "hlc:hlc123" | chpasswd && adduser hlc sudo
-USER hlc
+#RUN useradd -m hlc && echo "hlc:hlc123" | chpasswd && adduser hlc sudo
+#USER hlc
 CMD /bin/bash
-WORKDIR /home/hlc
+#WORKDIR /home/hlc
 
 #set env
 
