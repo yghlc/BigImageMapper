@@ -1,4 +1,5 @@
 Bootstrap: docker
+FROM: ubuntu:16.04
 OSVersion: ubuntu:16.4
 
 
