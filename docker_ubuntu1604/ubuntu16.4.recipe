@@ -12,8 +12,6 @@ OSVersion: ubuntu:16.4
 	Version v1.0
 
 %environment
-    export LD_LIBRARY_PATH=~/programs/cuda-9.0/lib64:~/programs/cuDNN_7.0/cuda/lib64:$LD_LIBRARY_PATH
-    export PATH=~/programs/OTB-6.6.1-Linux64/bin:~/programs/anaconda2/bin:$PATH
     #export LC_ALL=C
 
 %setup
@@ -23,6 +21,9 @@ OSVersion: ubuntu:16.4
 	apt-get install -y wget git vim libsm6 libopencv-dev
 	apt-get clean
 #	mkdir
+
+    echo 'export LD_LIBRARY_PATH=~/programs/cuda-9.0/lib64:~/programs/cuDNN_7.0/cuda/lib64:$LD_LIBRARY_PATH' >> $SINGULARITY_ENVIRONMENT
+    echo 'export PATH=~/programs/OTB-6.6.1-Linux64/bin:~/programs/anaconda2/bin:$PATH' >> $SINGULARITY_ENVIRONMENT
 
 
 
