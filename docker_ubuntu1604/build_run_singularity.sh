@@ -33,6 +33,8 @@ singularity shell --nv  ubuntu16.04_itsc_tf.simg
 # run a script inside singularity container
 singularity exec ubuntu16.04_itsc_tf.simg hostname
 
+singularity exec ubuntu16.04_itsc_tf.simg python
+
 # mount folder
 # The --bind/-B option can be specified multiple times,
 # or a comma-delimited string of bind path specifications can be used.
