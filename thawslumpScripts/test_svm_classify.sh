@@ -15,7 +15,7 @@ set -eE -o functrace
 #export PATH=/home/hlc/programs/anaconda2/bin:$PATH
 
 # use python3 to use starmap function in Pool for parallel computing
-export PATH=/home/hlc/programs/anaconda3/bin:$PATH
+export PATH=~/programs/anaconda3/bin:$PATH
 
 # output log information to time_cost.txt
 #log=test_img_augment_log.txt

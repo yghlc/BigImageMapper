@@ -11,7 +11,7 @@ echo $(basename $0) : "Create the ground truth images for a shape file (containi
 ### python 2 on Cryo06
 #export PATH=/usr/bin:$PATH
 ### python2 on Cryo03
-#export PATH=/home/hlc/programs/anaconda2/bin:$PATH
+#export PATH=~/programs/anaconda2/bin:$PATH
 
 
 # Exit immediately if a command exits with a non-zero status. E: error trace

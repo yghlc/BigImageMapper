@@ -11,12 +11,12 @@
 #MAKE SURE the /usr/bin/python, which is python2 on Cryo06
 export PATH=/usr/bin:$PATH
 # python2 on Cryo03, tensorflow 1.6
-export PATH=/home/hlc/programs/anaconda2/bin:$PATH
+export PATH=~/programs/anaconda2/bin:$PATH
 
 # Exit immediately if a command exits with a non-zero status. E: error trace
 set -eE -o functrace
 
-eo_dir=/home/hlc/codes/PycharmProjects/Landuse_DL
+eo_dir=~/codes/PycharmProjects/Landuse_DL
 cd ${eo_dir}
 git pull
 cd -
