@@ -51,4 +51,4 @@ mv trainval.txt list/.
 cp list/trainval.txt list/val.txt
 
 duration=$SECONDS
-echo "$(date): time cost of preparing training images augmentation: ${duration} seconds">>"time_cost.txt"
+echo "$(date): time cost of training images augmentation: ${duration} seconds">>"time_cost.txt"

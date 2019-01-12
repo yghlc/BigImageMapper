@@ -105,4 +105,4 @@ echo "count of class 1 ":$(ls split_images/*class_1*${img_ext} |wc -l) >> time_c
 #echo "count of class 2 ":$(ls split_images/*class_2*${img_ext} |wc -l) >> time_cost.txt
 
 duration=$SECONDS
-echo "$(date): time cost of preparing training images augmentation: ${duration} seconds">>"time_cost.txt"
+echo "$(date): time cost of training images augmentation: ${duration} seconds">>"time_cost.txt"
