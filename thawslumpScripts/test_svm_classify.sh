@@ -24,8 +24,6 @@ log='planet_svm_log.txt'
 
 time_str=`date +%Y_%m_%d_%H_%M_%S`
 
-mv ${log} ${log}_${time_str} || true
-
 echo ${time_str} >> ${log}
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
