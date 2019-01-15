@@ -266,19 +266,22 @@ class classify_pix_operation(object):
 
         basic.outputlogMessage('Training data set nsample: %d, nfeature: %d' % (len(X), len(X[0])))
 
-        # sub sample and make the class 0 and 1 balanced
-        basic.outputlogMessage('Number of sample before sub-sample: %d'%len(X))
+        # sub sample and make the class 0 and 1 balanced (have the same number)
+        basic.outputlogMessage('Number of sample before sub-sample: %d, class 0: %d, class 1: %d'%
+                               (len(X),len(np.where(y==0)[0]),len(np.where(y==1)[0])))
         from imblearn.under_sampling import RandomUnderSampler
         rus = RandomUnderSampler(return_indices=True)
         X_rus, y_rus, id_rus = rus.fit_sample(X, y)
-        X = X[X_rus]
-        y = y[y_rus]
-        basic.outputlogMessage('Number of sample after sub-sample: %d' % len(X))
-        # X_train = X
-        # y_train = y
+        X = X_rus
+        y = y_rus
+        basic.outputlogMessage('Number of sample after sub-sample: %d, class 0: %d, class 1: %d'%
+                               (len(X),len(np.where(y==0)[0]),len(np.where(y==1)[0])))
+
+        X_train = X
+        y_train = y
         # # for test by hlc
         # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.95, random_state=0)
-        X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=0)
+        # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=0)
 
         # SVM Parameter Tuning in Scikit Learn using GridSearchCV
 
