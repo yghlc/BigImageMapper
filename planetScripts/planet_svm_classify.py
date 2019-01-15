@@ -329,7 +329,7 @@ class classify_pix_operation(object):
                                                  train=False)
 
         for img_idx, aImg_patches in enumerate(img_patches):
-            inf_output_dir = os.path.splitext(img_name)[0]
+            inf_output_dir = 'inf_results' #os.path.splitext(img_name)[0]
             os.system('mkdir -p '+inf_output_dir)
             os.system('rm '+inf_output_dir+'/*')
 
