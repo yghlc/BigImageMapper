@@ -27,6 +27,9 @@ sys.path.insert(0, codes_dir2)
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
+# pip install imbalanced-learn for sub sample the training data.
+import imblearn
+
 # Preprocessing
 from sklearn import preprocessing
 # library for SVM classifier
@@ -263,6 +266,14 @@ class classify_pix_operation(object):
 
         basic.outputlogMessage('Training data set nsample: %d, nfeature: %d' % (len(X), len(X[0])))
 
+        # sub sample and make the class 0 and 1 balanced
+        basic.outputlogMessage('Number of sample before sub-sample: %d'%X.shape[0])
+        from imblearn.under_sampling import RandomUnderSampler
+        rus = RandomUnderSampler(return_indices=True)
+        X_rus, y_rus, id_rus = rus.fit_sample(X, y)
+        X = X[X_rus]
+        y = y[y_rus]
+        basic.outputlogMessage('Number of sample after sub-sample: %d' % X.shape[0])
         # X_train = X
         # y_train = y
         # # for test by hlc
