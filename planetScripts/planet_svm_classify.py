@@ -267,13 +267,13 @@ class classify_pix_operation(object):
         basic.outputlogMessage('Training data set nsample: %d, nfeature: %d' % (len(X), len(X[0])))
 
         # sub sample and make the class 0 and 1 balanced
-        basic.outputlogMessage('Number of sample before sub-sample: %d'%X.shape[0])
+        basic.outputlogMessage('Number of sample before sub-sample: %d'%len(X))
         from imblearn.under_sampling import RandomUnderSampler
         rus = RandomUnderSampler(return_indices=True)
         X_rus, y_rus, id_rus = rus.fit_sample(X, y)
         X = X[X_rus]
         y = y[y_rus]
-        basic.outputlogMessage('Number of sample after sub-sample: %d' % X.shape[0])
+        basic.outputlogMessage('Number of sample after sub-sample: %d' % len(X))
         # X_train = X
         # y_train = y
         # # for test by hlc
