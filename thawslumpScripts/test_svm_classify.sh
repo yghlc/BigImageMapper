@@ -37,8 +37,8 @@ train_shp_all=$(python2 ${para_py} -p ${para_file} training_polygons )
 
 ##########pre-processing for SVM##########
 input_image=$(python2 ${para_py} -p ${para_file} input_image_path )
-#rm "scaler_saved.pkl" || true
-#${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}  -p
+rm "scaler_saved.pkl" || true
+${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}  -p
 #
 #
 ###########svm training##########
