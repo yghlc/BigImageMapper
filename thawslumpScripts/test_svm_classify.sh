@@ -62,9 +62,16 @@ ${eo_dir}/planetScripts/planet_svm_classify.py -t
 ${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}
 filename=$(basename "$input_image")
 filename_no_ext="${filename%.*}"
-inf_dir=${filename_no_ext}
+#inf_dir=${filename_no_ext}
+inf_dir=inf_results
 
-output=${filename_no_ext}_classified.tif
+NUM_ITERATIONS=$(python2 ${para_py} -p ${para_file} export_iteration_num)
+trail=iter${NUM_ITERATIONS}
+expr_name=$(python2 ${para_py} -p ${para_file} expr_name)
+testid=$(basename $PWD)_${expr_name}_${trail}
+output=${testid}.tif
+
+#output=${filename_no_ext}_classified.tif
 
 cd ${inf_dir}
 
@@ -84,5 +91,15 @@ cd ..
 
 # accuracies assessment
 ${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}
+
+
+# back up results
+mkdir -p result_backup
+
+cp ${para_file} result_backup/${testid}_para.ini
+mv otb_acc_log.txt result_backup/${testid}_otb_acc_log.txt
+mv ${output} result_backup/${output}
+mv planet_svm_log.txt  result_backup/${testid}_planet_svm_log.txt
+
 
 
