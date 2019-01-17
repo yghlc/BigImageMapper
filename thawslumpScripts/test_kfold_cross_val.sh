@@ -45,7 +45,18 @@ function train_kfold_cross_val() {
         ${deeplabRS}/get_trianing_polygons.py ${train_shp_all} ${filename} -k ${kvalue}
         cd -
     else
-        echo "subset of shapefile already exist, skip creating new" >> ${log}
+        # check shapefiles exist
+        count=$(ls -1 ${dir_sub}/*.shp |wc -l)
+        if [ $count != 0 ];
+        then
+            echo "subset of shapefile already exist, skip creating new" >> ${log}
+        else
+            # create new
+            cd ${dir_sub}
+            ${deeplabRS}/get_trianing_polygons.py ${train_shp_all} ${filename} -k ${kvalue}
+            cd -
+        fi
+
     fi
 
     # training on k subset
