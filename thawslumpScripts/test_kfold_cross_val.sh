@@ -68,9 +68,10 @@ function train_kfold_cross_val() {
         count=$(ls -1 *${newline}.shp |wc -l)
         if [ $count != 0 ];
         then
-            echo true;
+            echo "${newline}.shp already exist, skip" >>  ${log}
         else
             # run
+            echo start: test:${test_num} the ${idx}_th fold  >> ${log}
             ./exe.sh
         fi
 
