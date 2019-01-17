@@ -65,7 +65,7 @@ function train_kfold_cross_val() {
         sed -i -e  s%x_test_num%$newline%g exe.sh
 
         # check results exist
-        count=$(ls -1 *${newline}.shp |wc -l)
+        count=$(ls -1 result_backup/*${newline}.shp |wc -l)
         if [ $count != 0 ];
         then
             echo "${newline}.shp already exist, skip" >>  ${log}
