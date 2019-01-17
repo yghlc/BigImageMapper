@@ -64,8 +64,15 @@ function train_kfold_cross_val() {
         newline=${kvalue}fold_${idx}_t${test_num}
         sed -i -e  s%x_test_num%$newline%g exe.sh
 
-        # run
-        ./exe.sh
+        # check results exist
+        count=$(ls -1 *${newline}.shp |wc -l)
+        if [ $count != 0 ];
+        then
+            echo true;
+        else
+            # run
+            ./exe.sh
+        fi
 
     done
 }
@@ -74,6 +81,8 @@ function train_kfold_cross_val() {
 #k=5
 #train_kfold_cross_val ${k} 1
 
-k=5
-train_kfold_cross_val ${k} 2
+# input k and test_number from outsize
+k=$1
+test_num=$2
+train_kfold_cross_val ${k} ${test_num}
 
