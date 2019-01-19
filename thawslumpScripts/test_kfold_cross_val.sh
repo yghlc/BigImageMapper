@@ -14,7 +14,7 @@ log=time_cost.txt
 #rm ${log} || true   # or true: don't exit with error and can continue run
 
 time_str=`date +%Y_%m_%d_%H_%M_%S`
-echo ${time_str} >> ${log}
+echo ${time_str} on $(hostname) >> ${log}
 
 #para_file=$1
 para_file=para.ini
