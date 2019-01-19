@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # orthorectify using mapproject (aps)
-# run this script in the ZY3 image folder: e.g.,
+# run this script in the ZY3 image folder contaning NAD images: e.g.,
 # ~/Data/Qinghai-Tibet/beiluhe/beiluhe_ZY3/ZY3_NAD_E92.8_N35.0_20141207_L1A0002929919
 
 #export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-OSX/bin:$PATH
@@ -21,7 +21,9 @@ output=${prename}_prj.tif
 
 # ${prename}.xml
 # sicne ASP complain the xml is not recognised, then remove it. the script still work without this complaint
-# on Linux, set METADATATYPE=ZY3 (original is DG), then mapproject would not copy the rpb files, on Mac, this not work
+# on Linux, no METADATATYPE, we set METADATATYPE=ZY3,
+# on Mac, it set METADATATYPE=ZY3, and can not be modified, and mapproject copy the rpb files
+# Same version, but different behaviour in Mac and Linux, strange
 mapproject -t rpc $dem ${prename}.tiff  ${output} --mpp ${our_res} \
 	--ot UInt16 --tif-compress None --mo METADATATYPE=ZY3 --threads ${num_thr}
 
