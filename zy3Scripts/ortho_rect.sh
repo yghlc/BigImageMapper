@@ -21,7 +21,7 @@ output=${prename}_prj.tif
 
 # ${prename}.xml
 # sicne ASP complain the xml is not recognised, then remove it. the script still work without this complaint
-# set METADATATYPE=ZY3 (original is DG), then mapproject would not copy the rpb files
+# on Linux, set METADATATYPE=ZY3 (original is DG), then mapproject would not copy the rpb files, on Mac, this not work
 mapproject -t rpc $dem ${prename}.tiff  ${output} --mpp ${our_res} \
 	--ot UInt16 --tif-compress None --mo METADATATYPE=ZY3 --threads ${num_thr}
 
