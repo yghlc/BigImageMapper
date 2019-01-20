@@ -33,7 +33,7 @@ figdir=result_backup/${k}fold_test${test_num}
 figname=p_r_${k}fold_test${test_num}.jpg
 mkdir -p ${figdir}
 
-mv result_backup/${k}fold_*_t${test_num}* ${figdir}/.
+mv result_backup/*${k}fold_*_t${test_num}* ${figdir}/.
 mv ${log} ${figdir}/.
 
 shp_list=$(ls ${figdir}/*post_${k}fold_*_t${test_num}*.shp)
