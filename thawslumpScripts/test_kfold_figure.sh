@@ -37,7 +37,7 @@ mv result_backup/*${k}fold_*_t${test_num}* ${figdir}/.
 mv ${log} ${figdir}/.
 
 shp_list=$(ls ${figdir}/*post_${k}fold_*_t${test_num}*.shp)
-${deeplabRS}/plot_accuracies.py -p ${para_file} ${shp_list} -o ${figdir}/${figname}
+python ${deeplabRS}/plot_accuracies.py -p ${para_file} ${shp_list} -o ${figdir}/${figname}
 
 
 
