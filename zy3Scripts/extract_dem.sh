@@ -4,8 +4,12 @@
 # run this script in the ZY3 image folder contaning NAD images: e.g.,
 # ~/Data/Qinghai-Tibet/beiluhe/beiluhe_ZY3/ZY3_DLC_E92.8_N35.0_20141207_L1A0002929919
 
+# Exit immediately if a command exits with a non-zero status. E: error trace
+set -eE -o functrace
+
 #export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-OSX/bin:$PATH
-export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-Linux/bin:$PATH
+#export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-Linux/bin:$PATH
+export PATH=~/programs/StereoPipeline-2.6.1-2019-01-19-x86_64-Linux/bin:$PATH
 
 #number of thread of to use, 8 or 16 on linux, 4 on mac (default is 4)
 num_thr=8
@@ -40,6 +44,8 @@ test_roi=
 # In this mode, ASP does not create a terrain model from scratch,
 # but rather uses an existing terrain model as an initial guess, and improves on it.
 
+# notice that, space or other character after '\' will cause trouble. This could happen when copy and paste
+
 mapproject -t rpc --tr ${out_res} ${dem} ${left} left_mapped.tif \
         ${test_roi} --threads ${num_thr} --ot UInt16 --tif-compress None
 
@@ -59,6 +65,8 @@ stereo -t rpcmaprpc --subpixel-mode 3 --alignment-method none     \
            ${output} ${dem}
 
 
+parallel_stereo -t rpc --stereo-algorithm 2 --subpixel-mode 3 --alignment-method none \
+    ${left} ${right} --threads ${num_thr}  ${output}
 
 # create dem from the point cloud (PC) file, --search-radius-factor 5 or higher to fill holes
 # --search-radius-factor 10
