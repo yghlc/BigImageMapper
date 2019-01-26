@@ -83,4 +83,5 @@ point2dem  --search-radius-factor 10 --nodata-value -9999 --tr ${dem_res} ${outp
 
 
 # Creating DEMs Relative to the Geoid/Areoid, after this the dem is close the SRTM (difference < a few meters)
+# the --tif-compress not work, it is a bug?, it always set to LZW
 dem_geoid  ${output}-DEM.tif --tif-compress None --threads ${num_thr}
