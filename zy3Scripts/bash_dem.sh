@@ -26,6 +26,8 @@ function extract_dsm() {
     cp ~/codes/PycharmProjects/Landuse_DL/zy3Scripts/stereo.default .
     ~/codes/PycharmProjects/Landuse_DL/zy3Scripts/extract_dem.sh ${res}
 
+    cd -
+
 
     # mv results
     mv ${folder}/stereo/*-DEM.tif  ${outdir}/.
