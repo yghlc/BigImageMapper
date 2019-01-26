@@ -31,7 +31,7 @@ function extract_dsm() {
 
     # mv results
     mv ${folder}/stereo/*-DEM.tif  ${outdir}/.
-    mv *-DEM-adj.tif ${outdir}/.
+    mv ${folder}/*-DEM-adj.tif ${outdir}/.
 
     # remove folder to save storage
     rm -r ${folder}/stereo
