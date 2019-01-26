@@ -29,7 +29,8 @@ left=${FWDname}
 right=${BWDname}
 
 # input image resolution zy3: 3.5m zy3-02: 2.5m
-out_res=3.5
+#out_res=3.5
+out_res=$1
 # output dem resolution, can set a higher value for zy3-02
 dem_res=3.0
 

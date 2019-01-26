@@ -17,6 +17,7 @@ mkdir -p ${outdir}
 # function of converting to 8bit using gdal_translate with max and min value.
 function extract_dsm() {
     local folder=${1}
+    local res=${2}
 
     cd ${folder}
 
@@ -41,13 +42,13 @@ function extract_dsm() {
 for zy3_dlc in $(ls -d ZY3_DLC*); do
     echo $zy3_dlc
 
-    extract_dsm $zy3_dlc
+    extract_dsm $zy3_dlc 3.5
 done
 
 for zy302_tms in $(ls ZY302_TMS*); do
     echo $zy302_tms
 
-    extract_dsm $zy302_tms
+    extract_dsm $zy302_tms 2.5
 done
 
 
