@@ -24,7 +24,7 @@ function extract_dsm() {
     SECONDS=0
     # extract dsm
     cp ~/codes/PycharmProjects/Landuse_DL/zy3Scripts/stereo.default .
-    ~/codes/PycharmProjects/Landuse_DL/zy3Scripts/extract_dem.sh
+    ~/codes/PycharmProjects/Landuse_DL/zy3Scripts/extract_dem.sh ${res}
 
 
     # mv results
