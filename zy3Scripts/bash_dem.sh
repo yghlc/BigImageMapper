@@ -41,13 +41,13 @@ function extract_dsm() {
     echo "$(date): time cost of extracting dsm of ${folder}: ${duration} seconds">>"time_cost.txt"
 }
 
-for zy3_dlc in $(ls -d ZY3_DLC*); do
+for zy3_dlc in $(ls -d ZY3_DLC* |grep -v gz); do
     echo $zy3_dlc
 
     extract_dsm $zy3_dlc 3.5
 done
 
-for zy302_tms in $(ls ZY302_TMS*); do
+for zy302_tms in $(ls -d ZY302_TMS* |grep -v gz ); do
     echo $zy302_tms
 
     extract_dsm $zy302_tms 2.5
