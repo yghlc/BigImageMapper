@@ -12,7 +12,7 @@ set -eE -o functrace
 export PATH=~/programs/StereoPipeline-2.6.1-2019-01-19-x86_64-Linux/bin:$PATH
 
 #number of thread of to use, 8 or 16 on linux, 4 on mac (default is 4)
-num_thr=8
+num_thr=16
 
 
 #dem=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_strm30.tif
@@ -31,10 +31,11 @@ right=${BWDname}
 # input image resolution zy3: 3.5m zy3-02: 2.5m
 out_res=3.5
 # output dem resolution, can set a higher value for zy3-02
-dem_res=5.0
+dem_res=3.0
 
-#output=$(basename $PWD)_dem
-output=stereo_r/test
+str=$(basename $PWD)
+IFS='_ ' read -r -a array <<< "$str"
+output=stereo/zy3_${array[4]}_dsm
 
 # for test: xmin ymin xmax ymax
 #test_roi="--t_pixelwin 5000 5000 6000 6000"
@@ -51,10 +52,6 @@ mapproject -t rpc --tr ${out_res} ${dem} ${left} left_mapped.tif \
 
 mapproject -t rpc --tr ${out_res} ${dem} ${right} right_mapped.tif \
         ${test_roi} --threads ${num_thr} --ot UInt16 --tif-compress None
-#      --tr 0.5 srtm_53_07.tif                            \
-#      12FEB12053341-P1BS_R2C1-052783824050_01_P001.TIF   \
-#      12FEB12053341-P1BS_R2C1-052783824050_01_P001.XML   \
-#      right_mapped.tif
 
 # copy rpc file on Linux
 cp "${left%.*}".rpb left_mapped.RPB
@@ -65,15 +62,16 @@ stereo -t rpcmaprpc --subpixel-mode 3 --alignment-method none     \
            ${output} ${dem}
 
 
-parallel_stereo -t rpc --stereo-algorithm 2 --subpixel-mode 3 --alignment-method none \
-    ${left} ${right} --threads ${num_thr}  ${output}
+#parallel_stereo -t rpc --stereo-algorithm 2 --subpixel-mode 3 --alignment-method none \
+#    ${left} ${right} --threads ${num_thr}  ${output}
 
 # create dem from the point cloud (PC) file, --search-radius-factor 5 or higher to fill holes
 # --search-radius-factor 10
 # output two resolution, one is the same to input, the other is user defined
 # the output log: "Percentage of valid pixels = 0.979167" shows that there are a few pixels with nodata (holes and edge pixels)
 #point2dem  --search-radius-factor 10 --nodata-value -9999 --tr "${out_res} ${dem_res}"  ${output}-PC.tif
-point2dem  --search-radius-factor 10 --nodata-value -9999 --tr ${dem_res} ${output}-PC.tif
+point2dem  --search-radius-factor 10 --nodata-value -9999 --tr ${dem_res} ${output}-PC.tif \
+    --threads ${num_thr} --tif-compress None
 
 
 # post-processing: fill holes
@@ -84,4 +82,4 @@ point2dem  --search-radius-factor 10 --nodata-value -9999 --tr ${dem_res} ${outp
 
 
 # Creating DEMs Relative to the Geoid/Areoid, after this the dem is close the SRTM (difference < a few meters)
-dem_geoid  ${output}-DEM.tif
+dem_geoid  ${output}-DEM.tif --tif-compress None --threads ${num_thr}
