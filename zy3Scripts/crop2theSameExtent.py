@@ -25,7 +25,7 @@ def main(options, args):
     input_image = args[0]
     base_image = args[1]
 
-    if options.output is None:
+    if options.output is not None:
         output = options.output
     else:
         output = io_function.get_name_by_adding_tail(input_image,'crop')
