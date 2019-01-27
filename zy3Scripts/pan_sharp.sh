@@ -4,12 +4,12 @@
 # run this script in the ZY3 image folder contaning NAD images: e.g.,
 # ~/Data/Qinghai-Tibet/beiluhe/beiluhe_ZY3/ZY302_TMS_E92.7_N35.0_20171027_L1A0000345912
 
-#export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-OSX/bin:$PATH
+export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-OSX/bin:$PATH
 #export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-Linux/bin:$PATH
-export PATH=~/programs/StereoPipeline-2.6.1-2019-01-19-x86_64-Linux/bin:$PATH
+#export PATH=~/programs/StereoPipeline-2.6.1-2019-01-19-x86_64-Linux/bin:$PATH
 
 #number of thread of to use, 8 or 16 on linux, 4 on mac (default is 4)
-num_thr=16
+num_thr=4
 
 #dem=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_strm30.tif
 dem=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_strm30_prj_utm.tif
@@ -32,8 +32,8 @@ IFS='_ ' read -r -a array <<< "$str"
 output=zy3_${array[4]}_${array[5]}_pansharp
 
 # ortho  first
-mapproject -t rpc --tr ${pan_res} ${dem} ${gray} gray_mapped.tif \
-        ${test_roi} --threads ${num_thr} --ot UInt16 --tif-compress None
+#mapproject -t rpc --tr ${pan_res} ${dem} ${gray} gray_mapped.tif \
+#        ${test_roi} --threads ${num_thr} --ot UInt16 --tif-compress None
 
 # error: Input images must be single channel or RGB!
 #mapproject -t rpc --tr ${mss_res} ${dem} ${color} color_mapped.tif \
@@ -61,3 +61,8 @@ cp ${color_fname_no_ext}.rpb color_mapped.RPB
 
 pansharp --nodata-value 0 --threads ${num_thr} --tif-compress None \
  gray_mapped.tif color_mapped.tif ${output}.tif
+
+
+# or using the pansharpening in OTB
+~/codes/PycharmProjects/Landuse_DL/zy3Scripts/crop2theSameExtent.py color_mapped.tif gray_mapped.tif
+otbcli_Pansharpening -progress 1 -ram 2048 -inp gray_mapped.tif -inxs color_mapped_crop.tif -out ${output}_otb.tif uint16
