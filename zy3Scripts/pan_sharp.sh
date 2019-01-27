@@ -5,10 +5,11 @@
 # ~/Data/Qinghai-Tibet/beiluhe/beiluhe_ZY3/ZY302_TMS_E92.7_N35.0_20171027_L1A0000345912
 
 #export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-OSX/bin:$PATH
-export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-Linux/bin:$PATH
+#export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-Linux/bin:$PATH
+export PATH=~/programs/StereoPipeline-2.6.1-2019-01-19-x86_64-Linux/bin:$PATH
 
 #number of thread of to use, 8 or 16 on linux, 4 on mac (default is 4)
-num_thr=4
+num_thr=16
 
 #dem=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_strm30.tif
 dem=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_strm30_prj_utm.tif
