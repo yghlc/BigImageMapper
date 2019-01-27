@@ -4,6 +4,9 @@
 # run this script in the ZY3 image folder contaning NAD images: e.g.,
 # ~/Data/Qinghai-Tibet/beiluhe/beiluhe_ZY3/ZY302_TMS_E92.7_N35.0_20171027_L1A0000345912
 
+# Exit immediately if a command exits with a non-zero status. E: error trace
+set -eE -o functrace
+
 #export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-OSX/bin:$PATH
 #export PATH=~/programs/StereoPipeline-2.6.1-2018-09-06-x86_64-Linux/bin:$PATH
 export PATH=~/programs/StereoPipeline-2.6.1-2019-01-19-x86_64-Linux/bin:$PATH
@@ -33,8 +36,8 @@ IFS='_ ' read -r -a array <<< "$str"
 output=zy3_${array[4]}_${array[5]}_pansharp
 
 # ortho  first
-#mapproject -t rpc --nodata-value ${nodata} --tr ${pan_res} ${dem} ${gray} gray_mapped.tif \
-#        ${test_roi} --threads ${num_thr} --ot UInt16 --tif-compress None
+mapproject -t rpc --nodata-value ${nodata} --tr ${pan_res} ${dem} ${gray} gray_mapped.tif \
+        ${test_roi} --threads ${num_thr} --ot UInt16 --tif-compress None
 
 # error: Input images must be single channel or RGB!
 #mapproject -t rpc --tr ${mss_res} ${dem} ${color} color_mapped.tif \
