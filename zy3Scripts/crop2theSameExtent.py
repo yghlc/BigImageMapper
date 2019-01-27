@@ -30,7 +30,7 @@ def main(options, args):
     else:
         output = io_function.get_name_by_adding_tail(input_image,'crop')
 
-    RSImageProcess.subset_image_baseimage(output,input_image,base_image)
+    RSImageProcess.subset_image_baseimage(output,input_image,base_image,same_res=True)
 
 
 if __name__ == "__main__":
