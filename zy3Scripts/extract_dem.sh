@@ -36,7 +36,7 @@ dem_res=3.0
 
 str=$(basename $PWD)
 IFS='_ ' read -r -a array <<< "$str"
-output=stereo/zy3_${array[4]}_${array[5]}
+output=stereo/${array[0]}_${array[4]}_${array[5]}
 
 # for test: xmin ymin xmax ymax
 #test_roi="--t_pixelwin 5000 5000 6000 6000"

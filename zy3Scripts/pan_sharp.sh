@@ -33,7 +33,7 @@ test_roi=
 
 str=$(basename $PWD)
 IFS='_ ' read -r -a array <<< "$str"
-output=zy3_${array[4]}_${array[5]}_pansharp
+output=${array[0]}_${array[4]}_${array[5]}_pansharp
 
 # ortho  first
 mapproject -t rpc --nodata-value ${nodata} --tr ${pan_res} ${dem} ${gray} gray_mapped.tif \
