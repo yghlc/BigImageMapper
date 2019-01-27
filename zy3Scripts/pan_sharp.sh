@@ -59,7 +59,7 @@ for band in $(seq 1 4); do
 #    exit
 done
 
-gdal_merge.py -separate -o color_mapped.tif color_mapped_B?.tif
+gdal_merge.py -separate -a_nodata ${nodata} -o color_mapped.tif color_mapped_B?.tif
 cp ${color_fname_no_ext}.rpb color_mapped.RPB
 
 
