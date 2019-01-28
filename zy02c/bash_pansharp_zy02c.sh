@@ -35,7 +35,7 @@ function pan_sharp() {
     echo "$(date): time cost of pan-sharpening of ${folder}: ${duration} seconds">>"time_cost.txt"
 }
 
-for zy02c_pms in $(ls -d ZY02C_PMS* |grep -v gz ); do
+for zy02c_pms in $(ls -d ZY02C_PMS_E* |grep -v gz ); do
     echo $zy02c_pms
 
     pan_sharp $zy02c_pms

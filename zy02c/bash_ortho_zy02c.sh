@@ -33,7 +33,7 @@ function ortho_rectify() {
     echo "$(date): time cost of orthorectification of ${folder}: ${duration} seconds">>"time_cost.txt"
 }
 
-for zy02c_hrc in $(ls -d ZY02C_HRC* |grep -v gz ); do
+for zy02c_hrc in $(ls -d ZY02C_HRC_E* |grep -v gz ); do
     echo zy02c_hrc
 
     ortho_rectify zy02c_hrc
