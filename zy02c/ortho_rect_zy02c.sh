@@ -21,7 +21,7 @@ nodata=0
 
 str=$(basename $PWD)
 IFS='_ ' read -r -a array <<< "$str"
-out_pan=${array[0]}_${array[1]}_${array[4]}_${array[5]}
+out_pan=${array[0]}_${array[1]}_${array[4]}_${array[5]}_ortho
 
 #test_roi="--t_pixelwin 0 0 500 500"
 test_roi=
