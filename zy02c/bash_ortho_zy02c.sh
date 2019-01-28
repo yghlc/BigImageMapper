@@ -34,9 +34,9 @@ function ortho_rectify() {
 }
 
 for zy02c_hrc in $(ls -d ZY02C_HRC_E* |grep -v gz ); do
-    echo zy02c_hrc
+    echo $zy02c_hrc
 
-    ortho_rectify zy02c_hrc
+    ortho_rectify $zy02c_hrc
 done
 
 
