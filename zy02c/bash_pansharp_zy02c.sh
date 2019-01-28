@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# create dsm from each zy3 scene
-# run this script in ~/Data/Qinghai-Tibet/beiluhe/beiluhe_ZY3
+# pansharpening for zy02C PMS images
+# run this script in ~/Data/Qinghai-Tibet/beiluhe/beiluhe_ZY02C
 
 #authors: Huang Lingcao
 #email:huanglingcao@gmail.com
-#add time: 25 January, 2019
+#add time: 28 January, 2019
 
 # Exit immediately if a command exits with a non-zero status. E: error trace
 set -eE -o functrace
@@ -32,7 +32,7 @@ function pan_sharp() {
 
     #exit
     duration=$SECONDS
-    echo "$(date): time cost of extracting dsm of ${folder}: ${duration} seconds">>"time_cost.txt"
+    echo "$(date): time cost of pan-sharpening of ${folder}: ${duration} seconds">>"time_cost.txt"
 }
 
 for zy02c_pms in $(ls -d ZY02C_PMS* |grep -v gz ); do
