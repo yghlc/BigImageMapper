@@ -71,6 +71,9 @@ cp ${color_fname_no_ext}.rpb color_mapped.RPB
 # method:rcs/lmvm/bayes , rcs has Segmentation fault (core dumped)
 otbcli_Pansharpening -progress 1 -method lmvm -inp gray_mapped.tif -inxs color_mapped_crop.tif -out ${output}_otb.tif uint16
 
+#set nondata (not necessary)
+#gdal_edit.py -a_nodata ${nodata} ${output}_otb.tif
+
 # convert the image for display purpose
 gdal_contrast_stretch -percentile-range 0.01 0.99 ${output}_otb.tif ${output}_otb_8bit.tif
 
