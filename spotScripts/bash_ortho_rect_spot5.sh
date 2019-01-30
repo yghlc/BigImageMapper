@@ -44,7 +44,7 @@ function ortho_rectify() {
     color=${array[0]}
     color=$(echo $color | tr + - )
 
-    output=beilue_spot5_${color}_${date}_${pathrow}.tif
+    output=beiluhe_spot5_${color}_${date}_${pathrow}.tif
 
     echo start ortho rectification: $output
 
