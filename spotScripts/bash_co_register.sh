@@ -22,9 +22,18 @@ function co_register() {
     local new_img=${1}
 #    local res=${2}
 
-    SECONDS=0
+    filename=$(basename $new_img)
+    filename_no_ext="${filename%.*}"
+    mkdir -p $filename_no_ext
 
-    ~/codes/PycharmProjects/Landuse_DL/spotScripts/co_register.py ${ref_img} ${new_img} -p ${para_file}
+    cd $filename_no_ext
+    SECONDS=0
+    ~/codes/PycharmProjects/Landuse_DL/spotScripts/co_register.py ${ref_img} ${new_img} -p ../${para_file}
+
+    cd -
+
+    # mv results
+    mv $filename_no_ext/*_warp.tif  .
 
     #exit
     duration=$SECONDS
