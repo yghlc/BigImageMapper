@@ -68,7 +68,7 @@ function ortho_rectify() {
                 ${test_roi} --threads ${num_thr} --ot Byte --tif-compress None
         done
         gdal_merge.py -separate -a_nodata ${nodata} -o ${output} tmpB?_ortho.tif
-        rm tmpB?.tif tmpB?_ortho.tif
+        rm tmpB?.tif* tmpB?_ortho.tif
 
     else
         mapproject -t rpc --nodata-value ${nodata} --tr ${out_res} ${dem} ${spot_tif} ${spot_dim} ${output} \
