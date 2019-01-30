@@ -17,22 +17,23 @@ num_thr=16
 out_res=2.5
 nodata=0
 
-outdir=../spot5_BLH_extent
+#outdir=../spot5_BLH_extent
+outdir=../spot5_blhzoomin2Ext
 
 mkdir -p ${outdir}
 
 function filename_no_ext(){
     local input=$1
-    filename=$(basename input)
+    filename=$(basename $input)
     filename_no_ext="${filename%.*}"
     echo $filename_no_ext
 
 }
-function mosaic_tow_img(){
+function mosaic_two_img(){
     local img1=$1
     local img2=$2
 
-    echo conduct mosaic of $img1 and $img2
+    echo "conduct mosaic of" $img1 and $img2 >> "time_cost.txt"
 
     SECONDS=0
 
@@ -41,7 +42,7 @@ function mosaic_tow_img(){
 
     # use gdalwarp to mosaic these two
     # (can choose how to calculate the pixel values in overlap area), better than gdal_merge.py,
-    gdalwarp -r average -tr ${out_res} ${out_res} ${img1} ${img2} ${out_mos}.tif
+    gdalwarp -r average -tr ${out_res} ${out_res} ${img1} ${img2} ${out_mos}
 
     duration=$SECONDS
     echo "$(date): time cost of mosaic of ${img1} and ${img2}: ${duration} seconds">>"time_cost.txt"
@@ -54,14 +55,17 @@ function mosaic_tow_img(){
 function crop_beiluhe() {
     local image=$1
 #    local shp=$2
+    #extent=~/Data/Qinghai-Tibet/beiluhe/beiluhe_reiver_basin.kml
+    extent=~/Data/Qinghai-Tibet/beiluhe/beiluhe_reiver_basin_extent/beiluhe_zoomIn2.kml
 
     SECONDS=0
 
     pre_name=$(filename_no_ext $image)
-    out_crop=${pre_name}_basinExt.tif
+    out_crop=${pre_name}_blhzoomin2Ext.tif
 
-    gdalwarp -cutline ~/Data/Qinghai-Tibet/beiluhe/beiluhe_reiver_basin.kml \
-        -crop_to_cutline -tr ${out_res} ${out_res} -of GTiff ${image} ${out_crop}
+    # ensure "gdalwarp" is built with KML support, or it will complain cannot open the kml files
+    ~/programs/anaconda3/bin/gdalwarp -cutline ${extent} \
+    -crop_to_cutline -tr ${out_res} ${out_res} -of GTiff ${image} ${out_crop}
 
     # move results
     mv ${out_crop} ${outdir}/.
@@ -74,11 +78,15 @@ function crop_beiluhe() {
 # Crop all the images to Beiluhe extent
 
 #2010-05-06
-mos=$(mosaic_tow_img beiluhe_spot5_T_2010-05-06_234-2??.tif)
-crop_beiluhe $mos
+#mos=$(mosaic_two_img beiluhe_spot5_T_2010-05-06_234-2??.tif)
+#crop_beiluhe $mos
 
-mos=$(mosaic_tow_img beiluhe_spot5_T-X_2010-05-06_234-2??.tif)
-crop_beiluhe $mos
+#mos=$(mosaic_two_img beiluhe_spot5_T-X_2010-05-06_234-2??.tif)
+#crop_beiluhe $mos
+
+for tif in $(ls beiluhe_spot5*_mos.tif ); do
+    crop_beiluhe $tif
+done
 
 # for other years (no need mosaic)
 for tif in $(ls beiluhe_spot5*.tif | grep -v 2010-05-06); do
