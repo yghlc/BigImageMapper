@@ -35,7 +35,7 @@ function co_register() {
 for img in $(ls -d beiluhe_spot5*.tif |grep -v new | grep -v 20061109); do
     echo $img
 
-    new_img $img
+    co_register $img
 done
 
 
