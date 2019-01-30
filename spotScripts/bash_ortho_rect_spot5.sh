@@ -55,8 +55,26 @@ function ortho_rectify() {
     add_spot_rpc ${spot_dim} -o ${spot_dim}
 #    exit 0
     # ortho
-    mapproject -t rpc --nodata-value ${nodata} --tr ${out_res} ${dem} ${spot_tif} ${spot_dim} ${output} \
-        ${test_roi} --threads ${num_thr} --ot Byte --tif-compress None
+    if [ $color = "T-X" ]; then
+        # since mapproject only output one band, so we have to process one band by one band
+        for band in $(seq 1 3); do
+            echo extract band: $band of $spot_tif
+
+            pre_name=tmpB${band}
+            tmp_out=tmpB${band}_ortho.tif
+            gdal_translate -b $band $spot_tif ${pre_name}.tif
+
+            mapproject -t rpc --nodata-value ${nodata} --tr ${out_res} ${dem} ${pre_name}.tif ${spot_dim} ${tmp_out} \
+                ${test_roi} --threads ${num_thr} --ot Byte --tif-compress None
+        done
+        gdal_merge.py -separate -a_nodata ${nodata} -o ${output} tmpB?_ortho.tif
+        rm tmpB?.tif tmpB?_ortho.tif
+
+    else
+        mapproject -t rpc --nodata-value ${nodata} --tr ${out_res} ${dem} ${spot_tif} ${spot_dim} ${output} \
+            ${test_roi} --threads ${num_thr} --ot Byte --tif-compress None
+    fi
+
 
     # mv results
     mv  ${output}  ${outdir}/.
