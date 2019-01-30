@@ -32,8 +32,6 @@ function ortho_rectify() {
 
     SECONDS=0
 
-    add_spot_rpc ${spot_dim} -o ${spot_dim}
-
     datasetName=$(cat ${spot_dim} | grep DATASET_NAME)
     IFS=' ' read -r -a array <<< "$datasetName"
     date=${array[3]}
@@ -44,6 +42,7 @@ function ortho_rectify() {
     color=${array[6]}
     IFS='<' read -r -a array <<< "$color"
     color=${array[0]}
+    color=$(echo $color | tr + - )
 
     output=beilue_spot5_${color}_${date}_${pathrow}.tif
 
@@ -53,8 +52,10 @@ function ortho_rectify() {
 #    mapproject sample_dem.tif front/SEGMT01/IMAGERY.BIL front/SEGMT01/METADATA.DIM
 #      front_map_proj.tif -t rpc
 
-    # ortho  first
-    mapproject -t rpc --nodata-value ${nodata} --tr ${out_res} ${dem} spot_tif ${spot_dim} ${output} \
+    add_spot_rpc ${spot_dim} -o ${spot_dim}
+#    exit 0
+    # ortho
+    mapproject -t rpc --nodata-value ${nodata} --tr ${out_res} ${dem} ${spot_tif} ${spot_dim} ${output} \
         ${test_roi} --threads ${num_thr} --ot Byte --tif-compress None
 
     # mv results
@@ -69,12 +70,12 @@ function ortho_rectify() {
 for spot5 in $(ls SWH*/SCEN*/*.TIF); do
 
     echo $spot5 >> "time_cost.txt"
-    dir=$(dirname $$spot5)
+    dir=$(dirname $spot5)
 	filename=$(basename -- "$spot5")
 #	extension="${filename##*.}"
 	filename_no_ext="${filename%.*}"
 
-    dimfile=$dir/METADATA.DIM
+    dimfile=${dir}/METADATA.DIM
 
     ortho_rectify $spot5  $dimfile
 done
