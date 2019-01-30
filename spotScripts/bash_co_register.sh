@@ -32,8 +32,6 @@ function co_register() {
 
     cd ..
 
-    # mv results
-    mv $filename_no_ext/*_warp.tif  .
 
     #exit
     duration=$SECONDS
