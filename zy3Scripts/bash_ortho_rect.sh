@@ -59,14 +59,26 @@ function ortho_rectify() {
 }
 
 
-for zy3_nad in $(ls -d ZY3_NAD* |grep -v gz); do
+for zy3_nad in $(ls -d ZY3_NAD_E* |grep -v gz); do
     echo $zy3_nad
 
-    ortho_rectify $zy3_nad 2.1
+#    ortho_rectify $zy3_nad 2.1
 done
 
-for zy302_tms in $(ls -d ZY302_TMS* |grep -v gz ); do
+for zy302_tms in $(ls -d ZY302_TMS_E* |grep -v gz ); do
     echo $zy302_tms
 
-    ortho_rectify $zy302_tms 2.1
+#    ortho_rectify $zy302_tms 2.1
 done
+
+cd ${outdir}
+for tif in $(ls *_prj.tif); do
+
+     # convert the image for display purpose
+    filename=$(basename "$tif")
+    filename_no_ext="${filename%.*}"
+    out_8bit=${filename_no_ext}_8bit.tif
+    gdal_contrast_stretch -percentile-range 0.01 0.99 ${tif} ${out_8bit}
+
+done
+
