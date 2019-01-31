@@ -16,6 +16,7 @@ num_thr=16
 
 #dem=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_strm30.tif
 dem=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_strm30_prj_utm.tif
+nodata=0
 
 outdir=zy3_nad_ortho
 
@@ -44,7 +45,7 @@ function ortho_rectify() {
 #     on Linux, no METADATATYPE, we set METADATATYPE=ZY3,
 #     on Mac, it set METADATATYPE=ZY3, and can not be modified, and mapproject copy the rpb files
 #     Same version, but different behaviour in Mac and Linux, strange
-    mapproject -t rpc $dem ${prename}.tiff  ${output} --mpp ${out_res} \
+    mapproject -t rpc --nodata-value ${nodata} $dem ${prename}.tiff  ${output} --mpp ${out_res} \
         --ot UInt16 --tif-compress None --mo METADATATYPE=ZY3 --threads ${num_thr}
 
     cd -
