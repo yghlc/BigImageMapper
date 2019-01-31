@@ -17,7 +17,11 @@ tifname=$(ls *-NAD.tiff)
 prename="${tifname%.*}"
 our_res=2.1
 
-output=${prename}_prj.tif
+str=$(basename $PWD)
+IFS='_ ' read -r -a array <<< "$str"
+output=${array[0]}_${array[4]}_${array[5]}_prj.tif
+
+#output=${prename}_prj.tif
 
 # ${prename}.xml
 # sicne ASP complain the xml is not recognised, then remove it. the script still work without this complaint
