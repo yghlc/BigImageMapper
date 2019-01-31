@@ -29,7 +29,7 @@ function co_register() {
 
     cd $filename_no_ext
     SECONDS=0
-    ~/codes/PycharmProjects/Landuse_DL/spotScripts/co_register.py ../${ref_img} ../${new_img} -p ../${para_file}
+    ~/codes/PycharmProjects/Landuse_DL/spotScripts/co_register.py ${ref_img} ../${new_img} -p ../${para_file}
 
     cd ..
 
