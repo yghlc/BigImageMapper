@@ -40,7 +40,8 @@ function co_register() {
 }
 
 
-for img in $(ls -d beiluhe_spot5*.tif |grep -v new | grep -v 20061109); do
+#for img in $(ls -d beiluhe_spot5*.tif |grep -v new | grep -v 20061109); do
+for img in $(ls -d beiluhe_spot5*.tif |grep -v new ); do
     echo $img
 
     co_register $img
