@@ -13,7 +13,6 @@ export PATH=~/programs/StereoPipeline-2.6.1-2019-01-19-x86_64-Linux/bin:$PATH
 
 #number of thread of to use, 8 or 16 on linux, 4 on mac (default is 4)
 num_thr=16
-nodata=0
 
 #outdir=../spot5_BLH_extent
 #outdir=zy02c_blhzoomin2Ext
@@ -23,9 +22,36 @@ mkdir -p ${outdir}
 
 function filename_no_ext(){
     local input=$1
-    filename=$(basename $input)
-    filename_no_ext="${filename%.*}"
-    echo $filename_no_ext
+#    filename=$(basename $input)
+    path_no_ext="${input%.*}"
+    echo $path_no_ext
+}
+
+function mosaic_two_img(){
+    local img1=$1
+    local img2=$2
+    local out_res=$3
+    # nodata
+    local nan=$4
+
+    echo "conduct mosaic of" $img1 and $img2 >> "time_cost.txt"
+
+    SECONDS=0
+
+    pre_name=$(filename_no_ext $img1)
+    out_mos=${pre_name}_mos.tif
+
+    # use gdalwarp to mosaic these two
+    # (can choose how to calculate the pixel values in overlap area), better than gdal_merge.py,
+    gdalwarp -srcnodata ${nan} -dstnodata ${nan} -r average -tr ${out_res} ${out_res} \
+        ${img1} ${img2} ${out_mos}
+
+    duration=$SECONDS
+    echo "$(date): time cost of mosaic of ${img1} and ${img2}: ${duration} seconds">>"time_cost.txt"
+
+    # return the output path
+    echo $out_mos
+
 }
 
 function crop_beiluhe() {
@@ -51,13 +77,38 @@ function crop_beiluhe() {
     echo "$(date): time cost of crop ${image}: ${duration} seconds">>"time_cost.txt"
 }
 
-#for tif in $(ls ZY02C_HRC_orthorectified/*_ortho.tif ); do
-#    crop_beiluhe $tif 2.36
+# Mosaic the images on the same acquisition date
+# Crop all the images to Beiluhe extent
+
+#20141207
+res=2.1
+nodata=0
+#mos=$(mosaic_two_img zy3_nad_ortho/ZY3_20141207*_8bit.tif ${res} ${nodata} )
+#crop_beiluhe $mos
+
+# for other years (no need mosaic)
+#for tif in $(ls zy3_nad_ortho/ZY3*_8bit.tif ); do
+#    crop_beiluhe $tif ${res}
 #done
 
-#for tif in $(ls ZY02C_PMS_pansharp/*_otb.tif ); do
-#    crop_beiluhe $tif 5.0
-#done
+
+# dem
+res=3.0
+nodata=-9999
+# for other years (no need mosaic)
+for tif in $(ls zy3_dsm_files/zy3_*.tif ); do
+    crop_beiluhe $tif ${res}
+done
+
+
+# pansharp
+res=2.1
+nodata=0
+# for other years (no need mosaic)
+for tif in $(ls ZY302_TMS_pansharp/ZY3*_otb_8bit_rgb.tif ); do
+    crop_beiluhe $tif ${res}
+done
+
 
 
 
