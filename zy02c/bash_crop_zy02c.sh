@@ -16,8 +16,8 @@ num_thr=16
 nodata=0
 
 #outdir=../spot5_BLH_extent
-#outdir=zy02c_blhzoomin2Ext
-outdir=zy02c_blhzoomin2Ext_rgb
+outdir=zy02c_blhzoomin2Ext
+#outdir=zy02c_blhzoomin2Ext_rgb
 
 mkdir -p ${outdir}
 
@@ -51,9 +51,9 @@ function crop_beiluhe() {
     echo "$(date): time cost of crop ${image}: ${duration} seconds">>"time_cost.txt"
 }
 
-#for tif in $(ls ZY02C_HRC_orthorectified/*_ortho.tif ); do
-#    crop_beiluhe $tif 2.36
-#done
+for tif in $(ls ZY02C_HRC_orthorectified/*_ortho.tif ); do
+    crop_beiluhe $tif 2.36
+done
 
 #for tif in $(ls ZY02C_PMS_pansharp/*_otb.tif ); do
 #    crop_beiluhe $tif 5.0
