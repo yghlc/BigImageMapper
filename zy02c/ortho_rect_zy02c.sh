@@ -34,8 +34,8 @@ for tiff in $(ls *HR?.tiff); do
     output=${prename}_prj.tif
 
 	# ortho  first
-#    mapproject -t rpc --nodata-value ${nodata} --tr ${out_res} ${dem} $tiff ${output} \
-#        ${test_roi} --threads ${num_thr} --ot Byte --tif-compress None
+    mapproject -t rpc --nodata-value ${nodata} --tr ${out_res} ${dem} $tiff ${output} \
+        ${test_roi} --threads ${num_thr} --ot Byte --tif-compress None
 
 #    exit
 done
@@ -44,9 +44,9 @@ done
 cp ../para.ini .
 ref_img=$(ls *-HR1_prj.tif)
 new_img=$(ls *-HR2_prj.tif)
-#rm *_new_warp.tif || true
-#rm *_new.tif || true
-#~/codes/PycharmProjects/Landuse_DL/spotScripts/co_register.py ${ref_img} ${new_img} -p para.ini
+rm *_new_warp.tif || true
+rm *_new.tif || true
+~/codes/PycharmProjects/Landuse_DL/spotScripts/co_register.py ${ref_img} ${new_img} -p para.ini
 
 #set nodata
 warp_img=$(ls *_new_warp.tif)
