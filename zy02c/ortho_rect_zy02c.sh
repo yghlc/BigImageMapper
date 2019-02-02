@@ -54,7 +54,7 @@ gdal_edit.py -a_nodata ${nodata} ${warp_img}
 
 # use gdalwarp to mosaic these two (can choose how to calculate the pixel values in overlap area), better than gdal_merge.py,
 #gdalwarp -r average -tr ${out_res} ${out_res} *_prj.tif ${out_pan}.tif
-gdalwarp -r average -tr ${out_res} ${out_res} ${ref_img} *_new_warp.tif ${out_pan}.tif
+gdalwarp -r max -tr ${out_res} ${out_res} ${ref_img} *_new_warp.tif ${out_pan}.tif
 
 
 
