@@ -44,19 +44,23 @@ done
 cp ../para.ini .
 ref_img=$(ls *-HR1_prj.tif)
 new_img=$(ls *-HR2_prj.tif)
-rm *_new_warp.tif || true
-rm *_new.tif || true
-~/codes/PycharmProjects/Landuse_DL/spotScripts/co_register.py ${ref_img} ${new_img} -p para.ini
+#rm *_new_warp.tif || true
+#rm *_new.tif || true
+#~/codes/PycharmProjects/Landuse_DL/spotScripts/co_register.py ${ref_img} ${new_img} -p para.ini
 
 #set nodata
 warp_img=$(ls *_new_warp.tif)
 gdal_edit.py -a_nodata ${nodata} ${warp_img}
 
 # use gdalwarp to mosaic these two (can choose how to calculate the pixel values in overlap area), better than gdal_merge.py,
+# gdalwarp "-r max" does not work as I expected, so we may try to use OSSIM
+# update: OSSIM have bug (see https://github.com/ossimlabs/ossim/issues/180)
+# at last, I use dem_mosaic in ASP
+# https://gis.stackexchange.com/questions/247577/gdalwarps-minimum-resampling-has-no-effect-possible-bug
 #gdalwarp -r average -tr ${out_res} ${out_res} *_prj.tif ${out_pan}.tif
-gdalwarp -r max -tr ${out_res} ${out_res} ${ref_img} *_new_warp.tif ${out_pan}.tif
+#gdalwarp -r max -tr ${out_res} ${out_res} ${ref_img} *_new_warp.tif ${out_pan}.tif
 
-
-
-
+dem_mosaic --max --ot Byte --threads ${num_thr} ${ref_img} ${warp_img}  -o ${out_pan}.tif
+gdal_translate -co COMPRESS=None ${out_pan}.tif tmp.tif
+mv tmp.tif ${out_pan}.tif
 
