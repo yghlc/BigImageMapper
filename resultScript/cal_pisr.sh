@@ -23,8 +23,12 @@ function run_exe_indocker() {
     local cmd=${1}
 
     # start the docker contain and mount the data folder (include the soft link and contain all the data):
-    # docker run -d -v $HOME/Data:$HOME/Data -it  saga_gis
+    # on Mac (don't have the issue of file permsssion)
+    # docker run -d -v $HOME/Data:$HOME/Data --user $(whoami) -it  saga_gis
+    # on Cryo06, set the user and group id (1000:1000 for hlc on Cryo06, output by: cat /etc/passwd | grep hlc)
+    # docker run -d -v $HOME/Data:$HOME/Data --user 1000:1000 -it  saga_gis  # 1000 is the hlc user ID on cryo06
     # if the container exit, then RUN "docker start id" to start it again, or allow it to restart automatically
+
     docker exec -it ${container_id} ${cmd}
 
 }
