@@ -43,18 +43,34 @@ function train_img_aug() {
 # spaces are not allow in img_aug_str
 #flip, blur, crop, scale, rotate
 # 1
-train_img_aug flip 1
+#train_img_aug flip 1
+#
+#train_img_aug flip,blur 2
+#
+#train_img_aug flip,blur,crop 3
+#
+#train_img_aug flip,blur,crop,scale 4
+#
+#train_img_aug flip,blur,crop,scale,rotate 5
+#
+#train_img_aug flip,rotate 6
+#
+#train_img_aug flip,crop,scale 7
 
-train_img_aug flip,blur 2
+~/codes/PycharmProjects/Landuse_DL/thawslumpScripts/test_img_augment.py
 
-train_img_aug flip,blur,crop 3
+while IFS= read -r line || [[ -n "$line" ]];
+do
+    #split the line to array with space
+    array=($line)
 
-train_img_aug flip,blur,crop,scale 4
+    testid="${array[0]}"
+    img_aug_str="${array[1]}"
 
-train_img_aug flip,blur,crop,scale,rotate 5
+    echo test using  $img_aug_str  $testid
+    train_img_aug $img_aug_str $testid
 
-train_img_aug flip,rotate 6
 
-train_img_aug flip,crop,scale 7
+done < "img_aug_str.txt"
 
 
