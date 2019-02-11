@@ -20,7 +20,6 @@ log=time_cost.txt
 para_file=para.ini
 deeplabRS=~/codes/PycharmProjects/DeeplabforRS
 para_py=${deeplabRS}/parameters.py
-train_shp_all=$(python2 ${para_py} -p ${para_file} training_polygons )
 
 
 # input k and test_number from outsize
