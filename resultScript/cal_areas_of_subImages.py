@@ -73,7 +73,8 @@ area_entire_area = get_area(entire_img)
 
 print("area of class 1: %.4f, class 0: %.4f, and the entire area: %.4f"%(area_class_1,area_class_0,area_entire_area))
 
-print("Percent of class 1: %.4f and class 0: %.4f"%(100*area_class_1/area_entire_area,100*area_class_0/area_entire_area))
+print("Percent of class 1: %.4f, class 0: %.4f, and total: %.4f"%
+      (100*area_class_1/area_entire_area,100*area_class_0/area_entire_area,100*(area_class_1+area_class_0)/area_entire_area))
 
 # info for the entire image
 # Size is 30916, 18713
