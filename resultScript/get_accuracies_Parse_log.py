@@ -18,7 +18,7 @@ output_iou=[0.8,0.6,0.4,0.2]
 result_list = []
 
 def read_txt_file(path):
-    if os.path.isfile(path):
+    if os.path.isfile(path) is False:
         raise IOError('%s not exist'%path)
     with open(path) as f_obj:
         lines_str = f_obj.readlines()
@@ -206,6 +206,7 @@ def save_to_csv_file(save_path):
         for idx,iou_thr in enumerate(result['iou_thr_list']):
             record ={}
             record['shapefile'] = result['shapefile']
+            print(result['shapefile'])
             record['average_precision'] = result['average_precision']
             if 'img_aug_str' in result.keys():  record['img_aug_str']= result['img_aug_str']
             else: record['img_aug_str'] = ''

@@ -14,7 +14,7 @@ para_file=para.ini
 deeplabRS=~/codes/PycharmProjects/DeeplabforRS
 para_py=${deeplabRS}/parameters.py
 
-
+rm accuracies_log.txt | true
 
 # plot Precision-recall curve
 # get the first ini file,  others should have the same validate polgons
