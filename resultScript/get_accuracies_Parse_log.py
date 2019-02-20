@@ -72,7 +72,9 @@ def get_test_num(file_name):
         test_num = re.findall('\d+',label)[0]
         return test_num
     else:
-        raise ValueError('unknow test type')
+        print('it is not test on data agumentation, skip get_get_num')
+        return False
+        # raise ValueError('unknow test type')
 
 def parse_acc_log_file(acc_log_file):
     '''
@@ -170,6 +172,8 @@ def parse_time_cost(time_cost_file):
     time_lines = [item.strip() for item in time_lines]
     for result in result_list:
         test_num = get_test_num(result['shapefile'])
+        if test_num is False:
+            return False
         test_num_str = 'test_num:'+test_num
         if test_num_str in time_lines:
             pass
@@ -234,7 +238,7 @@ def main(options, args):
 
     acc_log_file = args[0]
     average_prec =  args[1]
-    if len(args>2):
+    if len(args)>2:
         time_cost_file = args[2]
     else:
         time_cost_file = ''

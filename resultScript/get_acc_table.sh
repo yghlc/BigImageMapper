@@ -14,7 +14,7 @@ para_file=para.ini
 deeplabRS=~/codes/PycharmProjects/DeeplabforRS
 para_py=${deeplabRS}/parameters.py
 
-script=~/codes/PycharmProjects/Landuse_DL/resultScript
+script=~/codes/PycharmProjects/Landuse_DL/resultScript/get_accuracies_Parse_log.py
 
 # plot Precision-recall curve
 # get the first ini file,  others should have the same validate polgons
@@ -24,6 +24,6 @@ ap=$(ls *_ap.txt)
 
 fold_name=$(basename $PWD)
 
-output=fold_name_accuracy_table.csv
+output=${fold_name}_accuracy_table.csv
 
 python ${script}  ${acc_log} ${ap} time_cost.txt -o ${output}
