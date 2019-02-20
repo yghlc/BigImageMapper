@@ -21,8 +21,8 @@ import basic_src.basic as basic
 import basic_src.RSImage as RSImage
 from basic_src.RSImage import RSImageclass
 
-# folder='/home/hlc/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/autoMapping/BLH_basin_deeplabV3+_1/subImages'
-folder='/Users/huanglingcao/Dropbox/a_canada_sync/subImages'
+folder='/home/hlc/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/autoMapping/BLH_basin_deeplabV3+_1/subImages'
+# folder='/Users/huanglingcao/Dropbox/a_canada_sync/subImages'
 
 thawslump_subImages = io_function.get_file_list_by_pattern(folder,"*_class_1.tif")
 nonthawslump_subImages = io_function.get_file_list_by_pattern(folder,"*_class_0.tif")
