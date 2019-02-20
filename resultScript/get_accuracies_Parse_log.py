@@ -14,7 +14,7 @@ import re
 from optparse import OptionParser
 
 # only output the accuracies when IOU_thr are in
-output_iou=[0.8,0.6,0.4,0.2]
+output_iou=[0.8,0.6,0.4,0.2,0]
 result_list = []
 
 def read_txt_file(path):
