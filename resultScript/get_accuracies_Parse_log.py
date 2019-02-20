@@ -18,6 +18,8 @@ output_iou=[0.8,0.6,0.4,0.2]
 result_list = []
 
 def read_txt_file(path):
+    if os.path.isfile(path):
+        raise IOError('%s not exist'%path)
     with open(path) as f_obj:
         lines_str = f_obj.readlines()
         return lines_str
