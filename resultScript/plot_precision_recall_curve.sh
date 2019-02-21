@@ -14,13 +14,15 @@ para_file=para.ini
 deeplabRS=~/codes/PycharmProjects/DeeplabforRS
 para_py=${deeplabRS}/parameters.py
 
+fold_name=$(basename $PWD)
+
 rm accuracies_log.txt | true
 
 # plot Precision-recall curve
 # get the first ini file,  others should have the same validate polgons
 para_file=$(ls BLH_basin_deeplabV3+_1_exp9_iter30000_*imgAug*.ini | head -1)
 
-output=p_r_img_augmentation.jpg
+output=p_r_${fold_name}.jpg
 
 
 shp_list=$(ls BLH_basin_deeplabV3+_1_exp9_iter30000_post*imgAug*.shp)
