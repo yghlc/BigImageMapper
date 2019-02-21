@@ -14,7 +14,8 @@ import re
 from optparse import OptionParser
 
 # only output the accuracies when IOU_thr are in
-output_iou=[0.8,0.6,0.4,0.2,0]
+# output_iou=[0.8,0.6,0.4,0.2,0]
+output_iou=[0,0.4,0.8]
 result_list = []
 
 def read_txt_file(path):
@@ -176,6 +177,7 @@ def parse_time_cost(time_cost_file):
         test_num = get_test_num(result['shapefile'])
         if test_num is False:
             return False
+        result['test_num'] = int(test_num)  # add test number for reorder
         test_num_str = 'test_num:'+test_num
         if test_num_str in time_lines:
             pass
@@ -189,6 +191,21 @@ def parse_time_cost(time_cost_file):
                     break
         else:
             print('warning: test_num:%s not in the file'%test_num)
+
+def reorder_result():
+    '''
+    rearrange the order of result based on test number
+    :return:
+    '''
+
+    if 'test_num' not in result_list[0].keys():
+        print('dont have test number, skip reording')
+        return False
+    # sorted(result_list, key=lambda x: result_list[x]['test_num'])
+    # for result in result_list:
+    #     print(result['test_num'])
+    result_list.sort(key=lambda x: x['test_num'])
+
 
 def save_to_csv_file(save_path):
     # save to file
@@ -251,6 +268,8 @@ def main(options, args):
     parse_average_precision_file(average_prec)
 
     parse_time_cost(time_cost_file)
+
+    reorder_result()
 
     csv_file = options.output # "accuracy_table.csv"
     save_to_csv_file(csv_file)
