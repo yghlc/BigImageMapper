@@ -52,6 +52,96 @@ def output_one_test(idx,lines):
 
     pass
 
+def data_augmentation_statistics(lines):
+    '''
+    output the statistic information of different data augmentation method
+    :return: 
+    '''
+
+    count_dict = {'flip':0, 'blur':0, 'crop':0, 'scale':0, 'rotate':0}
+    iou_8_dict = {'flip':[], 'blur':[], 'crop':[], 'scale':[], 'rotate':[]}
+    iou_4_dict = {'flip':[], 'blur':[], 'crop':[], 'scale':[], 'rotate':[]}
+    iou_0_dict = {'flip':[], 'blur':[], 'crop':[], 'scale':[], 'rotate':[]}
+
+    ## output all
+    line_count = len(lines)
+    idx = 1
+
+    while idx < line_count:
+        # output_one_test(idx, lines)
+
+        line_1 = lines[idx]
+        line_2 = lines[idx + 1]
+        line_3 = lines[idx + 2]
+        method = line_1[1]  # flip, blur, crop, scale, rotate
+        m_labels = []
+        if 'flip' in method:
+            count_dict['flip'] += 1
+            iou_8_dict['flip'].append(float(line_1[11]))    # f1 score
+            iou_4_dict['flip'].append(float(line_2[11]))
+            iou_0_dict['flip'].append(float(line_3[11]))
+
+        if 'blur' in method:
+            count_dict['blur'] += 1
+            iou_8_dict['blur'].append(float(line_1[11]))    # f1 score
+            iou_4_dict['blur'].append(float(line_2[11]))
+            iou_0_dict['blur'].append(float(line_3[11]))
+
+        if 'crop' in method:
+            count_dict['crop'] += 1
+            iou_8_dict['crop'].append(float(line_1[11]))    # f1 score
+            iou_4_dict['crop'].append(float(line_2[11]))
+            iou_0_dict['crop'].append(float(line_3[11]))
+
+        if 'scale' in method:
+            count_dict['scale'] += 1
+            iou_8_dict['scale'].append(float(line_1[11]))    # f1 score
+            iou_4_dict['scale'].append(float(line_2[11]))
+            iou_0_dict['scale'].append(float(line_3[11]))
+
+        if 'rotate' in method:
+            count_dict['rotate'] += 1
+            iou_8_dict['rotate'].append(float(line_1[11]))    # f1 score
+            iou_4_dict['rotate'].append(float(line_2[11]))
+            iou_0_dict['rotate'].append(float(line_3[11]))
+
+        idx += 3
+
+    print(count_dict)
+    print(iou_8_dict)
+    print(iou_4_dict)
+    print(iou_0_dict)
+
+    # get min, max, min f1 score
+    print('min , max  , mean')
+    print('iou: 0.8')
+    for key in iou_8_dict.keys():
+        max_value = max(iou_8_dict[key])
+        min_value = min(iou_8_dict[key])
+        avg_value = sum(iou_8_dict[key]) / len(iou_8_dict[key])
+        # print('%6s, min: %.3f, max: %.3f, mean: %.3f'%(key,min_value,max_value,avg_value))
+        print('%6s & %.3f & %.3f & %.3f' % (key, min_value, max_value, avg_value))
+
+    print('iou: 0.4')
+    for key in iou_4_dict.keys():
+        max_value = max(iou_4_dict[key])
+        min_value = min(iou_4_dict[key])
+        avg_value = sum(iou_4_dict[key]) / len(iou_4_dict[key])
+        print('%6s & %.3f & %.3f & %.3f'%(key,min_value,max_value,avg_value))
+
+    print('iou: 0.0')
+    for key in iou_0_dict.keys():
+        max_value = max(iou_0_dict[key])
+        min_value = min(iou_0_dict[key])
+        avg_value = sum(iou_0_dict[key]) / len(iou_0_dict[key])
+        print('%6s & %.3f & %.3f & %.3f'%(key,min_value,max_value,avg_value))
+
+
+
+
+
+    pass
+
 with open(csv_table) as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
 
@@ -61,36 +151,38 @@ with open(csv_table) as csvfile:
     line_count = len(lines)
     print(line_count)
 
-    ## output all
-    idx = 1
-    while idx < line_count:
-        output_one_test(idx, lines)
-        idx += 3
+    data_augmentation_statistics(lines)
 
-    # remove the first line
-    del lines[0]
+    # ## output all
+    # idx = 1
+    # while idx < line_count:
+    #     output_one_test(idx, lines)
+    #     idx += 3
+    #
+    # # remove the first line
+    # del lines[0]
+    # # for line in lines:
+    # #     print(float(line[2]))
+    #
+    # # sort
+    # lines.sort(key=lambda x: float(x[2]),reverse=True)   # x[2] is the ap value, descending
+    #
     # for line in lines:
     #     print(float(line[2]))
-
-    # sort
-    lines.sort(key=lambda x: float(x[2]),reverse=True)   # x[2] is the ap value, descending
-
-    for line in lines:
-        print(float(line[2]))
-
-    # get top 5 of AP
-    # idx = 0
-    # for k in range(0,5):
-    #     # print(idx)
-    #     output_one_test(idx, lines)
-    #     idx += 3
-
-    # get bottom 5
-    # idx = len(lines) - 3*5
-    # for k in range(0,5):
-    #     # print(idx)
-    #     output_one_test(idx, lines)
-    #     idx += 3
+    #
+    # # get top 5 of AP
+    # # idx = 0
+    # # for k in range(0,5):
+    # #     # print(idx)
+    # #     output_one_test(idx, lines)
+    # #     idx += 3
+    #
+    # # get bottom 5
+    # # idx = len(lines) - 3*5
+    # # for k in range(0,5):
+    # #     # print(idx)
+    # #     output_one_test(idx, lines)
+    # #     idx += 3
 
 
 
