@@ -64,6 +64,10 @@ run_exe_indocker "saga_cmd ta_lighting 2 -GRD_DEM ${dem_grid} -GRD_DIRECT ${pisr
 
 # to tif format
 run_exe_indocker "saga_cmd io_gdal 1 -GRIDS ${pisr}.sdat -FILE ${pisr}.tif -FORMAT 1 "
+run_exe_indocker "saga_cmd io_gdal 1 -GRIDS ${pisr_direct}.sdat -FILE ${pisr_direct}.tif -FORMAT 1 "
+run_exe_indocker "saga_cmd io_gdal 1 -GRIDS ${pisr_diffus}.sdat -FILE ${pisr_diffus}.tif -FORMAT 1 "
+run_exe_indocker "saga_cmd io_gdal 1 -GRIDS ${pisr_flat}.sdat -FILE ${pisr_flat}.tif -FORMAT 1 "
+#run_exe_indocker "saga_cmd io_gdal 1 -GRIDS ${pisr_duration}.sdat -FILE ${pisr_duration}.tif -FORMAT 1 "
 
 
 
