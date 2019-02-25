@@ -57,10 +57,19 @@ fi
 
 #run_exe_indocker "gdalinfo ${dem} "
 
+# calculate sky view factor
+vis_sky=${outdir}/beiluhe_srtm30_utm_basinExt_vis_sky
+sky_vis_factor=${outdir}/beiluhe_srtm30_utm_basinExt_sky_vis_factor
+if [ ! -f $sky_vis_factor ]; then
+    run_exe_indocker "saga_cmd ta_lighting 3 -DEM ${dem_grid} -VISIBLE ${vis_sky} -SVF ${sky_vis_factor}"
+else
+    echo "warning: $sky_vis_factor already exist "
+fi
 
-run_exe_indocker "saga_cmd ta_lighting 2 -GRD_DEM ${dem_grid} -GRD_DIRECT ${pisr_direct} -GRD_DIFFUS ${pisr_diffus}  \
+# calculate pisr: potential incoming solar radiation
+run_exe_indocker "saga_cmd ta_lighting 2 -GRD_DEM ${dem_grid} -GRD_SVF ${sky_vis_factor}  -GRD_DIRECT ${pisr_direct} -GRD_DIFFUS ${pisr_diffus}  \
 -GRD_TOTAL ${pisr} -GRD_FLAT ${pisr_flat} -GRD_DURATION  ${pisr_duration} -LOCATION 1 \
--PERIOD 2 -DAY 2018-06-01 -DAY_STOP 2018-08-31 -DAYS_STEP 1 "
+-PERIOD 2 -DAY 2018-05-01 -DAY_STOP 2018-08-31 -DAYS_STEP 1 "
 
 # to tif format
 run_exe_indocker "saga_cmd io_gdal 1 -GRIDS ${pisr}.sdat -FILE ${pisr}.tif -FORMAT 1 "
@@ -69,7 +78,8 @@ run_exe_indocker "saga_cmd io_gdal 1 -GRIDS ${pisr_diffus}.sdat -FILE ${pisr_dif
 run_exe_indocker "saga_cmd io_gdal 1 -GRIDS ${pisr_flat}.sdat -FILE ${pisr_flat}.tif -FORMAT 1 "
 #run_exe_indocker "saga_cmd io_gdal 1 -GRIDS ${pisr_duration}.sdat -FILE ${pisr_duration}.tif -FORMAT 1 "
 
-
+# the day average of total pisr (total: 122 days from 2018-05-01 to 2018-08-31 )
+gdal_calc.py -A ${pisr}.tif --outfile=${pisr}_perDay.tif --calc="A/122"
 
 
 
