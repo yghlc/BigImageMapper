@@ -39,7 +39,7 @@ def add_raster_info_from_bufferArea(polygons_shp,raster_file,raster_name, b_buff
     operation_obj = shape_opeation()
 
     ## calculate the topography information from the buffer area
-    basic.outputlogMessage("info: calculate the topography information from the buffer area")
+    basic.outputlogMessage("info: calculate the raster information from the buffer area")
     buffer_polygon_shp = io_function.get_name_by_adding_tail(polygons_shp, 'buffer')
     # if os.path.isfile(buffer_polygon_shp) is False:
     if vector_features.get_buffer_polygons(polygons_shp,buffer_polygon_shp,b_buffer_size) is False:
@@ -91,11 +91,30 @@ def add_raster_info_insidePolygons(polygons_shp,raster_file,raster_name):
     # #DEM
 
     stats_list = ['min', 'max', 'mean', 'std']  # ['min', 'max', 'mean', 'count','median','std']
-    if operation_obj.add_fields_from_raster(polygons_shp, raster_file, "raster_name", band=1, stats_list=stats_list,
+    if operation_obj.add_fields_from_raster(polygons_shp, raster_file, raster_name, band=1, stats_list=stats_list,
                                                 all_touched=all_touched) is False:
         return False
 
     return True
+
+def check_same_projection(shp_file, raster_file):
+    '''
+    check the projection of shape file and the raster file
+    :param shp_file:
+    :param raster_file:
+    :return:
+    '''
+
+    shp_args_list = ['gdalsrsinfo','-o','epsg',shp_file]
+    shp_epsg_str = basic.exec_command_args_list_one_string(shp_args_list)
+
+    raster_args_list = ['gdalsrsinfo','-o','epsg',raster_file]
+    raster_epsg_str = basic.exec_command_args_list_one_string(raster_args_list)
+
+    if shp_epsg_str == raster_epsg_str:
+        return True
+    else:
+        return False
 
 
 def main(options, args):
@@ -107,13 +126,20 @@ def main(options, args):
     # if raster_path is None:
     #     basic.outputlogMessage('NO raster files')
 
+    if raster_file is not None:
+        if check_same_projection(polygons_shp,raster_file) is False:
+            raise ValueError('%s and %s don\'t have the same projection')
+
+
     buffer_meters = options.buffer_meters
     if buffer_meters is None:
         add_raster_info_insidePolygons(polygons_shp, raster_file, raster_name)
+        basic.outputlogMessage('add %s information (inside polygons) to %s'%(raster_name,polygons_shp))
     else:
         add_raster_info_from_bufferArea(polygons_shp, raster_file, raster_name, buffer_meters)
+        basic.outputlogMessage('add %s information (in surrounding buffer area) to %s' % (raster_name, polygons_shp))
 
-    pass
+
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] shp_file"
@@ -129,8 +155,9 @@ if __name__ == "__main__":
                       help="the name of raster, should less than four letters, will be used as part of the attribute name")
 
     parser.add_option("-b", "--buffer",
-                      action="store", dest="buffer_meters",
-                      help="the buffer area in meters")
+                      action="store", dest="buffer_meters",type=float,
+                      help="the buffer area in meters, if this is assigned, it will calculate the info in the buffer around "
+                           "the polygon, otherwise in the polygon")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
