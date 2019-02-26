@@ -25,12 +25,19 @@ result_NOimgAug = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mappin
 result_imgAug16 = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
                          'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_post_imgAug16.shp'
 
+ground_truth = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
+                         'identified_ThawSlumps_prj_post.shp'
 
 # plot histogram of IOU values.
-plot_results.draw_one_attribute_histogram(result_imgAug16, "IoU", "IoU (0-1)", "IoU_imgAug16.jpg")  # ,hatch='-'
-plot_results.draw_one_attribute_histogram(result_NOimgAug, "IoU", "IoU (0-1)", "IoU_NOimgAug.jpg")
+# plot_results.draw_one_attribute_histogram(result_imgAug16, "IoU", "IoU (0-1)", "IoU_imgAug16.jpg")  # ,hatch='-'
+# plot_results.draw_one_attribute_histogram(result_NOimgAug, "IoU", "IoU (0-1)", "IoU_NOimgAug.jpg")
 
-io_function.copy_file_to_dst('processLog.txt',out_dir+'/bins_iou.txt',overwrite=True)
-io_function.copy_file_to_dst('IoU_imgAug16.jpg',out_dir+'/IoU_imgAug16.jpg',overwrite=True)
-io_function.copy_file_to_dst('IoU_NOimgAug.jpg',out_dir+'/IoU_NOimgAug.jpg',overwrite=True)
+# io_function.copy_file_to_dst('processLog.txt',out_dir+'/bins_iou.txt',overwrite=True)
+# io_function.copy_file_to_dst('IoU_imgAug16.jpg',out_dir+'/IoU_imgAug16.jpg',overwrite=True)
+# io_function.copy_file_to_dst('IoU_NOimgAug.jpg',out_dir+'/IoU_NOimgAug.jpg',overwrite=True)
 
+
+# plot histogram of PISR values
+plot_results.draw_one_attribute_histogram(ground_truth, "pisr_mean", "pisr", "PISR_ground_truth.jpg")  # ,hatch='-'
+io_function.copy_file_to_dst('processLog.txt',out_dir+'/bins_pisr_gt.txt',overwrite=True)
+io_function.copy_file_to_dst('PISR_ground_truth.jpg',out_dir+'/PISR_ground_truth.jpg',overwrite=True)
