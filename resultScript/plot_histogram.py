@@ -91,8 +91,8 @@ def draw_two_list_histogram(shp_file,field_name,ano_list,output,bins=None,labels
 
     # n, bins, patches = ax.hist(values,bins=bins,normed = True, alpha=0.75, ec="black",linewidth='1.5',
     #                            color=['grey'],hatch=hatch,label=['RTS'],stacked=True)
-
-    ax.legend(prop={'size': 12})
+    fontsize=18
+    ax.legend(prop={'size': fontsize})
 
     # Create the formatter using the function to_percent. This multiplies all the
     # default labels by 100, making them all percentages
@@ -112,12 +112,13 @@ def draw_two_list_histogram(shp_file,field_name,ano_list,output,bins=None,labels
 
     # plt.tick_params(direction='out', length=6, width=2)
     # ax.tick_params(axis='both',direction='out', colors='red',length=0.1)
-    ax.tick_params(axis='both',which='both',direction='out', length=7,labelsize=12) #,width=50 #,
+    ax.tick_params(axis='both',which='both',direction='out', length=7,labelsize=fontsize) #,width=50 #,
 
-    if 'dem' in field_name or 'pisr' in field_name or 'asp' in field_name:
+    if 'dem' in field_name or 'pisr' in field_name or 'asp' in field_name \
+            or 'tpi' in field_name or 'slo' in field_name:
         ax.tick_params(axis='x',labelrotation=90)
 
-
+    plt.gcf().subplots_adjust(bottom=0.15)
     # plt.grid(True)
     plt.savefig(output)
     basic.outputlogMessage("Output figures to %s"%os.path.abspath(output))
@@ -139,7 +140,7 @@ def draw_one_list_histogram(value_list,output,bins=None,labels=None,color=None,h
         ax.tick_params(axis='x', labelrotation=90)
 
     # plt.grid(True)
-    plt.savefig(output)
+    plt.savefig(output)  #
     basic.outputlogMessage("Output figures to %s"%os.path.abspath(output))
     basic.outputlogMessage("ncount: " + str(n))
     basic.outputlogMessage("bins: "+ str(bins))
@@ -223,7 +224,7 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_two_values_hist(ground_truth,"dem_mean",dem,"dem_ground_truth.jpg",'bins_dem_gt.txt',4400,5250,50,['RTS','Landscape'])
 
 # slope #Computed Min/Max=0.000,48.435
-# draw_two_values_hist(ground_truth,"slo_mean",slope,"slope_ground_truth.jpg",'bins_slope_gt.txt',0,20,1,['RTS','Landscape'])
+draw_two_values_hist(ground_truth,"slo_mean",slope,"slope_ground_truth.jpg",'bins_slope_gt.txt',0,20,1,['RTS','Landscape'])
 
 # pisr per day #Computed Min/Max=0.000,9.131
 # draw_two_values_hist(ground_truth,"pisr_mean",pisr ,"pisr_ground_truth.jpg",'bins_pisr_gt.txt',8.5,9.15,0.03,['RTS','Landscape'])
@@ -232,9 +233,8 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # aspect #Computed Min/Max=0.269,360.000, the raster aspect seems not correct
 # draw_two_values_hist(ground_truth,"asp_mean",aspect ,"aspect_ground_truth.jpg",'bins_apsect_gt.txt',0,360,15,['RTS','Landscape'])
 
-
 #TPI # Minimum=-11.919, Maximum=13.788
-draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_tpi_gt.txt',-5,5.1,1,['RTS','Landscape'])
+# draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_tpi_gt.txt',-4,4.1,0.5,['RTS','Landscape'])
 
 
 # clear
