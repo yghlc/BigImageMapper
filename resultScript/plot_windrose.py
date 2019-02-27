@@ -48,9 +48,12 @@ def draw_one_attribute_windrose(shp_file,field_name,attribute, output,color='gre
     bins_range = np.arange(1, 2, 1)  # this sets the legend scale
 
     ax = WindroseAxes.from_ax()
-    ax.bar(wind_dir, wind_sd, normed=True, bins=bins_range,colors=color)
-    ax.set_yticks(np.arange(5, 16, step=5))
-    ax.set_yticklabels(np.arange(5, 16, step=5))
+    # ax.bar(wind_dir, wind_sd, normed=True, bins=bins_range,colors=color)
+    ax.bar(wind_dir, wind_sd, bins=bins_range, colors=color)  # normed=True, show count, not density
+    ax.set_ylim([0,30])
+    ax.set_yticks(np.arange(10, 31, step=10))
+    ax.set_yticklabels(np.arange(10, 31, step=10))
+
 
     ax.tick_params(labelsize=20)
 
