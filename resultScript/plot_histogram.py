@@ -191,6 +191,9 @@ result_imgAug16 = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mappin
 ground_truth = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
                          'identified_ThawSlumps_prj_post.shp'
 
+polygons_imgAug16_tp = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
+                         'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_post_imgAug16_TP.shp'
+
 dem=HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt.tif'
 slope=HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_slope.tif'
 aspect=HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_apect.tif'
@@ -216,6 +219,16 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # # circularity 0 - 1
 # draw_one_value_hist(ground_truth,'circularit','circularity_ground_truth.jpg','bins_circularity_gt.txt',0,1.01,0.1)
 
+####### use mapping polygons  ####
+# area # in ha, to compare, the min, max, should be the same as the ones for ground truth
+# draw_one_value_hist(polygons_imgAug16_tp,'INarea','area_imgAug16_tp.jpg','bins_area_imgAug16_tp.txt',0,31,2)
+
+# perimeters meters, to compare, the min, max, should be the same as the ones for ground truth
+# draw_one_value_hist(polygons_imgAug16_tp,'INperimete','perimeter_imgAug16_tp.jpg','bins_perimeter_imgAug16_tp.txt',200,6300,600)
+
+# circularity 0 - 1
+# draw_one_value_hist(polygons_imgAug16_tp,'circularit','circularity_imgAug16_tp.jpg','bins_circularity_imgAug16_tp.txt',0,1.01,0.1)
+####### use mapping polygons ####
 
 ####################################################################
 ## draw two list together
@@ -224,7 +237,7 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_two_values_hist(ground_truth,"dem_mean",dem,"dem_ground_truth.jpg",'bins_dem_gt.txt',4400,5250,50,['RTS','Landscape'])
 
 # slope #Computed Min/Max=0.000,48.435
-draw_two_values_hist(ground_truth,"slo_mean",slope,"slope_ground_truth.jpg",'bins_slope_gt.txt',0,20,1,['RTS','Landscape'])
+# draw_two_values_hist(ground_truth,"slo_mean",slope,"slope_ground_truth.jpg",'bins_slope_gt.txt',0,20,1,['RTS','Landscape'])
 
 # pisr per day #Computed Min/Max=0.000,9.131
 # draw_two_values_hist(ground_truth,"pisr_mean",pisr ,"pisr_ground_truth.jpg",'bins_pisr_gt.txt',8.5,9.15,0.03,['RTS','Landscape'])
@@ -236,6 +249,24 @@ draw_two_values_hist(ground_truth,"slo_mean",slope,"slope_ground_truth.jpg",'bin
 #TPI # Minimum=-11.919, Maximum=13.788
 # draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_tpi_gt.txt',-4,4.1,0.5,['RTS','Landscape'])
 
+####### use mapping polygons  ####
+# to compare, the min, max, should be the same as the ones for ground truth
+# dem
+draw_two_values_hist(polygons_imgAug16_tp,"dem_mean",dem,"dem_imgAug16_tp.jpg",'bins_dem_imgAug16_tp.txt',4400,5250,50,['RTS','Landscape'])
+
+# slope #Computed Min/Max=0.000,48.435
+draw_two_values_hist(polygons_imgAug16_tp,"slo_mean",slope,"slope_imgAug16_tp.jpg",'bins_slope_imgAug16_tp.txt',0,20,1,['RTS','Landscape'])
+
+# pisr per day #Computed Min/Max=0.000,9.131
+draw_two_values_hist(polygons_imgAug16_tp,"pisr_mean",pisr ,"pisr_imgAug16_tp.jpg",'bins_pisr_imgAug16_tp.txt',8.5,9.15,0.03,['RTS','Landscape'])
+
+#TPI # Minimum=-11.919, Maximum=13.788
+draw_two_values_hist(polygons_imgAug16_tp,"tpi_mean",tpi ,"tpi_imgAug16_tp.jpg",'bins_tpi_imgAug16_tp.txt',-4,4.1,0.5,['RTS','Landscape'])
+
+
+
+
+####### use mapping polygons ####
 
 # clear
 os.system('rm processLog.txt')

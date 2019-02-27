@@ -15,8 +15,9 @@ res_dir=~/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe
 
 ### polygons
 # the 202 ground truth polygons
-polygon_shp=${res_dir}/identified_ThawSlumps_prj_post.shp
-
+#polygon_shp=${res_dir}/identified_ThawSlumps_prj_post.shp
+# the 165 true positives
+polygon_shp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_post_imgAug16_TP.shp
 
 ### raster
 pisr=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_utm_basinExt_PISR_total_perDay.tif
@@ -27,15 +28,15 @@ slope=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_slope
 aspect=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_apect.tif
 
 # inside polygons
-#${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${pisr} -n "pisr"
+${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${pisr} -n "pisr"
 
 ${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${tpi} -n "tpi"
 
-#${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${slope} -n "slo"
+${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${slope} -n "slo"
 
-#${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${dem} -n "dem"
+${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${dem} -n "dem"
 
-#${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${aspect} -n "asp"
+${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${aspect} -n "asp"
 
 
 

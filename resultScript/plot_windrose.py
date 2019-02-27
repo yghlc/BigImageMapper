@@ -77,16 +77,23 @@ aspect=HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt
 
 aspect_line=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_prj.shp')
 
+aspect_line_imgAug16_tp=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_prj_TP.shp')
+
 
 # output='aspect_ground_truth_winrose.jpg'
 # draw_one_attribute_windrose(ground_truth,'asp_mean','',output ,color='grey',hatch="")
 # io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
 
 # draw wind rose of azimuth from manually draw lines
-output="aspectLine_ground_truth_winrose.jpg"
-draw_one_attribute_windrose(aspect_line, "aspectLine", "Mean Aspect ($^\circ$)", output)  # ,hatch='/'
-io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
+# output="aspectLine_ground_truth_winrose.jpg"
+# draw_one_attribute_windrose(aspect_line, "aspectLine", "Mean Aspect ($^\circ$)", output)  # ,hatch='/'
+# io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
 
+####### use mapping polygons  ####
+output="aspectLine_imgAug16_tp_winrose.jpg"
+draw_one_attribute_windrose(aspect_line_imgAug16_tp, "aspectLine", "Mean Aspect ($^\circ$)", output)  # ,hatch='/'
+io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
+####### use mapping polygons  ####
 
 #
 # # clear
