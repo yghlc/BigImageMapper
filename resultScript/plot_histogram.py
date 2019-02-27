@@ -63,7 +63,7 @@ def to_percent(y, position):
     else:
         return s
 
-def draw_two_list_histogram(shp_file,field_name,ano_list,output,bins=None,labels=None,color=None,hatch=""):
+def draw_two_list_histogram(shp_file,field_name,ano_list,output,bins=None,labels=None,color=None,hatch="",ylim=None):
     """
 
     Args:
@@ -118,6 +118,9 @@ def draw_two_list_histogram(shp_file,field_name,ano_list,output,bins=None,labels
             or 'tpi' in field_name or 'slo' in field_name:
         ax.tick_params(axis='x',labelrotation=90)
 
+    if ylim is not None:
+        ax.set_ylim(ylim)
+
     plt.gcf().subplots_adjust(bottom=0.15)
     # plt.grid(True)
     plt.savefig(output)
@@ -126,7 +129,7 @@ def draw_two_list_histogram(shp_file,field_name,ano_list,output,bins=None,labels
     basic.outputlogMessage("bins: "+ str(bins))
     # plt.show()
 
-def draw_one_list_histogram(value_list,output,bins=None,labels=None,color=None,hatch="",xlabelrotation=None):
+def draw_one_list_histogram(value_list,output,bins=None,labels=None,color=None,hatch="",xlabelrotation=None,ylim=None):
 
 
     fig, ax = plt.subplots(nrows=1, ncols=1,figsize=(8,8))
@@ -139,6 +142,9 @@ def draw_one_list_histogram(value_list,output,bins=None,labels=None,color=None,h
     if xlabelrotation is not None:
         ax.tick_params(axis='x', labelrotation=90)
 
+    if ylim is not None:
+        ax.set_ylim(ylim)
+
     # plt.grid(True)
     plt.savefig(output)  #
     basic.outputlogMessage("Output figures to %s"%os.path.abspath(output))
@@ -147,7 +153,7 @@ def draw_one_list_histogram(value_list,output,bins=None,labels=None,color=None,h
     # plt.show()
 
 
-def draw_two_values_hist(shp_file,field_name,raster_file,output,logfile,bin_min,bin_max,bin_width,labels):
+def draw_two_values_hist(shp_file,field_name,raster_file,output,logfile,bin_min,bin_max,bin_width,labels,ylim):
 
     raster_values = read_oneband_image_to_1dArray(raster_file)
     bins = np.arange(bin_min, bin_max, bin_width)
@@ -155,13 +161,15 @@ def draw_two_values_hist(shp_file,field_name,raster_file,output,logfile,bin_min,
     # update
     global global_bin_size
     global_bin_size = bin_width
+    ylim = [ item/(100.0*bin_width) for item in ylim]
 
-    draw_two_list_histogram(shp_file, field_name, raster_values, output, bins=bins,labels=labels,color=['black', 'silver'])
+    draw_two_list_histogram(shp_file, field_name, raster_values, output, bins=bins,labels=labels,
+                            color=['black', 'silver'],ylim=ylim)
     io_function.copy_file_to_dst('processLog.txt', os.path.join(out_dir,logfile), overwrite=True)
     io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
 
 
-def draw_one_value_hist(shp_file,field_name,output,logfile,bin_min,bin_max,bin_width):
+def draw_one_value_hist(shp_file,field_name,output,logfile,bin_min,bin_max,bin_width,ylim):
 
     values = read_attribute(shp_file, field_name)
     if field_name == 'INarea':                      # m^2 to ha
@@ -175,7 +183,7 @@ def draw_one_value_hist(shp_file,field_name,output,logfile,bin_min,bin_max,bin_w
 
     # plot histogram of slope values
     # value_list,output,bins=None,labels=None,color=None,hatch=""
-    draw_one_list_histogram(values, output,bins=bins,color=['grey'],xlabelrotation=xlabelrotation )  # ,hatch='-'
+    draw_one_list_histogram(values, output,bins=bins,color=['grey'],xlabelrotation=xlabelrotation,ylim=ylim )  # ,hatch='-'
     io_function.copy_file_to_dst('processLog.txt', os.path.join(out_dir, logfile), overwrite=True)
     io_function.copy_file_to_dst(output, os.path.join(out_dir, output), overwrite=True)
 
@@ -211,57 +219,57 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug_new.jpg','bins_NOimgAug.txt',0,1.01,0.1)
 
 # # area # in ha, min 0.25, max: 29
-# draw_one_value_hist(ground_truth,'INarea','area_ground_truth.jpg','bins_area_gt.txt',0,31,2)
+# draw_one_value_hist(ground_truth,'INarea','area_ground_truth.jpg','bins_area_gt.txt',0,31,2,[0,100])
 #
 # # perimeters meters, min 235, max 5898
-# draw_one_value_hist(ground_truth,'INperimete','perimeter_ground_truth.jpg','bins_perimeter_gt.txt',200,6300,600)
+# draw_one_value_hist(ground_truth,'INperimete','perimeter_ground_truth.jpg','bins_perimeter_gt.txt',200,6300,600,[0,110])
 #
 # # circularity 0 - 1
-# draw_one_value_hist(ground_truth,'circularit','circularity_ground_truth.jpg','bins_circularity_gt.txt',0,1.01,0.1)
+# draw_one_value_hist(ground_truth,'circularit','circularity_ground_truth.jpg','bins_circularity_gt.txt',0,1.01,0.1,[0,60])
 
 ####### use mapping polygons  ####
 # area # in ha, to compare, the min, max, should be the same as the ones for ground truth
-# draw_one_value_hist(polygons_imgAug16_tp,'INarea','area_imgAug16_tp.jpg','bins_area_imgAug16_tp.txt',0,31,2)
+# draw_one_value_hist(polygons_imgAug16_tp,'INarea','area_imgAug16_tp.jpg','bins_area_imgAug16_tp.txt',0,31,2,[0,100])
 
 # perimeters meters, to compare, the min, max, should be the same as the ones for ground truth
-# draw_one_value_hist(polygons_imgAug16_tp,'INperimete','perimeter_imgAug16_tp.jpg','bins_perimeter_imgAug16_tp.txt',200,6300,600)
+# draw_one_value_hist(polygons_imgAug16_tp,'INperimete','perimeter_imgAug16_tp.jpg','bins_perimeter_imgAug16_tp.txt',200,6300,600,[0,110])
 
 # circularity 0 - 1
-# draw_one_value_hist(polygons_imgAug16_tp,'circularit','circularity_imgAug16_tp.jpg','bins_circularity_imgAug16_tp.txt',0,1.01,0.1)
+# draw_one_value_hist(polygons_imgAug16_tp,'circularit','circularity_imgAug16_tp.jpg','bins_circularity_imgAug16_tp.txt',0,1.01,0.1,[0,60])
 ####### use mapping polygons ####
 
 ####################################################################
 ## draw two list together
 
-# dem
-# draw_two_values_hist(ground_truth,"dem_mean",dem,"dem_ground_truth.jpg",'bins_dem_gt.txt',4400,5250,50,['RTS','Landscape'])
+# dem, y lim: we want,[0,50]
+# draw_two_values_hist(ground_truth,"dem_mean",dem,"dem_ground_truth.jpg",'bins_dem_gt.txt',4400,5250,50,['RTS','Landscape'],[0,50])
 
 # slope #Computed Min/Max=0.000,48.435
-# draw_two_values_hist(ground_truth,"slo_mean",slope,"slope_ground_truth.jpg",'bins_slope_gt.txt',0,20,1,['RTS','Landscape'])
+# draw_two_values_hist(ground_truth,"slo_mean",slope,"slope_ground_truth.jpg",'bins_slope_gt.txt',0,20,1,['RTS','Landscape'],[0,25])
 
 # pisr per day #Computed Min/Max=0.000,9.131
-# draw_two_values_hist(ground_truth,"pisr_mean",pisr ,"pisr_ground_truth.jpg",'bins_pisr_gt.txt',8.5,9.15,0.03,['RTS','Landscape'])
+# draw_two_values_hist(ground_truth,"pisr_mean",pisr ,"pisr_ground_truth.jpg",'bins_pisr_gt.txt',8.5,9.15,0.03,['RTS','Landscape'],[0,22])
 
 
 # aspect #Computed Min/Max=0.269,360.000, the raster aspect seems not correct
 # draw_two_values_hist(ground_truth,"asp_mean",aspect ,"aspect_ground_truth.jpg",'bins_apsect_gt.txt',0,360,15,['RTS','Landscape'])
 
 #TPI # Minimum=-11.919, Maximum=13.788
-# draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_tpi_gt.txt',-4,4.1,0.5,['RTS','Landscape'])
+draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_tpi_gt.txt',-4,4.1,0.5,['RTS','Landscape'],[0,65])
 
 ####### use mapping polygons  ####
 # to compare, the min, max, should be the same as the ones for ground truth
 # dem
-draw_two_values_hist(polygons_imgAug16_tp,"dem_mean",dem,"dem_imgAug16_tp.jpg",'bins_dem_imgAug16_tp.txt',4400,5250,50,['RTS','Landscape'])
+# draw_two_values_hist(polygons_imgAug16_tp,"dem_mean",dem,"dem_imgAug16_tp.jpg",'bins_dem_imgAug16_tp.txt',4400,5250,50,['RTS','Landscape'],[0,50])
 
 # slope #Computed Min/Max=0.000,48.435
-draw_two_values_hist(polygons_imgAug16_tp,"slo_mean",slope,"slope_imgAug16_tp.jpg",'bins_slope_imgAug16_tp.txt',0,20,1,['RTS','Landscape'])
+# draw_two_values_hist(polygons_imgAug16_tp,"slo_mean",slope,"slope_imgAug16_tp.jpg",'bins_slope_imgAug16_tp.txt',0,20,1,['RTS','Landscape'],[0,25])
 
 # pisr per day #Computed Min/Max=0.000,9.131
-draw_two_values_hist(polygons_imgAug16_tp,"pisr_mean",pisr ,"pisr_imgAug16_tp.jpg",'bins_pisr_imgAug16_tp.txt',8.5,9.15,0.03,['RTS','Landscape'])
+# draw_two_values_hist(polygons_imgAug16_tp,"pisr_mean",pisr ,"pisr_imgAug16_tp.jpg",'bins_pisr_imgAug16_tp.txt',8.5,9.15,0.03,['RTS','Landscape'],[0,22])
 
 #TPI # Minimum=-11.919, Maximum=13.788
-draw_two_values_hist(polygons_imgAug16_tp,"tpi_mean",tpi ,"tpi_imgAug16_tp.jpg",'bins_tpi_imgAug16_tp.txt',-4,4.1,0.5,['RTS','Landscape'])
+draw_two_values_hist(polygons_imgAug16_tp,"tpi_mean",tpi ,"tpi_imgAug16_tp.jpg",'bins_tpi_imgAug16_tp.txt',-4,4.1,0.5,['RTS','Landscape'],[0,65])
 
 
 
