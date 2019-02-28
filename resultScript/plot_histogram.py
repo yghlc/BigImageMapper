@@ -220,6 +220,10 @@ ground_truth = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_R
 polygons_imgAug16_tp = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
                          'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_post_imgAug16_TP.shp'
 
+
+aspect_line=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_prj.shp')
+aspect_line_imgAug16_tp=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_prj_TP.shp')
+
 dem=HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt.tif'
 slope=HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_slope.tif'
 aspect=HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_apect.tif'
@@ -237,23 +241,31 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug_new.jpg','bins_NOimgAug.txt',0,1.01,0.1)
 
 # # area # in ha, min 0.25, max: 29
-draw_one_value_hist(ground_truth,'INarea','area_ground_truth.jpg','bins_area_gt.txt',0,31,2,[0,100])
+# draw_one_value_hist(ground_truth,'INarea','area_ground_truth.jpg','bins_area_gt.txt',0,31,2,[0,100])
 #
 # # perimeters meters, min 235, max 5898
-draw_one_value_hist(ground_truth,'INperimete','perimeter_ground_truth.jpg','bins_perimeter_gt.txt',200,6300,600,[0,110])
+# draw_one_value_hist(ground_truth,'INperimete','perimeter_ground_truth.jpg','bins_perimeter_gt.txt',200,6300,600,[0,110])
 #
 # # circularity 0 - 1
-draw_one_value_hist(ground_truth,'circularit','circularity_ground_truth.jpg','bins_circularity_gt.txt',0,1.01,0.1,[0,60])
+# draw_one_value_hist(ground_truth,'circularit','circularity_ground_truth.jpg','bins_circularity_gt.txt',0,1.01,0.1,[0,60])
+
+# aspect line
+draw_one_value_hist(aspect_line,'aspectLine','aspectLine_ground_truth_hist.jpg','bins_aspectLine_gt.txt',0,361,45,[0,50])
+
 
 ####### use mapping polygons  ####
 # area # in ha, to compare, the min, max, should be the same as the ones for ground truth
-draw_one_value_hist(polygons_imgAug16_tp,'INarea','area_imgAug16_tp.jpg','bins_area_imgAug16_tp.txt',0,31,2,[0,100])
+# draw_one_value_hist(polygons_imgAug16_tp,'INarea','area_imgAug16_tp.jpg','bins_area_imgAug16_tp.txt',0,31,2,[0,100])
 
 # perimeters meters, to compare, the min, max, should be the same as the ones for ground truth
-draw_one_value_hist(polygons_imgAug16_tp,'INperimete','perimeter_imgAug16_tp.jpg','bins_perimeter_imgAug16_tp.txt',200,6300,600,[0,110])
+# draw_one_value_hist(polygons_imgAug16_tp,'INperimete','perimeter_imgAug16_tp.jpg','bins_perimeter_imgAug16_tp.txt',200,6300,600,[0,110])
 
 # circularity 0 - 1
-draw_one_value_hist(polygons_imgAug16_tp,'circularit','circularity_imgAug16_tp.jpg','bins_circularity_imgAug16_tp.txt',0,1.01,0.1,[0,60])
+# draw_one_value_hist(polygons_imgAug16_tp,'circularit','circularity_imgAug16_tp.jpg','bins_circularity_imgAug16_tp.txt',0,1.01,0.1,[0,60])
+
+# aspect line
+draw_one_value_hist(aspect_line_imgAug16_tp,'aspectLine','aspectLine_imgAug16_tp_hist.jpg','bins_aspectLine_imgAug16_tp.txt',0,361,45,[0,50])
+
 ####### use mapping polygons ####
 
 ####################################################################
