@@ -63,6 +63,22 @@ def to_percent(y, position):
     else:
         return s
 
+def histogram2logfile(value_list,bins,hist_tag=None):
+    if hist_tag is not None:
+        basic.outputlogMessage('the following is the histogram information of %s'%hist_tag)
+    # output hist, min, max, average, accumulate percentage
+    np_hist,bin_edges = np.histogram(value_list, bins=bins)
+    basic.outputlogMessage("np_hist: " + str(np_hist))
+    basic.outputlogMessage("min value: " + str(min(value_list)))
+    basic.outputlogMessage("max value: " + str(max(value_list)))
+    basic.outputlogMessage("average value: " + str(sum(value_list)/float(len(value_list))))
+    if len(value_list) != np.sum(np_hist):
+        basic.outputlogMessage('warning: the count (%d) of input is not equal to the count (%d)'
+                               ' in histogram'%(len(value_list),int(np.sum(np_hist))))
+    acc_per = np.cumsum(np_hist)/np.sum(np_hist)
+    basic.outputlogMessage("accumulate percentage: " + str(acc_per))
+
+
 def draw_two_list_histogram(shp_file,field_name,ano_list,output,bins=None,labels=None,color=None,hatch="",ylim=None):
     """
 
@@ -127,6 +143,8 @@ def draw_two_list_histogram(shp_file,field_name,ano_list,output,bins=None,labels
     basic.outputlogMessage("Output figures to %s"%os.path.abspath(output))
     basic.outputlogMessage("ncount: " + str(n))
     basic.outputlogMessage("bins: "+ str(bins))
+    histogram2logfile(values, bins,hist_tag=labels[0])
+    histogram2logfile(ano_list, bins, hist_tag=labels[1])
     # plt.show()
 
 def draw_one_list_histogram(value_list,output,bins=None,labels=None,color=None,hatch="",xlabelrotation=None,ylim=None):
@@ -150,8 +168,8 @@ def draw_one_list_histogram(value_list,output,bins=None,labels=None,color=None,h
     basic.outputlogMessage("Output figures to %s"%os.path.abspath(output))
     basic.outputlogMessage("ncount: " + str(n))
     basic.outputlogMessage("bins: "+ str(bins))
+    histogram2logfile(value_list, bins)
     # plt.show()
-
 
 def draw_two_values_hist(shp_file,field_name,raster_file,output,logfile,bin_min,bin_max,bin_width,labels,ylim):
 
@@ -165,8 +183,8 @@ def draw_two_values_hist(shp_file,field_name,raster_file,output,logfile,bin_min,
 
     draw_two_list_histogram(shp_file, field_name, raster_values, output, bins=bins,labels=labels,
                             color=['black', 'silver'],ylim=ylim)
-    io_function.copy_file_to_dst('processLog.txt', os.path.join(out_dir,logfile), overwrite=True)
-    io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
+    io_function.move_file_to_dst('processLog.txt', os.path.join(out_dir,logfile), overwrite=True)
+    io_function.move_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
 
 
 def draw_one_value_hist(shp_file,field_name,output,logfile,bin_min,bin_max,bin_width,ylim):
@@ -184,8 +202,8 @@ def draw_one_value_hist(shp_file,field_name,output,logfile,bin_min,bin_max,bin_w
     # plot histogram of slope values
     # value_list,output,bins=None,labels=None,color=None,hatch=""
     draw_one_list_histogram(values, output,bins=bins,color=['grey'],xlabelrotation=xlabelrotation,ylim=ylim )  # ,hatch='-'
-    io_function.copy_file_to_dst('processLog.txt', os.path.join(out_dir, logfile), overwrite=True)
-    io_function.copy_file_to_dst(output, os.path.join(out_dir, output), overwrite=True)
+    io_function.move_file_to_dst('processLog.txt', os.path.join(out_dir, logfile), overwrite=True)
+    io_function.move_file_to_dst(output, os.path.join(out_dir, output), overwrite=True)
 
 
 out_dir=HOME+'/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe'
@@ -219,23 +237,23 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug_new.jpg','bins_NOimgAug.txt',0,1.01,0.1)
 
 # # area # in ha, min 0.25, max: 29
-# draw_one_value_hist(ground_truth,'INarea','area_ground_truth.jpg','bins_area_gt.txt',0,31,2,[0,100])
+draw_one_value_hist(ground_truth,'INarea','area_ground_truth.jpg','bins_area_gt.txt',0,31,2,[0,100])
 #
 # # perimeters meters, min 235, max 5898
-# draw_one_value_hist(ground_truth,'INperimete','perimeter_ground_truth.jpg','bins_perimeter_gt.txt',200,6300,600,[0,110])
+draw_one_value_hist(ground_truth,'INperimete','perimeter_ground_truth.jpg','bins_perimeter_gt.txt',200,6300,600,[0,110])
 #
 # # circularity 0 - 1
-# draw_one_value_hist(ground_truth,'circularit','circularity_ground_truth.jpg','bins_circularity_gt.txt',0,1.01,0.1,[0,60])
+draw_one_value_hist(ground_truth,'circularit','circularity_ground_truth.jpg','bins_circularity_gt.txt',0,1.01,0.1,[0,60])
 
 ####### use mapping polygons  ####
 # area # in ha, to compare, the min, max, should be the same as the ones for ground truth
-# draw_one_value_hist(polygons_imgAug16_tp,'INarea','area_imgAug16_tp.jpg','bins_area_imgAug16_tp.txt',0,31,2,[0,100])
+draw_one_value_hist(polygons_imgAug16_tp,'INarea','area_imgAug16_tp.jpg','bins_area_imgAug16_tp.txt',0,31,2,[0,100])
 
 # perimeters meters, to compare, the min, max, should be the same as the ones for ground truth
-# draw_one_value_hist(polygons_imgAug16_tp,'INperimete','perimeter_imgAug16_tp.jpg','bins_perimeter_imgAug16_tp.txt',200,6300,600,[0,110])
+draw_one_value_hist(polygons_imgAug16_tp,'INperimete','perimeter_imgAug16_tp.jpg','bins_perimeter_imgAug16_tp.txt',200,6300,600,[0,110])
 
 # circularity 0 - 1
-# draw_one_value_hist(polygons_imgAug16_tp,'circularit','circularity_imgAug16_tp.jpg','bins_circularity_imgAug16_tp.txt',0,1.01,0.1,[0,60])
+draw_one_value_hist(polygons_imgAug16_tp,'circularit','circularity_imgAug16_tp.jpg','bins_circularity_imgAug16_tp.txt',0,1.01,0.1,[0,60])
 ####### use mapping polygons ####
 
 ####################################################################
@@ -255,7 +273,7 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_two_values_hist(ground_truth,"asp_mean",aspect ,"aspect_ground_truth.jpg",'bins_apsect_gt.txt',0,360,15,['RTS','Landscape'])
 
 #TPI # Minimum=-11.919, Maximum=13.788
-draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_tpi_gt.txt',-4,4.1,0.5,['RTS','Landscape'],[0,65])
+# draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_tpi_gt.txt',-4,4.1,0.5,['RTS','Landscape'],[0,65])
 
 ####### use mapping polygons  ####
 # to compare, the min, max, should be the same as the ones for ground truth
@@ -269,13 +287,14 @@ draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_t
 # draw_two_values_hist(polygons_imgAug16_tp,"pisr_mean",pisr ,"pisr_imgAug16_tp.jpg",'bins_pisr_imgAug16_tp.txt',8.5,9.15,0.03,['RTS','Landscape'],[0,22])
 
 #TPI # Minimum=-11.919, Maximum=13.788
-draw_two_values_hist(polygons_imgAug16_tp,"tpi_mean",tpi ,"tpi_imgAug16_tp.jpg",'bins_tpi_imgAug16_tp.txt',-4,4.1,0.5,['RTS','Landscape'],[0,65])
+# draw_two_values_hist(polygons_imgAug16_tp,"tpi_mean",tpi ,"tpi_imgAug16_tp.jpg",'bins_tpi_imgAug16_tp.txt',-4,4.1,0.5,['RTS','Landscape'],[0,65])
 
 
 
 
 ####### use mapping polygons ####
 
-# clear
+
 os.system('rm processLog.txt')
-os.system('rm *.jpg')
+# not used, since we move files in the previous steps
+# os.system('rm *.jpg')
