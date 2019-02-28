@@ -163,6 +163,7 @@ def draw_one_list_histogram(value_list,output,bins=None,labels=None,color=None,h
     if ylim is not None:
         ax.set_ylim(ylim)
 
+    plt.gcf().subplots_adjust(bottom=0.15)
     # plt.grid(True)
     plt.savefig(output)  #
     basic.outputlogMessage("Output figures to %s"%os.path.abspath(output))
@@ -194,7 +195,7 @@ def draw_one_value_hist(shp_file,field_name,output,logfile,bin_min,bin_max,bin_w
         values = [item/10000.0 for item in values]
 
     xlabelrotation = None
-    if 'area' in field_name or 'INperimete' in field_name or 'circularit' in field_name:
+    if 'area' in field_name or 'INperimete' in field_name or 'circularit' in field_name or 'aspectLine' in field_name:
         xlabelrotation = 90
 
     bins = np.arange(bin_min, bin_max, bin_width)
@@ -250,7 +251,7 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_one_value_hist(ground_truth,'circularit','circularity_ground_truth.jpg','bins_circularity_gt.txt',0,1.01,0.1,[0,60])
 
 # aspect line
-draw_one_value_hist(aspect_line,'aspectLine','aspectLine_ground_truth_hist.jpg','bins_aspectLine_gt.txt',0,361,45,[0,50])
+draw_one_value_hist(aspect_line,'aspectLine','aspectLine_ground_truth_hist.jpg','bins_aspectLine_gt.txt',0,361,22.5,[0,35])
 
 
 ####### use mapping polygons  ####
@@ -264,7 +265,7 @@ draw_one_value_hist(aspect_line,'aspectLine','aspectLine_ground_truth_hist.jpg',
 # draw_one_value_hist(polygons_imgAug16_tp,'circularit','circularity_imgAug16_tp.jpg','bins_circularity_imgAug16_tp.txt',0,1.01,0.1,[0,60])
 
 # aspect line
-draw_one_value_hist(aspect_line_imgAug16_tp,'aspectLine','aspectLine_imgAug16_tp_hist.jpg','bins_aspectLine_imgAug16_tp.txt',0,361,45,[0,50])
+draw_one_value_hist(aspect_line_imgAug16_tp,'aspectLine','aspectLine_imgAug16_tp_hist.jpg','bins_aspectLine_imgAug16_tp.txt',0,361,22.5,[0,35])
 
 ####### use mapping polygons ####
 
