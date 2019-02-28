@@ -236,7 +236,9 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw one list (attributes)
 
 # iou values
-# draw_one_value_hist(result_imgAug16,'IoU','IoU_imgAug16_new.jpg','bins_IoU_imgAug16.txt',0,1.01,0.1)
+draw_one_value_hist(result_imgAug16,'IoU','IoU_imgAug16.jpg','bins_IoU_imgAug16.txt',0,1.01,0.1,[0,80])
+
+draw_one_value_hist(polygons_imgAug16_tp,'IoU','IoU_imgAug16_tp.jpg','bins_IoU_imgAug16_tp.txt',0,1.01,0.1,[0,80])
 
 # iou values
 # draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug_new.jpg','bins_NOimgAug.txt',0,1.01,0.1)
@@ -251,7 +253,7 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_one_value_hist(ground_truth,'circularit','circularity_ground_truth.jpg','bins_circularity_gt.txt',0,1.01,0.1,[0,60])
 
 # aspect line
-draw_one_value_hist(aspect_line,'aspectLine','aspectLine_ground_truth_hist.jpg','bins_aspectLine_gt.txt',0,361,22.5,[0,35])
+# draw_one_value_hist(aspect_line,'aspectLine','aspectLine_ground_truth_hist.jpg','bins_aspectLine_gt.txt',0,361,22.5,[0,35])
 
 
 ####### use mapping polygons  ####
@@ -265,7 +267,7 @@ draw_one_value_hist(aspect_line,'aspectLine','aspectLine_ground_truth_hist.jpg',
 # draw_one_value_hist(polygons_imgAug16_tp,'circularit','circularity_imgAug16_tp.jpg','bins_circularity_imgAug16_tp.txt',0,1.01,0.1,[0,60])
 
 # aspect line
-draw_one_value_hist(aspect_line_imgAug16_tp,'aspectLine','aspectLine_imgAug16_tp_hist.jpg','bins_aspectLine_imgAug16_tp.txt',0,361,22.5,[0,35])
+# draw_one_value_hist(aspect_line_imgAug16_tp,'aspectLine','aspectLine_imgAug16_tp_hist.jpg','bins_aspectLine_imgAug16_tp.txt',0,361,22.5,[0,35])
 
 ####### use mapping polygons ####
 
