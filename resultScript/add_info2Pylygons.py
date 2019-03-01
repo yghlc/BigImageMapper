@@ -116,28 +116,50 @@ def check_same_projection(shp_file, raster_file):
     else:
         return False
 
+def add_IoU_values(polygons_shp,ground_truth_shp,field_name):
+    '''
+    add IoU values to the shape file
+    :param polygons_shp:
+    :param ground_truth_shp:
+    :param field_name:  should be 'IoU'
+    :return:
+    '''
+    IoUs = vector_features.calculate_IoU_scores(polygons_shp, ground_truth_shp)
+    if IoUs is False:
+        return False
+    # save IoU to result shape file
+    operation_obj = shape_opeation()
+    return operation_obj.add_one_field_records_to_shapefile(polygons_shp, IoUs, field_name)
+
 
 def main(options, args):
+
     polygons_shp = args[0]
+    field_name = options.field_name
 
-    # add PISR information
+    # add information from a raster file
     raster_file = options.raster_file
-    raster_name = options.raster_name
-    # if raster_path is None:
-    #     basic.outputlogMessage('NO raster files')
-
     if raster_file is not None:
         if check_same_projection(polygons_shp,raster_file) is False:
             raise ValueError('%s and %s don\'t have the same projection')
 
+        buffer_meters = options.buffer_meters
+        if buffer_meters is None:
+            add_raster_info_insidePolygons(polygons_shp, raster_file, field_name)
+            basic.outputlogMessage('add %s information (inside polygons) to %s'%(field_name,polygons_shp))
+        else:
+            add_raster_info_from_bufferArea(polygons_shp, raster_file, field_name, buffer_meters)
+            basic.outputlogMessage('add %s information (in surrounding buffer area) to %s' % (field_name, polygons_shp))
 
-    buffer_meters = options.buffer_meters
-    if buffer_meters is None:
-        add_raster_info_insidePolygons(polygons_shp, raster_file, raster_name)
-        basic.outputlogMessage('add %s information (inside polygons) to %s'%(raster_name,polygons_shp))
-    else:
-        add_raster_info_from_bufferArea(polygons_shp, raster_file, raster_name, buffer_meters)
-        basic.outputlogMessage('add %s information (in surrounding buffer area) to %s' % (raster_name, polygons_shp))
+    # add IoU values
+    validation_shp = options.val_polygon
+    if validation_shp is not None:
+        if check_same_projection(polygons_shp,validation_shp) is False:
+            raise ValueError('%s and %s don\'t have the same projection')
+
+        if add_IoU_values(polygons_shp,validation_shp,field_name):
+            basic.outputlogMessage('add %s to %s' % (field_name, polygons_shp))
+
 
 
 
@@ -150,9 +172,13 @@ if __name__ == "__main__":
                       action="store", dest="raster_file",
                       help="the path of the raster file")
 
-    parser.add_option("-n", "--raster_name",
-                      action="store", dest="raster_name",
-                      help="the name of raster, should less than four letters, will be used as part of the attribute name")
+    parser.add_option("-v", "--val_polygon",
+                      action="store", dest="val_polygon",
+                      help="the path of validation polygons, for calculating IoU values")
+
+    parser.add_option("-n", "--field_name",
+                      action="store", dest="field_name",
+                      help="for raster, it should less than four letters, will be used as part of the attribute name")
 
     parser.add_option("-b", "--buffer",
                       action="store", dest="buffer_meters",type=float,
