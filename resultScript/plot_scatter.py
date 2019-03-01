@@ -40,7 +40,7 @@ def draw_two_list_scatter(x_list,y_list,output,color='grey',hatch=""):
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 8))
 
-    plt.scatter(x_values, y_values,marker='^',color=color)
+    plt.scatter(x_values, y_values,marker='x',color=color) #marker='^'
 
     plt.gcf().subplots_adjust(left=0.15)
     plt.gcf().subplots_adjust(bottom=0.15)   # reserve space for label
@@ -53,11 +53,12 @@ def draw_two_list_scatter(x_list,y_list,output,color='grey',hatch=""):
 
     ax.tick_params(labelsize=20)
 
-    # # marked area values
-    # area_range = [1500]
-    # for area in area_range:
-    #     ax.axvline(x=area,color='k',linewidth=0.8,linestyle='--')
-    #     ax.text(area+100, 0.55, '%d $\mathrm{m^2}$'%area, rotation=90,fontsize=20)
+    # # marked  values
+    iou_thresholds = [0.5]
+    for iou_thr in iou_thresholds:
+        ax.axvline(x=iou_thr,color='k',linewidth=0.8,linestyle='--')
+        # ax.text(area+100, 0.55, '%d $\mathrm{m^2}$'%area, rotation=90,fontsize=20)
+        ax.text(iou_thr+0.02, 20, '%.1f ' % iou_thr, rotation=90, fontsize=20)
 
 
     # plt.grid(True)
@@ -90,8 +91,15 @@ result_imgAug16 = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mappin
 polygons_imgAug16_tp = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
                          'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_post_imgAug16_TP.shp'
 
+# polyon without post-processing (removing polygons based on their areas)
+shp_imgAug16_NOpost_tp=os.path.join(out_dir,'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP.shp')
+shp_imgAug17_NOpost_tp=os.path.join(out_dir,'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17_TP.shp')
+
 # draw_two_attribute_scatter(result_imgAug16,'IoU','INarea','iou_area_imgAug16_scatter.jpg','bins_iou_area_imgAug16.txt')
 
 # draw_two_attribute_scatter(result_imgAug16,'IoU','INperimete','iou_peri_imgAug16_scatter.jpg','bins_iou_peri_imgAug16.txt')
 
-draw_two_attribute_scatter(result_imgAug16,'IoU','circularit','iou_circ_imgAug16_scatter.jpg','bins_iou_circ_imgAug16.txt')
+# draw_two_attribute_scatter(result_imgAug16,'IoU','circularit','iou_circ_imgAug16_scatter.jpg','bins_iou_circ_imgAug16.txt')
+
+draw_two_attribute_scatter(shp_imgAug16_NOpost_tp,'IoU','INarea','iou_area_imgAug16_NOpost_tp_scatter.jpg','bins_iou_area_imgAug16_NOpost_tp.txt')
+draw_two_attribute_scatter(shp_imgAug17_NOpost_tp,'IoU','INarea','iou_area_imgAug17_NOpost_tp_scatter.jpg','bins_iou_area_imgAug17_NOpost_tp.txt')
