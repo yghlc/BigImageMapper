@@ -61,7 +61,7 @@ def remove_lines_based_on_polygons(shp_line,output_mainline,shp_polygon):
         raise ValueError('%s and %s don\'t have the same projection')
 
     inte_lines_list = vector_features.get_intersection_of_line_polygon(shp_line,shp_polygon)
-    b_remove = [True if item is None else False for item in inte_lines_list ]
+    b_remove = [True if item.is_empty else False for item in inte_lines_list ]
     # print(b_remove)
 
     operation_obj = shape_opeation()
