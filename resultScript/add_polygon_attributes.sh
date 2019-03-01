@@ -20,7 +20,7 @@ ground_truth=${res_dir}/identified_ThawSlumps_prj_post.shp
 # the 165 true positives
 polygon_shp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_post_imgAug16_TP.shp
 
-# polyon with post-processing (removing polygons based on their areas)
+# polyon without post-processing (removing polygons based on their areas)
 shp_imgAug16_NOpost=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16.shp
 shp_imgAug17_NOpost=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17.shp
 
