@@ -77,13 +77,14 @@ def main(options, args):
     output = options.output
 
     # print(field_name,threshold,bsmaller,output)
-    # remove_polygons(polygons_shp, field_name, threshold, bsmaller, output)
+    remove_polygons(polygons_shp, field_name, threshold, bsmaller, output)
 
 
     # remove the file in main_lines
     shp_mainline = options.shp_mainline
-    output_mainline = options.output_mainline
-    remove_lines_based_on_polygons(shp_mainline, output_mainline, output)
+    if shp_mainline is not None:
+        output_mainline = options.output_mainline
+        remove_lines_based_on_polygons(shp_mainline, output_mainline, output)
 
 
 
