@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 
 from vector_features import read_attribute
 
-def draw_two_list_scatter(x_list,y_list,output,color='grey',hatch=""):
+def draw_two_list_scatter(x_list,y_list,output,text_loc_detX,text_locY,color='grey',hatch=""):
     """
     draw a scatter of two attributes
 
@@ -58,7 +58,7 @@ def draw_two_list_scatter(x_list,y_list,output,color='grey',hatch=""):
     for iou_thr in iou_thresholds:
         ax.axvline(x=iou_thr,color='k',linewidth=0.8,linestyle='--')
         # ax.text(area+100, 0.55, '%d $\mathrm{m^2}$'%area, rotation=90,fontsize=20)
-        ax.text(iou_thr+0.02, 20, '%.1f ' % iou_thr, rotation=90, fontsize=20)
+        ax.text(iou_thr+text_loc_detX, text_locY, '%.1f ' % iou_thr, rotation=90, fontsize=20)
 
 
     # plt.grid(True)
@@ -74,7 +74,18 @@ def draw_two_attribute_scatter(shp_file,field1,field2,output,logfile):
     if field2 == 'INarea':                      # m^2 to ha
         y_values = [item/10000.0 for item in y_values]
 
-    draw_two_list_scatter(x_values,y_values,output)
+    text_loc_detX=0.02
+    text_loc_Y = 20
+    if field2 =='INarea':
+        text_loc_Y = 20
+    elif field2 =='adj_count':
+        text_loc_Y = 5
+    elif field2 == 'INperimete':
+        text_loc_Y = 4000
+    elif field2 == 'circularit':
+        text_loc_Y = 0.4
+
+    draw_two_list_scatter(x_values,y_values,output,text_loc_detX,text_loc_Y)
 
     io_function.move_file_to_dst('processLog.txt', os.path.join(out_dir, logfile), overwrite=True)
     io_function.move_file_to_dst(output, os.path.join(out_dir, output), overwrite=True)
@@ -95,14 +106,14 @@ polygons_imgAug16_tp = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_m
 shp_imgAug16_NOpost_tp=os.path.join(out_dir,'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP.shp')
 shp_imgAug17_NOpost_tp=os.path.join(out_dir,'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17_TP.shp')
 
-# draw_two_attribute_scatter(result_imgAug16,'IoU','INarea','iou_area_imgAug16_scatter.jpg','bins_iou_area_imgAug16.txt')
+draw_two_attribute_scatter(result_imgAug16,'IoU','INarea','iou_area_imgAug16_scatter.jpg','bins_iou_area_imgAug16.txt')
 
-# draw_two_attribute_scatter(result_imgAug16,'IoU','INperimete','iou_peri_imgAug16_scatter.jpg','bins_iou_peri_imgAug16.txt')
+draw_two_attribute_scatter(result_imgAug16,'IoU','INperimete','iou_peri_imgAug16_scatter.jpg','bins_iou_peri_imgAug16.txt')
 
-# draw_two_attribute_scatter(result_imgAug16,'IoU','circularit','iou_circ_imgAug16_scatter.jpg','bins_iou_circ_imgAug16.txt')
+draw_two_attribute_scatter(result_imgAug16,'IoU','circularit','iou_circ_imgAug16_scatter.jpg','bins_iou_circ_imgAug16.txt')
 
-# draw_two_attribute_scatter(shp_imgAug16_NOpost_tp,'IoU','INarea','iou_area_imgAug16_NOpost_tp_scatter.jpg','bins_iou_area_imgAug16_NOpost_tp.txt')
-# draw_two_attribute_scatter(shp_imgAug17_NOpost_tp,'IoU','INarea','iou_area_imgAug17_NOpost_tp_scatter.jpg','bins_iou_area_imgAug17_NOpost_tp.txt')
+draw_two_attribute_scatter(shp_imgAug16_NOpost_tp,'IoU','INarea','iou_area_imgAug16_NOpost_tp_scatter.jpg','bins_iou_area_imgAug16_NOpost_tp.txt')
+draw_two_attribute_scatter(shp_imgAug17_NOpost_tp,'IoU','INarea','iou_area_imgAug17_NOpost_tp_scatter.jpg','bins_iou_area_imgAug17_NOpost_tp.txt')
 
 # intersection of ground truth and polyons without post-processing
 intersect_ground_truth_imgAug17_NOpost_tp=os.path.join(out_dir,'intersect_ground_truth_imgAug17_NOpost_tp.shp')
