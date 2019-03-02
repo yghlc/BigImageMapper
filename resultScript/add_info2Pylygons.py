@@ -131,6 +131,21 @@ def add_IoU_values(polygons_shp,ground_truth_shp,field_name):
     operation_obj = shape_opeation()
     return operation_obj.add_one_field_records_to_shapefile(polygons_shp, IoUs, field_name)
 
+def add_adjacent_polygon_count(polygons_shp,buffer_size,field_name):
+    '''
+
+    :param polygons_shp:
+    :param buffer_size:
+    :param field_name: should be "adj_count"
+    :return:
+    '''
+    # save IoU to result shape file
+    operation_obj = shape_opeation()
+    counts = vector_features.get_adjacent_polygon_count(polygons_shp,buffer_size)
+    # print(len(counts))
+    return operation_obj.add_one_field_records_to_shapefile(polygons_shp, counts, field_name)
+
+
 
 def main(options, args):
 
@@ -160,7 +175,9 @@ def main(options, args):
         if add_IoU_values(polygons_shp,validation_shp,field_name):
             basic.outputlogMessage('add %s to %s' % (field_name, polygons_shp))
 
-
+    if field_name=="adj_count":
+        buffer_meters = options.buffer_meters
+        add_adjacent_polygon_count(polygons_shp, buffer_meters, field_name)
 
 
 if __name__ == "__main__":
