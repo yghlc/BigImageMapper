@@ -26,7 +26,11 @@ def main(options, args):
     polygons_shp2  = args[1]
     output = options.output
 
-    if vector_features.get_intersection_of_polygon_polygon(polygons_shp1,polygons_shp2,output):
+    copy_fields = options.copy_fields
+    if copy_fields is not None:
+        copy_fields = copy_fields.split(',')
+
+    if vector_features.get_intersection_of_polygon_polygon(polygons_shp1,polygons_shp2,output,copy_field=copy_fields):
         basic.outputlogMessage('get intersection, save to %s'%output)
     else:
         basic.outputlogMessage('get intersection failed')
@@ -40,6 +44,10 @@ if __name__ == "__main__":
     parser.add_option("-o", "--output",
                       action="store", dest="output",
                       help="the output")
+
+    parser.add_option("-c", "--copy_fields",
+                      action="store", dest="copy_fields",
+                      help="the multi field names to be copied, e.g., 'area,perimeter', use comma to sperate them but no space")
 
 
     (options, args) = parser.parse_args()

@@ -101,5 +101,14 @@ shp_imgAug17_NOpost_tp=os.path.join(out_dir,'img_aug_test_results/BLH_basin_deep
 
 # draw_two_attribute_scatter(result_imgAug16,'IoU','circularit','iou_circ_imgAug16_scatter.jpg','bins_iou_circ_imgAug16.txt')
 
-draw_two_attribute_scatter(shp_imgAug16_NOpost_tp,'IoU','INarea','iou_area_imgAug16_NOpost_tp_scatter.jpg','bins_iou_area_imgAug16_NOpost_tp.txt')
-draw_two_attribute_scatter(shp_imgAug17_NOpost_tp,'IoU','INarea','iou_area_imgAug17_NOpost_tp_scatter.jpg','bins_iou_area_imgAug17_NOpost_tp.txt')
+# draw_two_attribute_scatter(shp_imgAug16_NOpost_tp,'IoU','INarea','iou_area_imgAug16_NOpost_tp_scatter.jpg','bins_iou_area_imgAug16_NOpost_tp.txt')
+# draw_two_attribute_scatter(shp_imgAug17_NOpost_tp,'IoU','INarea','iou_area_imgAug17_NOpost_tp_scatter.jpg','bins_iou_area_imgAug17_NOpost_tp.txt')
+
+# intersection of ground truth and polyons without post-processing
+intersect_ground_truth_imgAug17_NOpost_tp=os.path.join(out_dir,'intersect_ground_truth_imgAug17_NOpost_tp.shp')
+intersect_ground_truth_imgAug16_NOpost_tp=os.path.join(out_dir,'intersect_ground_truth_imgAug16_NOpost_tp.shp')
+
+draw_two_attribute_scatter(intersect_ground_truth_imgAug16_NOpost_tp,'IoU','adj_count',
+                           'iou_count_intersect_imgAug16_NOpost_tp_scatter.jpg','bins_iou_count_intersect_imgAug16_NOpost_tp.txt')
+draw_two_attribute_scatter(intersect_ground_truth_imgAug17_NOpost_tp,'IoU','adj_count',
+                           'iou_count_intersect_imgAug17_NOpost_tp_scatter.jpg','bins_iou_count_intersect_imgAug17_NOpost_tp.txt')
