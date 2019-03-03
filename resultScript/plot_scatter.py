@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 
 from vector_features import read_attribute
 
-def draw_two_list_scatter(x_list,y_list,output,text_loc_detX,text_locY,color='grey',hatch=""):
+def draw_two_list_scatter(x_list,y_list,output,xlabel,ylabel,text_loc_detX,text_locY,color='grey',hatch=""):
     """
     draw a scatter of two attributes
 
@@ -52,6 +52,8 @@ def draw_two_list_scatter(x_list,y_list,output,text_loc_detX,text_locY,color='gr
     # # plt.axis([40, 160, 0, 0.03])
 
     ax.tick_params(labelsize=20)
+    plt.xlabel(xlabel,fontsize=20)
+    plt.ylabel(ylabel,fontsize=20)
 
     # # marked  values
     iou_thresholds = [0.5]
@@ -74,18 +76,25 @@ def draw_two_attribute_scatter(shp_file,field1,field2,output,logfile):
     if field2 == 'INarea':                      # m^2 to ha
         y_values = [item/10000.0 for item in y_values]
 
+    xlabel = 'IOU value'
+    ylabel = 'null'
     text_loc_detX=0.02
     text_loc_Y = 20
     if field2 =='INarea':
         text_loc_Y = 20
+        ylabel = 'Area ($ha$)'
     elif field2 =='adj_count':
         text_loc_Y = 5
+        ylabel = 'Count'
     elif field2 == 'INperimete':
         text_loc_Y = 4000
+        ylabel = 'Perimeter ($m$)'
     elif field2 == 'circularit':
         text_loc_Y = 0.4
+        ylabel = 'Circularity'
 
-    draw_two_list_scatter(x_values,y_values,output,text_loc_detX,text_loc_Y)
+
+    draw_two_list_scatter(x_values,y_values,output,xlabel,ylabel,text_loc_detX,text_loc_Y)
 
     io_function.move_file_to_dst('processLog.txt', os.path.join(out_dir, logfile), overwrite=True)
     io_function.move_file_to_dst(output, os.path.join(out_dir, output), overwrite=True)
