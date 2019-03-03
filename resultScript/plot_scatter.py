@@ -115,20 +115,32 @@ polygons_imgAug16_tp = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_m
 shp_imgAug16_NOpost_tp=os.path.join(out_dir,'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP.shp')
 shp_imgAug17_NOpost_tp=os.path.join(out_dir,'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17_TP.shp')
 
-draw_two_attribute_scatter(result_imgAug16,'IoU','INarea','iou_area_imgAug16_scatter.jpg','bins_iou_area_imgAug16.txt')
-
-draw_two_attribute_scatter(result_imgAug16,'IoU','INperimete','iou_peri_imgAug16_scatter.jpg','bins_iou_peri_imgAug16.txt')
-
-draw_two_attribute_scatter(result_imgAug16,'IoU','circularit','iou_circ_imgAug16_scatter.jpg','bins_iou_circ_imgAug16.txt')
-
-draw_two_attribute_scatter(shp_imgAug16_NOpost_tp,'IoU','INarea','iou_area_imgAug16_NOpost_tp_scatter.jpg','bins_iou_area_imgAug16_NOpost_tp.txt')
-draw_two_attribute_scatter(shp_imgAug17_NOpost_tp,'IoU','INarea','iou_area_imgAug17_NOpost_tp_scatter.jpg','bins_iou_area_imgAug17_NOpost_tp.txt')
-
 # intersection of ground truth and polyons without post-processing
 intersect_ground_truth_imgAug17_NOpost_tp=os.path.join(out_dir,'intersect_ground_truth_imgAug17_NOpost_tp.shp')
 intersect_ground_truth_imgAug16_NOpost_tp=os.path.join(out_dir,'intersect_ground_truth_imgAug16_NOpost_tp.shp')
 
-draw_two_attribute_scatter(intersect_ground_truth_imgAug16_NOpost_tp,'IoU','adj_count',
-                           'iou_count_intersect_imgAug16_NOpost_tp_scatter.jpg','bins_iou_count_intersect_imgAug16_NOpost_tp.txt')
-draw_two_attribute_scatter(intersect_ground_truth_imgAug17_NOpost_tp,'IoU','adj_count',
-                           'iou_count_intersect_imgAug17_NOpost_tp_scatter.jpg','bins_iou_count_intersect_imgAug17_NOpost_tp.txt')
+# only one ground truth is missing
+shp_imgAug16_NOpost_tp_intersec1=os.path.join(out_dir,'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP_intersec1.shp')
+# no ground truth is missing
+shp_imgAug17_NOpost_tp_intersec1=os.path.join(out_dir,'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17_TP_intersec1.shp')
+
+
+
+# draw_two_attribute_scatter(result_imgAug16,'IoU','INarea','iou_area_imgAug16_scatter.jpg','bins_iou_area_imgAug16.txt')
+#
+# draw_two_attribute_scatter(result_imgAug16,'IoU','INperimete','iou_peri_imgAug16_scatter.jpg','bins_iou_peri_imgAug16.txt')
+#
+# draw_two_attribute_scatter(result_imgAug16,'IoU','circularit','iou_circ_imgAug16_scatter.jpg','bins_iou_circ_imgAug16.txt')
+#
+# draw_two_attribute_scatter(shp_imgAug16_NOpost_tp,'IoU','INarea','iou_area_imgAug16_NOpost_tp_scatter.jpg','bins_iou_area_imgAug16_NOpost_tp.txt')
+# draw_two_attribute_scatter(shp_imgAug17_NOpost_tp,'IoU','INarea','iou_area_imgAug17_NOpost_tp_scatter.jpg','bins_iou_area_imgAug17_NOpost_tp.txt')
+#
+# draw_two_attribute_scatter(intersect_ground_truth_imgAug16_NOpost_tp,'IoU','adj_count',
+#                            'iou_count_intersect_imgAug16_NOpost_tp_scatter.jpg','bins_iou_count_intersect_imgAug16_NOpost_tp.txt')
+# draw_two_attribute_scatter(intersect_ground_truth_imgAug17_NOpost_tp,'IoU','adj_count',
+#                            'iou_count_intersect_imgAug17_NOpost_tp_scatter.jpg','bins_iou_count_intersect_imgAug17_NOpost_tp.txt')
+
+draw_two_attribute_scatter(shp_imgAug16_NOpost_tp_intersec1,'IoU','adj_count',
+                           'iou_count_intersect_imgAug16_NOpost_tp_intersec1_scatter.jpg','bins_iou_count_intersect_imgAug16_NOpost_tp_intersec1.txt')
+draw_two_attribute_scatter(shp_imgAug17_NOpost_tp_intersec1,'IoU','adj_count',
+                           'iou_count_intersect_imgAug17_NOpost_tp_intersec1_scatter.jpg','bins_iou_count_intersect_imgAug17_NOpost_tp_intersec1.txt')

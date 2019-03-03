@@ -62,7 +62,7 @@ ${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug17_NOpost_tp} -o ${shp_i
 
 
 # step 4: plot scatter figure
-# in script "plot_historam.py"
+# in script "plot_scatter.py"
 
 
 
