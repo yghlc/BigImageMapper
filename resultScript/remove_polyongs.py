@@ -68,6 +68,21 @@ def remove_lines_based_on_polygons(shp_line,output_mainline,shp_polygon):
     if operation_obj.remove_shapes_by_list(shp_line,output_mainline,b_remove) is False:
         return False
 
+
+def remove_polygons_intersect_multi_ground_truths(shp_file, shp_ground_truth, output, copy_fields=None):
+    '''
+
+    :param shp_file:
+    :param shp_ground_truth:
+    :param output:
+    :param copy_fields:
+    :return:
+    '''
+    operation_obj = shape_opeation()
+    return operation_obj.remove_polygons_intersect_multi_polygons(shp_file, shp_ground_truth, output, copy_fields=copy_fields)
+
+
+
 def main(options, args):
     polygons_shp = args[0]
 
@@ -77,7 +92,8 @@ def main(options, args):
     output = options.output
 
     # print(field_name,threshold,bsmaller,output)
-    remove_polygons(polygons_shp, field_name, threshold, bsmaller, output)
+    if field_name is not None:
+        remove_polygons(polygons_shp, field_name, threshold, bsmaller, output)
 
 
     # remove the file in main_lines
@@ -86,7 +102,12 @@ def main(options, args):
         output_mainline = options.output_mainline
         remove_lines_based_on_polygons(shp_mainline, output_mainline, output)
 
-
+    # remove polygon based on the intersection with ground truth polygons
+    val_polygon = options.val_polygon
+    if val_polygon is not None:
+        copy_fields = options.copy_fields
+        copy_fields = copy_fields.split(',')
+        remove_polygons_intersect_multi_ground_truths(polygons_shp, val_polygon, output, copy_fields=copy_fields)
 
 if __name__ == "__main__":
     usage = "usage: %prog [options] shp_file"
@@ -98,7 +119,7 @@ if __name__ == "__main__":
                       help="save file path")
 
     parser.add_option("-f", "--field_name",
-                      action="store", dest="field_name",default='IoU',
+                      action="store", dest="field_name",
                       help="the field name of the attribute based on which to remove polygons")
 
     parser.add_option("-t", "--threshold",
@@ -113,6 +134,13 @@ if __name__ == "__main__":
                       action="store", dest="output_mainline",default='save_mainline.shp',
                       help="save file path of main line")
 
+    parser.add_option("-v", "--val_polygon",
+                      action="store", dest="val_polygon",
+                      help="the path of validation polygons")
+
+    parser.add_option("-c", "--copy_fields",
+                      action="store", dest="copy_fields",
+                      help="the multi field names to be copied from validation polygons, e.g., 'area,perimeter', use comma to sperate them but no space")
 
     parser.add_option("-s", "--bsmaller",
                       action="store_true", dest="bsmaller",
