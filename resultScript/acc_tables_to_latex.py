@@ -12,11 +12,12 @@ add time: 21 February, 2019
 import csv
 import os,sys
 
-csv_table = "img_aug_test_results_accuracy_table_to_latex.csv"
+# csv_table = "img_aug_test_results_accuracy_table_to_latex.csv"
+csv_table = "img_aug_test_results_accuracy_table_noPost_to_latex.csv"
 
 def output_one_test(idx,lines):
 
-    print('\midrule')
+    # print('\midrule')
     line_1 = lines[idx]
     method = line_1[1]  # flip, blur, crop, scale, rotate
     m_labels = []
@@ -30,12 +31,12 @@ def output_one_test(idx,lines):
     test_num = line_1[-1] // 3 + 1
 
     # to latex
-    tmp='\multirow{3}{*}{%d} &  \multirow{3}{*}{%s} & \multirow{3}{*}{%s} & \multirow{3}{*}{%s} & \multirow{3}{*}{%s} &' \
-        % (test_num, ', '.join(m_labels), line_1[2], line_1[3], line_1[4])
+    # tmp='\multirow{3}{*}{%d} &  \multirow{3}{*}{%s} & \multirow{3}{*}{%s} & \multirow{3}{*}{%s} & \multirow{3}{*}{%s} &' \
+    #     % (test_num, ', '.join(m_labels), line_1[2], line_1[3], line_1[4])
 
     # to word
-    # tmp='%d & %s & %s & %s & %s &' \
-    #     % (test_num, ', '.join(m_labels), line_1[2], line_1[3], line_1[4])
+    tmp='%d & %s & %s & %s & %s &' \
+        % (test_num, ', '.join(m_labels), line_1[2], line_1[3], line_1[4])
 
     print(tmp + ' & '.join(line_1[5:-1]) + '\\\\' )
 
@@ -151,13 +152,13 @@ with open(csv_table) as csvfile:
     line_count = len(lines)
     print(line_count)
 
-    data_augmentation_statistics(lines)
+    # data_augmentation_statistics(lines)
 
-    # ## output all
-    # idx = 1
-    # while idx < line_count:
-    #     output_one_test(idx, lines)
-    #     idx += 3
+    ## output all
+    idx = 1
+    while idx < line_count:
+        output_one_test(idx, lines)
+        idx += 3
     #
     # # remove the first line
     # del lines[0]
