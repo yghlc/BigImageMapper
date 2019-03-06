@@ -16,8 +16,7 @@ March 2019:
 
 
 Dependencies:
-    Python package: Numpy, sklearn, rasterio 
-    GDAL, OTB, ASP 
+    Python package: Numpy, sklearn, rasterio, GDAL. Binary package: GDAL, OTB, ASP 
 
 ## Disclaimer
 This is a personal repo that we are actively developing. It may not work as expected. 
