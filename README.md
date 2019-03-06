@@ -11,12 +11,16 @@ August 2018:
 January 2019:
     Supporting of Mask RCNN
 
+March 2019:
+    Many scripts for producing figures of manuscript: Mapping Retrogressive Thaw Slumps in the Beiluhe Region, Tibetan Plateau on Planet CubeSat images using Deep Learning
+
+
 Dependencies:
     Python package: Numpy, sklearn, rasterio 
-    
-    GDAL, OTB
-    
-    
-    
+    GDAL, OTB, ASP 
+
+## Disclaimer
+This is a personal repo that we are actively developing. It may not work as expected. 
+ 
     
  
