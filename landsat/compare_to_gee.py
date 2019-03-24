@@ -56,25 +56,48 @@ def diff_bands(file_lcoal, file_gee):
 
     # compare the bands with the same name
     for band_name in com_bands:
-        with rasterio.open(file_lcoal) as local_src:
 
-            band_local = local_src.read(band_names_local.index(band_name) + 1)
+        local_src = rasterio.open(file_lcoal)
+        band_local = local_src.read(band_names_local.index(band_name) + 1)
 
-            with rasterio.open(file_lcoal) as gee_src:
-                band_gee = gee_src.read(band_names_gee.index(band_name) + 1)
+        gee_src = rasterio.open(file_gee)
+        band_gee = gee_src.read(band_names_gee.index(band_name) + 1)
 
-                # compare
-                if np.array_equal(band_local,band_gee):
-                    basic.outputlogMessage('%s band is total the samle'%band_name)
-                else:
-                    basic.outputlogMessage('%s band is different'%band_name)
+        # dff_value = band_local - band_gee
+        dff_value = np.nan_to_num(band_local) - np.nan_to_num(band_gee)
 
-                    # dff_value = band_local - band_gee
-                    dff_value = np.nan_to_num(band_local) - np.nan_to_num(band_gee)
-                    # print(np.sum(dff_value))
-                    basic.outputlogMessage('difference (local - gee): sum %.6f, mean %.6f, min %.6f, max %.6f' %
-                                           (np.sum(dff_value,axis=None), np.mean(dff_value,axis=None), np.max(dff_value),np.min(dff_value) ))
+        diff_sum = np.sum(dff_value,axis=None)
+        diff_mean = np.mean(dff_value,axis=None)
+        diff_max = np.max(dff_value)
+        diff_min = np.min(dff_value)
 
+        # find and output the different pixels
+        loc_row, loc_col = np.where(np.abs(dff_value) > 0)
+
+        # compare
+        if  loc_col.size == 0:
+            basic.outputlogMessage('%s band is total the samle'%band_name)
+        else:
+            basic.outputlogMessage('%s band is different'%band_name)
+
+            # print(np.sum(dff_value))
+            basic.outputlogMessage('difference (local - gee): sum %.6f, mean %.6f, min %.6f, max %.6f' %
+                                   (diff_sum, diff_mean, diff_max, diff_min))
+
+            for x,y in zip(loc_col,loc_row):
+                # use gdallocationinfo to check the values
+                print(x,y)
+
+            # save this band
+            # Set spatial characteristics of the output object to mirror the input
+            kwargs = gee_src.meta
+            kwargs.update(
+                dtype=rasterio.float32,
+                count=3)
+            with rasterio.open('diff_'+band_name+'.tif', 'w', **kwargs) as dst:
+                dst.write_band(1, band_local.astype(rasterio.float32))
+                dst.write_band(2, band_gee.astype(rasterio.float32))
+                dst.write_band(3, dff_value.astype(rasterio.float32))
 
 
     return True
