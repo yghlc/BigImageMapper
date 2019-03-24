@@ -84,8 +84,11 @@ def diff_bands(file_lcoal, file_gee):
             basic.outputlogMessage('difference (local - gee): sum %.6f, mean %.6f, min %.6f, max %.6f' %
                                    (diff_sum, diff_mean, diff_max, diff_min))
 
-            for x,y in zip(loc_col,loc_row):
+            for idx,(x,y) in enumerate(zip(loc_col,loc_row)):
                 # use gdallocationinfo to check the values
+                if idx > 2000:
+                    print('pixels > 2000, skip output more')
+                    break
                 print(x,y)
 
             # save this band
