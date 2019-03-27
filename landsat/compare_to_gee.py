@@ -87,7 +87,7 @@ def diff_bands(file_lcoal, file_gee):
             for idx,(x,y) in enumerate(zip(loc_col,loc_row)):
                 # use gdallocationinfo to check the values
                 if idx > 2000:
-                    print('pixels > 2000, skip output more')
+                    basic.outputlogMessage('pixels > 2000, skip output more')
                     break
                 print(x,y)
 
