@@ -76,7 +76,7 @@ def diff_bands(file_lcoal, file_gee):
 
         # compare
         if  loc_col.size == 0:
-            basic.outputlogMessage('%s band is total the samle'%band_name)
+            basic.outputlogMessage('%s band is totally the samle'%band_name)
         else:
             basic.outputlogMessage('%s band is different'%band_name)
 
