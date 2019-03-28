@@ -34,7 +34,7 @@ def get_band_names(img_path):
     '''
     get the all the band names (description) in this raster
     :param img_path:
-    :return:
+    :return: the list of all the band name
     '''
     rs_obj = RSImageclass()
     rs_obj.open(img_path)
