@@ -23,17 +23,17 @@ msi_dir=./
 
 ########################################################################
 ## for landsat 7
-#B=${gee_msi_dir}/beiluhe_LE07_brightness_1990to2018.tif
-#G=${gee_msi_dir}/beiluhe_LE07_greenness_1990to2018.tif
-#W=${gee_msi_dir}/beiluhe_LE07_wetness_1990to2018.tif
+B=${gee_msi_dir}/beiluhe_LE07_brightness_1990to2018.tif
+G=${gee_msi_dir}/beiluhe_LE07_greenness_1990to2018.tif
+W=${gee_msi_dir}/beiluhe_LE07_wetness_1990to2018.tif
 
-#./compose_RGB.py ${B} ${G} ${W}
+./compose_RGB.py ${B} ${G} ${W}
 
 
 ########################################################################
 ## for landsat 5
-B=${gee_msi_dir}/beiluhe_LT05_brightness_2001to2018.tif
-G=${gee_msi_dir}/beiluhe_LT05_greenness_2001to2018.tif
-W=${gee_msi_dir}/beiluhe_LT05_wetness_2001to2018.tif
-# compare brightness
-./compose_RGB.py ${B} ${G} ${W}
+#B=${gee_msi_dir}/beiluhe_LT05_brightness_2001to2018.tif
+#G=${gee_msi_dir}/beiluhe_LT05_greenness_2001to2018.tif
+#W=${gee_msi_dir}/beiluhe_LT05_wetness_2001to2018.tif
+## compare brightness
+#./compose_RGB.py ${B} ${G} ${W}
