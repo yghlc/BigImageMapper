@@ -10,9 +10,8 @@
 # Exit immediately if a command exits with a non-zero status. E: error trace
 set -eE -o functrace
 
-dir=~/Data/Qinghai-Tibet/beiluhe/beiluhe_landsat/landsat_multispectral_indices
-
-cd ${dir}
+#dir=~/Data/Qinghai-Tibet/beiluhe/beiluhe_landsat/landsat_multispectral_indices
+#cd ${dir}
 
 for tif in $(ls *.tif); do
 
