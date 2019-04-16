@@ -216,7 +216,7 @@ def main(options, args):
     # df.plot(x='date', y='brightness')
     # plt.show()
     output='fig_'+str(np.random.randint(1,10000))+'.png'
-    plt.savefig(output)
+    plt.savefig(output,bbox_inches="tight") # dpi=200
 
 
 
