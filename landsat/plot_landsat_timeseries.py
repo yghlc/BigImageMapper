@@ -124,12 +124,21 @@ def main(options, args):
 
     # x = 10
     # y = 100
-    #
-    x = 92.912
-    y=34.848
+
+    # at least four decimal
+    # x = 92.9123
+    # y=34.8485
+    # x = 92.76071
+    # y = 35.08546
+
+    x = 92.80871
+    y = 34.79564
+
 
     xy_srs = 'lon_lat_wgs84'  # pixel
 
+    # sort the file to make
+    msi_files = sorted(msi_files)
 
 
     # read brightness values
@@ -192,6 +201,15 @@ def main(options, args):
     # set DatetimeIndex
     msi_series = msi_series.set_index('date')
 
+    # sort, seem not necessary
+    msi_series = msi_series.sort_index()
+
+    # remove nan, if one cloumn is nan, other also nan
+    msi_series =  msi_series.dropna(how='any')
+
+    # set date_range
+    # msi_series = msi_series["2013-01-01":"2018-01-01"]
+
 
     # Add columns with year, month, and weekday name
     msi_series['Year'] = msi_series.index.year
@@ -208,15 +226,18 @@ def main(options, args):
     # msi_series['brightness'].plot(marker='.',linestyle='None') #linewidth=1.5
 
     cols_plot = ['greenness', 'brightness','wetness','ndvi','ndwi','ndmi']
-    axes = msi_series[cols_plot].plot(marker='.', alpha=0.9, linestyle='None', figsize=(21, 16), subplots=True)
+    ylim_list = [(-0.5,0.5), (0,1), (-0.5,0.5), (-1, 1), (-1,1), (-1,1) ]
+    axes = msi_series[cols_plot].plot(marker='.', alpha=0.9,linestyle='None' , figsize=(21, 16), subplots=True)  # linewidth=0.5
     for idx,ax in enumerate(axes):
         ax.set_ylabel(cols_plot[idx])
+        ax.set_ylim(ylim_list[idx])
+
 
     # df.set_index('date').plot()
     # df.plot(x='date', y='brightness')
     # plt.show()
     output='fig_'+str(np.random.randint(1,10000))+'.png'
-    plt.savefig(output,bbox_inches="tight") # dpi=200
+    plt.savefig(output,bbox_inches="tight") # dpi=200, ,dpi=300
 
 
 
