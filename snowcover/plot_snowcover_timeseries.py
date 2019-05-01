@@ -20,6 +20,7 @@ codes_dir2 = HOME + '/codes/PycharmProjects/DeeplabforRS'
 sys.path.insert(0, codes_dir2)
 
 import datetime
+import matplotlib
 import matplotlib.pyplot as plt
 import basic_src.RSImage as RSImage
 import csv
@@ -275,7 +276,26 @@ def main(options, args):
 
     # fill the unknow values
     landcover_series_filled =  fill_land_cover_series(landcover_series)
+
+    # add
+    landcover_series_filled['Year'] = landcover_series_filled.index.year
+    landcover_series_filled['Month'] = landcover_series_filled.index.month
+
     landcover_series_filled.to_excel('landcover_series_filled.xlsx')
+
+    # only keep the records with snow cover
+    snow_series = landcover_series_filled[landcover_series_filled.land_cover == 1]
+    snow_series.to_excel('snow_series.xlsx')
+    year_month_s_days = snow_series.groupby(['Year', 'Month'])['land_cover'].apply(sum)
+
+
+    year_month_s_days.to_frame(name='year_month_snow_days').to_excel('snow_series_year_month.xlsx')
+    # print(year_month_s_days.head(1000))
+
+    year_s_days = snow_series.groupby(['Year'])['land_cover'].apply(sum)
+    print(year_s_days.head(1000))
+
+    # test = 1
 
     # set date_range
     # msi_series = msi_series["2012-01-01":"2012-12-01"]
@@ -329,6 +349,12 @@ def main(options, args):
     # plt.savefig(output,bbox_inches="tight") # dpi=200, ,dpi=300
 
 
+    ## plot snow series by month
+    # axes = year_month_s_days.plot(marker='.', alpha=0.9,linestyle='None', figsize=(21, 2))
+    ## axes.xaxis.set_minor_locator(matplo tlib.dates.WeekdayLocator(byweekday=(1),interval=1))
+    ## axes.xaxis.set_minor_locator(matplotlib.dates.MonthLocator())
+    # output='fig_'+str(np.random.randint(1,10000))+'.png'
+    # plt.savefig(output,bbox_inches="tight") # dpi=200, ,dpi=300
 
 
 
