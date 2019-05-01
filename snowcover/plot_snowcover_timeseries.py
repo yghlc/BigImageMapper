@@ -22,6 +22,8 @@ sys.path.insert(0, codes_dir2)
 import datetime
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as colors
 import basic_src.RSImage as RSImage
 from basic_src.RSImage import RSImageclass
 import csv
@@ -269,8 +271,12 @@ def one_point_snowcover_series(x,y, xy_srs,mod_snow_file,myd_snow_file, b_xlsx=F
     if b_xlsx:
         landcover_series_filled.to_excel('landcover_series_filled.xlsx')
 
-    # only keep the records with snow cover
-    snow_series = landcover_series_filled[landcover_series_filled.land_cover == 1]
+    # replace other land cover as 0, then easy to sum the days
+    tmp_values = landcover_series_filled.loc[:,'land_cover'].values  #landcover_series_filled.replace(2,0)
+    tmp_values[tmp_values == 2] = 0
+    landcover_series_filled.loc[:, 'land_cover']  = tmp_values
+    # snow_series = landcover_series_filled[landcover_series_filled.land_cover == 1]
+    snow_series = landcover_series_filled
     # if b_xlsx:
     #     snow_series.to_excel('snow_series.xlsx')
     # year_month_s_days = snow_series.groupby(['Year', 'Month'])['land_cover'].apply(sum)
@@ -349,7 +355,116 @@ def one_point_snowcover_series(x,y, xy_srs,mod_snow_file,myd_snow_file, b_xlsx=F
 
     pass
 
+def vis_snow_day(snow_days_2d, output,min_val,max_val):
 
+    fig = plt.figure()
+    # select a color map
+    my_cmap = cm.get_cmap('jet_r')  # 'jet_r' bwr_r
+
+    # for yearly
+    # min_val = 0
+    # max_val = 100
+    # norm = colors.Normalize(min_val, max_val)
+    my_cmap.set_over((1, 1, 1))  # set the color greater than max_val
+    my_cmap.set_under((0,0,0))  # set the color less than min_val
+
+    plt.imshow(snow_days_2d, cmap='jet_r',vmin=min_val, vmax=max_val)
+    # cmmapable = cm.ScalarMappable(norm, my_cmap)
+    # cmmapable.set_array(np.array(np.arange(min_val, max_val)))
+    plt.colorbar() #my_cmap, extend='both'  # extend='max'
+    plt.savefig(output,bbox_inches="tight")
+
+
+
+def save_year_monthly_days(mod_snow_file,snow_series_list, width, height):
+    '''
+    save the snow days of a area to images
+    :param snow_series_list:
+    :param width:
+    :param height:
+    :return:
+    '''
+    if len(snow_series_list) != width*height:
+        raise ValueError('insistence in the count')
+
+    snow_days_list = []
+    for snow_series in snow_series_list:
+        year_month_s_days = snow_series.groupby(['Year', 'Month'])['land_cover'].apply(sum)
+        snow_days_list.append(year_month_s_days)
+
+    # print(snow_days_list[0].head(1000))
+    src_image = rasterio.open(mod_snow_file)
+    save_folder = 'beiluhe_monthly_snow_days'
+    os.system('mkdir -p '+save_folder)
+
+    # save image month by month
+    for idx, month in enumerate(snow_days_list[0].index):
+        print(month)
+
+        # create 2D grid
+        month_daily = np.zeros((height,width),dtype=np.uint8)
+
+
+
+
+
+    pass
+
+def save_yearly_days(mod_snow_file, snow_series_list, width, height):
+
+    if len(snow_series_list) != width*height:
+        raise ValueError('insistence in the count')
+
+    snow_days_list = []
+
+    for snow_series in snow_series_list:
+        year_yearly_days = snow_series.groupby(['Year'])['land_cover'].apply(sum) # year_yearly_days is series, not DataFrame
+        snow_days_list.append(year_yearly_days)     #
+
+    # print(snow_days_list[0].head(100))
+
+    src_image = rasterio.open(mod_snow_file)
+    save_folder = 'beiluhe_yearly_snow_days'
+    vis_folder = 'vis_beiluhe_yearly_snow_days'
+    os.system('mkdir -p '+save_folder)
+    os.system('mkdir -p ' + vis_folder)
+
+
+    save_file_list = []
+
+    # save image month by month
+    for idx, year in enumerate(snow_days_list[0].index):
+        print(year)
+        # create 2D grid
+        year_s_days = np.zeros((height,width),dtype=np.uint8)
+        for img_row in range(height):
+            for img_col in range(width):
+                img_idx = img_row*width + img_col
+                year_s_days[ img_row, img_col ] = snow_days_list[img_idx].get(year)
+
+        # Set spatial characteristics of the output object to mirror the input
+        kwargs = src_image.meta
+        kwargs.update(
+            dtype=rasterio.uint8,
+            count=1,
+            width=width,
+            height=height)
+
+        # Create the file
+        fn = 'snow_days_%d.tif'%int(year)
+        output_file = os.path.join(save_folder, fn)
+        save_file_list.append(output_file)
+        with rasterio.open(output_file, 'w', **kwargs) as dst:
+            dst.write_band(1, year_s_days.astype(rasterio.uint8))
+        print("save to %s" % output_file)
+
+        vis_snow_day(year_s_days,os.path.join(vis_folder, fn),0,100)
+
+    # # visualiztion
+    # for file in save_file_list:
+    #
+
+    pass
 
 def main(options, args):
 
@@ -368,14 +483,15 @@ def main(options, args):
     # x = 92.80871
     # y = 34.79564
     # xy_srs = 'lon_lat_wgs84'  # pixel
-    # one_point_snowcover_series(x,y,xy_srs,mod_snow_file,myd_snow_file)
+    # snow_series = one_point_snowcover_series(x,y,xy_srs,mod_snow_file,myd_snow_file)
+    # save_year_monthly_days([snow_series], 1, 1)
 
     # calculate for the whole image
     rs_obj = RSImageclass()
     if rs_obj.open(mod_snow_file) is False:
         return False
-    img_width = rs_obj.GetWidth()
-    img_height = rs_obj.GetHeight()
+    img_width = 3 #rs_obj.GetWidth()
+    img_height = 3 #rs_obj.GetHeight()
 
     xy_srs = 'pixel'  # pixel lon_lat_wgs84
     snow_series_wholeArea = []
@@ -385,10 +501,9 @@ def main(options, args):
             snow_series = one_point_snowcover_series(img_col, img_row, xy_srs, mod_snow_file, myd_snow_file)
             snow_series_wholeArea.append(snow_series)
 
+    save_yearly_days(mod_snow_file,snow_series_wholeArea,img_width,img_height)
 
-
-
-
+    # save_year_monthly_days(snow_series_wholeArea,img_width,img_height)
 
 
 
