@@ -170,11 +170,32 @@ def fill_land_cover_series(land_cover):
     :return:
     '''
 
+    land_type_array = land_cover.loc[:, 'land_cover'].values
 
+    land_type_array_copy = np.copy(land_type_array)
 
+    total_count = len(land_type_array)
 
+    # fill the unknow values, based on the nearest (the past is first)
+    for idx,land_type in enumerate(land_type_array):
+        if land_type != 3:  # 1 or 2, that is snow or other land cover
+            continue
 
-    pass
+        for win_size in range(1,30):
+            if (idx - win_size)  >= 0 and land_type_array[idx - win_size] != 3:
+                land_type_array_copy[idx] = land_type_array[idx - win_size]
+                break
+            elif (idx + win_size) < total_count and land_type_array[idx + win_size] != 3:
+                land_type_array_copy[idx] = land_type_array[idx + win_size]
+                break
+        if land_type_array_copy[idx] == 3:
+            raise ValueError('Can not find its adjacent value in a window of 30')
+
+    result = land_cover.copy(deep=True)
+
+    result.loc[:, 'land_cover'] = land_type_array_copy
+
+    return result
 
 
 def main(options, args):
@@ -251,6 +272,10 @@ def main(options, args):
 
     landcover_series = get_snow_cover(msi_series)
     landcover_series.to_excel('landcover_series.xlsx')
+
+    # fill the unknow values
+    landcover_series_filled =  fill_land_cover_series(landcover_series)
+    landcover_series_filled.to_excel('landcover_series_filled.xlsx')
 
     # set date_range
     # msi_series = msi_series["2012-01-01":"2012-12-01"]
