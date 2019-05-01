@@ -23,6 +23,7 @@ import datetime
 import matplotlib
 import matplotlib.pyplot as plt
 import basic_src.RSImage as RSImage
+from basic_src.RSImage import RSImageclass
 import csv
 # from msi_landsat8 import get_band_names  # get_band_names(img_path)
 
@@ -199,25 +200,7 @@ def fill_land_cover_series(land_cover):
     return result
 
 
-def main(options, args):
-
-    mod_snow_file = args[0]
-    myd_snow_file = args[1]
-
-    # x = 10
-    # y = 100
-
-    # at least four decimal
-    # x = 92.9123
-    # y = 34.8485
-    # x = 92.76071
-    # y = 35.08546
-
-    x = 92.80871
-    y = 34.79564
-
-    xy_srs = 'lon_lat_wgs84'  # pixel
-
+def one_point_snowcover_series(x,y, xy_srs,mod_snow_file,myd_snow_file, b_xlsx=False):
 
     # read snow cover from  MOD10A1 product
     date_str_list = get_date_string_list(mod_snow_file)
@@ -264,7 +247,8 @@ def main(options, args):
 
     # remove nan, if one cloumn is nan, other also nan
     msi_series = msi_series.dropna(how='any')
-    print('msi_series row count:',len(msi_series.index))
+
+    # print('msi_series row count:',len(msi_series.index))
 
     # # remove duplicate date
     # aaaa = msi_series.groupby(msi_series.index).max() # which column it used for calculating the max value?
@@ -272,7 +256,8 @@ def main(options, args):
     # print('aaaa row count:', len(aaaa.index))
 
     landcover_series = get_snow_cover(msi_series)
-    landcover_series.to_excel('landcover_series.xlsx')
+    if b_xlsx:
+        landcover_series.to_excel('landcover_series.xlsx')
 
     # fill the unknow values
     landcover_series_filled =  fill_land_cover_series(landcover_series)
@@ -281,21 +266,24 @@ def main(options, args):
     landcover_series_filled['Year'] = landcover_series_filled.index.year
     landcover_series_filled['Month'] = landcover_series_filled.index.month
 
-    landcover_series_filled.to_excel('landcover_series_filled.xlsx')
+    if b_xlsx:
+        landcover_series_filled.to_excel('landcover_series_filled.xlsx')
 
     # only keep the records with snow cover
     snow_series = landcover_series_filled[landcover_series_filled.land_cover == 1]
-    snow_series.to_excel('snow_series.xlsx')
-    year_month_s_days = snow_series.groupby(['Year', 'Month'])['land_cover'].apply(sum)
+    # if b_xlsx:
+    #     snow_series.to_excel('snow_series.xlsx')
+    # year_month_s_days = snow_series.groupby(['Year', 'Month'])['land_cover'].apply(sum)
+    #
+    # if b_xlsx:
+    #     year_month_s_days.to_frame(name='year_month_snow_days').to_excel('snow_series_year_month.xlsx')
+    # # print(year_month_s_days.head(1000))
+    #
+    # year_s_days = snow_series.groupby(['Year'])['land_cover'].apply(sum)
 
+    # print(year_s_days.head(1000))
 
-    year_month_s_days.to_frame(name='year_month_snow_days').to_excel('snow_series_year_month.xlsx')
-    # print(year_month_s_days.head(1000))
-
-    year_s_days = snow_series.groupby(['Year'])['land_cover'].apply(sum)
-    print(year_s_days.head(1000))
-
-    # test = 1
+    return snow_series
 
     # set date_range
     # msi_series = msi_series["2012-01-01":"2012-12-01"]
@@ -313,6 +301,8 @@ def main(options, args):
     # aaaa.to_excel("aaaa.xlsx")
 
     # print(msi_series.loc['2001-06'])
+
+    # plot figures
 
     # Use seaborn style defaults and set the default figure size
     # sns.set(rc={'figure.figsize': (21, 4)})
@@ -355,6 +345,47 @@ def main(options, args):
     ## axes.xaxis.set_minor_locator(matplotlib.dates.MonthLocator())
     # output='fig_'+str(np.random.randint(1,10000))+'.png'
     # plt.savefig(output,bbox_inches="tight") # dpi=200, ,dpi=300
+
+
+    pass
+
+
+
+def main(options, args):
+
+    mod_snow_file = args[0]
+    myd_snow_file = args[1]
+
+    # x = 10
+    # y = 100
+
+    # at least four decimal
+    # x = 92.9123
+    # y = 34.8485
+    # x = 92.76071
+    # y = 35.08546
+
+    # x = 92.80871
+    # y = 34.79564
+    # xy_srs = 'lon_lat_wgs84'  # pixel
+    # one_point_snowcover_series(x,y,xy_srs,mod_snow_file,myd_snow_file)
+
+    # calculate for the whole image
+    rs_obj = RSImageclass()
+    if rs_obj.open(mod_snow_file) is False:
+        return False
+    img_width = rs_obj.GetWidth()
+    img_height = rs_obj.GetHeight()
+
+    xy_srs = 'pixel'  # pixel lon_lat_wgs84
+    snow_series_wholeArea = []
+    # print(img_width,img_height)
+    for img_row in range(img_height):
+        for img_col in range(img_width):
+            snow_series = one_point_snowcover_series(img_col, img_row, xy_srs, mod_snow_file, myd_snow_file)
+            snow_series_wholeArea.append(snow_series)
+
+
 
 
 
