@@ -75,11 +75,106 @@ def read_time_series_snow(snow_file, x, y, xy_srs):
 
     values = RSImage.get_image_location_value_list(snow_file, x, y, xy_srs)
     # convert to float
-    values_f = [float(item) for item in values]
+    values_f = [int(item) for item in values]
     series_value.extend(values_f)
 
-    return series_value
 
+    # read other data
+    dir_path = os.path.dirname(snow_file)
+    basename = os.path.basename(snow_file)
+    tmp_str =  basename.split('_')
+    # read NDSI_Snow_Cover_Class
+    NDSI_Snow_Cover_Class_path = os.path.join(dir_path,
+                                '_'.join(tmp_str[:2]) + '_NDSI_Snow_Cover_Class_'+tmp_str[2])
+    # print(NDSI_Snow_Cover_Class_path)
+    Class_values = RSImage.get_image_location_value_list(NDSI_Snow_Cover_Class_path, x, y, xy_srs)
+    Class_values_f = [int(item) for item in Class_values]
+
+    # read Snow_Albedo_Daily_Tile_Class
+    Snow_Albedo_Daily_Tile_Class = os.path.join(dir_path,
+                                '_'.join(tmp_str[:2]) + '_Snow_Albedo_Daily_Tile_Class_'+tmp_str[2])
+    # print(Snow_Albedo_Daily_Tile_Class)
+    Tile_Class_values = RSImage.get_image_location_value_list(Snow_Albedo_Daily_Tile_Class, x, y, xy_srs)
+    Tile_Class_values_f = [int(item) for item in Tile_Class_values]
+
+    if len(series_value) != len(Class_values_f):
+        raise ValueError('the length is inconsistent')
+
+    if len(series_value) != len(Tile_Class_values_f):
+        raise ValueError('the length is inconsistent')
+
+    return series_value, Class_values_f, Tile_Class_values_f
+
+def get_snow_cover(data_pd):
+    '''
+    merge the daily snow cover data from MOD and MYD
+    :param data_pd: pandas dataframe, using date as index, sorted by date
+    :return: pandas dataframe, only one record for each day
+    '''
+    # divide to group based on date
+    # data_group = data_pd.groupby(data_pd.index) #.aggregate(func, axis=0, *args, **kwargs)[source]
+
+    # remove no_decision, missing data
+    # data_pd= data_pd[data_pd.Class != 201]
+    # data_pd = data_pd[data_pd.Class != 200]
+
+    date_list = []
+
+    land_cover = [] # (1, 2, 3) snow, others (land, inland water or others), unknown (due to cloud or missing data)
+
+    # check the data date by date.
+    for date_value in set(data_pd.index):  # use set to get unique dates
+        row = data_pd.loc[date_value,:].values  # get a row by date index
+
+        date_list.append(date_value)
+        # for this date, only have one record
+        if len(row) == 3:    # 1D list
+            # MODIS_snow_cover_list.append(row[0])
+            # Class_values_list.append(row[1])
+            # Tile_Class_values_list.append(row[2])
+            if row[0] > 0 and row[1]==0 and row[2]==0:
+                land_cover.append(1)    # this is snow
+            elif row[2] in [125,137,139]:  # land, inland water, ocean
+                land_cover.append(2)  # others land cover
+            else:
+                land_cover.append(3)    # unknow due to cloud, missing data and so on
+            continue
+        # 2D list, for the date has two records
+        saved_row = row[0]
+        if (row[0][0] > 0 and row[0][1]==0 and row[0][2]==0) or (row[1][0] > 0 and row[1][1]==0 and row[1][2]==0):
+            land_cover.append(1)    # this is snow
+        elif row[0][2] in [125,137,139] or row[1][2] in [125,137,139]:  # land, inland water, ocean
+            land_cover.append(2)  # others land cover
+        else:
+            land_cover.append(3)    # unknow due to cloud, missing data and so on
+
+    # create a new dataframe
+    data = {'date': date_list, 'land_cover': land_cover}
+    msi_series = pd.DataFrame(data, columns=['date', 'land_cover'])
+    #
+    # convert to datetime format
+    msi_series['date'] = pd.to_datetime(msi_series['date'])
+
+    # set DatetimeIndex
+    msi_series = msi_series.set_index('date')
+
+    # sort, seem not necessary
+    msi_series = msi_series.sort_index()
+
+    return msi_series
+
+def fill_land_cover_series(land_cover):
+    '''
+    fill the unknown value based on adjacent values
+    :param land_cover: dataframe of land cover of on pixel, in time order
+    :return:
+    '''
+
+
+
+
+
+    pass
 
 
 def main(options, args):
@@ -104,14 +199,13 @@ def main(options, args):
 
     # read snow cover from  MOD10A1 product
     date_str_list = get_date_string_list(mod_snow_file)
-    time_series_snow = read_time_series_snow(mod_snow_file,x,y, xy_srs)
+    time_series_snow, Class_values, Tile_Class_values = read_time_series_snow(mod_snow_file,x,y, xy_srs)
     if len(date_str_list) != len(time_series_snow):
         raise ValueError('the length of snow and date_str is different')
 
-
     # read snow cover from MYD10A1 product
     myd_date_str_list = get_date_string_list(myd_snow_file)
-    myd_time_series_snow = read_time_series_snow(myd_snow_file,x,y, xy_srs)
+    myd_time_series_snow,myd_Class_values, myd_Tile_Class_values = read_time_series_snow(myd_snow_file,x,y, xy_srs)
     if len(myd_date_str_list) != len(myd_time_series_snow):
         raise ValueError('the length of snow and date_str is different')
 
@@ -119,8 +213,12 @@ def main(options, args):
     date_str_list.extend(myd_date_str_list)
     time_series_snow.extend(myd_time_series_snow)
 
-    data = {'date':date_str_list, 'MODIS_snow_cover':time_series_snow}
-    msi_series = pd.DataFrame(data, columns=['date', 'MODIS_snow_cover'])
+    Class_values.extend(myd_Class_values)
+    Tile_Class_values.extend(myd_Tile_Class_values)
+
+
+    data = {'date':date_str_list, 'MODIS_snow_cover':time_series_snow,'Class':Class_values,'Tile_Class':Tile_Class_values }
+    msi_series = pd.DataFrame(data, columns=['date', 'MODIS_snow_cover', 'Class', 'Tile_Class'])
     #
     # convert to datetime format
     msi_series['date'] = pd.to_datetime(msi_series['date'], format='%Y_%m_%d')
@@ -131,20 +229,43 @@ def main(options, args):
     # sort, seem not necessary
     msi_series = msi_series.sort_index()
 
+    ## check the data date by date.
+    # for date_value in set(msi_series.index):  # use set to get unique dates
+    #     row = msi_series.loc[date_value,:].values  # get a row by date index
+    #     if len(row) == 3:    # 1D list
+    #         continue
+    #     # 2D list
+    #     if np.array_equal(row[0],row[1]):
+    #         continue
+    #     else:
+    #         print(date_value,row[0], row[1])
+
     # remove nan, if one cloumn is nan, other also nan
-    msi_series =  msi_series.dropna(how='any')
+    msi_series = msi_series.dropna(how='any')
+    print('msi_series row count:',len(msi_series.index))
+
+    # # remove duplicate date
+    # aaaa = msi_series.groupby(msi_series.index).max() # which column it used for calculating the max value?
+    # print('msi_series row count:', len(msi_series.index))
+    # print('aaaa row count:', len(aaaa.index))
+
+    landcover_series = get_snow_cover(msi_series)
+    landcover_series.to_excel('landcover_series.xlsx')
 
     # set date_range
-    msi_series = msi_series["2012-01-01":"2012-12-01"]
+    # msi_series = msi_series["2012-01-01":"2012-12-01"]
 
 
     # Add columns with year, month, and weekday name
-    msi_series['Year'] = msi_series.index.year
-    msi_series['Month'] = msi_series.index.month
+    # msi_series['Year'] = msi_series.index.year
+    # msi_series['Month'] = msi_series.index.month
 
-    print(msi_series.head(100))
-    print(msi_series.shape)
-    print(msi_series.dtypes)
+    # print(msi_series.head(100))
+    # print(msi_series.shape)
+    # print(msi_series.dtypes)
+
+    # msi_series.to_excel("msi_series.xlsx")
+    # aaaa.to_excel("aaaa.xlsx")
 
     # print(msi_series.loc['2001-06'])
 
@@ -152,19 +273,38 @@ def main(options, args):
     # sns.set(rc={'figure.figsize': (21, 4)})
     # msi_series['brightness'].plot(marker='.',linestyle='None') #linewidth=1.5
 
-    cols_plot = ['MODIS_snow_cover']
-    ylim_list = [(1,100) ]
-    axes = msi_series[cols_plot].plot(marker='.', alpha=0.9,linestyle='None' , figsize=(21, 16), subplots=True)  # linewidth=0.5
-    for idx,ax in enumerate(axes):
-        ax.set_ylabel(cols_plot[idx])
-        ax.set_ylim(ylim_list[idx])
+    # # plot snow value
+    # cols_plot = ['MODIS_snow_cover']
+    # ylim_list = [(1,100) ]
+    # axes = msi_series[cols_plot].plot(marker='.', alpha=0.9,linestyle='None',
+    #                                   figsize=(21, 16), subplots=True)  # linewidth=0.5
+    # for idx,ax in enumerate(axes):
+    #     ax.set_ylabel(cols_plot[idx])
+    #     ax.set_ylim(ylim_list[idx])
+    #
+    # # df.set_index('date').plot()
+    # # df.plot(x='date', y='brightness')
+    # # plt.show()
+    # output='fig_'+str(np.random.randint(1,10000))+'.png'
+    # # plt.savefig(output,bbox_inches="tight") # dpi=200, ,dpi=300
+
+    ## plot land cover
+    # cols_plot = ['land_cover']
+    # ylim_list = [(0,4) ]
+    # axes = landcover_series[cols_plot].plot(marker=',', alpha=0.9,linestyle='None',
+    #                                   figsize=(21, 4), subplots=True)  # linewidth=0.5
+    # for idx,ax in enumerate(axes):
+    #     ax.set_ylabel(cols_plot[idx])
+    #     ax.set_ylim(ylim_list[idx])
+    #
+    # # df.set_index('date').plot()
+    # # df.plot(x='date', y='brightness')
+    # # plt.show()
+    # output='fig_'+str(np.random.randint(1,10000))+'.png'
+    # plt.savefig(output,bbox_inches="tight") # dpi=200, ,dpi=300
 
 
-    # df.set_index('date').plot()
-    # df.plot(x='date', y='brightness')
-    # plt.show()
-    output='fig_'+str(np.random.randint(1,10000))+'.png'
-    plt.savefig(output,bbox_inches="tight") # dpi=200, ,dpi=300
+
 
 
 
