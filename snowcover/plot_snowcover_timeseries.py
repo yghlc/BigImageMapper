@@ -34,6 +34,10 @@ import pandas as pd
 # use seaborn styling for our plots
 import seaborn as sns
 
+#set limit, to avoid RecursionError: maximum recursion depth exceeded while calling a Python object
+#sys.getrecursionlimit()  #should return 1000
+sys.setrecursionlimit(10000)
+
 def remove_nan_value(msi_str_list, image_date_list):
     # remove non-data "nan"
     tmp_list = [(float(item), date_str) for item,date_str in zip(msi_str_list,image_date_list)  ] # if item != 'nan'
@@ -357,9 +361,10 @@ def one_point_snowcover_series(x,y, xy_srs,mod_snow_file,myd_snow_file, b_xlsx=F
 
 def vis_snow_day(snow_days_2d, output,min_val,max_val):
 
+
     fig = plt.figure()
     # select a color map
-    my_cmap = cm.get_cmap('jet_r')  # 'jet_r' bwr_r
+    my_cmap = cm.get_cmap('jet')  # 'jet_r' bwr_r
 
     # for yearly
     # min_val = 0
@@ -396,15 +401,38 @@ def save_year_monthly_days(mod_snow_file,snow_series_list, width, height):
     src_image = rasterio.open(mod_snow_file)
     save_folder = 'beiluhe_monthly_snow_days'
     os.system('mkdir -p '+save_folder)
+    vis_folder = 'vis_beiluhe_monthly_snow_days'
+    os.system('mkdir -p ' + vis_folder)
 
     # save image month by month
     for idx, month in enumerate(snow_days_list[0].index):
         print(month)
-
         # create 2D grid
-        month_daily = np.zeros((height,width),dtype=np.uint8)
+        monthly_s_days = np.zeros((height,width),dtype=np.uint8)
 
+        for img_row in range(height):
+            for img_col in range(width):
+                img_idx = img_row*width + img_col
+                monthly_s_days[ img_row, img_col ] = snow_days_list[img_idx].get(month)
 
+        # Set spatial characteristics of the output object to mirror the input
+        kwargs = src_image.meta
+        kwargs.update(
+            dtype=rasterio.uint8,
+            count=1,
+            width=width,
+            height=height)
+
+        # Create the file
+        fn = 'snow_days_%d_%d.tif'%(month[0], month[1])
+        output_file = os.path.join(save_folder, fn)
+
+        with rasterio.open(output_file, 'w', **kwargs) as dst:
+            dst.write_band(1, monthly_s_days.astype(rasterio.uint8))
+        print("save to %s" % output_file)
+
+        # visualiztion
+        vis_snow_day(monthly_s_days,os.path.join(vis_folder, fn),0,30)
 
 
 
@@ -430,8 +458,6 @@ def save_yearly_days(mod_snow_file, snow_series_list, width, height):
     os.system('mkdir -p ' + vis_folder)
 
 
-    save_file_list = []
-
     # save image month by month
     for idx, year in enumerate(snow_days_list[0].index):
         print(year)
@@ -453,18 +479,15 @@ def save_yearly_days(mod_snow_file, snow_series_list, width, height):
         # Create the file
         fn = 'snow_days_%d.tif'%int(year)
         output_file = os.path.join(save_folder, fn)
-        save_file_list.append(output_file)
+
         with rasterio.open(output_file, 'w', **kwargs) as dst:
             dst.write_band(1, year_s_days.astype(rasterio.uint8))
         print("save to %s" % output_file)
 
+        # visualiztion
         vis_snow_day(year_s_days,os.path.join(vis_folder, fn),0,100)
 
-    # # visualiztion
-    # for file in save_file_list:
-    #
-
-    pass
+    return True
 
 def main(options, args):
 
@@ -490,8 +513,8 @@ def main(options, args):
     rs_obj = RSImageclass()
     if rs_obj.open(mod_snow_file) is False:
         return False
-    img_width = 3 #rs_obj.GetWidth()
-    img_height = 3 #rs_obj.GetHeight()
+    img_width = 3 #rs_obj.GetWidth() #3 #
+    img_height = 3 #rs_obj.GetHeight() #3 #
 
     xy_srs = 'pixel'  # pixel lon_lat_wgs84
     snow_series_wholeArea = []
@@ -503,7 +526,7 @@ def main(options, args):
 
     save_yearly_days(mod_snow_file,snow_series_wholeArea,img_width,img_height)
 
-    # save_year_monthly_days(snow_series_wholeArea,img_width,img_height)
+    save_year_monthly_days(mod_snow_file,snow_series_wholeArea,img_width,img_height)
 
 
 
