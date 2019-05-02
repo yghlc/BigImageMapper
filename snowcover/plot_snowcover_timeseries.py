@@ -513,8 +513,8 @@ def main(options, args):
     rs_obj = RSImageclass()
     if rs_obj.open(mod_snow_file) is False:
         return False
-    img_width = 3 #rs_obj.GetWidth() #3 #
-    img_height = 3 #rs_obj.GetHeight() #3 #
+    img_width = rs_obj.GetWidth() #3 #
+    img_height = rs_obj.GetHeight() #3 #
 
     xy_srs = 'pixel'  # pixel lon_lat_wgs84
     snow_series_wholeArea = []
