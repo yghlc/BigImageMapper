@@ -52,7 +52,7 @@ def draw_one_attribute_windrose(shp_file,field_name,attribute, output,color='gre
     ax.bar(wind_dir, wind_sd, bins=bins_range, colors=color)  # normed=True, show count, not density
     ax.set_ylim([0,30])
     ax.set_yticks(np.arange(10, 31, step=10))
-    ax.set_yticklabels(np.arange(10, 31, step=10))
+    ax.set_yticklabels(np.arange(10, 31, step=10),color='red')
 
 
     ax.tick_params(labelsize=20)
@@ -88,14 +88,14 @@ aspect_line_imgAug16_tp=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_p
 # io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
 
 # draw wind rose of azimuth from manually draw lines
-# output="aspectLine_ground_truth_winrose.jpg"
-# draw_one_attribute_windrose(aspect_line, "aspectLine", "Mean Aspect ($^\circ$)", output)  # ,hatch='/'
-# io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
+output="aspectLine_ground_truth_winrose.jpg"
+draw_one_attribute_windrose(aspect_line, "aspectLine", "Mean Aspect ($^\circ$)", output,color='black')  # ,hatch='/'
+io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
 
 ####### use mapping polygons  ####
-output="aspectLine_imgAug16_tp_winrose.jpg"
-draw_one_attribute_windrose(aspect_line_imgAug16_tp, "aspectLine", "Mean Aspect ($^\circ$)", output)  # ,hatch='/'
-io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
+# output="aspectLine_imgAug16_tp_winrose.jpg"
+# draw_one_attribute_windrose(aspect_line_imgAug16_tp, "aspectLine", "Mean Aspect ($^\circ$)", output,color='black')  # ,hatch='/'
+# io_function.copy_file_to_dst(output, os.path.join(out_dir,output), overwrite=True)
 ####### use mapping polygons  ####
 
 #
