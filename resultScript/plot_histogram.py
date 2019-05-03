@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 
 from vector_features import read_attribute
 
-def read_oneband_image_to_1dArray(image_path):
+def read_oneband_image_to_1dArray(image_path,nodata=None, ignore_small=None):
 
     if os.path.isfile(image_path) is False:
         raise IOError("error, file not exist: " + image_path)
@@ -41,6 +41,11 @@ def read_oneband_image_to_1dArray(image_path):
 
         data = img_obj.read(indexes)
         data_1d = data.flatten()  # convert to one 1d, row first.
+
+        if nodata is not None:
+            data_1d = data_1d[data_1d != nodata]
+        if ignore_small is not None:
+            data_1d = data_1d[data_1d >= ignore_small ]
 
         return data_1d
 
@@ -174,7 +179,7 @@ def draw_one_list_histogram(value_list,output,bins=None,labels=None,color=None,h
 
 def draw_two_values_hist(shp_file,field_name,raster_file,output,logfile,bin_min,bin_max,bin_width,labels,ylim):
 
-    raster_values = read_oneband_image_to_1dArray(raster_file)
+    raster_values = read_oneband_image_to_1dArray(raster_file, nodata=0, ignore_small=bin_min)
     bins = np.arange(bin_min, bin_max, bin_width)
 
     # update
@@ -236,9 +241,9 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw one list (attributes)
 
 # iou values
-draw_one_value_hist(result_imgAug16,'IoU','IoU_imgAug16.jpg','bins_IoU_imgAug16.txt',0,1.01,0.1,[0,80])
+# draw_one_value_hist(result_imgAug16,'IoU','IoU_imgAug16.jpg','bins_IoU_imgAug16.txt',0,1.01,0.1,[0,80])
 
-draw_one_value_hist(polygons_imgAug16_tp,'IoU','IoU_imgAug16_tp.jpg','bins_IoU_imgAug16_tp.txt',0,1.01,0.1,[0,80])
+# draw_one_value_hist(polygons_imgAug16_tp,'IoU','IoU_imgAug16_tp.jpg','bins_IoU_imgAug16_tp.txt',0,1.01,0.1,[0,80])
 
 # iou values
 # draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug_new.jpg','bins_NOimgAug.txt',0,1.01,0.1)
@@ -281,7 +286,7 @@ draw_one_value_hist(polygons_imgAug16_tp,'IoU','IoU_imgAug16_tp.jpg','bins_IoU_i
 # draw_two_values_hist(ground_truth,"slo_mean",slope,"slope_ground_truth.jpg",'bins_slope_gt.txt',0,20,1,['RTS','Landscape'],[0,25])
 
 # pisr per day #Computed Min/Max=0.000,9.131
-# draw_two_values_hist(ground_truth,"pisr_mean",pisr ,"pisr_ground_truth.jpg",'bins_pisr_gt.txt',8.5,9.15,0.03,['RTS','Landscape'],[0,22])
+draw_two_values_hist(ground_truth,"pisr_mean",pisr ,"pisr_ground_truth.jpg",'bins_pisr_gt.txt',8.5,9.15,0.03,['RTS','Landscape'],[0,22])
 
 
 # aspect #Computed Min/Max=0.269,360.000, the raster aspect seems not correct
@@ -299,7 +304,7 @@ draw_one_value_hist(polygons_imgAug16_tp,'IoU','IoU_imgAug16_tp.jpg','bins_IoU_i
 # draw_two_values_hist(polygons_imgAug16_tp,"slo_mean",slope,"slope_imgAug16_tp.jpg",'bins_slope_imgAug16_tp.txt',0,20,1,['RTS','Landscape'],[0,25])
 
 # pisr per day #Computed Min/Max=0.000,9.131
-# draw_two_values_hist(polygons_imgAug16_tp,"pisr_mean",pisr ,"pisr_imgAug16_tp.jpg",'bins_pisr_imgAug16_tp.txt',8.5,9.15,0.03,['RTS','Landscape'],[0,22])
+draw_two_values_hist(polygons_imgAug16_tp,"pisr_mean",pisr ,"pisr_imgAug16_tp.jpg",'bins_pisr_imgAug16_tp.txt',8.5,9.15,0.03,['RTS','Landscape'],[0,22])
 
 #TPI # Minimum=-11.919, Maximum=13.788
 # draw_two_values_hist(polygons_imgAug16_tp,"tpi_mean",tpi ,"tpi_imgAug16_tp.jpg",'bins_tpi_imgAug16_tp.txt',-4,4.1,0.5,['RTS','Landscape'],[0,65])
