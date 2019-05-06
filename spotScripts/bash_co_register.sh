@@ -13,7 +13,10 @@ set -eE -o functrace
 
 
 #ref_img='beiluhe_spot5_pan_20061109.tif'
-ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/201805/20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt.tif
+#ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/201805/20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt.tif
+
+ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_google_img/beiluhe_google_img_zoomIn2_2010_utm.tif
+
 #new_img='../beiluhe_spot5_pan_20090501.tif'
 para_file=para.ini
 
