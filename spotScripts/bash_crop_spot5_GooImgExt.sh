@@ -39,14 +39,14 @@ function crop_beiluhe() {
     echo "$(date): time cost of crop ${image}: ${duration} seconds">>"time_cost.txt"
 }
 
-for tif in $(ls ../spot5_blhzoomin2Ext/*2011*blhzoomin2Ext.tif ); do
-    crop_beiluhe $tif
-done
-
-# for other years
-#for tif in $(ls ../spot5_blhzoomin2Ext/*blhzoomin2Ext.tif | grep -v 2011); do
+#for tif in $(ls ../spot5_blhzoomin2Ext/*2011*blhzoomin2Ext.tif ); do
 #    crop_beiluhe $tif
 #done
+
+# for other years
+for tif in $(ls ../spot5_blhzoomin2Ext/*blhzoomin2Ext.tif | grep -v 2011); do
+    crop_beiluhe $tif
+done
 
 
 
