@@ -75,6 +75,8 @@ def read_data_series(station_no, txt_list):
 def read_temperature_series(data_folder, station_no):
 
     txt_list = io_function.get_file_list_by_ext('.TXT', data_folder,bsub_folder=False)
+    txt_list_2 = io_function.get_file_list_by_ext('.txt', data_folder, bsub_folder=False)
+    txt_list.extend(txt_list_2)
 
     # read daily mean, max, and min temperature
     date_list, mean_tem, max_tem, min_tem =  read_data_series(station_no, txt_list)
@@ -89,6 +91,8 @@ def read_temperature_series(data_folder, station_no):
 def read_precipitation_series(data_folder, station_no):
 
     txt_list = io_function.get_file_list_by_ext('.TXT', data_folder,bsub_folder=False)
+    txt_list_2 = io_function.get_file_list_by_ext('.txt', data_folder, bsub_folder=False)
+    txt_list.extend(txt_list_2)
 
     # read daily mean, max, and min precipitation
     date_list, mean_pre, max_pre, min_pre =  read_data_series(station_no, txt_list)
@@ -126,6 +130,7 @@ def plot_air_tem_series(data_folder, station_no):
         raise ValueError('this is not the folder of air temperature')
 
     date_list, mean_tem, max_tem, min_tem = read_temperature_series(data_folder, station_no)
+    # print(date_list)
 
     # plot time series data
     data = {'date': date_list, 'mean_air_tem': mean_tem, 'max_air_tem': max_tem, 'min_air_tem': min_tem}
@@ -169,7 +174,8 @@ def plot_air_tem_series(data_folder, station_no):
     ## linear regression
     X = tem_series.index.strftime("%Y%m%d").astype(int)
     # X = sm.add_constant(X)        # add a constant
-    y = tem_series['max_air_tem']
+    # y = tem_series['max_air_tem']
+    y = tem_series['min_air_tem']
     # Note the difference in argument order
     model = sm.OLS(y, X).fit()
     predictions = model.predict(X)  # make the predictions by the model
@@ -179,11 +185,16 @@ def plot_air_tem_series(data_folder, station_no):
     tem_series['predictions'] = predictions
 
     # plot the air temperature and linear trend together.
-    cols_plot = ['max_air_tem', 'predictions']
-    # ylim_list = [(-20,30), (-35,10) ]
+    cols_plot = ['min_air_tem', 'predictions'] # mean_air_tem  max_air_tem, min_air_tem
+    # ylim_list = [(-20,30), (-20, 30) ]
     axes = tem_series[cols_plot].plot(x=tem_series.index, y=cols_plot, marker='.', alpha=0.9, linestyle='None',
                                       figsize=(21, 8))  # linewidth=0.5
-    axes.set_ylabel('Daily max air temperature')
+    # axes.set_ylabel('Daily max air temperature')
+    # axes.set_ylabel('Daily mean air temperature')
+    axes.set_ylabel('Daily min air temperature')
+    # axes.set_ylim(-20,30)
+    # axes.set_ylim(-25, 15)
+    axes.set_ylim(-35, 10)
     # axes.set_ylim(-5,5)
     print(max(predictions) - min(predictions))
 
@@ -289,8 +300,8 @@ def plot_gst_tem_series(data_folder, station_no):
 
 def plot_pre_series(data_folder, station_no):
 
-    if 'pre' not in data_folder:
-        raise ValueError('this is not the folder of Precipitation')
+    # if 'pre' not in data_folder:
+    #     raise ValueError('this is not the folder of Precipitation')
 
     date_list, pre20_8, pre8_20, pre20_20 = read_precipitation_series(data_folder, station_no)
 
@@ -393,12 +404,17 @@ def main(options, args):
 
     station_no = options.station
 
-    # plot_air_tem_series(data_folder, station_no)
+    data_type = options.data_type
 
-    # plot_gst_tem_series(data_folder, station_no)
-
-    plot_pre_series(data_folder, station_no)
-
+    # air temperature
+    if data_type.upper() == 'TEM':
+        plot_air_tem_series(data_folder, station_no)
+    elif data_type.upper() == 'PRE':
+        plot_pre_series(data_folder, station_no)
+    elif data_type.upper() == 'GST':
+        plot_gst_tem_series(data_folder, station_no)
+    else:
+        print('%s not has been supported'%data_type)
 
 
 
@@ -414,6 +430,10 @@ if __name__ == "__main__":
     parser.add_option("-s","--station",
                       action="store", dest="station",
                       help="the station number")
+
+    parser.add_option("-d","--data_type",
+                      action="store", dest="data_type",
+                      help="data_tyep, including: pre, tem, gst (need to add more in the future)")
 
     # parser.add_option("-p", "--para",
     #                   action="store", dest="para_file",
