@@ -8,11 +8,13 @@
 #add time: 19 May, 2019
 
 
-#station_no=52908  # wu dao liang station
+station_no=52908  # wu dao liang station
 
 #station_no=56004  # a station between wu dao liang and tang gu la
 
-station_no=52818  # Golmud
+#station_no=52818  # Golmud
+
+#station_no=58843 # a station in Xiapu
 
 ## only have data from 2010-2017
 #cma_dir=/Users/huanglingcao/Data/meteorological_data/4lingcao
