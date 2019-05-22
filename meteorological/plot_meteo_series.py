@@ -383,18 +383,23 @@ def plot_pre_series(data_folder, station_no):
     tem_series['Year'] = tem_series.index.year
     tem_series['Month'] = tem_series.index.month
     cols_plot = ['pre20_20']
-    # year_month_s_days = tem_series.groupby(['Year', 'Month'])['pre20_20'].apply(sum)
+    year_month_s_days = tem_series.groupby(['Year', 'Month'])['pre20_20'].apply(sum)
     # axes = year_month_s_days.plot(x=tem_series.index, y=cols_plot, marker='.', alpha=0.9, linestyle='None', figsize=(21, 16), subplots=True)
-    # axes = year_month_s_days.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
+    axes = year_month_s_days.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
+
+    axes[0].set_xlabel('Years, Month', fontsize=16)
+    # plt.tick_params(axis='both', which='major', labelsize=16)
+    plt.title('Monthly precipitation',fontsize=16)
 
     ######
     # plot yearly data
-    yearly_pre = tem_series.groupby(['Year'])['pre20_20'].apply(sum)
-    axes = yearly_pre.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
-    # axes[0].set_xticklabels('x',fontsize=16)
-    axes[0].set_xlabel('Years', fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=16)
-    plt.title('Annual precipitation',fontsize=16)
+    # yearly_pre = tem_series.groupby(['Year'])['pre20_20'].apply(sum)
+    # axes = yearly_pre.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
+
+    ## axes[0].set_xticklabels('x',fontsize=16)
+    # axes[0].set_xlabel('Years', fontsize=16)
+    # plt.tick_params(axis='both', which='major', labelsize=16)
+    # plt.title('Annual precipitation',fontsize=16)
 
 
     # df.set_index('date').plot()
