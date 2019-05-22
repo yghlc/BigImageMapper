@@ -146,7 +146,7 @@ def plot_air_tem_series(data_folder, station_no):
     tem_series = tem_series.sort_index()
 
     # set date_range
-    # msi_series = msi_series["2013-01-01":"2018-01-01"]
+    tem_series = tem_series["2002-01-01":"2012-12-31"]
 
     # Add columns with year, month, and weekday name
     # msi_series['Year'] = msi_series.index.year
@@ -175,7 +175,7 @@ def plot_air_tem_series(data_folder, station_no):
     X = tem_series.index.strftime("%Y%m%d").astype(int)
     # X = sm.add_constant(X)        # add a constant
     # y = tem_series['max_air_tem']
-    y = tem_series['min_air_tem']
+    y = tem_series['mean_air_tem']
     # Note the difference in argument order
     model = sm.OLS(y, X).fit()
     predictions = model.predict(X)  # make the predictions by the model
@@ -185,16 +185,20 @@ def plot_air_tem_series(data_folder, station_no):
     tem_series['predictions'] = predictions
 
     # plot the air temperature and linear trend together.
-    cols_plot = ['min_air_tem', 'predictions'] # mean_air_tem  max_air_tem, min_air_tem
+    cols_plot = ['mean_air_tem', 'predictions'] # mean_air_tem  max_air_tem, min_air_tem
     # ylim_list = [(-20,30), (-20, 30) ]
     axes = tem_series[cols_plot].plot(x=tem_series.index, y=cols_plot, marker='.', alpha=0.9, linestyle='None',
                                       figsize=(21, 8))  # linewidth=0.5
+    axes.set_xlabel('Years', fontsize=16)
+    plt.tick_params(axis='both', which='major', labelsize=16)
+    # plt.title('Air temperature',fontsize=16)
+
     # axes.set_ylabel('Daily max air temperature')
-    # axes.set_ylabel('Daily mean air temperature')
-    axes.set_ylabel('Daily min air temperature')
+    axes.set_ylabel('Daily mean air temperature',fontsize=16)
+    # axes.set_ylabel('Daily min air temperature',fontsize=16)
     # axes.set_ylim(-20,30)
-    # axes.set_ylim(-25, 15)
-    axes.set_ylim(-35, 10)
+    axes.set_ylim(-25, 15)
+    # axes.set_ylim(-35, 10)
     # axes.set_ylim(-5,5)
     print(max(predictions) - min(predictions))
 
@@ -235,7 +239,7 @@ def plot_gst_tem_series(data_folder, station_no):
     tem_series = tem_series.sort_index()
 
     # set date_range
-    # msi_series = msi_series["2013-01-01":"2018-01-01"]
+    tem_series = tem_series["2002-01-01":"2012-12-31"]
 
     # Add columns with year, month, and weekday name
     # msi_series['Year'] = msi_series.index.year
@@ -319,7 +323,7 @@ def plot_pre_series(data_folder, station_no):
     tem_series = tem_series.sort_index()
 
     # set date_range
-    # msi_series = msi_series["2013-01-01":"2018-01-01"]
+    tem_series = tem_series["2002-01-01":"2012-12-31"]
 
     # Add columns with year, month, and weekday name
     # msi_series['Year'] = msi_series.index.year
@@ -387,6 +391,10 @@ def plot_pre_series(data_folder, station_no):
     # plot yearly data
     yearly_pre = tem_series.groupby(['Year'])['pre20_20'].apply(sum)
     axes = yearly_pre.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
+    # axes[0].set_xticklabels('x',fontsize=16)
+    axes[0].set_xlabel('Years', fontsize=16)
+    plt.tick_params(axis='both', which='major', labelsize=16)
+    plt.title('Annual precipitation',fontsize=16)
 
 
     # df.set_index('date').plot()
