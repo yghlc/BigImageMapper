@@ -37,6 +37,7 @@ import seaborn as sns
 
 import statsmodels.api as sm    # for linear regression
 
+import matplotlib.ticker as ticker
 
 def read_data_series(station_no, txt_list):
     '''
@@ -387,26 +388,34 @@ def plot_pre_series(data_folder, station_no):
     # axes = year_month_s_days.plot(x=tem_series.index, y=cols_plot, marker='.', alpha=0.9, linestyle='None', figsize=(21, 16), subplots=True)
     axes = year_month_s_days.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
 
-    axes[0].set_xlabel('Years, Month', fontsize=16)
-    # plt.tick_params(axis='both', which='major', labelsize=16)
-    plt.title('Monthly precipitation',fontsize=16)
+    interval = 6 # very six tick
+    axes[0].set_ylabel('Monthly precipitation (mm)', fontsize=20)
+    axes[0].set_xlabel('Year, Month', fontsize=20)
+    plt.tick_params(axis='both', which='major', labelsize=20,length=8)
+    axes[0].xaxis.set_major_locator(ticker.MultipleLocator(interval))
+
+    seq = axes[0].xaxis.get_major_formatter().seq
+    axes[0].xaxis.set_major_formatter(ticker.FixedFormatter([""] + seq[::interval]))
+    # plt.title('Monthly precipitation',fontsize=20)
+    axes[0].set_title("")
 
     ######
-    # plot yearly data
+    # # plot yearly data
     # yearly_pre = tem_series.groupby(['Year'])['pre20_20'].apply(sum)
     # axes = yearly_pre.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
-
-    ## axes[0].set_xticklabels('x',fontsize=16)
-    # axes[0].set_xlabel('Years', fontsize=16)
-    # plt.tick_params(axis='both', which='major', labelsize=16)
-    # plt.title('Annual precipitation',fontsize=16)
-
+    #
+    # # axes[0].set_xticklabels('x',fontsize=16)
+    # axes[0].set_ylabel('Annual precipitation (mm)', fontsize=20)
+    # axes[0].set_xlabel('Year', fontsize=20)
+    # plt.tick_params(axis='both', which='major', labelsize=20)
+    # # plt.title('Annual precipitation',fontsize=16)
+    # axes[0].set_title("")
 
     # df.set_index('date').plot()
     # df.plot(x='date', y='brightness')
     # plt.show()
     output = 'fig_' + str(np.random.randint(1, 10000)) + '.png'
-    plt.savefig(output, bbox_inches="tight")  # dpi=200, ,dpi=300
+    plt.savefig(output, bbox_inches="tight",dpi=300)  # dpi=200, ,dpi=300
 
     # sns.regplot(x='date', y="mean_air_tem", data=tem_series);
 
