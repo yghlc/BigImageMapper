@@ -13,8 +13,12 @@ upcodes.sh
 
 imgdir=~/Data/Qinghai-Tibet/beiluhe/modis_snow_cover
 
-./plot_snowcover_timeseries.py ${imgdir}/beiluhe_MOD10A1_2000to2013.tif ${imgdir}/beiluhe_MYD10A1_2000to2013.tif
 
+#./plot_snowcover_timeseries.py ${imgdir}/beiluhe_MOD10A1_2000to2013.tif ${imgdir}/beiluhe_MYD10A1_2000to2013.tif
+
+# for a smaller extent (GooImgExt: Google image extent)
+./plot_snowcover_timeseries.py ${imgdir}/GooImgExt/beiluhe_MOD10A1_2000to2013-GooImgExt.tif \
+${imgdir}/GooImgExt/beiluhe_MYD10A1_2000to2013-GooImgExt.tif
 
 
 

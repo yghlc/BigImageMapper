@@ -399,9 +399,11 @@ def save_year_monthly_days(mod_snow_file,snow_series_list, width, height):
 
     # print(snow_days_list[0].head(1000))
     src_image = rasterio.open(mod_snow_file)
-    save_folder = 'beiluhe_monthly_snow_days'
+    # save_folder = 'beiluhe_monthly_snow_days'
+    save_folder = 'beiluhe_monthly_snow_days_GooImgExt'
     os.system('mkdir -p '+save_folder)
-    vis_folder = 'vis_beiluhe_monthly_snow_days'
+    # vis_folder = 'vis_beiluhe_monthly_snow_days'
+    vis_folder = 'vis_beiluhe_monthly_snow_days_GooImgExt'
     os.system('mkdir -p ' + vis_folder)
 
     # save image month by month
@@ -452,8 +454,10 @@ def save_yearly_days(mod_snow_file, snow_series_list, width, height):
     # print(snow_days_list[0].head(100))
 
     src_image = rasterio.open(mod_snow_file)
-    save_folder = 'beiluhe_yearly_snow_days'
-    vis_folder = 'vis_beiluhe_yearly_snow_days'
+    # save_folder = 'beiluhe_yearly_snow_days'
+    # vis_folder = 'vis_beiluhe_yearly_snow_days'
+    save_folder = 'beiluhe_yearly_snow_days_GooImgExt'
+    vis_folder = 'vis_beiluhe_yearly_snow_days_GooImgExt'
     os.system('mkdir -p '+save_folder)
     os.system('mkdir -p ' + vis_folder)
 
