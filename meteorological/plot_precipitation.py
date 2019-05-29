@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-# Filename: plot_snow_timeseries.py
+# Filename: plot_precipitation.py
 """
-introduction: plot the time series of air temperature
+introduction: plot the time series of precipitation
 
 authors: Huang Lingcao
 email:huanglingcao@gmail.com
