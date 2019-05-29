@@ -191,7 +191,9 @@ for loc, date in zip(x_date, date_list):
         # print(loc,date)
         x_tick_loc.append(loc)
         x_labels.append(date.split('-')[0])
-
+# add 2013
+x_tick_loc.append(len(date_list))
+x_labels.append('2013')
 print(x_tick_loc)
 print(x_labels)
 
