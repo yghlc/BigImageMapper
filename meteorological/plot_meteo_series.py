@@ -118,6 +118,19 @@ def read_precipitation_series(data_folder, station_no):
 
     return date_list_new, mean_pre_new, max_pre_new, min_pre_new
 
+def save2txt(time_series, output,column_name=None):
+
+    with open(output,'w') as txt_obj:
+        # print('start')
+        x_list = time_series.index.values
+        y_list = time_series.values
+        # print(x_list)
+        # print(y_list)
+        for index, value in zip(x_list,y_list):
+            txt_obj.writelines('%s : %f \n'%(str(index),value))
+
+
+    pass
 
 def plot_air_tem_series(data_folder, station_no):
     '''
@@ -381,23 +394,23 @@ def plot_pre_series(data_folder, station_no):
 
     ######
     # plot monthly data
-    tem_series['Year'] = tem_series.index.year
-    tem_series['Month'] = tem_series.index.month
-    cols_plot = ['pre20_20']
-    year_month_s_days = tem_series.groupby(['Year', 'Month'])['pre20_20'].apply(sum)
-    # axes = year_month_s_days.plot(x=tem_series.index, y=cols_plot, marker='.', alpha=0.9, linestyle='None', figsize=(21, 16), subplots=True)
-    axes = year_month_s_days.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
-
-    interval = 6 # very six tick
-    axes[0].set_ylabel('Monthly precipitation (mm)', fontsize=20)
-    axes[0].set_xlabel('Year, Month', fontsize=20)
-    plt.tick_params(axis='both', which='major', labelsize=20,length=8)
-    axes[0].xaxis.set_major_locator(ticker.MultipleLocator(interval))
-
-    seq = axes[0].xaxis.get_major_formatter().seq
-    axes[0].xaxis.set_major_formatter(ticker.FixedFormatter([""] + seq[::interval]))
-    # plt.title('Monthly precipitation',fontsize=20)
-    axes[0].set_title("")
+    # tem_series['Year'] = tem_series.index.year
+    # tem_series['Month'] = tem_series.index.month
+    # cols_plot = ['pre20_20']
+    # year_month_s_days = tem_series.groupby(['Year', 'Month'])['pre20_20'].apply(sum)
+    # # axes = year_month_s_days.plot(x=tem_series.index, y=cols_plot, marker='.', alpha=0.9, linestyle='None', figsize=(21, 16), subplots=True)
+    # axes = year_month_s_days.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
+    #
+    # interval = 6 # very six tick
+    # axes[0].set_ylabel('Monthly precipitation (mm)', fontsize=20)
+    # axes[0].set_xlabel('Year, Month', fontsize=20)
+    # plt.tick_params(axis='both', which='major', labelsize=20,length=8)
+    # axes[0].xaxis.set_major_locator(ticker.MultipleLocator(interval))
+    #
+    # seq = axes[0].xaxis.get_major_formatter().seq
+    # axes[0].xaxis.set_major_formatter(ticker.FixedFormatter([""] + seq[::interval]))
+    # # plt.title('Monthly precipitation',fontsize=20)
+    # axes[0].set_title("")
 
     ######
     # # plot yearly data
@@ -411,11 +424,53 @@ def plot_pre_series(data_folder, station_no):
     # # plt.title('Annual precipitation',fontsize=16)
     # axes[0].set_title("")
 
+
+
+    #################
+    ## plot yearly, monthly together
+    tem_series['Year'] = tem_series.index.year
+    tem_series['Month'] = tem_series.index.month
+    cols_plot = ['pre20_20']
+    year_month_s_days = tem_series.groupby(['Year', 'Month'])['pre20_20'].apply(sum)
+    yearly_pre = tem_series.groupby(['Year'])['pre20_20'].apply(sum)
+    # axes = year_month_s_days.plot(x=tem_series.index, y=cols_plot, marker='.', alpha=0.9, linestyle='None', figsize=(21, 16), subplots=True)
+    # axes = year_month_s_days.plot.bar(x=tem_series.index, y=cols_plot, figsize=(21, 16), subplots=True)
+
+    # save2txt(year_month_s_days, 'year_month_s_days.txt')
+    save2txt(yearly_pre, 'yearly_pre.txt')
+
+    # print(yearly_pre)
+    # plt.scatter(yearly_pre.index, yearly_pre)
+    # tem_series.plot(style='.')
+
+    # df = yearly_pre.to_frame()
+    # print(df)
+    # df.plot(kind='scatter', x='Year', y='pre20_20')
+
+    # print(year_month_s_days.index)
+    # print(year_month_s_days)
+    # plt.scatter(year_month_s_days.index, year_month_s_days)
+    # plt.show()
+
+    # axes  =  pd.DataFrame.plot.scatter(tem_series.index, year_month_s_days)
+    #
+    # interval = 6 # very six tick
+    # axes[0].set_ylabel('Monthly precipitation (mm)', fontsize=20)
+    # axes[0].set_xlabel('Year, Month', fontsize=20)
+    # plt.tick_params(axis='both', which='major', labelsize=20,length=8)
+    # axes[0].xaxis.set_major_locator(ticker.MultipleLocator(interval))
+    #
+    # seq = axes[0].xaxis.get_major_formatter().seq
+    # axes[0].xaxis.set_major_formatter(ticker.FixedFormatter([""] + seq[::interval]))
+    # # plt.title('Monthly precipitation',fontsize=20)
+    # axes[0].set_title("")
+
+
     # df.set_index('date').plot()
     # df.plot(x='date', y='brightness')
     # plt.show()
-    output = 'fig_' + str(np.random.randint(1, 10000)) + '.png'
-    plt.savefig(output, bbox_inches="tight",dpi=300)  # dpi=200, ,dpi=300
+    # output = 'fig_' + str(np.random.randint(1, 10000)) + '.png'
+    # plt.savefig(output, bbox_inches="tight",dpi=300)  # dpi=200, ,dpi=300
 
     # sns.regplot(x='date', y="mean_air_tem", data=tem_series);
 
