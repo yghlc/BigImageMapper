@@ -124,13 +124,24 @@ def save2txt(time_series, output,column_name=None):
         # print('start')
         x_list = time_series.index.values
         y_list = time_series.values
-        # print(x_list)
+        print(x_list)
         # print(y_list)
         for index, value in zip(x_list,y_list):
             txt_obj.writelines('%s : %f \n'%(str(index),value))
 
-
     pass
+
+def save_daily_tem2txt(time_series, output):
+
+    with open(output,'w') as txt_obj:
+        # print('start')
+        x_list = time_series.index.values
+        y_list = time_series.values
+        print(x_list)
+        # print(y_list)
+        for index, value in zip(x_list,y_list):
+            txt_obj.writelines('%s * %f \n'%(str(index),value[0]))
+
 
 def plot_air_tem_series(data_folder, station_no):
     '''
@@ -215,6 +226,9 @@ def plot_air_tem_series(data_folder, station_no):
     # axes.set_ylim(-35, 10)
     # axes.set_ylim(-5,5)
     print(max(predictions) - min(predictions))
+
+    #
+    save_daily_tem2txt(tem_series,'daily_mean_air_tem.txt')
 
     # cols_plot = ['mean_air_tem', 'max_air_tem','min_air_tem']
     # ylim_list = [(-30,20), (-20,30), (-35,10) ]
