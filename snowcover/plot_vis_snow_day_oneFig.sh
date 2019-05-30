@@ -47,10 +47,19 @@ set -eE -o functrace
 #dir=~/Data/Qinghai-Tibet/beiluhe/modis_snow_cover/beiluhe_monthly_snow_days_GooImgExt/Aug2003to2012
 #output=snow_days_August2003to2012.tif
 
-dir=~/Data/Qinghai-Tibet/beiluhe/modis_snow_cover/beiluhe_monthly_snow_days_GooImgExt/Sep2003to2012
-output=snow_days_September2003to2012.tif
+#dir=~/Data/Qinghai-Tibet/beiluhe/modis_snow_cover/beiluhe_monthly_snow_days_GooImgExt/Sep2003to2012
+#output=snow_days_September2003to2012.tif
+
+##################
+# draw three month together
+for folder in JanFebMar2003to2012 AprMayJun2003to2012 JulAugSep2003to2012 OctNovDec2003to2012; do
+
+dir=~/Data/Qinghai-Tibet/beiluhe/modis_snow_cover/beiluhe_monthly_snow_days_GooImgExt/${folder}
+output=snow_days_${folder}.png
 
 ./plot_vis_snow_day.py $(find ${dir}/*.tif) -o ${output}
+
+done
 
 
 

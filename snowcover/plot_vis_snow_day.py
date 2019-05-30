@@ -98,7 +98,7 @@ def draw_multi_snow_days(snow_days_file_list, output):
     #
     # # for yearly
     min_val = 0
-    max_val = 30
+    max_val = 70
     norm = colors.Normalize(min_val, max_val)
     # my_cmap.set_over((1, 1, 1))  # set the color greater than max_val
     # my_cmap.set_under((0, 0, 0))  # set the color less than min_val
@@ -113,7 +113,7 @@ def draw_multi_snow_days(snow_days_file_list, output):
 
         # plot_one_figure(ax, file_name, colormap=my_cmap, min_val=0, max_val=30, top_label=top_labels[idx])
 
-        im_shown = plot_one_figure(ax, file_name, colormap=my_cmap, min_val=0, max_val=30, top_label=top_labels[idx])
+        im_shown = plot_one_figure(ax, file_name, colormap=my_cmap, min_val=min_val, max_val=max_val, top_label=top_labels[idx])
 
         # break
 
