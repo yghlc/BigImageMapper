@@ -131,7 +131,7 @@ for i in range(len(X)):
 # plot curve over original data
 # pyplot.plot(series.values)
 # pyplot.plot(curve, color='red', linewidth=3)
-print('max and min diff:',max(poly_trend) - min(poly_trend))
+print('max and min diff:',poly_trend[-1] - poly_trend[0])
 print('Linear trend mean:', np.mean(np.array(poly_trend)))
 plt.plot(x_date,poly_trend,'-b',linewidth=2,markersize=5,label='Linear trend')
 
