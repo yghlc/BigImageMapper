@@ -43,7 +43,7 @@ function crop_beiluhe() {
 #    crop_beiluhe $tif
 #done
 
-#crop_beiluhe 20190523/20190523_3B_AnalyticMS_SR_mosaic_8bit_rgb_sharpen.tif
+crop_beiluhe 20190523/20190523_3B_AnalyticMS_SR_mosaic_8bit_rgb_sharpen.tif
 #
 #crop_beiluhe ../beiluhe_basin/201707/20170719_3B_AnalyticMS_SR_mosaic_8bit_rgb_sharpen.tif
 #
