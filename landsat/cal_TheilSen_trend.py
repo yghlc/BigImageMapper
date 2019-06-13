@@ -279,7 +279,21 @@ def cal_Theilsen_trend(date_string_list,arrays_list):
     ncount, height, width = obser_value.shape
 
     # calcuate trend
-    # for
+    output = np.zeros((4,height, width)) # slope, lower slope, upper slope, and intercept
+    for row in range(height):
+        for col in range(width):
+
+            x = np.array(date_num) #date_num.copy()
+            y = obser_value[:,row, col]
+
+            # remove nan value
+            not_nan_loc = np.logical_not(np.isnan(y))
+            x = x[not_nan_loc]
+            y = y[not_nan_loc]
+
+            # perform calculation
+
+            test = 1
 
 
 
