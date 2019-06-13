@@ -243,21 +243,13 @@ def filter_time_series_by_month(date_string_list, arrays_list, keep_month):
 
     return out_date_string_list, out_arrays_list
 
-def remove_nan_points(msi_str_list, image_date_list):
-    # # remove non-data "nan"
-    # tmp_list = [(float(item), date_str) for item,date_str in zip(msi_str_list,image_date_list)  ] # if item != 'nan'
-    #
-    # msi_list = [item[0] for item in tmp_list]       # float
-    # date_list = [item[1] for item in tmp_list]      # string
-    #
-    # return msi_list, date_list
-    pass
 
-def cal_Theilsen_trend(date_string_list,arrays_list):
+def cal_Theilsen_trend(date_string_list,arrays_list,confidence_inter=0.9):
     '''
     calculate Theil sen trend
     :param date_string_list: 2d list, contains date string
     :param arrays_list: 1d list, contains arrays
+    :param confidence_inter: the conficence interval, notes: 0.1 and 0.9 have the same output
     :return: a numpy array of trend
     '''
 
@@ -279,7 +271,7 @@ def cal_Theilsen_trend(date_string_list,arrays_list):
     ncount, height, width = obser_value.shape
 
     # calcuate trend
-    output = np.zeros((4,height, width)) # slope, lower slope, upper slope, and intercept
+    output_trend = np.zeros((4,height, width)) # slope, lower slope, upper slope, and intercept
     for row in range(height):
         for col in range(width):
 
@@ -291,17 +283,27 @@ def cal_Theilsen_trend(date_string_list,arrays_list):
             x = x[not_nan_loc]
             y = y[not_nan_loc]
 
+
             # perform calculation
+            constant, slope, lower_slope, upper_slope = TheilSen_regression(x,y,confidence_inter)
 
-            test = 1
+            # test on np median: difference between np.median and the index-based median.
+            # because when numpy will average the terms in the middle if total no. of terms are even
+            y_median_idx = np.argsort(y)[len(y) // 2]
+            # print('median x',np.median(x),'median y',np.median(y),'median x, y',x[y_median_idx],y[y_median_idx])
+
+            intercept = y[y_median_idx] -  slope*x[y_median_idx]
+
+            output_trend[0, row, col] = slope
+            output_trend[1, row, col] = lower_slope
+            output_trend[2, row, col] = upper_slope
+            output_trend[3, row, col] = intercept
+
+            # test = 1
 
 
+    return output_trend.astype(np.float32)
 
-    pass
-
-
-
-    pass
 
 def main(options, args):
 
@@ -330,8 +332,8 @@ def main(options, args):
     # print(date_int)
 
     # test
-    # aoi = (300,250,600,300)  # (xoff, yoff ,xsize, ysize) in pixels
-    aoi = (300, 250, 10, 20)
+    aoi = (300,250,600,300)  # (xoff, yoff ,xsize, ysize) in pixels
+    # aoi = (300, 250, 10, 20)
     # band_index = [1,2,3]    # for test
     band_index = None
     date_string_list, arrays_list = read_aoi_data(brightness_files,brightness_date_str_list,aoi,bands=band_index)
@@ -350,7 +352,10 @@ def main(options, args):
     date_string_list,arrays_list = filter_time_series_by_month(date_string_list, arrays_list, keep_month)
 
     #calculate the trend
-    cal_Theilsen_trend(date_string_list,arrays_list)
+    trend = cal_Theilsen_trend(date_string_list,arrays_list,confidence_inter=0.95)
+
+    save_files=['trend.tif']
+    save_aoi_to_file(brightness_files[0], aoi, [trend], save_files)
 
     test = 1
 
