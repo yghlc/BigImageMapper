@@ -304,6 +304,56 @@ def cal_Theilsen_trend(date_string_list,arrays_list,confidence_inter=0.9):
 
     return output_trend.astype(np.float32)
 
+def cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,output):
+    '''
+    calculate the trend of one index
+    :param msi_files: multi spectural indces
+    :param aoi: the aoi window for calculation # (xoff, yoff ,xsize, ysize) in pixels
+    :param index_name: e.g., brightness
+    :param keep_month: the months for filtering index values, e.g., [7,8]
+    :param confidence: confidence interval for TheilSen regression
+    :param output: save path
+    :return:
+    '''
+    # read brightness values
+    brightness_files = get_msi_file_list(msi_files, index_name) #'brightness'
+
+    if len(brightness_files) < 1:
+        raise ValueError('input files do not contain %s'%index_name)
+
+    # brightness_files = brightness_files[1:2] # for test
+    brightness_date_str_list = get_date_string_list(brightness_files)
+    # b_date_str, b_value = read_time_series(brightness_files,brightness_date_str_list,x,y, xy_srs)
+
+    # for item in brightness_date_str_list:
+    #     for sub_item in item:
+    #         print(sub_item)
+
+    # date_int = [date_string_to_number(date_str) for date_str in brightness_date_str_list[0]]
+    # print(brightness_date_str_list[0])
+    # print(date_int)
+
+    band_index = None
+    date_string_list, arrays_list = read_aoi_data(brightness_files, brightness_date_str_list, aoi, bands=band_index)
+
+    # save the trend
+    # print(date_string_list)
+    # print(arrays_list)
+    # print(len(date_string_list))
+    # print(len(arrays_list))
+    # save_files = ['save_%d.tif'%idx for idx in range(len(brightness_files))]
+    # save_aoi_to_file(brightness_files[0],aoi,arrays_list,save_files)
+
+    # filter the months, only keep month 7 and 8.
+    date_string_list, arrays_list = filter_time_series_by_month(date_string_list, arrays_list, keep_month)
+
+    # calculate the trend
+    trend = cal_Theilsen_trend(date_string_list, arrays_list, confidence_inter=confidence)
+
+    save_files = [output]
+    save_aoi_to_file(brightness_files[0], aoi, [trend], save_files)
+
+    return True
 
 def main(options, args):
 
@@ -317,45 +367,25 @@ def main(options, args):
     # for file in msi_files:
     #     print(file)
 
-    # read brightness values
-    brightness_files = get_msi_file_list(msi_files,'brightness')
-    # brightness_files = brightness_files[1:2] # for test
-    brightness_date_str_list = get_date_string_list(brightness_files)
-    # b_date_str, b_value = read_time_series(brightness_files,brightness_date_str_list,x,y, xy_srs)
-
-    # for item in brightness_date_str_list:
-    #     for sub_item in item:
-    #         print(sub_item)
-
-    # date_int = [date_string_to_number(date_str) for date_str in brightness_date_str_list[0]]
-    # print(brightness_date_str_list[0])
-    # print(date_int)
-
     # test
-    aoi = (300,250,600,300)  # (xoff, yoff ,xsize, ysize) in pixels
+    aoi = (300, 250, 600, 300)  # (xoff, yoff ,xsize, ysize) in pixels
     # aoi = (300, 250, 10, 20)
     # band_index = [1,2,3]    # for test
-    band_index = None
-    date_string_list, arrays_list = read_aoi_data(brightness_files,brightness_date_str_list,aoi,bands=band_index)
 
-    # save the trend
-    # print(date_string_list)
-    # print(arrays_list)
-    # print(len(date_string_list))
-    # print(len(arrays_list))
-    # save_files = ['save_%d.tif'%idx for idx in range(len(brightness_files))]
-    # save_aoi_to_file(brightness_files[0],aoi,arrays_list,save_files)
+    valid_month = [7, 8]
+    confidence_inter = 0.95
 
+    cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif')
 
-    # filter the months, only keep month 7 and 8.
-    keep_month = [7,8]
-    date_string_list,arrays_list = filter_time_series_by_month(date_string_list, arrays_list, keep_month)
+    cal_trend_for_one_index(msi_files, aoi, 'greenness', valid_month, confidence_inter, 'greenness_trend.tif')
 
-    #calculate the trend
-    trend = cal_Theilsen_trend(date_string_list,arrays_list,confidence_inter=0.95)
+    cal_trend_for_one_index(msi_files, aoi, 'wetness', valid_month, confidence_inter, 'wetness_trend.tif')
 
-    save_files=['trend.tif']
-    save_aoi_to_file(brightness_files[0], aoi, [trend], save_files)
+    cal_trend_for_one_index(msi_files, aoi, 'NDVI', valid_month, confidence_inter, 'NDVI_trend.tif')
+
+    cal_trend_for_one_index(msi_files, aoi, 'NDWI', valid_month, confidence_inter, 'NDWI_trend.tif')
+
+    cal_trend_for_one_index(msi_files, aoi, 'NDMI', valid_month, confidence_inter, 'NDMI_trend.tif')
 
     test = 1
 
