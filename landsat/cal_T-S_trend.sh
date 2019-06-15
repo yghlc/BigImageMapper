@@ -26,23 +26,20 @@ function index_trend() {
 
     ./cal_TheilSen_trend.py ${input_tifs}  --name_index=${index_name}
 
-    gdal_merge.py -o beiluhe_${index_name}_trend  ${index_name}_trend_patches/*.tif
+    gdal_merge.py -o beiluhe_${index_name}_trend.tif  ${index_name}_trend_patches/*.tif
 
 }
 
 
 index_trend brightness
 
+index_trend greenness
 
+index_trend wetness
 
+index_trend NDVI
 
+index_trend NDWI
 
-    # cal_trend_for_one_index(msi_files, aoi, 'greenness', valid_month, confidence_inter, 'greenness_trend.tif')
-    #
-    # cal_trend_for_one_index(msi_files, aoi, 'wetness', valid_month, confidence_inter, 'wetness_trend.tif')
-    #
-    # cal_trend_for_one_index(msi_files, aoi, 'NDVI', valid_month, confidence_inter, 'NDVI_trend.tif')
-    #
-    # cal_trend_for_one_index(msi_files, aoi, 'NDWI', valid_month, confidence_inter, 'NDWI_trend.tif')
-    #
-    # cal_trend_for_one_index(msi_files, aoi, 'NDMI', valid_month, confidence_inter, 'NDMI_trend.tif')
+index_trend NDMI
+
