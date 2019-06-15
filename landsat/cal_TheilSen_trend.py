@@ -411,8 +411,10 @@ def main(options, args):
     # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
     theadPool = Pool(num_cores)       # multi processes
 
-    parameters_list = [(msi_files, aoi, 'brightness', valid_month, confidence_inter,'%d_brightness_trend.tif'%idx) for idx, aoi in enumerate(patch_boundary)]
-    results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
+    for idx, aoi in enumerate(patch_boundary):
+        print(idx, aoi)
+    # parameters_list = [(msi_files, aoi, 'brightness', valid_month, confidence_inter,'%d_brightness_trend.tif'%idx) for idx, aoi in enumerate(patch_boundary)]
+    # results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
 
     # cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif')
 
@@ -437,9 +439,9 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage, version="1.0 2019-4-14")
     parser.description = 'Introduction: calculate Theil-Sen Regression of landsat time series'
 
-    parser.add_option("-o", "--output",
-                      action="store", dest="output",
-                      help="the output file path")
+    parser.add_option("-o", "--outdir",
+                      action="store", dest="outdir",
+                      help="the output directory")
 
     # parser.add_option("-p", "--para",
     #                   action="store", dest="para_file",
