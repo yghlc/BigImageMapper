@@ -31,6 +31,12 @@ from plot_landsat_timeseries import get_date_string_list
 from plot_landsat_timeseries import get_msi_file_list
 from plot_landsat_timeseries import read_time_series
 
+import split_image
+from basic_src.RSImage import RSImageclass
+
+import multiprocessing
+from multiprocessing import Pool
+
 from scipy import stats
 
 def test_TheilSen():
@@ -357,7 +363,10 @@ def cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,outp
 
 def main(options, args):
 
-    msi_files = args
+    msi_files = args        # all images in this file should have the same width and height
+
+    if len(msi_files) < 1:
+        raise IOError('NO input images')
 
     # test_TheilSen()
 
@@ -375,17 +384,37 @@ def main(options, args):
     valid_month = [7, 8]
     confidence_inter = 0.95
 
-    cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif')
+    # split the image and label
+    img_obj = RSImageclass()
+    if img_obj.open(msi_files[0]) is False:
+        raise IOError('Open %s failed'%msi_files[0])
+    width = img_obj.GetWidth()
+    height = img_obj.GetHeight()
+    patch_w = 200
+    patch_h = 200
+    patch_boundary = split_image.sliding_window(width, height, patch_w, patch_h, 0, 0)  # boundary of patch (xoff,yoff ,xsize, ysize)
 
-    cal_trend_for_one_index(msi_files, aoi, 'greenness', valid_month, confidence_inter, 'greenness_trend.tif')
 
-    cal_trend_for_one_index(msi_files, aoi, 'wetness', valid_month, confidence_inter, 'wetness_trend.tif')
+    # use multiple thread
+    num_cores = multiprocessing.cpu_count()
+    print('number of thread %d'%num_cores)
+    # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
+    theadPool = Pool(num_cores)       # multi processes
 
-    cal_trend_for_one_index(msi_files, aoi, 'NDVI', valid_month, confidence_inter, 'NDVI_trend.tif')
+    parameters_list = [(msi_files, aoi, 'brightness', valid_month, confidence_inter,'%d_brightness_trend.tif'%idx) for idx, aoi in enumerate(patch_boundary)]
+    results = theadPool.map(cal_trend_for_one_index,parameters_list)
 
-    cal_trend_for_one_index(msi_files, aoi, 'NDWI', valid_month, confidence_inter, 'NDWI_trend.tif')
+    # cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif')
 
-    cal_trend_for_one_index(msi_files, aoi, 'NDMI', valid_month, confidence_inter, 'NDMI_trend.tif')
+    # cal_trend_for_one_index(msi_files, aoi, 'greenness', valid_month, confidence_inter, 'greenness_trend.tif')
+    #
+    # cal_trend_for_one_index(msi_files, aoi, 'wetness', valid_month, confidence_inter, 'wetness_trend.tif')
+    #
+    # cal_trend_for_one_index(msi_files, aoi, 'NDVI', valid_month, confidence_inter, 'NDVI_trend.tif')
+    #
+    # cal_trend_for_one_index(msi_files, aoi, 'NDWI', valid_month, confidence_inter, 'NDWI_trend.tif')
+    #
+    # cal_trend_for_one_index(msi_files, aoi, 'NDMI', valid_month, confidence_inter, 'NDMI_trend.tif')
 
     test = 1
 
