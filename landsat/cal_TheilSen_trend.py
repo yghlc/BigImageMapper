@@ -310,6 +310,16 @@ def cal_Theilsen_trend(date_string_list,arrays_list,confidence_inter=0.9):
 
     return output_trend.astype(np.float32)
 
+def cal_trend_for_one_index_parallel(parameters):
+    msi_files = parameters[0]
+    aoi = parameters[1]
+    index_name = parameters[2]
+    keep_month = parameters[3]
+    confidence = parameters[4]
+    output = parameters[5]
+    return cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,output)
+
+
 def cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,output):
     '''
     calculate the trend of one index
@@ -402,7 +412,7 @@ def main(options, args):
     theadPool = Pool(num_cores)       # multi processes
 
     parameters_list = [(msi_files, aoi, 'brightness', valid_month, confidence_inter,'%d_brightness_trend.tif'%idx) for idx, aoi in enumerate(patch_boundary)]
-    results = theadPool.map(cal_trend_for_one_index,parameters_list)
+    results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
 
     # cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif')
 
