@@ -22,14 +22,11 @@ sys.path.insert(0, codes_dir2)
 import datetime
 from astropy.time import Time
 import matplotlib.pyplot as plt
-import basic_src.RSImage as RSImage
-from msi_landsat8 import get_band_names  # get_band_names(img_path)
 
-import pandas as pd
+import basic_src.io_function as io_function
 
 from plot_landsat_timeseries import get_date_string_list
 from plot_landsat_timeseries import get_msi_file_list
-from plot_landsat_timeseries import read_time_series
 
 import split_image
 from basic_src.RSImage import RSImageclass
@@ -371,9 +368,12 @@ def cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,outp
 
     return True
 
+
 def main(options, args):
 
     msi_files = args        # all images in this file should have the same width and height
+    # output = options.output
+    name_index= options.name_index
 
     if len(msi_files) < 1:
         raise IOError('NO input images')
@@ -411,10 +411,14 @@ def main(options, args):
     # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
     theadPool = Pool(num_cores)       # multi processes
 
-    for idx, aoi in enumerate(patch_boundary):
-        print(idx, aoi)
-    # parameters_list = [(msi_files, aoi, 'brightness', valid_month, confidence_inter,'%d_brightness_trend.tif'%idx) for idx, aoi in enumerate(patch_boundary)]
-    # results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
+    # for idx, aoi in enumerate(patch_boundary):
+    #     print(idx, aoi)
+
+    tmp_dir = '%s_trend_patches'%name_index
+    parameters_list = [(msi_files, aoi, name_index, valid_month, confidence_inter, os.path.join(tmp_dir,'%d.tif'%idx))
+                       for idx, aoi in enumerate(patch_boundary)]
+    results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
+
 
     # cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif')
 
@@ -428,7 +432,7 @@ def main(options, args):
     #
     # cal_trend_for_one_index(msi_files, aoi, 'NDMI', valid_month, confidence_inter, 'NDMI_trend.tif')
 
-    test = 1
+    # test = 1
 
 
 
@@ -439,9 +443,13 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage, version="1.0 2019-4-14")
     parser.description = 'Introduction: calculate Theil-Sen Regression of landsat time series'
 
-    parser.add_option("-o", "--outdir",
-                      action="store", dest="outdir",
-                      help="the output directory")
+    parser.add_option("-o", "--output",
+                      action="store", dest="output",
+                      help="the output file path")
+
+    parser.add_option("-n", "--name_index",
+                      action="store", dest="name_index",
+                      help="the name of mult-spectral index")
 
     # parser.add_option("-p", "--para",
     #                   action="store", dest="para_file",
