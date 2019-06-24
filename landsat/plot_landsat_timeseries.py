@@ -221,6 +221,9 @@ def main(options, args):
 
     # print(msi_series.loc['2001-06'])
 
+    # group by year, and plot yearly maximum value
+    msi_series = msi_series.groupby(['Year']).apply(max) # ['pre20_20']
+
     # Use seaborn style defaults and set the default figure size
     # sns.set(rc={'figure.figsize': (21, 4)})
     # msi_series['brightness'].plot(marker='.',linestyle='None') #linewidth=1.5
