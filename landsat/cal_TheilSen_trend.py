@@ -284,7 +284,7 @@ def get_yearly_max_value_series(year_list, date_string_list, array_1d):
         nan_loc = np.isnan(max_list)
         mean = np.mean(max_list[np.logical_not(nan_loc)])
         max_list[nan_loc] = mean
-        basic.outputlogMessage('nan value encountered at year: %s, replace it by mean value'%str(year_list[nan_loc]))
+        basic.outputlogMessage('nan value encountered at year: %s, replace it by mean value'%str(np.array(year_list)[nan_loc]))
 
     return max_list
 
@@ -519,8 +519,8 @@ def main(options, args):
     #     print(file)
 
     # test
-    # aoi = (300, 250, 600, 300)  # (xoff, yoff ,xsize, ysize) in pixels
-    aoi = (300, 250, 10, 20)
+    aoi = (300, 250, 600, 300)  # (xoff, yoff ,xsize, ysize) in pixels
+    # aoi = (300, 250, 10, 20)
     # band_index = [1,2,3]    # for test
 
     valid_month = [7, 8]
@@ -538,21 +538,21 @@ def main(options, args):
 
 
     # use multiple thread
-    num_cores = multiprocessing.cpu_count()
-    print('number of thread %d'%num_cores)
-    # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
-    theadPool = Pool(num_cores)       # multi processes
+    # num_cores = multiprocessing.cpu_count()
+    # print('number of thread %d'%num_cores)
+    # # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
+    # theadPool = Pool(num_cores)       # multi processes
+    #
+    # # for idx, aoi in enumerate(patch_boundary):
+    # #     print(idx, aoi)
+    #
+    # tmp_dir = '%s_trend_patches'%name_index
+    # parameters_list = [(msi_files, aoi, name_index, valid_month, confidence_inter, os.path.join(tmp_dir,'%d.tif'%idx), annual_based)
+    #                    for idx, aoi in enumerate(patch_boundary)]
+    # results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
 
-    # for idx, aoi in enumerate(patch_boundary):
-    #     print(idx, aoi)
 
-    tmp_dir = '%s_trend_patches'%name_index
-    parameters_list = [(msi_files, aoi, name_index, valid_month, confidence_inter, os.path.join(tmp_dir,'%d.tif'%idx), annual_based)
-                       for idx, aoi in enumerate(patch_boundary)]
-    results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
-
-
-    # cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif',annual_based=annual_based)
+    cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif',annual_based=annual_based)
 
     # cal_trend_for_one_index(msi_files, aoi, 'greenness', valid_month, confidence_inter, 'greenness_trend.tif')
     #
