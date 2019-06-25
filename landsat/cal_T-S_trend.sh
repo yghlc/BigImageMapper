@@ -10,6 +10,7 @@
 # Exit immediately if a command exits with a non-zero status. E: error trace
 set -eE -o functrace
 
+code_dir=~/codes/PycharmProjects/Landuse_DL
 gee_msi_dir=~/Data/Qinghai-Tibet/beiluhe/beiluhe_landsat/landsat_multispectral_indices
 output_dir=./
 
@@ -24,7 +25,7 @@ function index_trend() {
     mkdir -p ${index_name}_trend_patches
     rm ${index_name}_trend_patches/* || true
 
-    ./cal_TheilSen_trend.py ${input_tifs}  --name_index=${index_name} --annual_based
+    ${code_dir}/landsat/cal_TheilSen_trend.py ${input_tifs}  --name_index=${index_name} --annual_based
 
     gdal_merge.py -o beiluhe_${index_name}_trend.tif  ${index_name}_trend_patches/*.tif
 
