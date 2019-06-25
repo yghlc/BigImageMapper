@@ -278,6 +278,7 @@ def get_yearly_max_value_series(year_list, date_string_list, array_1d):
         unique, counts = np.unique(is_nan, return_counts=True)
         nan_dict = dict(zip(unique, counts))
         if nan_dict[True] > len(year_list)/2:
+            basic.outputlogMessage('half of years in this pixel are nan, set as zero')
             return np.zeros(len(year_list))     # return zero
 
         nan_loc = np.isnan(max_list)
