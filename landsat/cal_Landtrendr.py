@@ -115,6 +115,8 @@ def main(options, args):
 
     # test = 1
 
+    ### ### ### ### haven\'t complete ### ### ### ### ### ###
+
 
 
 
@@ -122,7 +124,7 @@ def main(options, args):
 if __name__ == "__main__":
     usage = "usage: %prog [options] msi_file1 msi_file2 ..."
     parser = OptionParser(usage=usage, version="1.0 2019-4-14")
-    parser.description = 'Introduction: calculate Theil-Sen Regression of landsat time series'
+    parser.description = 'Introduction: haven\'t complete '
 
     parser.add_option("-o", "--output",
                       action="store", dest="output",
