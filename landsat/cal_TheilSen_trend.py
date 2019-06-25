@@ -282,7 +282,7 @@ def get_yearly_max_value_series(year_list, date_string_list, array_1d):
             return np.zeros(len(year_list))     # return zero
 
         nan_loc = np.isnan(max_list)
-        mean = max_list[np.logical_not(nan_loc)]
+        mean = np.mean(max_list[np.logical_not(nan_loc)])
         max_list[nan_loc] = mean
         basic.outputlogMessage('nan value encountered, replace it by mean value')
 
