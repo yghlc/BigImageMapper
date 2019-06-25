@@ -24,6 +24,7 @@ from astropy.time import Time
 import matplotlib.pyplot as plt
 
 import basic_src.io_function as io_function
+import basic_src.basic as basic
 
 from plot_landsat_timeseries import get_date_string_list
 from plot_landsat_timeseries import get_msi_file_list
@@ -216,6 +217,10 @@ def get_month(date_string,format='%Y-%m-%d'):
     date_obj = datetime.datetime.strptime(date_string, format)
     return date_obj.month
 
+def get_year(date_string,format='%Y-%m-%d'):
+    date_obj = datetime.datetime.strptime(date_string, format)
+    return date_obj.year
+
 def filter_time_series_by_month(date_string_list, arrays_list, keep_month):
     '''
     filter the data only keep particluar months
@@ -246,6 +251,114 @@ def filter_time_series_by_month(date_string_list, arrays_list, keep_month):
 
     return out_date_string_list, out_arrays_list
 
+def get_yearly_max_value_series(year_list, date_string_list, array_1d):
+    '''
+    get yearly maximum value from a series
+    :param date_string_list: date strings
+    :param array_1d:
+    :return:
+    '''
+
+    # create a dictionary
+    annual_values = {}
+    for year_int in year_list:
+        annual_values[year_int] = []
+
+    for date_str, value in zip(date_string_list,array_1d):
+        year_int = int(get_year(date_str))
+        annual_values[year_int].append(value)
+
+    # get the maximum values
+    max_list = np.array([ np.nanmax(annual_values[year])  for year in year_list ]) # np.nanmax get max ignore nan
+
+    # handle nodata: fill the nan value with mean
+    is_nan = np.isnan(max_list)
+    if True in is_nan:
+        nan_loc = np.isnan(max_list)
+        mean = max_list[np.logical_not(nan_loc)]
+        max_list[nan_loc] = mean
+        basic.outputlogMessage('')
+
+    return max_list
+
+
+def get_annual_values(date_string_list, arrays_list):
+    '''
+    get annual maximum value of time series
+    :param date_string_list: 2D list
+    :param arrays_list: a list contian 3D arrays
+    :return: year list, a 3D numpy array
+    '''
+
+    # 2d list to one 1D
+    date_strings = [ item for item_list in date_string_list for item in  item_list]
+
+    # get year list
+    year_list = []
+    for date_str in date_strings:
+        tmp = int(get_year(date_str))
+        if tmp not in year_list:
+            year_list.append(tmp)
+
+    year_list.sort()
+
+    obser_value = np.concatenate(arrays_list, axis=0)  # Join a sequence of arrays along an existing axis.
+
+    _, height, width = obser_value.shape
+
+    ncount = len(year_list)
+    # calcuate trend
+    out_values = np.zeros((ncount,height, width))
+
+    for row in range(height):
+        for col in range(width):
+            series_values = obser_value[:, row, col]
+            out_values[:, row, col] = get_yearly_max_value_series(year_list, date_strings, series_values)
+
+    return year_list, out_values
+
+def cal_Theilsen_trend_fix_length(year_list,obser_value, confidence_inter=0.9):
+    '''
+    calculate Theil sen trend
+    :param year_list: 1d list, for x value
+    :param obser_value: 3d nunpy array
+    :param confidence_inter: the confidence interval, notes: 0.1 and 0.9 have the same output
+    :return: a numpy array of trend
+    '''
+
+    date_num = year_list
+    ncount, height, width = obser_value.shape
+
+    # calcuate trend
+    output_trend = np.zeros((4,height, width)) # slope, lower slope, upper slope, and intercept
+    for row in range(height):
+        for col in range(width):
+
+            x = np.array(date_num) #date_num.copy()
+            y = obser_value[:,row, col]
+
+            # remove nan value (should already be removed in function: get_yearly_max_value_series)
+            # not_nan_loc = np.logical_not(np.isnan(y))
+            # x = x[not_nan_loc]
+            # y = y[not_nan_loc]
+
+
+            # perform calculation
+            constant, slope, lower_slope, upper_slope = TheilSen_regression(x,y,confidence_inter)
+
+            # test on np median: difference between np.median and the index-based median.
+            # because when numpy will average the terms in the middle if total no. of terms are even
+            y_median_idx = np.argsort(y)[len(y) // 2]
+            # print('median x',np.median(x),'median y',np.median(y),'median x, y',x[y_median_idx],y[y_median_idx])
+
+            intercept = y[y_median_idx] -  slope*x[y_median_idx]
+
+            output_trend[0, row, col] = slope
+            output_trend[1, row, col] = lower_slope
+            output_trend[2, row, col] = upper_slope
+            output_trend[3, row, col] = intercept
+
+    return output_trend.astype(np.float32)
 
 def cal_Theilsen_trend(date_string_list,arrays_list,confidence_inter=0.9):
     '''
@@ -314,18 +427,20 @@ def cal_trend_for_one_index_parallel(parameters):
     keep_month = parameters[3]
     confidence = parameters[4]
     output = parameters[5]
-    return cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,output)
+    annual_based = parameters[6]
+    return cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,output,annual_based=annual_based)
 
 
-def cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,output):
+def cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,output,annual_based=False):
     '''
     calculate the trend of one index
     :param msi_files: multi spectural indces
     :param aoi: the aoi window for calculation # (xoff, yoff ,xsize, ysize) in pixels
     :param index_name: e.g., brightness
-    :param keep_month: the months for filtering index values, e.g., [7,8]
+    :param keep_month: the months for filtering index values, e.g., [7,8], it will be ignored if annual_based is true
     :param confidence: confidence interval for TheilSen regression
     :param output: save path
+    :param annual_based: if true, then calculate the trend based on annual maximum value
     :return:
     '''
     # read brightness values
@@ -357,11 +472,19 @@ def cal_trend_for_one_index(msi_files, aoi,index_name,keep_month,confidence,outp
     # save_files = ['save_%d.tif'%idx for idx in range(len(brightness_files))]
     # save_aoi_to_file(brightness_files[0],aoi,arrays_list,save_files)
 
-    # filter the months, only keep month 7 and 8.
-    date_string_list, arrays_list = filter_time_series_by_month(date_string_list, arrays_list, keep_month)
+    trend = None
+    if annual_based is False:
+        # filter the months, only keep month 7 and 8.
+        date_string_list, arrays_list = filter_time_series_by_month(date_string_list, arrays_list, keep_month)
 
-    # calculate the trend
-    trend = cal_Theilsen_trend(date_string_list, arrays_list, confidence_inter=confidence)
+        # calculate the trend
+        trend = cal_Theilsen_trend(date_string_list, arrays_list, confidence_inter=confidence)
+    else:
+        # get annual-based value
+        year_list, annual_max_data = get_annual_values(date_string_list, arrays_list)
+
+        # calculate the trend
+        trend = cal_Theilsen_trend_fix_length(year_list,annual_max_data, confidence_inter=confidence)
 
     save_files = [output]
     save_aoi_to_file(brightness_files[0], aoi, [trend], save_files)
@@ -380,6 +503,8 @@ def main(options, args):
 
     # test_TheilSen()
 
+    annual_based = options.annual_based
+
     # sort the file to make
     msi_files = sorted(msi_files)
 
@@ -387,8 +512,8 @@ def main(options, args):
     #     print(file)
 
     # test
-    aoi = (300, 250, 600, 300)  # (xoff, yoff ,xsize, ysize) in pixels
-    # aoi = (300, 250, 10, 20)
+    # aoi = (300, 250, 600, 300)  # (xoff, yoff ,xsize, ysize) in pixels
+    aoi = (300, 250, 10, 20)
     # band_index = [1,2,3]    # for test
 
     valid_month = [7, 8]
@@ -405,22 +530,22 @@ def main(options, args):
     patch_boundary = split_image.sliding_window(width, height, patch_w, patch_h, 0, 0)  # boundary of patch (xoff,yoff ,xsize, ysize)
 
 
-    # use multiple thread
-    num_cores = multiprocessing.cpu_count()
-    print('number of thread %d'%num_cores)
-    # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
-    theadPool = Pool(num_cores)       # multi processes
+    # # use multiple thread
+    # num_cores = multiprocessing.cpu_count()
+    # print('number of thread %d'%num_cores)
+    # # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
+    # theadPool = Pool(num_cores)       # multi processes
+    #
+    # # for idx, aoi in enumerate(patch_boundary):
+    # #     print(idx, aoi)
+    #
+    # tmp_dir = '%s_trend_patches'%name_index
+    # parameters_list = [(msi_files, aoi, name_index, valid_month, confidence_inter, os.path.join(tmp_dir,'%d.tif'%idx), annual_based)
+    #                    for idx, aoi in enumerate(patch_boundary)]
+    # results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
 
-    # for idx, aoi in enumerate(patch_boundary):
-    #     print(idx, aoi)
 
-    tmp_dir = '%s_trend_patches'%name_index
-    parameters_list = [(msi_files, aoi, name_index, valid_month, confidence_inter, os.path.join(tmp_dir,'%d.tif'%idx))
-                       for idx, aoi in enumerate(patch_boundary)]
-    results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
-
-
-    # cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif')
+    cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif',annual_based=annual_based)
 
     # cal_trend_for_one_index(msi_files, aoi, 'greenness', valid_month, confidence_inter, 'greenness_trend.tif')
     #
@@ -450,6 +575,10 @@ if __name__ == "__main__":
     parser.add_option("-n", "--name_index",
                       action="store", dest="name_index",
                       help="the name of mult-spectral index")
+
+    parser.add_option("-a", "--annual_based",
+                      action="store_true", dest="annual_based", default=False,
+                      help="to indicate that use the maximum value of each year for calculating trend")
 
     # parser.add_option("-p", "--para",
     #                   action="store", dest="para_file",

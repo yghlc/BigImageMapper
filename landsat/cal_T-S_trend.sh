@@ -24,7 +24,7 @@ function index_trend() {
     mkdir -p ${index_name}_trend_patches
     rm ${index_name}_trend_patches/* || true
 
-    ./cal_TheilSen_trend.py ${input_tifs}  --name_index=${index_name}
+    ./cal_TheilSen_trend.py ${input_tifs}  --name_index=${index_name} --annual_based
 
     gdal_merge.py -o beiluhe_${index_name}_trend.tif  ${index_name}_trend_patches/*.tif
 
