@@ -42,7 +42,7 @@ function extract_one_band() {
 }
 
 # compose a six band file contianing the first trend slope
-band_index=4
+band_index=1
 tmp_dir=band_${band_index}
 mkdir -p ${tmp_dir}
 rm ${tmp_dir}/* || true
