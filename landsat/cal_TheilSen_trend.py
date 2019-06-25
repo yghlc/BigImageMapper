@@ -269,15 +269,21 @@ def get_yearly_max_value_series(year_list, date_string_list, array_1d):
         annual_values[year_int].append(value)
 
     # get the maximum values
-    max_list = np.array([ np.nanmax(annual_values[year])  for year in year_list ]) # np.nanmax get max ignore nan
+    max_list = np.array([ np.nanmax(annual_values[year]) for year in year_list ]) # np.nanmax get max ignore nan
 
     # handle nodata: fill the nan value with mean
     is_nan = np.isnan(max_list)
     if True in is_nan:
+        # if half of the year has nan value, then ignore this pixel
+        unique, counts = np.unique(is_nan, return_counts=True)
+        nan_dict = dict(zip(unique, counts))
+        if nan_dict[True] > len(year_list)/2:
+            return np.zeros(len(year_list))     # return zero
+
         nan_loc = np.isnan(max_list)
         mean = max_list[np.logical_not(nan_loc)]
         max_list[nan_loc] = mean
-        basic.outputlogMessage('')
+        basic.outputlogMessage('nan value encountered, replace it by mean value')
 
     return max_list
 
