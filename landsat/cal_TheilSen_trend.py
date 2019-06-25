@@ -530,22 +530,22 @@ def main(options, args):
     patch_boundary = split_image.sliding_window(width, height, patch_w, patch_h, 0, 0)  # boundary of patch (xoff,yoff ,xsize, ysize)
 
 
-    # # use multiple thread
-    # num_cores = multiprocessing.cpu_count()
-    # print('number of thread %d'%num_cores)
-    # # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
-    # theadPool = Pool(num_cores)       # multi processes
-    #
-    # # for idx, aoi in enumerate(patch_boundary):
-    # #     print(idx, aoi)
-    #
-    # tmp_dir = '%s_trend_patches'%name_index
-    # parameters_list = [(msi_files, aoi, name_index, valid_month, confidence_inter, os.path.join(tmp_dir,'%d.tif'%idx), annual_based)
-    #                    for idx, aoi in enumerate(patch_boundary)]
-    # results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
+    # use multiple thread
+    num_cores = multiprocessing.cpu_count()
+    print('number of thread %d'%num_cores)
+    # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
+    theadPool = Pool(num_cores)       # multi processes
+
+    # for idx, aoi in enumerate(patch_boundary):
+    #     print(idx, aoi)
+
+    tmp_dir = '%s_trend_patches'%name_index
+    parameters_list = [(msi_files, aoi, name_index, valid_month, confidence_inter, os.path.join(tmp_dir,'%d.tif'%idx), annual_based)
+                       for idx, aoi in enumerate(patch_boundary)]
+    results = theadPool.map(cal_trend_for_one_index_parallel,parameters_list)
 
 
-    cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif',annual_based=annual_based)
+    # cal_trend_for_one_index(msi_files, aoi, 'brightness', valid_month, confidence_inter, 'brightness_trend.tif',annual_based=annual_based)
 
     # cal_trend_for_one_index(msi_files, aoi, 'greenness', valid_month, confidence_inter, 'greenness_trend.tif')
     #
