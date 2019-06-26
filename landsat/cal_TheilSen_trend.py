@@ -272,30 +272,31 @@ def get_yearly_max_value_series(year_list, date_string_list, array_1d):
     max_list = np.array([ np.nanmax(annual_values[year]) for year in year_list ]) # np.nanmax get max ignore nan
 
     # handle nodata: fill the nan value with mean
-    is_nan = np.isnan(max_list)
-    if True in is_nan:
-        # if half of the year has nan value, then ignore this pixel
-        unique, counts = np.unique(is_nan, return_counts=True)
-        nan_dict = dict(zip(unique, counts))
-        if nan_dict[True] > len(year_list)/2:
-            basic.outputlogMessage('half of years in this pixel are nan, set as zero')
-            return year_list, np.zeros(len(year_list))     # return zero
-
-
-        nan_loc = np.isnan(max_list)
-
-        # replace the nan value by mean values
-        # mean = np.mean(max_list[np.logical_not(nan_loc)])
-        # max_list[nan_loc] = mean
-        # basic.outputlogMessage('nan value encountered at year: %s, replace it by mean value'%str(np.array(year_list)[nan_loc]))
-
-        # remove the nan values
-        not_nan_loc = np.logical_not(nan_loc)
-        year_list_rm_nan = np.array(year_list)[not_nan_loc]
-        max_list_nan = max_list[not_nan_loc]
-        basic.outputlogMessage('remove nan value at year: %s' % str(np.array(year_list)[nan_loc]))
-
-        return year_list_rm_nan, max_list_nan
+    # update on 26 June, remove nan value just before calculating TheilSen trend
+    # is_nan = np.isnan(max_list)
+    # if True in is_nan:
+    #     # if half of the year has nan value, then ignore this pixel
+    #     unique, counts = np.unique(is_nan, return_counts=True)
+    #     nan_dict = dict(zip(unique, counts))
+    #     if nan_dict[True] > len(year_list)/2:
+    #         basic.outputlogMessage('half of years in this pixel are nan, set as zero')
+    #         return year_list, np.zeros(len(year_list))     # return zero
+    #
+    #
+    #     nan_loc = np.isnan(max_list)
+    #
+    #     # replace the nan value by mean values
+    #     # mean = np.mean(max_list[np.logical_not(nan_loc)])
+    #     # max_list[nan_loc] = mean
+    #     # basic.outputlogMessage('nan value encountered at year: %s, replace it by mean value'%str(np.array(year_list)[nan_loc]))
+    #
+    #     # remove the nan values
+    #     not_nan_loc = np.logical_not(nan_loc)
+    #     year_list_rm_nan = np.array(year_list)[not_nan_loc]
+    #     max_list_nan = max_list[not_nan_loc]
+    #     basic.outputlogMessage('remove nan value at year: %s' % str(np.array(year_list)[nan_loc]))
+    #
+    #     return year_list_rm_nan, max_list_nan
 
     return year_list, max_list
 
@@ -355,10 +356,10 @@ def cal_Theilsen_trend_fix_length(year_list,obser_value, confidence_inter=0.9):
             x = np.array(date_num) #date_num.copy()
             y = obser_value[:,row, col]
 
-            # remove nan value (should already be removed in function: get_yearly_max_value_series)
-            # not_nan_loc = np.logical_not(np.isnan(y))
-            # x = x[not_nan_loc]
-            # y = y[not_nan_loc]
+            # remove nan value (could already be removed in function: get_yearly_max_value_series)
+            not_nan_loc = np.logical_not(np.isnan(y))
+            x = x[not_nan_loc]
+            y = y[not_nan_loc]
 
 
             # perform calculation
