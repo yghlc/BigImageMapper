@@ -291,7 +291,7 @@ def get_yearly_max_value_series(year_list, date_string_list, array_1d):
 
         # remove the nan values
         not_nan_loc = np.logical_not(nan_loc)
-        year_list_rm_nan = year_list[not_nan_loc]
+        year_list_rm_nan = np.array(year_list)[not_nan_loc]
         max_list_nan = max_list[not_nan_loc]
         basic.outputlogMessage('remove nan value at year: %s' % str(np.array(year_list)[nan_loc]))
 
