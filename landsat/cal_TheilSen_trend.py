@@ -269,7 +269,9 @@ def get_yearly_max_value_series(year_list, date_string_list, array_1d):
         annual_values[year_int].append(value)
 
     # get the maximum values
-    max_list = np.array([ np.nanmax(annual_values[year]) for year in year_list ]) # np.nanmax get max ignore nan
+    # max_list = np.array([ np.nanmax(annual_values[year]) for year in year_list ]) # np.nanmax get max ignore nan
+    # get median value
+    max_list = np.array([np.nanmedian(annual_values[year]) for year in year_list])
 
     # handle nodata: fill the nan value with mean
     # update on 26 June, remove nan value just before calculating TheilSen trend
