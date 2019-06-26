@@ -33,14 +33,14 @@ function index_trend() {
 
 
 index_trend brightness
-
-index_trend greenness
-
-index_trend wetness
-
-index_trend NDVI
-
-index_trend NDWI
-
-index_trend NDMI
+#
+#index_trend greenness
+#
+#index_trend wetness
+#
+#index_trend NDVI
+#
+#index_trend NDWI
+#
+#index_trend NDMI
 
