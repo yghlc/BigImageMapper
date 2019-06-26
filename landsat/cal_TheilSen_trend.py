@@ -279,14 +279,23 @@ def get_yearly_max_value_series(year_list, date_string_list, array_1d):
         nan_dict = dict(zip(unique, counts))
         if nan_dict[True] > len(year_list)/2:
             basic.outputlogMessage('half of years in this pixel are nan, set as zero')
-            return np.zeros(len(year_list))     # return zero
+            return year_list, np.zeros(len(year_list))     # return zero
+
 
         nan_loc = np.isnan(max_list)
-        mean = np.mean(max_list[np.logical_not(nan_loc)])
-        max_list[nan_loc] = mean
-        basic.outputlogMessage('nan value encountered at year: %s, replace it by mean value'%str(np.array(year_list)[nan_loc]))
 
-    return max_list
+        # replace the nan value by mean values
+        # mean = np.mean(max_list[np.logical_not(nan_loc)])
+        # max_list[nan_loc] = mean
+        # basic.outputlogMessage('nan value encountered at year: %s, replace it by mean value'%str(np.array(year_list)[nan_loc]))
+
+        # remove the nan values
+        not_nan_loc = np.logical_not(nan_loc)
+        year_list_rm_nan = year_list[not_nan_loc]
+        max_list_nan = max_list[not_nan_loc]
+        return year_list_rm_nan, max_list_nan
+
+    return year_list, max_list
 
 
 def get_annual_values(date_string_list, arrays_list):
@@ -320,7 +329,7 @@ def get_annual_values(date_string_list, arrays_list):
     for row in range(height):
         for col in range(width):
             series_values = obser_value[:, row, col]
-            out_values[:, row, col] = get_yearly_max_value_series(year_list, date_strings, series_values)
+            year_list, out_values[:, row, col] = get_yearly_max_value_series(year_list, date_strings, series_values)
 
     return year_list, out_values
 
