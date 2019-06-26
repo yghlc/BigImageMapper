@@ -16,6 +16,7 @@ output_dir=./
 
 input_tifs=$(ls ${gee_msi_dir}/*.tif)
 
+SECONDS=0
 
 # calculate a trend of one index
 function index_trend() {
@@ -44,3 +45,6 @@ index_trend brightness
 #
 #index_trend NDMI
 
+
+duration=$SECONDS
+echo "$(date): time cost of calculating trends: ${duration} seconds">>"time_cost.txt"
