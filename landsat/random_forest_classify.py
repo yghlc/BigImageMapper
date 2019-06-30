@@ -28,7 +28,11 @@ sys.path.insert(0, codes_dir2)
 import basic_src.basic as basic
 import numpy as np
 
-model_saved_path = "sk_svm_trained.pkl"
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.externals import joblib  # save and load model
+from sklearn import model_selection
+
+model_saved_path = "sk_rf_trained.pkl"
 scaler_saved_path = "scaler_saved.pkl"
 
 def example_rf():
@@ -219,12 +223,98 @@ class classify_pix_operation_rf(classify_pix_operation):
     def __init__(self):
         super(classify_pix_operation, self).__init__()
 
+
     def __del__(self):
-        super(classify_pix_operation, self).__del__()
+        # super(classify_pix_operation, self).__del__()   #  Feel free not to call
+        pass
 
 
     def train_rf_classifier(self, training_X, training_y):
+        '''
+        train random forest classifer
+        :param training_X: X array, an array of size [n_records, n_features(fields)]
+        :param training_y: y array, an array of size [n_records, 1 (class)]
+        :return: True if successful, Flase otherwise
+        '''
+
+        if self.__classifier is None:
+            self.__classifier = RandomForestClassifier(n_estimators=25)
+        else:
+            basic.outputlogMessage('warning, classifier already exist, this operation will replace the old one')
+            self.__classifier = RandomForestClassifier(n_estimators=25)   # LinearSVC()  #SVC()
+
+        if os.path.isfile(scaler_saved_path) and self.__scaler is None:
+            self.__scaler = joblib.load(scaler_saved_path)
+            result = self.__scaler.transform(training_X)
+            X = result.tolist()
+        elif self.__scaler is not None:
+            result = self.__scaler.transform(training_X)
+            X = result.tolist()
+        else:
+            X = training_X
+            basic.outputlogMessage('warning, no pre-processing of data before training')
+
+        y = training_y
+
+        basic.outputlogMessage('Training data set nsample: %d, nfeature: %d' % (len(X), len(X[0])))
+
+        # X_train = X
+        # y_train = y
+        # # for test by hlc
+        X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.95, random_state=0)
+        # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=0)
+
+        # print('Parameters currently in use:\n')
+        # print(self.__classifier.get_params())
+
+        # Number of trees in random forest
+        n_estimators = [int(x) for x in np.linspace(start=200, stop=2000, num=10)]
+        # Number of features to consider at every split
+        max_features = ['auto', 'sqrt']
+        # Maximum number of levels in tree
+        max_depth = [int(x) for x in np.linspace(10, 110, num=11)]
+        max_depth.append(None)
+        # Minimum number of samples required to split a node
+        min_samples_split = [2, 5, 10]
+        # Minimum number of samples required at each leaf node
+        min_samples_leaf = [1, 2, 4]
+        # Method of selecting samples for training each tree
+        bootstrap = [True, False]
+
+        # Create the serach grid
+        search_grid = {'n_estimators': n_estimators,
+                       'max_features': max_features,
+                       'max_depth': max_depth,
+                       'min_samples_split': min_samples_split,
+                       'min_samples_leaf': min_samples_leaf,
+                       'bootstrap': bootstrap}
+        basic.outputlogMessage(str(search_grid))
+
+        clf = model_selection.GridSearchCV(RandomForestClassifier() , search_grid, cv=5,
+                                           scoring='f1_macro', n_jobs=-1, verbose=3)
+
+        clf.fit(X_train, y_train)
+
+        basic.outputlogMessage("Best parameters set found on development set:" + str(clf.best_params_))
+        basic.outputlogMessage("Grid scores on development set:\n")
+
+        means = clf.cv_results_['mean_test_score']
+        stds = clf.cv_results_['std_test_score']
+        for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+            basic.outputlogMessage("%0.3f (+/-%0.03f) for %r"
+                                   % (mean, std * 2, params))
+
+        # fit_model = self.__classifier.fit(X,y)
+        # basic.outputlogMessage(str(fit_model))
+
+        # save the classification model
+        joblib.dump(clf, model_saved_path)
+
+
+
+
         pass
+
 
 
 def main(options, args):
@@ -252,7 +342,7 @@ def main(options, args):
         X, y = classify_obj.read_training_pixels_from_multi_images('subImages', 'subLabels')
 
         if os.path.isfile(model_saved_path) is False:
-            classify_obj.training_svm_classifier(X, y)
+            classify_obj.train_rf_classifier(X, y)
         else:
             basic.outputlogMessage("warning, trained model already exist, skip training")
 

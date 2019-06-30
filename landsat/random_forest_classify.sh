@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# run tests on using SVM classification
+# run tests on using random forest classification
 # copy this script to the working folder
-# e.g., working folder: ~/Data/Qinghai-Tibet/beiluhe/beiluhe_landsat/auto_classification/BLH_landsattrend_svm_1
+# e.g., working folder: ~/Data/Qinghai-Tibet/beiluhe/beiluhe_landsat/auto_classification/BLH_landsattrend_rf_2
 # then run
 
 # Exit immediately if a command exits with a non-zero status. E: error trace
@@ -14,7 +14,7 @@ export PATH=~/programs/anaconda3/bin:$PATH
 
 # output log information to time_cost.txt
 
-log='landsatTrend_randomforest_log.txt'
+log='RandomForest_log.txt'
 #rm ${log} || true   # or true: don't exit with error and can continue run
 
 time_str=`date +%Y_%m_%d_%H_%M_%S`
@@ -31,13 +31,13 @@ train_shp_all=$(python2 ${para_py} -p ${para_file} training_polygons )
 
 input_image=$(python2 ${para_py} -p ${para_file} input_image_path )
 
-##########pre-processing for SVM##########
+##########pre-processing ##########
 
 #rm "scaler_saved.pkl" || true
 #${eo_dir}/landsat/random_forest_classify.py ${input_image}  -p
 ##
 #
-###########svm training##########
+###########random forest training##########
 
 # remove previous subImages
 ${eo_dir}/thawslumpScripts/remove_previous_data.sh ${para_file}
@@ -49,7 +49,7 @@ ${eo_dir}/thawslumpScripts/get_ground_truth_raster.sh ${para_file}
 # make sure ground truth raster already exist
 ${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
 
-rm "sk_svm_trained.pkl" || true
+rm "sk_rf_trained.pkl" || true
 ${eo_dir}/landsat/random_forest_classify.py -t
 
 ###########pclassification##########
@@ -93,7 +93,7 @@ mkdir -p result_backup
 cp ${para_file} result_backup/${testid}_para.ini
 mv otb_acc_log.txt result_backup/${testid}_otb_acc_log.txt
 mv ${output} result_backup/${output}
-mv planet_svm_log.txt  result_backup/${testid}_planet_svm_log.txt
+mv RandomForest_log.txt  result_backup/${testid}_planet_rf_log.txt
 
 
 
