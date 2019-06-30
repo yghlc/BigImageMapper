@@ -174,13 +174,13 @@ class classify_pix_operation(object):
         self.__scaler = None
 
         # classifiers
-        self.__classifier_svm = None
+        self.__classifier = None
         # self.__classifier_tree = None
         pass
 
     def __del__(self):
         # release resource
-        self.__classifier_svm = None
+        self.__classifier = None
         # self.__classifier_tree = None
         pass
 
@@ -245,11 +245,11 @@ class classify_pix_operation(object):
         :param training_data: an array of size [n_records, n_features(fields) + 1 (class) ]
         :return: True if successful, Flase otherwise
         """
-        if self.__classifier_svm is None:
-            self.__classifier_svm = svm.SVC()  # LinearSVC() #SVC()
+        if self.__classifier is None:
+            self.__classifier = svm.SVC()  # LinearSVC() #SVC()
         else:
             basic.outputlogMessage('warning, classifier already exist, this operation will replace the old one')
-            self.__classifier_svm = svm.SVC()  # LinearSVC()  #SVC()
+            self.__classifier = svm.SVC()  # LinearSVC()  #SVC()
 
         if os.path.isfile(scaler_saved_path) and self.__scaler is None:
             self.__scaler = joblib.load(scaler_saved_path)
@@ -307,7 +307,7 @@ class classify_pix_operation(object):
             basic.outputlogMessage("%0.3f (+/-%0.03f) for %r"
                                    % (mean, std * 2, params))
 
-        # fit_model = self.__classifier_svm.fit(X,y)
+        # fit_model = self.__classifier.fit(X,y)
         # basic.outputlogMessage(str(fit_model))
 
         # save the classification model
