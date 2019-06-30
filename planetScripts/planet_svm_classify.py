@@ -328,8 +328,8 @@ class classify_pix_operation(object):
         clf = joblib.load(model_saved_path)
 
         # split a large image to many small ones
-        patch_w = 2000  # parameters.get_digit_parameters("", "train_patch_width", None, 'int')
-        patch_h = 2000  # parameters.get_digit_parameters("", "train_patch_height", None, 'int')
+        patch_w = 500  # parameters.get_digit_parameters("", "train_patch_width", None, 'int')
+        patch_h = 500  # parameters.get_digit_parameters("", "train_patch_height", None, 'int')
         overlay_x = 0  # parameters.get_digit_parameters("", "train_pixel_overlay_x", None, 'int')
         overlay_y = 0  # parameters.get_digit_parameters("", "train_pixel_overlay_y", None, 'int')
 
