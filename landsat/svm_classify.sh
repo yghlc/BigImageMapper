@@ -18,6 +18,7 @@ log='landsatTrend_svm_log.txt'
 #rm ${log} || true   # or true: don't exit with error and can continue run
 
 time_str=`date +%Y_%m_%d_%H_%M_%S`
+SECONDS=0
 
 echo ${time_str} >> ${log}
 
@@ -96,4 +97,5 @@ mv ${output} result_backup/${output}
 mv planet_svm_log.txt  result_backup/${testid}_planet_svm_log.txt
 
 
-
+duration=$SECONDS
+echo "$(date): time cost of applying support vector machine : ${duration} seconds">>"time_cost.txt"

@@ -20,6 +20,7 @@ log='RandomForest_log.txt'
 time_str=`date +%Y_%m_%d_%H_%M_%S`
 
 echo ${time_str} >> ${log}
+SECONDS=0
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
 
@@ -96,4 +97,5 @@ mv ${output} result_backup/${output}
 mv RandomForest_log.txt  result_backup/${testid}_planet_rf_log.txt
 
 
-
+duration=$SECONDS
+echo "$(date): time cost of applying random forest : ${duration} seconds">>"time_cost.txt"
