@@ -171,17 +171,17 @@ class classify_pix_operation(object):
 
     def __init__(self):
         # Preprocessing
-        self.__scaler = None
+        self._scaler = None
 
         # classifiers
-        self.__classifier = None
-        # self.__classifier_tree = None
+        self._classifier = None
+        # self._classifier_tree = None
         pass
 
     def __del__(self):
         # release resource
-        self.__classifier = None
-        # self.__classifier_tree = None
+        self._classifier = None
+        # self._classifier_tree = None
         pass
 
     def read_training_pixels_from_multi_images(input, subImg_folder, subLabel_folder):
@@ -231,13 +231,13 @@ class classify_pix_operation(object):
         """
         # for svm
         X = whole_dataset
-        if self.__scaler == None:
-            self.__scaler = preprocessing.StandardScaler().fit(X)
+        if self._scaler == None:
+            self._scaler = preprocessing.StandardScaler().fit(X)
         else:
             basic.outputlogMessage('warning, StandardScaler object already exist, this operation will overwrite it')
-            self.__scaler = preprocessing.StandardScaler().fit(X)
+            self._scaler = preprocessing.StandardScaler().fit(X)
         # save
-        joblib.dump(self.__scaler, scaler_saved_path)
+        joblib.dump(self._scaler, scaler_saved_path)
 
     def training_svm_classifier(self, training_X, training_y):
         """
@@ -245,18 +245,18 @@ class classify_pix_operation(object):
         :param training_data: an array of size [n_records, n_features(fields) + 1 (class) ]
         :return: True if successful, Flase otherwise
         """
-        if self.__classifier is None:
-            self.__classifier = svm.SVC()  # LinearSVC() #SVC()
+        if self._classifier is None:
+            self._classifier = svm.SVC()  # LinearSVC() #SVC()
         else:
             basic.outputlogMessage('warning, classifier already exist, this operation will replace the old one')
-            self.__classifier = svm.SVC()  # LinearSVC()  #SVC()
+            self._classifier = svm.SVC()  # LinearSVC()  #SVC()
 
-        if os.path.isfile(scaler_saved_path) and self.__scaler is None:
-            self.__scaler = joblib.load(scaler_saved_path)
-            result = self.__scaler.transform(training_X)
+        if os.path.isfile(scaler_saved_path) and self._scaler is None:
+            self._scaler = joblib.load(scaler_saved_path)
+            result = self._scaler.transform(training_X)
             X = result.tolist()
-        elif self.__scaler is not None:
-            result = self.__scaler.transform(training_X)
+        elif self._scaler is not None:
+            result = self._scaler.transform(training_X)
             X = result.tolist()
         else:
             X = training_X
@@ -307,7 +307,7 @@ class classify_pix_operation(object):
             basic.outputlogMessage("%0.3f (+/-%0.03f) for %r"
                                    % (mean, std * 2, params))
 
-        # fit_model = self.__classifier.fit(X,y)
+        # fit_model = self._classifier.fit(X,y)
         # basic.outputlogMessage(str(fit_model))
 
         # save the classification model
@@ -359,7 +359,7 @@ class classify_pix_operation(object):
             # inference_one_patch_svm(img_idx, image_count, p_idx, patch_count, inf_output_dir, img_patch, scaler,clf)
 
             parameters_list = [
-                (img_idx, len(img_patches), idx, len(aImg_patches), inf_output_dir, img_patch, self.__scaler, clf)
+                (img_idx, len(img_patches), idx, len(aImg_patches), inf_output_dir, img_patch, self._scaler, clf)
                 for (idx, img_patch) in enumerate(aImg_patches)]
             # results = theadPool.map(inference_one_patch_svm, parameters_list)     # not working
             results = theadPool.starmap(inference_one_patch_svm, parameters_list)   # need python3
@@ -374,12 +374,12 @@ class classify_pix_operation(object):
             #     X_predit = patch_data.reshape(nbands, -1)
             #     X_predit = np.transpose(X_predit, (1, 0))
             #
-            #     if os.path.isfile(scaler_saved_path) and self.__scaler is None:
-            #         self.__scaler = joblib.load(scaler_saved_path)
-            #         result = self.__scaler.transform(X_predit)
+            #     if os.path.isfile(scaler_saved_path) and self._scaler is None:
+            #         self._scaler = joblib.load(scaler_saved_path)
+            #         result = self._scaler.transform(X_predit)
             #         X = result.tolist()
-            #     elif self.__scaler is not None:
-            #         result = self.__scaler.transform(X_predit)
+            #     elif self._scaler is not None:
+            #         result = self._scaler.transform(X_predit)
             #         X = result.tolist()
             #     else:
             #         X = X_predit
