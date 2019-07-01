@@ -221,11 +221,11 @@ class classify_pix_operation_rf(classify_pix_operation):
     """perform classify operation on raster images using random forest"""
 
     def __init__(self):
-        super(classify_pix_operation, self).__init__()
+        super(classify_pix_operation_rf, self).__init__()
 
 
     def __del__(self):
-        # super(classify_pix_operation, self).__del__()   #  Feel free not to call
+        super(classify_pix_operation_rf, self).__del__()   #  Feel free not to call
         pass
 
 
@@ -237,18 +237,18 @@ class classify_pix_operation_rf(classify_pix_operation):
         :return: True if successful, Flase otherwise
         '''
 
-        if self.__classifier is None:
-            self.__classifier = RandomForestClassifier(n_estimators=25)
+        if self._classifier is None:
+            self._classifier = RandomForestClassifier(n_estimators=25)
         else:
             basic.outputlogMessage('warning, classifier already exist, this operation will replace the old one')
-            self.__classifier = RandomForestClassifier(n_estimators=25)   # LinearSVC()  #SVC()
+            self._classifier = RandomForestClassifier(n_estimators=25)   # LinearSVC()  #SVC()
 
-        if os.path.isfile(scaler_saved_path) and self.__scaler is None:
-            self.__scaler = joblib.load(scaler_saved_path)
-            result = self.__scaler.transform(training_X)
+        if os.path.isfile(scaler_saved_path) and self._scaler is None:
+            self._scaler = joblib.load(scaler_saved_path)
+            result = self._scaler.transform(training_X)
             X = result.tolist()
-        elif self.__scaler is not None:
-            result = self.__scaler.transform(training_X)
+        elif self._scaler is not None:
+            result = self._scaler.transform(training_X)
             X = result.tolist()
         else:
             X = training_X
@@ -265,7 +265,7 @@ class classify_pix_operation_rf(classify_pix_operation):
         # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=0)
 
         # print('Parameters currently in use:\n')
-        # print(self.__classifier.get_params())
+        # print(self._classifier.get_params())
 
         # Number of trees in random forest
         n_estimators = [int(x) for x in np.linspace(start=200, stop=2000, num=10)]
@@ -304,7 +304,7 @@ class classify_pix_operation_rf(classify_pix_operation):
             basic.outputlogMessage("%0.3f (+/-%0.03f) for %r"
                                    % (mean, std * 2, params))
 
-        # fit_model = self.__classifier.fit(X,y)
+        # fit_model = self._classifier.fit(X,y)
         # basic.outputlogMessage(str(fit_model))
 
         # save the classification model
@@ -318,8 +318,6 @@ class classify_pix_operation_rf(classify_pix_operation):
 
 
 def main(options, args):
-
-    # example_rf()
 
     basic.outputlogMessage('Is_preprocessing:' + str(options.ispreprocess))
     basic.outputlogMessage('Is_training:' + str(options.istraining))
