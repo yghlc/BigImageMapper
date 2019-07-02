@@ -238,7 +238,7 @@ class classify_pix_operation(object):
 
         # read them one by one
         Xs, ys = [], []
-        for img_data, label in zip(sub_images, class_labels):
+        for idx, (img_data, label) in enumerate(zip(sub_images, class_labels)):
             # img: 3d array (nband, height, width)
              # label: int values
 
@@ -249,6 +249,11 @@ class classify_pix_operation(object):
             # remove non-data pixels
             valid_pixles = np.any(X_arr != no_data,axis=0)
             X_arr = X_arr[:,valid_pixles]
+            valid_pixel_count = int(X_arr.size/img_data.shape[0])
+            # print('pixel count',valid_pixel_count)
+            if valid_pixel_count < 1:
+                basic.outputlogMessage('Warning, No valid pixel in %d th polygon due to its small size'%valid_pixel_count)
+                continue
 
             y_arr = np.ones(X_arr.shape[1])*label
             Xs.append(X_arr)
