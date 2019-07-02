@@ -355,7 +355,7 @@ def main(options, args):
             X, y = classify_obj.read_training_pixels_inside_polygons(input_tif, options.polygon_train)
 
         if os.path.isfile(model_saved_path) is False:
-            classify_obj.training_svm_classifier(X, y)
+            classify_obj.train_rf_classifier(X, y)
         else:
             basic.outputlogMessage("warning, trained model already exist, skip training")
 
