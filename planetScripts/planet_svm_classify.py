@@ -245,7 +245,12 @@ class classify_pix_operation(object):
             # print(img_data)
             # print(label)
             X_arr = img_data.reshape(img_data.shape[0], -1)
-            y_arr = np.ones(img_data.shape[1]*img_data.shape[2])*label
+
+            # remove non-data pixels
+            valid_pixles = np.any(X_arr != no_data,axis=0)
+            X_arr = X_arr[:,valid_pixles]
+
+            y_arr = np.ones(X_arr.shape[1])*label
             Xs.append(X_arr)
             ys.append(y_arr)
 
