@@ -468,9 +468,10 @@ def main(options, args):
     basic.outputlogMessage('Is_training:' + str(options.istraining))
 
     classify_obj = classify_pix_operation()
-    input_tif = args[0]
+
 
     if options.ispreprocess:
+        input_tif = args[0]
         # preprocessing
         if os.path.isfile(scaler_saved_path) is False:
             # #read whole data set for pre-processing
@@ -485,6 +486,7 @@ def main(options, args):
         # read training data (make sure 'subImages', 'subLabels' is under current folder)
             X, y = classify_obj.read_training_pixels_from_multi_images('subImages', 'subLabels')
         else:
+            input_tif = args[0]
             X, y = classify_obj.read_training_pixels_inside_polygons(input_tif, options.polygon_train)
 
         if os.path.isfile(model_saved_path) is False:
@@ -494,6 +496,7 @@ def main(options, args):
 
     else:
         # prediction
+        input_tif = args[0]
         if options.output is not None:
             output = options.output
         else:
