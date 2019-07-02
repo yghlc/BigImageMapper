@@ -50,8 +50,10 @@ input_image=$(python2 ${para_py} -p ${para_file} input_image_path )
 ## make sure ground truth raster already exist
 #${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
 
+shape_train=$(python2 ${para_py} -p ${para_file} training_polygons)
+
 rm "sk_rf_trained.pkl" || true
-${eo_dir}/landsat/random_forest_classify.py -t
+${eo_dir}/landsat/random_forest_classify.py ${input_image} -t -s ${shape_train}
 
 ###########pclassification##########
 ${eo_dir}/landsat/random_forest_classify.py ${input_image}

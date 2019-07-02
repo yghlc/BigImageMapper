@@ -258,10 +258,21 @@ class classify_pix_operation_rf(classify_pix_operation):
 
         basic.outputlogMessage('Training data set nsample: %d, nfeature: %d' % (len(X), len(X[0])))
 
-        # X_train = X
-        # y_train = y
+        # sub sample and make the class 0 and 1 balanced (have the same number)
+        basic.outputlogMessage('Number of sample before sub-sample: %d, class 0: %d, class 1: %d'%
+                               (len(X),len(np.where(y==0)[0]),len(np.where(y==1)[0])))
+        from imblearn.under_sampling import RandomUnderSampler
+        rus = RandomUnderSampler(return_indices=True)
+        X_rus, y_rus, id_rus = rus.fit_sample(X, y)
+        X = X_rus
+        y = y_rus
+        basic.outputlogMessage('Number of sample after sub-sample: %d, class 0: %d, class 1: %d'%
+                               (len(X),len(np.where(y==0)[0]),len(np.where(y==1)[0])))
+        X_train = X
+        y_train = y
+
         # # for test by hlc
-        X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.95, random_state=0)
+        # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.95, random_state=0)
         # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=0)
 
         # print('Parameters currently in use:\n')
@@ -336,11 +347,15 @@ def main(options, args):
 
     elif options.istraining:
         # training
+        if options.polygon_train is None:
         # read training data (make sure 'subImages', 'subLabels' is under current folder)
-        X, y = classify_obj.read_training_pixels_from_multi_images('subImages', 'subLabels')
+            X, y = classify_obj.read_training_pixels_from_multi_images('subImages', 'subLabels')
+        else:
+            input_tif = args[0]
+            X, y = classify_obj.read_training_pixels_inside_polygons(input_tif, options.polygon_train)
 
         if os.path.isfile(model_saved_path) is False:
-            classify_obj.train_rf_classifier(X, y)
+            classify_obj.training_svm_classifier(X, y)
         else:
             basic.outputlogMessage("warning, trained model already exist, skip training")
 
@@ -371,6 +386,11 @@ if __name__ == "__main__":
     parser.add_option("-t", "--istraining",
                       action="store_true", dest="istraining", default=False,
                       help="to indicate the script will perform training process")
+
+    parser.add_option("-s", "--shape_train",
+                      action="store", dest="polygon_train",
+                      help="the shape file containing polygons for training")
+
 
     parser.add_option("-o", "--output",
                       action="store", dest="output",
