@@ -362,7 +362,7 @@ class classify_pix_operation(object):
         # save the classification model
         joblib.dump(clf, model_saved_path)
 
-    def prediction_on_a_image(self, input, output):
+    def prediction_on_a_image(self, input, output,model_saved_path):
         """
         conduct prediction on a tif image
         :param input:
@@ -502,7 +502,7 @@ def main(options, args):
         else:
             output = get_output_name(input_tif)
         basic.outputlogMessage('staring prediction on image:' + str(input_tif))
-        classify_obj.prediction_on_a_image(input_tif, output)
+        classify_obj.prediction_on_a_image(input_tif, output,model_saved_path)
 
 
 if __name__ == "__main__":

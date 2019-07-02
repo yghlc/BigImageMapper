@@ -368,7 +368,7 @@ def main(options, args):
         else:
             output = get_output_name(input_tif)
         basic.outputlogMessage('staring prediction on image:' + str(input_tif))
-        classify_obj.prediction_on_a_image(input_tif, output)
+        classify_obj.prediction_on_a_image(input_tif, output, model_saved_path)
 
 
 
