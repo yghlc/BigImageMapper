@@ -222,6 +222,42 @@ class classify_pix_operation(object):
 
         return X_pixels, y_pixels
 
+    def read_training_pixels_inside_polygons(self, img_path, shp_path):
+        '''
+        read pixels on a image in the extent of polygons
+        :param img_path: the path of an image
+        :param shp_path: the path of shape file
+        :return:
+        '''
+        if io_function.is_file_exist(img_path) is False or io_function.is_file_exist(shp_path) is False:
+            return False
+
+        no_data = 255   # consider changing to other values
+        touch = False   # we only read the pixels inside the polygons, so set all_touched as False
+        sub_images, class_labels = build_RS_data.read_pixels_inside_polygons(img_path,shp_path,mask_no_data=no_data, touch=touch)
+
+        # read them one by one
+        Xs, ys = [], []
+        for img_data, label in zip(sub_images, class_labels):
+            # img: 3d array (nband, height, width)
+             # label: int values
+
+            # print(img_data)
+            # print(label)
+            X_arr = img_data.reshape(img_data.shape[0], -1)
+            y_arr = np.ones(img_data.shape[1]*img_data.shape[2])*label
+            Xs.append(X_arr)
+            ys.append(y_arr)
+
+        X_pixels = np.concatenate(Xs, axis=1)
+        y_pixels = np.concatenate(ys, axis=0)
+        X_pixels = np.transpose(X_pixels, (1, 0))
+        basic.outputlogMessage(str(X_pixels.shape))
+        basic.outputlogMessage(str(y_pixels.shape))
+
+        return X_pixels, y_pixels
+
+
     def pre_processing(self, whole_dataset, type=None):
         """
         pre-processing of whole dataset
@@ -245,6 +281,9 @@ class classify_pix_operation(object):
         :param training_data: an array of size [n_records, n_features(fields) + 1 (class) ]
         :return: True if successful, Flase otherwise
         """
+        if training_X is None or training_y is None:
+            raise ValueError('the training samples are None')
+
         if self._classifier is None:
             self._classifier = svm.SVC()  # LinearSVC() #SVC()
         else:
@@ -419,10 +458,10 @@ def main(options, args):
     basic.outputlogMessage('Is_training:' + str(options.istraining))
 
     classify_obj = classify_pix_operation()
+    input_tif = args[0]
 
     if options.ispreprocess:
         # preprocessing
-        input_tif = args[0]
         if os.path.isfile(scaler_saved_path) is False:
             # #read whole data set for pre-processing
             X, _, _ = read_whole_x_pixels(input_tif)
@@ -432,8 +471,11 @@ def main(options, args):
 
     elif options.istraining:
         # training
+        if options.polygon_train is None:
         # read training data (make sure 'subImages', 'subLabels' is under current folder)
-        X, y = classify_obj.read_training_pixels_from_multi_images('subImages', 'subLabels')
+            X, y = classify_obj.read_training_pixels_from_multi_images('subImages', 'subLabels')
+        else:
+            X, y = classify_obj.read_training_pixels_inside_polygons(input_tif, options.polygon_train)
 
         if os.path.isfile(model_saved_path) is False:
             classify_obj.training_svm_classifier(X, y)
@@ -442,7 +484,6 @@ def main(options, args):
 
     else:
         # prediction
-        input_tif = args[0]
         if options.output is not None:
             output = options.output
         else:
@@ -463,6 +504,10 @@ if __name__ == "__main__":
     parser.add_option("-t", "--istraining",
                       action="store_true", dest="istraining", default=False,
                       help="to indicate the script will perform training process")
+
+    parser.add_option("-s", "--shape_train",
+                      action="store", dest="polygon_train",
+                      help="the shape file containing polygons for training")
 
     parser.add_option("-o", "--output",
                       action="store", dest="output",

@@ -94,6 +94,72 @@ def read_image(path):
 
         return data
 
+def read_pixels_inside_polygons(image_path, shp_path,mask_no_data=255, touch=False):
+    '''
+    read pixels inside polygons
+    :param image_path: the image path
+    :param shp_path: the path of a shape file (containing polygons)
+    :param mask_no_data: the filled value outside polygons
+    :return: a list of 3d numpy array (nbands, height, width), a list containing class labels
+    '''
+
+    from rasterio.mask import mask
+    import geopandas as gpd
+
+    shapefile = gpd.read_file(shp_path)
+    # shapefile.plot()
+
+    class_labels = shapefile['class_int'].tolist()
+    array_3d_list = []
+    # print(class_labels)
+
+    # extract the geometry in GeoJSON format
+    geoms = shapefile.geometry.values  # list of shapely geometries
+
+    print('the number of polygons',len(geoms))
+    # geometry = geoms[0]  # shapely geometry
+    # print(geoms)
+
+    # transform to GeJSON format
+    from shapely.geometry import mapping
+    # geoms = [mapping(geoms[0])]
+    polygons_json = [mapping(item) for item in geoms]
+    # extract the raster values values within the polygon
+    with rasterio.open(image_path) as src:
+
+        # the extent of the raster
+        raster_bounds = src.bounds
+
+        for idx, mask_polygon in enumerate(polygons_json):
+
+            # check the overlap between the shape and raster
+            # if the polygon partially overlap the raster, only the pixels in the overlap part will be read.
+            shape_bound = rasterio.features.bounds(mask_polygon)
+            if rasterio.coords.disjoint_bounds(raster_bounds, shape_bound):
+                basic.outputlogMessage('Warning, The %d th polygon is ignored because it does not overlap the raster'%(idx+1))
+                continue
+
+            # we only read the pixels inside the polygons, so set all_touched as False
+            out_image, out_transform = mask(src, [mask_polygon],nodata=mask_no_data, all_touched=touch, crop=True)
+
+            # #test: output infomation
+            # print('out_transform', out_transform)
+            # print('out_image',out_image.shape)
+            #
+            # # test: save it to disk
+            # out_meta = src.meta.copy()
+            # out_meta.update({"driver": "GTiff",
+            #                  "height": out_image.shape[1],
+            #                  "width": out_image.shape[2],
+            #                  "transform": out_transform})   # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+            # save_path = "masked_polygons/masked_of_polygon_%d.tif"%(idx+1)
+            # with rasterio.open(save_path, "w", **out_meta) as dest:
+            #     dest.write(out_image)
+
+            array_3d_list.append(np.array(out_image))
+
+    return array_3d_list, class_labels
+
 
 def read_patch(patch_obj):
     """
