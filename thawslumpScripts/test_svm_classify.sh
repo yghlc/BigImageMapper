@@ -44,18 +44,20 @@ ${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}  -p
 #
 ###########svm training##########
 
-# remove previous subImages
-${eo_dir}/thawslumpScripts/remove_previous_data.sh ${para_file}
+## remove previous subImages
+#${eo_dir}/thawslumpScripts/remove_previous_data.sh ${para_file}
+#
+## get a ground truth raster if it did not exists or the corresponding shape file gets update
+#${eo_dir}/thawslumpScripts/get_ground_truth_raster.sh ${para_file}
+#
+## get subImages (using four bands) and subLabels for training, extract sub_images based on the training polygons
+## make sure ground truth raster already exist
+#${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
 
-# get a ground truth raster if it did not exists or the corresponding shape file gets update
-${eo_dir}/thawslumpScripts/get_ground_truth_raster.sh ${para_file}
-
-# get subImages (using four bands) and subLabels for training, extract sub_images based on the training polygons
-# make sure ground truth raster already exist
-${eo_dir}/thawslumpScripts/get_sub_images.sh ${para_file}
+shape_train=$(python2 ${para_py} -p ${para_file} training_polygons)
 
 rm "sk_svm_trained.pkl" || true
-${eo_dir}/planetScripts/planet_svm_classify.py -t
+${eo_dir}/planetScripts/planet_svm_classify.py -t -s ${shape_train}
 
 ###########pclassification##########
 ${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}
