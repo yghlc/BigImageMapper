@@ -57,7 +57,7 @@ ${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}  -p
 shape_train=$(python2 ${para_py} -p ${para_file} training_polygons)
 
 rm "sk_svm_trained.pkl" || true
-${eo_dir}/planetScripts/planet_svm_classify.py -t -s ${shape_train}
+${eo_dir}/planetScripts/planet_svm_classify.py ${input_image} -t -s ${shape_train}
 
 ###########pclassification##########
 ${eo_dir}/planetScripts/planet_svm_classify.py ${input_image}
