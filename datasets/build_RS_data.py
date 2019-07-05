@@ -536,13 +536,13 @@ def make_dataset(root,list_txt,patch_w,patch_h,adj_overlay_x,adj_overlay_y,train
 
     if os.path.isfile(list_txt) is False:
         basic.outputlogMessage("error, file %s not exist"%list_txt)
-        assert False
+        raise IOError("error, file %s not exist" % list_txt)
 
     with open(list_txt) as file_obj:
         files_list = file_obj.readlines()
     if len(files_list) < 1:
         basic.outputlogMessage("error, no file name in the %s" % list_txt)
-        assert False
+        raise ValueError("error, no file name in the %s" % list_txt)
 
     if train:
         for line in files_list:
