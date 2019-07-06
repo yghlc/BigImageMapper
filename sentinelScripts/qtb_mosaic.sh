@@ -27,6 +27,7 @@ tifs=$(ls gee_saved/*.tif)
 output=qtb_sentinel2_2018_mosaic_rgb.tif
 out_8bit=qtb_sentinel2_2018_mosaic_rgb_8bit.tif
 
+# it takes too long for making a mosaic of tibetan Plateau.
 gdal_merge.py -o ${output} ${tifs}
 
 # to 8bit
