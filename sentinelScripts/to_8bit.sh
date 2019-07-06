@@ -42,7 +42,7 @@ for tif in $(ls gee_saved/*.tif); do
     gdal_translate -scale 0 3000 0 255 -ot Byte $tif ${out_8bit}
 
     # for test
-    exit
+#    exit
 done
 
 
