@@ -30,6 +30,8 @@ para_file=para.ini
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 train_dir=Data/Qinghai-Tibet/beiluhe/beiluhe_sentinel-2/autoMapping/BLH_deeplabV3+_1
 
+inf_dir=inf_results
+
 ################################################
 SECONDS=0
 # remove previous data or results if necessary
@@ -49,10 +51,17 @@ frozen_graph=frozen_inference_graph_${trail}.pb
 
 scp $chpc_host:~/${train_dir}/${expr_name}/export/${frozen_graph}  ${expr_name}/export/${frozen_graph}
 
-
+SECONDS=0
 ################################################
 ## inference and post processing, including output "time_cost.txt"
-${eo_dir}/thawslumpScripts/inf.sh ${para_file}
+#${eo_dir}/thawslumpScripts/inf.sh ${para_file}
+inf_batch_size=$(python2 ${para_py} -p ${para_file} inf_batch_size)
+python ${eo_dir}/grss_data_fusion/deeplab_inference.py --frozen_graph=${frozen_graph} --inf_output_dir=${inf_dir} --inf_batch_size=${inf_batch_size}
+
+
+duration=$SECONDS
+echo "$(date): time cost of inference: ${duration} seconds">>"time_cost.txt"
+
 ${eo_dir}/thawslumpScripts/postProc.sh ${para_file}
 
 ${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}

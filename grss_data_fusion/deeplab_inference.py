@@ -269,6 +269,7 @@ def inference_one_patch(img_idx,idx,org_img_path,boundary,model):
     save_path = os.path.join(FLAGS.inf_output_dir,file_name+'.tif')
     if os.path.isfile(save_path):
         print('already exist, skip')
+        return True
     if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
         return False
 
@@ -361,9 +362,9 @@ def inf_remoteSensing_image(model,image_path=None):
                 file_name = "I%d_%d" % (img_idx, idx)
 
                 save_path = os.path.join(FLAGS.inf_output_dir, file_name + '.tif')
-                print(save_path)
                 if os.path.isfile(save_path):
                     print('already exist, skip')
+                    continue
                 if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
                     return False
 
