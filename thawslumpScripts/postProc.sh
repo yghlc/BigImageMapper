@@ -30,21 +30,30 @@ output=${testid}.tif
 inf_dir=inf_results
 
 SECONDS=0
+
+# the number of images in the list for inference
+num=$(cat inf_image_list.txt | wc -l)
+
 # merge patches
 ### post processing
 cd ${inf_dir}
 
+    for (( n=1; n<=${num}; n++ ));
+    do
+
     #python ${eo_dir}/gdal_class_mosaic.py -o ${output} -init 0 *_pred.tif
-    gdal_merge.py -init 0 -n 0 -a_nodata 0 -o ${output} *.tif
+    gdal_merge.py -init 0 -n 0 -a_nodata 0 -o I${n}_${output} I${n}_*.tif
     #mv ${output} ../.
 
-    gdal_polygonize.py -8 ${output} -b 1 -f "ESRI Shapefile" ${testid}.shp
+    gdal_polygonize.py -8 I${n}_${output} -b 1 -f "ESRI Shapefile" I${n}_${testid}.shp
 
     # post processing of shapefile
     cp ../${para_file}  ${para_file}
     min_area=$(python2 ${para_py} -p ${para_file} minimum_gully_area)
     min_p_a_r=$(python2 ${para_py} -p ${para_file} minimum_ratio_perimeter_area)
-    ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} ${testid}.shp ${testid}_post.shp
+    ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} I${n}_${testid}.shp I${n}_${testid}_post.shp
+
+    done
 
 cd ..
 
