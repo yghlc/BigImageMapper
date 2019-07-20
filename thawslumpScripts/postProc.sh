@@ -38,7 +38,7 @@ num=$(cat inf_image_list.txt | wc -l)
 ### post processing
 cd ${inf_dir}
 
-    for (( n=1; n<=${num}; n++ ));
+    for (( n=0; n<${num}; n++ ));
     do
 
     #python ${eo_dir}/gdal_class_mosaic.py -o ${output} -init 0 *_pred.tif
