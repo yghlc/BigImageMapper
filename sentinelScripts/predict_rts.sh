@@ -46,7 +46,7 @@ trail=iter${NUM_ITERATIONS}
 frozen_graph=frozen_inference_graph_${trail}.pb
 
 
-cp $chpc_host:~/${train_dir}/${expr_name}/export/${frozen_graph}  ${expr_name}/export/${frozen_graph}
+scp $chpc_host:~/${train_dir}/${expr_name}/export/${frozen_graph}  ${expr_name}/export/${frozen_graph}
 
 
 ################################################
