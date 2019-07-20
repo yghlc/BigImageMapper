@@ -364,6 +364,7 @@ def inf_remoteSensing_image(model,image_path=None):
                 save_path = os.path.join(FLAGS.inf_output_dir, file_name + '.tif')
                 if os.path.isfile(save_path):
                     print('already exist, skip')
+                    idx += 1
                     continue
                 if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
                     return False
