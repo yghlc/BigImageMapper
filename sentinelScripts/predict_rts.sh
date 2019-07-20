@@ -59,4 +59,4 @@ ${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}
 
 ################################################
 ## backup results
-${eo_dir}/thawslumpScripts/backup_results.sh ${para_file}
+${eo_dir}/thawslumpScripts/backup_results.sh ${para_file} s2_qtb_exp1
