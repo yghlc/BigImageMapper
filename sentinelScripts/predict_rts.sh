@@ -33,7 +33,8 @@ train_dir=Data/Qinghai-Tibet/beiluhe/beiluhe_sentinel-2/autoMapping/BLH_deeplabV
 ################################################
 SECONDS=0
 # remove previous data or results if necessary
-
+rm -r inf_results | true
+rm processLog.txt
 
 ################################################
 #copy trained model to here
