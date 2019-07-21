@@ -47,11 +47,19 @@ cd ${inf_dir}
 
     gdal_polygonize.py -8 I${n}_${output} -b 1 -f "ESRI Shapefile" I${n}_${testid}.shp
 
+    # reproject the shapefile from "GEOGCS (WGS84)" to "Cartesian (XY) projection"
+    # the following projection (wkt string) came from ran.shp (gdalsrsinfo -o wkt ran.shp), the Permafrost map on the Tibetan Plateau
+    # need to modify it if switch to other regions
+    t_srs="PROJCS["Krasovsky_1940_Albers",GEOGCS["GCS_WGS_1984",DATUM["WGS_1984",SPHEROID["WGS_84",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["longitude_of_center",90.0],PARAMETER["Standard_Parallel_1",27.5],PARAMETER["Standard_Parallel_2",37.5],PARAMETER["latitude_of_center",0.0],UNIT["Meter",1.0]]"
+
+    ogr2ogr -t_srs  ${t_srs}  I${n}_${testid}_prj.shp I${n}_${testid}.shp
+
+
     # post processing of shapefile
     cp ../${para_file}  ${para_file}
     min_area=$(python2 ${para_py} -p ${para_file} minimum_gully_area)
     min_p_a_r=$(python2 ${para_py} -p ${para_file} minimum_ratio_perimeter_area)
-    ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} I${n}_${testid}.shp I${n}_${testid}_post.shp
+    ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} I${n}_${testid}_prj.shp I${n}_${testid}_prj_post.shp
 
     done
 
