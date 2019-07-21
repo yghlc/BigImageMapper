@@ -62,5 +62,6 @@ python ${eo_dir}/grss_data_fusion/deeplab_inference.py --frozen_graph=${frozen_g
 duration=$SECONDS
 echo "$(date): time cost of inference: ${duration} seconds">>"time_cost.txt"
 
+################################################
 # post processing and backup results
 ${eo_dir}/sentinelScripts/postProc_qtp.sh ${para_file} s2_qtb_exp1
