@@ -44,17 +44,23 @@ cd ${inf_dir}
     do
 
     #python ${eo_dir}/gdal_class_mosaic.py -o ${output} -init 0 *_pred.tif
-    gdal_merge.py -init 0 -n 0 -a_nodata 0 -o I${n}_${output} I${n}_*.tif
-    #mv ${output} ../.
+    if [ ! -f I${n}_${output} ]; then
+        gdal_merge.py -init 0 -n 0 -a_nodata 0 -o I${n}_${output} I${n}_*.tif
+    fi
 
-    gdal_polygonize.py -8 I${n}_${output} -b 1 -f "ESRI Shapefile" I${n}_${testid}.shp
+    #mv ${output} ../.
+    if [ ! -f I${n}_${testid}.shp ]; then
+        gdal_polygonize.py -8 I${n}_${output} -b 1 -f "ESRI Shapefile" I${n}_${testid}.shp
+    fi
 
     # reproject the shapefile from "GEOGCS (WGS84)" to "Cartesian (XY) projection"
     # the following projection (wkt string) came from ran.shp (gdalsrsinfo -o wkt ran.shp), the Permafrost map on the Tibetan Plateau
     # need to modify it if switch to other regions
     t_srs="PROJCS["Krasovsky_1940_Albers",GEOGCS["GCS_WGS_1984",DATUM["WGS_1984",SPHEROID["WGS_84",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["longitude_of_center",90.0],PARAMETER["Standard_Parallel_1",27.5],PARAMETER["Standard_Parallel_2",37.5],PARAMETER["latitude_of_center",0.0],UNIT["Meter",1.0]]"
 
-    ogr2ogr -t_srs  ${t_srs}  I${n}_${testid}_prj.shp I${n}_${testid}.shp
+    if [ ! -f I${n}_${testid}_prj.shp ]; then
+        ogr2ogr -t_srs  ${t_srs}  I${n}_${testid}_prj.shp I${n}_${testid}.shp
+    fi
 
 
     # post processing of shapefile
