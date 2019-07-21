@@ -83,8 +83,8 @@ mkdir -p result_backup
 for (( n=0; n<${num}; n++ ));
     do
 
-    cp_shapefile ${inf_dir}/I${n}_${testid}_prj_post result_backup/I${n}_${testid}_prj_post_${test}
-    cp_shapefile ${inf_dir}/I${n}_${testid}_prj result_backup/I${n}_${testid}_prj_${test}
+    cp_shapefile ${inf_dir}/I${n}_${testid}_prj_post result_backup/I${n}_${testid}_prj_post_${test} | true
+    cp_shapefile ${inf_dir}/I${n}_${testid}_prj result_backup/I${n}_${testid}_prj_${test} | true
 
     cp ${inf_dir}/${para_file} result_backup/${testid}_para_${test}.ini
 #    cp ${inf_dir}/evaluation_report.txt result_backup/${testid}_eva_report_${test}.txt
