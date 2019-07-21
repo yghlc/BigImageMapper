@@ -36,7 +36,7 @@ do
       else
             echo "creating ${out_shp}"
             ogr2ogr -f "ESRI Shapefile" $out_shp $i
-            exit
+#            exit
       fi
 
 done
