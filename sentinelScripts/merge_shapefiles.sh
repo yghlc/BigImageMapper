@@ -44,7 +44,8 @@ do
 
 done
 
-cd ..
-
 # convert to KML
 ogr2ogr -f KML ${out_name}.kml ${out_shp}
+
+
+cd ..
