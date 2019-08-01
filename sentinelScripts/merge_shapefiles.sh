@@ -26,6 +26,9 @@ testid=$(basename $PWD)_${expr_name}_${trail}
 out_name=${testid}_prj_post
 out_shp=${out_name}.shp
 
+cd result_backup
+cp ../${para_file} para.ini
+
 for i in $(ls *_prj_post*.shp)
 do
 
@@ -40,6 +43,8 @@ do
       fi
 
 done
+
+cd ..
 
 # convert to KML
 ogr2ogr -f KML ${out_name}.kml ${out_shp}
