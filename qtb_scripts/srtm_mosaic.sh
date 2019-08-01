@@ -22,7 +22,7 @@ tif_dir="Bulk Order 1026517/SRTM 1 Arc-Second Global"
 
 # merge SRTM patches patches
 if [ ! -f ${output} ]; then
-    gdal_merge.py -o ${output} ${tif_dir}/*.tif
+    gdal_merge.py -o ${output} "${tif_dir}"/*.tif
 else
     echo "${output} already exist, skip gdal_merge.py"
 fi
