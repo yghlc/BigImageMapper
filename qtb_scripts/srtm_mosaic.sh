@@ -45,7 +45,7 @@ fi
 extent=~/Data/Qinghai-Tibet/Qinghai-Tibet_Plateau_shp/Qinghai-Tibet_Plateau_outline2_gee/QTP_outline_simplified_0.1.shp
 if [ ! -f ${output_30m_crop} ]; then
     gdalwarp -cutline ${extent} -crop_to_cutline -tr ${res} ${res} \
-    -of GTiff ${output_30m}.tif ${output_30m_crop}
+    -of GTiff ${output_30m} ${output_30m_crop}
 else
     echo "${output_30m_crop} already exist, skip cropping"
 fi
