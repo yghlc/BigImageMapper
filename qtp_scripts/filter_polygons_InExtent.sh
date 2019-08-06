@@ -20,9 +20,10 @@ input_shp=${data_dir}/BLH_deeplabV3+_1_exp1_iter30000_prj_post.shp
 #  biggest_permafrost_area_from_zou
 #extent_shp=~/Data/Qinghai-Tibet/biggest_permafrost_area_from_zou/extent/biggest_permafrost_area_from_zou_outline_prj.shp
 
-extent_shp=~/Data/Qinghai-Tibet/Qinghai-Tibet_Plateau_shp/Qinghai-Tibet_Plateau_outline2_gee/QTP_outline_simplified_0.1_Albers.shp
+#extent_shp=~/Data/Qinghai-Tibet/Qinghai-Tibet_Plateau_shp/Qinghai-Tibet_Plateau_outline2_gee/QTP_outline_simplified_0.1_Albers.shp
+extent_shp=~/Data/Qinghai-Tibet/biggest_permafrost_area_from_zou/extent/biggest_permafrost_area_subset_Albers.shp
 
-save_shp=${data_dir}/BLH_deeplabV3+_1_exp1_iter30000_prj_post_crop.shp
+save_shp=${data_dir}/BLH_deeplabV3+_1_exp1_iter30000_prj_post_biggest_perma_subset.shp
 
 # make sure the two shape files below has the same projection info (coordinate reference system, CRS)
 crs_shp=$(gdalsrsinfo -o EPSG ${input_shp})
