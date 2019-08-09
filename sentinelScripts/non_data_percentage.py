@@ -49,7 +49,7 @@ for idx, img_file in enumerate(image_files):
         nodata_per = 100.0*(width*height - valid_count)/(width*height)
         basic.outputlogMessage('Nodata percentage %.2lf'%nodata_per)
 
-        img_name = os.path.basename(image_files)
+        img_name = os.path.basename(img_file)
         f_obj.writelines("%d: %s Nodata percentage: %.2lf"%(idx+1, img_name, nodata_per))
 
 
