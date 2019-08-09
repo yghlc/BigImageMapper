@@ -51,6 +51,7 @@ for idx, img_file in enumerate(image_files):
 
         img_name = os.path.basename(img_file)
         f_obj.writelines("%d: %s Nodata percentage: %.2lf"%(idx+1, img_name, nodata_per))
+        f_obj.flush()
 
 
 f_obj.close()
