@@ -54,9 +54,9 @@ for idx, img_file in enumerate(image_files):
 
     try:
         valid_count = RSImage.get_valid_pixel_count(img_file)       # count the pixels without nodata pixel
-    except Exception as e:
+    except Exception as e:      # can get all the exception, and the program will not exit
         print(str(e))
-        basic.outputlogMessage("get grey histrogram of %s failed"%image_files)
+        basic.outputlogMessage("get grey histrogram of %s failed"%img_file)
         continue
 
 
