@@ -43,6 +43,7 @@ for idx, img_file in enumerate(image_files):
         valid_count = RSImage.get_valid_pixel_count(img_file)       # count the pixels without nodata pixel
     except IOError:
         basic.outputlogMessage("get grey histrogram of %s failed"%image_files)
+        continue
 
     # get image width and height
     img_obj = RSImageclass()
