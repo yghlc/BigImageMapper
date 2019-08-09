@@ -57,6 +57,9 @@ for idx, img_file in enumerate(image_files):
     except IOError:
         basic.outputlogMessage("get grey histrogram of %s failed"%image_files)
         continue
+    finally:
+        print("The 'try except' is finished")
+
 
     # get image width and height
     img_obj = RSImageclass()
