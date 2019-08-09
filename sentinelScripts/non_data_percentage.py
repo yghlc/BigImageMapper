@@ -31,13 +31,25 @@ nodata = 0
 image_files = io_function.get_file_list_by_ext('.tif','.',bsub_folder=False)
 image_count = len(image_files)
 
+
+calculated_files = []
+with open('no_data_percentage.txt','r') as f_obj:
+    for line in f_obj.readlines():
+        filename = line.split()[1]
+        calculated_files.append(filename)
+
+
 # save to file
-f_obj = open('no_data_percentage.txt','w')
+f_obj = open('no_data_percentage.txt','a')
 
 for idx, img_file in enumerate(image_files):
     print('start working on (%d / %d) images'%(idx+1, image_count))
     # band_num  = 1   # only consider the first band
     # bucket_count, hist_min, hist_max, hist_buckets = RSImage.get_image_histogram_oneband(img_file, band_num)
+
+    img_name = os.path.basename(img_file)
+    if img_name in calculated_files:
+        basic.outputlogMessage('image: %s already be calcuated, skip'%img_name)
 
     try:
         valid_count = RSImage.get_valid_pixel_count(img_file)       # count the pixels without nodata pixel
@@ -53,7 +65,6 @@ for idx, img_file in enumerate(image_files):
         nodata_per = 100.0*(width*height - valid_count)/(width*height)
         basic.outputlogMessage('Nodata percentage %.2lf'%nodata_per)
 
-        img_name = os.path.basename(img_file)
         f_obj.writelines("%d: %s Nodata percentage: %.2lf \n"%(idx+1, img_name, nodata_per))
         f_obj.flush()
 
