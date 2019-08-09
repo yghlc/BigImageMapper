@@ -23,13 +23,16 @@ from basic_src.RSImage import RSImageclass
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
-basic.setlogfile('no_data_percentage.txt')
+# basic.setlogfile('no_data_percentage.txt')
 
 nodata = 0
 
 # get image list
 image_files = io_function.get_file_list_by_ext('.tif','.',bsub_folder=False)
 image_count = len(image_files)
+
+# save to file
+f_obj = open('no_data_percentage.txt','w')
 
 for idx, img_file in enumerate(image_files):
     print('start working on (%d / %d) images'%(idx+1, image_count))
@@ -46,7 +49,11 @@ for idx, img_file in enumerate(image_files):
         nodata_per = 100.0*(width*height - valid_count)/(width*height)
         basic.outputlogMessage('Nodata percentage %.2lf'%nodata_per)
 
+        img_name = os.path.basename(image_files)
+        f_obj.writelines("%d: %s Nodata percentage: %.2lf"%(idx+1, img_name, nodata_per))
 
+
+f_obj.close()
 
 
 
