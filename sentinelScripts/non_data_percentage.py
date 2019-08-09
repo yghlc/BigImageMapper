@@ -50,6 +50,7 @@ for idx, img_file in enumerate(image_files):
     img_name = os.path.basename(img_file)
     if img_name in calculated_files:
         basic.outputlogMessage('image: %s already be calcuated, skip'%img_name)
+        continue
 
     try:
         valid_count = RSImage.get_valid_pixel_count(img_file)       # count the pixels without nodata pixel
