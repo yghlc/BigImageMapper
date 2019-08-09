@@ -54,11 +54,11 @@ for idx, img_file in enumerate(image_files):
 
     try:
         valid_count = RSImage.get_valid_pixel_count(img_file)       # count the pixels without nodata pixel
-    except IOError:
+    except Exception as e:
+        print(str(e))
         basic.outputlogMessage("get grey histrogram of %s failed"%image_files)
         continue
-    finally:
-        print("The 'try except' is finished")
+
 
 
     # get image width and height
