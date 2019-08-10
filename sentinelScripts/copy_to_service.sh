@@ -11,7 +11,10 @@
 function copy_files() {
     file_head=$1
 
-    scp ${file_head}* $chpc_host:/project/LinLiu/hlc/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/8bit_dir/sentinel-2_2018_mosaic_v3/.
+#    scp ${file_head}* $chpc_host:/project/LinLiu/hlc/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/8bit_dir/sentinel-2_2018_mosaic_v3/.
+
+    # it seems that copy to /scratch, it can change the group info to "LinLiuScratch" automatically, then problem solved.
+    scp ${file_head}* $chpc_host:/scratch/s1/LinLiu/hlc/.
 }
 
 
