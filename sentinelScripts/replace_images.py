@@ -92,9 +92,28 @@ files_to_copy = ['qtb_sentinel2_2018_mosaic-0000107520-0000134400_8bit.tif','qtb
 
 # after manually checking, the files in files_to_copy is the same as the ones in files_with_large_diff_values, we did not manually removed any fiels
 
+# # copy files from sentinel-2_2018_mosaic_v2 to sentinel-2_2018_mosaic_v3
+# count = len(files_to_copy)
+# for idx, file in enumerate(files_to_copy):
+#     print('(%d/%d) Copying %s'%(idx+1,count,file))
+#     cmd = 'cp ' +'sentinel-2_2018_mosaic_v2/'+file + ' sentinel-2_2018_mosaic_v3/'+file
+#     os.system(cmd)
+#
+#     # copy over file
+#     overfile = file + '.ovr'
+#     cmd = 'cp ' + 'sentinel-2_2018_mosaic_v2/' + overfile + ' sentinel-2_2018_mosaic_v3/' + overfile
+#     os.system(cmd)
+#
+#     #copy xml file
+#     auxxml = file + '.aux.xml'
+#     cmd = 'cp ' + 'sentinel-2_2018_mosaic_v2/' + auxxml + ' sentinel-2_2018_mosaic_v3/' + auxxml
+#     os.system(cmd)
+
+copy_more = ['qtb_sentinel2_2018_mosaic-0000080640-0000241920_8bit.tif','qtb_sentinel2_2018_mosaic-0000080640-0000295680_8bit.tif','qtb_sentinel2_2018_mosaic-0000107520-0000295680_8bit.tif']
+
 # copy files from sentinel-2_2018_mosaic_v2 to sentinel-2_2018_mosaic_v3
-count = len(files_to_copy)
-for idx, file in enumerate(files_to_copy):
+count = len(copy_more)
+for idx, file in enumerate(copy_more):
     print('(%d/%d) Copying %s'%(idx+1,count,file))
     cmd = 'cp ' +'sentinel-2_2018_mosaic_v2/'+file + ' sentinel-2_2018_mosaic_v3/'+file
     os.system(cmd)
@@ -108,6 +127,3 @@ for idx, file in enumerate(files_to_copy):
     auxxml = file + '.aux.xml'
     cmd = 'cp ' + 'sentinel-2_2018_mosaic_v2/' + auxxml + ' sentinel-2_2018_mosaic_v3/' + auxxml
     os.system(cmd)
-
-
-
