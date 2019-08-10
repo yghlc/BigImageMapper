@@ -46,6 +46,7 @@ image_count = len(image_files)
 
 files_without_nodata_per = []
 files_with_large_diff = []
+files_with_large_diff_values=[]
 
 for idx, img_file in enumerate(image_files):
     img_name = os.path.basename(img_file)
@@ -54,6 +55,7 @@ for idx, img_file in enumerate(image_files):
         diff_per = v3_nodata_per[img_name] - v2_nodata_per[img_name]
         if abs(diff_per) > 10:
             files_with_large_diff.append(img_name)
+            files_with_large_diff_values.append(diff_per)
         else:
             # for the files have large nodata percentage but on the edge of QTP, we should don't need to copy them
             print('%s in v3 and v2 has similar nodata percentage (%2.lf vs %.2lf)'%(img_name,v3_nodata_per[img_name],v2_nodata_per[img_name]))
@@ -62,9 +64,9 @@ for idx, img_file in enumerate(image_files):
         print('%s missed nodata percentage in v3'%img_name)
         files_without_nodata_per.append(img_name)
 
-print("image files with large diffence in nodata percentage:")
-for tmp in files_with_large_diff:
-    print(tmp)
+print("image files with large diffence in nodata percentage and the difference:")
+for tmp, diff_value in zip(files_with_large_diff,files_with_large_diff_values):
+    print(tmp, diff_value)
 
 print("image files missed nodata percentage in v3:")
 for tmp in files_without_nodata_per:
