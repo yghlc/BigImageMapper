@@ -33,10 +33,11 @@ image_count = len(image_files)
 
 
 calculated_files = []
-with open('no_data_percentage.txt','r') as f_obj:
-    for line in f_obj.readlines():
-        filename = line.split()[1]
-        calculated_files.append(filename)
+if os.path.isfile("no_data_percentage.txt"):
+    with open('no_data_percentage.txt','r') as f_obj:
+        for line in f_obj.readlines():
+            filename = line.split()[1]
+            calculated_files.append(filename)
 
 
 # save to file
