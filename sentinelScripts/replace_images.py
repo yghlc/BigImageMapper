@@ -71,3 +71,31 @@ for tmp, diff_value in zip(files_with_large_diff,files_with_large_diff_values):
 print("image files missed nodata percentage in v3:")
 for tmp in files_without_nodata_per:
     print(tmp)
+
+# based on the difference of nodata percentage, then
+# copy to excel, then from the file with largest value,
+# manunally check files in QGIS, then deciced which will be copied, list below:
+
+files_to_copy = ['qtb_sentinel2_2018_mosaic-0000107520-0000134400_8bit.tif','qtb_sentinel2_2018_mosaic-0000053760-0000053760_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000080640-0000188160_8bit.tif','qtb_sentinel2_2018_mosaic-0000026880-0000053760_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000107520-0000188160_8bit.tif','qtb_sentinel2_2018_mosaic-0000080640-0000161280_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000107520-0000107520_8bit.tif','qtb_sentinel2_2018_mosaic-0000080640-0000215040_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000107520-0000161280_8bit.tif','qtb_sentinel2_2018_mosaic-0000000000-0000000000_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000080640-0000134400_8bit.tif','qtb_sentinel2_2018_mosaic-0000107520-0000241920_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000053760-0000080640_8bit.tif','qtb_sentinel2_2018_mosaic-0000080640-0000107520_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000026880-0000107520_8bit.tif','qtb_sentinel2_2018_mosaic-0000026880-0000080640_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000026880-0000134400_8bit.tif','qtb_sentinel2_2018_mosaic-0000134400-0000134400_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000026880-0000026880_8bit.tif','qtb_sentinel2_2018_mosaic-0000107520-0000215040_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000107520-0000268800_8bit.tif','qtb_sentinel2_2018_mosaic-0000134400-0000161280_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000053760-0000134400_8bit.tif','qtb_sentinel2_2018_mosaic-0000053760-0000107520_8bit.tif',
+                 'qtb_sentinel2_2018_mosaic-0000080640-0000053760_8bit.tif','qtb_sentinel2_2018_mosaic-0000053760-0000188160_8bit.tif']
+
+# after manually checking, the files in files_to_copy is the same as the ones in files_with_large_diff_values, we did not manually removed any fiels
+
+# copy files from sentinel-2_2018_mosaic_v2 to sentinel-2_2018_mosaic_v3
+count = len(files_to_copy)
+for idx, file in enumerate(files_to_copy):
+    print('(%d/%d) Copying %s'%(idx,count,file))
+    cmd = 'cp ' +'sentinel-2_2018_mosaic_v2/'+file + ' sentinel-2_2018_mosaic_v3/'+file
+    os.system(cmd)
+
