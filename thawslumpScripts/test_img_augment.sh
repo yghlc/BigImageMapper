@@ -25,8 +25,8 @@ function train_img_aug() {
     echo img_aug_str:${img_aug_str} >> ${log}
     echo test_num:${test_num} >> ${log}
 
-    # remove previous trained model (the setting are the same to exp9)
-    rm -r exp9 || true
+    # remove previous trained model (the setting are the same to exp10)
+    rm -r exp10 || true
 
     # modified para.ini
     cp para_template_imgAug.ini para.ini

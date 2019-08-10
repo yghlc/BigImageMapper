@@ -61,8 +61,8 @@ function train_kfold_cross_val() {
 
     # training on k subset
     for idx in $(seq 1 $kvalue); do
-        # remove previous trained model (the setting are the same to exp9)
-        rm -r exp9 || true
+        # remove previous trained model (the setting are the same to exp10)
+        rm -r exp10 || true
 
         echo run training and inference of the ${idx}_th fold >> ${log}
 
