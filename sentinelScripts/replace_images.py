@@ -27,7 +27,7 @@ v2_nodata_per = {}
 with open('sentinel-2_2018_mosaic_v3/no_data_percentage.txt') as fv3_obj:
     for line in fv3_obj.readlines():
         filename = line.split()[1]
-        nodata_per = float(line.split()[1])
+        nodata_per = float(line.split()[4])
         v3_nodata_per[filename] = nodata_per
 
     print(v3_nodata_per)
@@ -35,7 +35,7 @@ with open('sentinel-2_2018_mosaic_v3/no_data_percentage.txt') as fv3_obj:
 with open('sentinel-2_2018_mosaic_v2/no_data_percentage.txt') as fv2_obj:
     for line in fv2_obj.readlines():
         filename = line.split()[1]
-        nodata_per = float(line.split()[1])
+        nodata_per = float(line.split()[4])
         v2_nodata_per[filename] = nodata_per
 
     print(v2_nodata_per)
