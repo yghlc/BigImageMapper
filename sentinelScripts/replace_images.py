@@ -95,7 +95,19 @@ files_to_copy = ['qtb_sentinel2_2018_mosaic-0000107520-0000134400_8bit.tif','qtb
 # copy files from sentinel-2_2018_mosaic_v2 to sentinel-2_2018_mosaic_v3
 count = len(files_to_copy)
 for idx, file in enumerate(files_to_copy):
-    print('(%d/%d) Copying %s'%(idx,count,file))
+    print('(%d/%d) Copying %s'%(idx+1,count,file))
     cmd = 'cp ' +'sentinel-2_2018_mosaic_v2/'+file + ' sentinel-2_2018_mosaic_v3/'+file
     os.system(cmd)
+
+    # copy over file
+    overfile = file + '.ovr'
+    cmd = 'cp ' + 'sentinel-2_2018_mosaic_v2/' + overfile + ' sentinel-2_2018_mosaic_v3/' + overfile
+    os.system(cmd)
+
+    #copy xml file
+    auxxml = file + '.aux.xml'
+    cmd = 'cp ' + 'sentinel-2_2018_mosaic_v2/' + auxxml + ' sentinel-2_2018_mosaic_v3/' + auxxml
+    os.system(cmd)
+
+
 
