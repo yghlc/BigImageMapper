@@ -31,7 +31,12 @@ shp_file=$(python2 ${para_py} -p ${para_file} training_polygons)
 label_raster=$(python2 ${para_py} -p ${para_file} input_label_image )
 
 if [  -f $label_raster ]; then
-   rm ${label_raster}
+#   rm ${label_raster}
+
+    # skip create a new one
+    echo "label raster already exist, skip creating a new one"
+    echo "$label_raster"
+    exit 0
 fi
 
 
