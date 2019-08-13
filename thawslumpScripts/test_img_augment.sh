@@ -57,7 +57,13 @@ function train_img_aug() {
 #
 #train_img_aug flip,crop,scale 7
 
-~/codes/PycharmProjects/Landuse_DL/thawslumpScripts/test_img_augment.py
+if [ ! -f "img_aug_str.txt" ]; then
+    # create img_aug_str.txt if it is not exist
+   ~/codes/PycharmProjects/Landuse_DL/thawslumpScripts/test_img_augment.py
+else
+   echo "img_aug_str.txt (could be modified) already exist, skip create a new one"
+fi
+
 
 while IFS= read -r line || [[ -n "$line" ]];
 do
