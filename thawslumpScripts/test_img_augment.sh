@@ -73,8 +73,16 @@ do
     testid="${array[0]}"
     img_aug_str="${array[1]}"
 
-    echo test using  $img_aug_str  $testid
-    train_img_aug $img_aug_str $testid
+    # check results exist
+    count=$(ls -1 result_backup/*imgAug${testid}.shp |wc -l)
+    if [ $count != 0 ];
+    then
+        echo "*imgAug${testid}.shp already exist, skip" >>  ${log}
+    else
+        # run
+        echo test using  $img_aug_str  $testid
+        train_img_aug $img_aug_str $testid
+    fi
 
 
 done < "img_aug_str.txt"
