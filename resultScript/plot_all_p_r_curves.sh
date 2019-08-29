@@ -26,6 +26,7 @@ for k in  3 5 10 ; do
 
     echo $k $test >> "plot_p_r_curves.log"
     ${eo_dir}/thawslumpScripts/test_kfold_figure.sh $k $test
+    mv accuracies_log.txt result_backup/${k}fold_test${test}/.
 
     done
 done
