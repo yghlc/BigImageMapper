@@ -50,9 +50,9 @@ def draw_one_attribute_windrose(shp_file,field_name,attribute, output,color='gre
     ax = WindroseAxes.from_ax()
     # ax.bar(wind_dir, wind_sd, normed=True, bins=bins_range,colors=color)
     ax.bar(wind_dir, wind_sd, bins=bins_range, colors=color)  # normed=True, show count, not density
-    ax.set_ylim([0,30])
-    ax.set_yticks(np.arange(10, 31, step=10))
-    ax.set_yticklabels(np.arange(10, 31, step=10),color='red')
+    ax.set_ylim([0,45])
+    ax.set_yticks(np.arange(10, 41, step=10))
+    ax.set_yticklabels(np.arange(10, 41, step=10),color='red')
 
 
     ax.tick_params(labelsize=20)
@@ -71,16 +71,19 @@ def draw_one_attribute_windrose(shp_file,field_name,attribute, output,color='gre
 
 
 
-out_dir=HOME+'/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe'
+# out_dir=HOME+'/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe'
+out_dir=HOME+'/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe_revised2019'
 
-ground_truth = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
-                         'identified_ThawSlumps_prj_post.shp'
+# ground_truth = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
+#                          'identified_ThawSlumps_prj_post.shp'
 
-aspect=HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_apect.tif'
+# aspect=HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_apect.tif'
 
-aspect_line=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_prj.shp')
+# aspect_line=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_prj.shp')
+aspect_line=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_utm.shp')
 
-aspect_line_imgAug16_tp=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_prj_TP.shp')
+
+# aspect_line_imgAug16_tp=os.path.join(out_dir,'identified_ThawSlumps_MaiinLines_prj_TP.shp')
 
 
 # output='aspect_ground_truth_winrose.jpg'
