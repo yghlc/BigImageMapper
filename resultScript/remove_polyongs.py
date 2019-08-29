@@ -60,10 +60,21 @@ def remove_lines_based_on_polygons(shp_line,output_mainline,shp_polygon):
     if check_same_projection(shp_line,shp_polygon) is False:
         raise ValueError('%s and %s don\'t have the same projection')
 
+    print(shp_line,shp_polygon)
     inte_lines_list = vector_features.get_intersection_of_line_polygon(shp_line,shp_polygon)
     b_remove = [True if item.is_empty else False for item in inte_lines_list ]
     # print(b_remove)
+    # a=0
+    # b=0
+    # for rm in b_remove:
+    #     if rm is True:
+    #         a += 1
+    #     else:
+    #         b += 1
+    # print(a,b)
 
+    #note that, after remove, the number of main lines are greater than the number of polygons in "shp_polygon"
+    #This is because, in Beiluhe, some mapped thaw slumps close to each other were merged to one
     operation_obj = shape_opeation()
     if operation_obj.remove_shapes_by_list(shp_line,output_mainline,b_remove) is False:
         return False
