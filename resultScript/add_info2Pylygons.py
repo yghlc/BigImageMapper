@@ -105,6 +105,9 @@ def check_same_projection(shp_file, raster_file):
     :return:
     '''
 
+    assert io_function.is_file_exist(shp_file)
+    assert io_function.is_file_exist(raster_file)
+
     shp_args_list = ['gdalsrsinfo','-o','epsg',shp_file]
     shp_epsg_str = basic.exec_command_args_list_one_string(shp_args_list)
 
@@ -156,7 +159,7 @@ def main(options, args):
     raster_file = options.raster_file
     if raster_file is not None:
         if check_same_projection(polygons_shp,raster_file) is False:
-            raise ValueError('%s and %s don\'t have the same projection')
+            raise ValueError('%s and %s don\'t have the same projection'%(polygons_shp,raster_file))
 
         buffer_meters = options.buffer_meters
         if buffer_meters is None:
