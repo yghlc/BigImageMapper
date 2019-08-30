@@ -47,7 +47,7 @@ echo "$(date): start plotting image augmentation experiment precision recall cur
 output=p_r_img_augmentation_new.jpg
 shp_list=$(ls BLH_basin_deeplabV3+_*_exp10_iter30000_post_imgAug*.shp | grep -v _TP )
 python ${deeplabRS}/plot_accuracies.py -p ${para_file} ${shp_list} -o ${output}
-mv accuracies_log.txt accuracies_bak.txt
+mv accuracies_log.txt accuracies_log_bak.txt
 echo "$(date): finish plotting image augmentation experiment precision recall curves ">>"plot_p_r_curves.log"
 
 echo "$(date): start plotting image augmentation experiment (no post processing) precision recall curves ">>"plot_p_r_curves.log"
