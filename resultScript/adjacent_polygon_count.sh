@@ -11,11 +11,13 @@ set -eE -o functrace
 
 code_dir=~/codes/PycharmProjects/Landuse_DL
 # folder contains results
-res_dir=~/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe
+#res_dir=~/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe
+res_dir=~/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe_revised2019
 
 ### polygons
 # the 202 ground truth polygons
-ground_truth=${res_dir}/identified_ThawSlumps_prj_post.shp
+#ground_truth=${res_dir}/identified_ThawSlumps_prj_post.shp
+ground_truth=${res_dir}/identified_thawslumps_utm_post.shp
 
 # polyon without post-processing (removing polygons based on their areas)
 # only one ground truth is missing
@@ -24,15 +26,19 @@ ground_truth=${res_dir}/identified_ThawSlumps_prj_post.shp
 #shp_imgAug17_NOpost=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17.shp
 
 # only one ground truth is missing
-shp_imgAug16_NOpost_tp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP.shp
+#shp_imgAug16_NOpost_tp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP.shp
 # no ground truth is missing
-shp_imgAug17_NOpost_tp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17_TP.shp
+#shp_imgAug17_NOpost_tp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17_TP.shp
+
+shp_imgAug22_NOpost_tp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_b_exp10_iter30000_imgAug22_TP.shp
 
 # only one ground truth is missing
-shp_imgAug16_NOpost_tp_intersec1=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP_intersec1.shp
-shp_imgAug16_NOpost_tp_intersec2p=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP_intersec2p.shp
-# no ground truth is missing
-shp_imgAug17_NOpost_tp_intersec1=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17_TP_intersec1.shp
+#shp_imgAug16_NOpost_tp_intersec1=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP_intersec1.shp
+#shp_imgAug16_NOpost_tp_intersec2p=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16_TP_intersec2p.shp
+## no ground truth is missing
+#shp_imgAug17_NOpost_tp_intersec1=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug17_TP_intersec1.shp
+
+shp_imgAug22_NOpost_tp_intersec1=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_b_exp10_iter30000_imgAug22_TP_intersec1.shp
 
 # step 1: get the count of adjacent polygons based on ground_truths
 #${code_dir}/resultScript/add_info2Pylygons.py ${ground_truth}  -n "adj_count" -b 300
@@ -49,11 +55,14 @@ shp_imgAug17_NOpost_tp_intersec1=${res_dir}/img_aug_test_results/BLH_basin_deepl
 #${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug16_NOpost_tp} -o ${shp_imgAug16_NOpost_tp_intersec2p} \
 #    -v ${ground_truth}  -c "adj_count"
 
-${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug16_NOpost_tp} -o ${shp_imgAug16_NOpost_tp_intersec1} \
+#${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug16_NOpost_tp} -o ${shp_imgAug16_NOpost_tp_intersec1} \
+#    -v ${ground_truth}  -c "adj_count"
+
+${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug22_NOpost_tp} -o ${shp_imgAug22_NOpost_tp_intersec1} \
     -v ${ground_truth}  -c "adj_count"
 
-${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug17_NOpost_tp} -o ${shp_imgAug17_NOpost_tp_intersec1} \
-    -v ${ground_truth}  -c "adj_count"
+#${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug17_NOpost_tp} -o ${shp_imgAug17_NOpost_tp_intersec1} \
+#    -v ${ground_truth}  -c "adj_count"
 
 # step 3: calculate the IOU values
 #${code_dir}/resultScript/add_info2Pylygons.py ${res_dir}/intersect_ground_truth_imgAug17_NOpost_tp.shp -v ${ground_truth} -n "IoU"
