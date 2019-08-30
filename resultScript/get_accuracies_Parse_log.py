@@ -224,7 +224,8 @@ def save_to_csv_file(save_path):
             record ={}
             record['shapefile'] = result['shapefile']
             print(result['shapefile'])
-            record['average_precision'] = result['average_precision']
+            if 'average_precision' in result.keys(): record['average_precision'] = result['average_precision']
+            else: record['average_precision'] = ''
             if 'img_aug_str' in result.keys():  record['img_aug_str']= result['img_aug_str']
             else: record['img_aug_str'] = ''
             if 'class_0_count' in result.keys():  record['class_0_count']= result['class_0_count']

@@ -70,6 +70,7 @@ cd -
 ################################################################
 # draw results of the first test
 cd result_backup/first_test
+rm accuracies_log.txt | true
 echo "$(date): start plotting first test precision recall curves ">>"plot_p_r_curves.log"
 output=p_r_first_test.jpg
 shp_list=$(ls BLH_basin_deeplabV3+_1_exp10_iter30000*_2.shp)
@@ -80,6 +81,7 @@ cd -
 ################################################################
 # draw results of other bands
 cd result_backup/other_bands_test_blur_crop_scale
+rm accuracies_log.txt | true
 echo "$(date): start plotting other bands precision recall curves ">>"plot_p_r_curves.log"
 output=p_r_other_bands.jpg
 shp_list=$(ls *_post_b1_ndvi_ndwi.shp *_post_pca3b_3.shp )
