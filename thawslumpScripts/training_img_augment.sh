@@ -81,7 +81,12 @@ cd split_labels
 
 
 cd ..
-cp list/images_including_aug.txt list/trainval.txt
+if [ -f "list/images_including_aug.txt" ]; then
+   cp list/images_including_aug.txt list/trainval.txt
+else
+   echo "list/images_including_aug.txt does not exist because no data agumentation strings"
+fi
+
 # copy the training data for elevation
 #mv trainval.txt list/.  # done in  image_augment.py
 cp list/trainval.txt list/val.txt
