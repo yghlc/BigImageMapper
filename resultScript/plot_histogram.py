@@ -218,7 +218,7 @@ out_dir=HOME+'/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_bei
 # result_NOimgAug = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
 #                          'BLH_basin_deeplabV3+_1_exp9_iter30000_post_1.shp'
 result_NOimgAug = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe_revised2019/' \
-                         'first_test/BLH_basin_deeplabV3+_1_exp10_iter30000_post_2.shp'
+                         'no_data_augmentation/BLH_basin_deeplabV3+_1_a_exp10_iter30000_post_noimgAug1.shp'
 # result_imgAug16 = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
 #                          'img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_post_imgAug16.shp'
 
@@ -260,7 +260,7 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_one_value_hist(polygons_imgAug22_tp,'IoU','IoU_imgAug22_tp.jpg','bins_IoU_imgAug22_tp.txt',0,1.01,0.1,[0,105])
 
 # iou values
-# draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug_new.jpg','bins_NOimgAug.txt',0,1.01,0.1)
+draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug.jpg','bins_IoU_NOimgAug.txt',0,1.01,0.1,[0,110])
 
 # # area # in ha, min 0.25, max: 29
 # draw_one_value_hist(ground_truth,'INarea','area_ground_truth.jpg','bins_area_gt.txt',0,31,2,[0,123])
@@ -278,7 +278,7 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 ####### use mapping polygons  ####
 # area # in ha, to compare, the min, max, should be the same as the ones for ground truth
 # draw_one_value_hist(polygons_imgAug16_tp,'INarea','area_imgAug16_tp.jpg','bins_area_imgAug16_tp.txt',0,31,2,[0,100])
-draw_one_value_hist(polygons_imgAug22_tp,'INarea','area_imgAug22_tp.jpg','bins_area_imgAug22_tp.txt',0,31,2,[0,123])
+# draw_one_value_hist(polygons_imgAug22_tp,'INarea','area_imgAug22_tp.jpg','bins_area_imgAug22_tp.txt',0,31,2,[0,123])
 
 # perimeters meters, to compare, the min, max, should be the same as the ones for ground truth
 # draw_one_value_hist(polygons_imgAug16_tp,'INperimete','perimeter_imgAug16_tp.jpg','bins_perimeter_imgAug16_tp.txt',200,6300,600,[0,110])
