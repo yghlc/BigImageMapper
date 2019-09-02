@@ -278,7 +278,7 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 ####### use mapping polygons  ####
 # area # in ha, to compare, the min, max, should be the same as the ones for ground truth
 # draw_one_value_hist(polygons_imgAug16_tp,'INarea','area_imgAug16_tp.jpg','bins_area_imgAug16_tp.txt',0,31,2,[0,100])
-# draw_one_value_hist(result_imgAug22,'INarea','area_imgAug22_tp.jpg','bins_area_imgAug22_tp.txt',0,31,2,[0,123])
+draw_one_value_hist(polygons_imgAug22_tp,'INarea','area_imgAug22_tp.jpg','bins_area_imgAug22_tp.txt',0,31,2,[0,123])
 
 # perimeters meters, to compare, the min, max, should be the same as the ones for ground truth
 # draw_one_value_hist(polygons_imgAug16_tp,'INperimete','perimeter_imgAug16_tp.jpg','bins_perimeter_imgAug16_tp.txt',200,6300,600,[0,110])
@@ -309,7 +309,7 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw_two_values_hist(ground_truth,"asp_mean",aspect ,"aspect_ground_truth.jpg",'bins_apsect_gt.txt',0,360,15,['RTS','Landscape'])
 
 #TPI # Minimum=-11.919, Maximum=13.788
-draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_tpi_gt.txt',-4,4.1,0.5,['RTS','Landscape'],[0,70])
+# draw_two_values_hist(ground_truth,"tpi_mean",tpi ,"tpi_ground_truth.jpg",'bins_tpi_gt.txt',-4,4.1,0.5,['RTS','Landscape'],[0,70])
 
 ####### use mapping polygons  ####
 # to compare, the min, max, should be the same as the ones for ground truth
