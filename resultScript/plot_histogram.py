@@ -254,10 +254,10 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 
 # iou values
 ## draw_one_value_hist(result_imgAug16,'IoU','IoU_imgAug16.jpg','bins_IoU_imgAug16.txt',0,1.01,0.1,[0,80])
-# draw_one_value_hist(result_imgAug22,'IoU','IoU_imgAug22.jpg','bins_IoU_imgAug22.txt',0,1.01,0.1,[0,105])
+draw_one_value_hist(result_imgAug22,'IoU','IoU_imgAug22.jpg','bins_IoU_imgAug22.txt',0,1.01,0.1,[0,110])
 
 # #draw_one_value_hist(polygons_imgAug16_tp,'IoU','IoU_imgAug16_tp.jpg','bins_IoU_imgAug16_tp.txt',0,1.01,0.1,[0,80])
-# draw_one_value_hist(polygons_imgAug22_tp,'IoU','IoU_imgAug22_tp.jpg','bins_IoU_imgAug22_tp.txt',0,1.01,0.1,[0,105])
+draw_one_value_hist(polygons_imgAug22_tp,'IoU','IoU_imgAug22_tp.jpg','bins_IoU_imgAug22_tp.txt',0,1.01,0.1,[0,110])
 
 # iou values
 draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug.jpg','bins_IoU_NOimgAug.txt',0,1.01,0.1,[0,110])
