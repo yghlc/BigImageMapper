@@ -225,6 +225,9 @@ result_NOimgAug = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mappin
 result_imgAug22 = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe_revised2019/' \
                          'img_aug_test_results/BLH_basin_deeplabV3+_1_b_exp10_iter30000_post_imgAug22.shp'
 
+result_testArea = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe_revised2019/' \
+                        'beiluhe_test_area_exp10/BLH_basin_deeplabV3+_1_exp10_iter30000_post_test_area.shp'
+
 # ground_truth = HOME + '/Data/Qinghai-Tibet/beiluhe/result/result_paper_mapping_RTS_dl_beiluhe/' \
 #                          'identified_ThawSlumps_prj_post.shp'
 
@@ -253,14 +256,19 @@ tpi = HOME+'/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_u
 # draw one list (attributes)
 
 # iou values
-## draw_one_value_hist(result_imgAug16,'IoU','IoU_imgAug16.jpg','bins_IoU_imgAug16.txt',0,1.01,0.1,[0,80])
-draw_one_value_hist(result_imgAug22,'IoU','IoU_imgAug22.jpg','bins_IoU_imgAug22.txt',0,1.01,0.1,[0,110])
+# ## draw_one_value_hist(result_imgAug16,'IoU','IoU_imgAug16.jpg','bins_IoU_imgAug16.txt',0,1.01,0.1,[0,80])
+# draw_one_value_hist(result_imgAug22,'IoU','IoU_imgAug22.jpg','bins_IoU_imgAug22.txt',0,1.01,0.1,[0,110])
+#
+# # #draw_one_value_hist(polygons_imgAug16_tp,'IoU','IoU_imgAug16_tp.jpg','bins_IoU_imgAug16_tp.txt',0,1.01,0.1,[0,80])
+# draw_one_value_hist(polygons_imgAug22_tp,'IoU','IoU_imgAug22_tp.jpg','bins_IoU_imgAug22_tp.txt',0,1.01,0.1,[0,110])
+#
+# # iou values
+# draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug.jpg','bins_IoU_NOimgAug.txt',0,1.01,0.1,[0,110])
 
-# #draw_one_value_hist(polygons_imgAug16_tp,'IoU','IoU_imgAug16_tp.jpg','bins_IoU_imgAug16_tp.txt',0,1.01,0.1,[0,80])
-draw_one_value_hist(polygons_imgAug22_tp,'IoU','IoU_imgAug22_tp.jpg','bins_IoU_imgAug22_tp.txt',0,1.01,0.1,[0,110])
+# iou values of test area
+# print(result_testArea)
+draw_one_value_hist(result_testArea,'IoU','IoU_testArea.jpg','bins_IoU_testArea.txt',0,1.01,0.1,[0,30])
 
-# iou values
-draw_one_value_hist(result_NOimgAug,'IoU','IoU_NOimgAug.jpg','bins_IoU_NOimgAug.txt',0,1.01,0.1,[0,110])
 
 # # area # in ha, min 0.25, max: 29
 # draw_one_value_hist(ground_truth,'INarea','area_ground_truth.jpg','bins_area_gt.txt',0,31,2,[0,123])
