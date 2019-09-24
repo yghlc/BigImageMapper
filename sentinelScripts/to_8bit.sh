@@ -25,7 +25,9 @@ cd ${dir_s2}
 
 mkdir -p 8bit_dir
 
-for tif in $(ls gee_saved/*.tif); do
+verdir=sentinel-2_2018_mosaic_v4
+
+for tif in $(ls gee_saved/${verdir}/*.tif); do
 
     # convert projection
     filename=$(basename "$tif")
@@ -35,7 +37,7 @@ for tif in $(ls gee_saved/*.tif); do
 
 
     # convert to 8bit
-    out_8bit=8bit_dir/${filename_no_ext}_8bit.tif
+    out_8bit=8bit_dir/${verdir}/${filename_no_ext}_8bit.tif
 #    gdal_contrast_stretch -percentile-range 0.01 0.99 ${out_name} ${out_8bit}
 
     # gdal_translate to make max, and min consistant over files
