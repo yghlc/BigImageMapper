@@ -23,9 +23,9 @@ res=10
 
 cd ${dir_s2}
 
-mkdir -p 8bit_dir
-
 verdir=sentinel-2_2018_mosaic_v4
+
+mkdir -p 8bit_dir/${verdir}
 
 for tif in $(ls gee_saved/${verdir}/*.tif); do
 
