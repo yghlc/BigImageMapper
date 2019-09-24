@@ -89,7 +89,7 @@ while idx < img_count:
 end_time = datetime.datetime.now()
 
 diff_time = end_time - start_time
-out_str = "str(end_time): time cost of parallel inference: %d seconds"%(diff_time.seconds)
+out_str = "%s: time cost of parallel inference: %d seconds"%(str(end_time),diff_time.seconds)
 basic.outputlogMessage(out_str)
 with open ("time_cost.txt",'a') as t_obj:
     t_obj.writelines(out_str+'\n')
