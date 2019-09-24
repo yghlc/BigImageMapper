@@ -8,6 +8,7 @@ email:huanglingcao@gmail.com
 add time: 24 September, 2019
 """
 
+# note: it seems the codes cannot run on multi-nodes on ITSC services. So I have to submit jobs using different separately
 
 import os, sys
 import time
@@ -49,6 +50,13 @@ img_count = len(inf_img_list)
 if img_count < 1:
     raise ValueError('No image in inf_image_list.txt')
 
+def is_file_exist_in_folder(folder):
+    file_list = io_function.get_file_list_by_pattern(folder, '*.*')
+    if len(file_list) > 0:
+        return True
+    else:
+        return False
+
 # parallel inference images
 idx = 0
 while idx < img_count:
@@ -56,7 +64,7 @@ while idx < img_count:
     # get available GPUs
     deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
                                     maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
-    basic.outputlogMessage('available GPUs:'+str(deviceIDs) + ' on ' + machine_name)
+    basic.outputlogMessage('on ' + machine_name + ', available GPUs:'+str(deviceIDs))
     if len(deviceIDs) < 1:
         time.sleep(60)  # wait one minute, then check the available GPUs again
         continue
@@ -69,7 +77,7 @@ while idx < img_count:
     inf_list_file = os.path.join(outdir,'%d.txt'%idx)
 
     # if it already exist, then skip
-    if os.path.isdir(save_dir):
+    if os.path.isdir(save_dir) and is_file_exist_in_folder(save_dir):
         continue
 
     with open(inf_list_file,'w') as inf_obj:
@@ -82,11 +90,21 @@ while idx < img_count:
 
     idx += 1
 
-    # wait 10 seconds before next image
-    if 'chpc' in machine_name:
-        time.sleep(60)  # wait 60 second on ITSC services
-    else:
-        time.sleep(10)
+    # wait until predicted image patches exist or exceed 10 minutes
+    start_time = time.time()
+    elapsed_time = time.time() - start_time
+    while elapsed_time < 600:
+        elapsed_time = time.time() - start_time
+        file_exist = is_file_exist_in_folder(save_dir)
+        if file_exist is True:
+            break
+        else:
+            time.sleep(5)
+
+    # if 'chpc' in machine_name:
+    #     time.sleep(60)  # wait 60 second on ITSC services
+    # else:
+    #     time.sleep(10)
 
 
 end_time = datetime.datetime.now()
