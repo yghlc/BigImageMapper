@@ -73,7 +73,7 @@ while idx < img_count:
         continue
 
     with open(inf_list_file,'w') as inf_obj:
-        inf_obj.writelines(inf_img_list[idx])
+        inf_obj.writelines(inf_img_list[idx] + '\n')
     basic.outputlogMessage('%d: predict image %s on GPU %d'%(idx, inf_img_list[idx], gpuid))
     command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
@@ -83,7 +83,10 @@ while idx < img_count:
     idx += 1
 
     # wait 10 seconds before next image
-    time.sleep(10)
+    if 'chpc' in machine_name:
+        time.sleep(60)  # wait 60 second on ITSC services
+    else:
+        time.sleep(10)
 
 
 end_time = datetime.datetime.now()
