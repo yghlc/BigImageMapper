@@ -40,7 +40,7 @@ io_function.mkdir(outdir)
 deviceIDs = GPUtil.getAvailable(order = 'first', limit = 100, maxLoad = 0.5,
                                 maxMemory = 0.5, includeNan=False, excludeID=[], excludeUUID=[])
 # print('available GPUs:',deviceIDs)
-
+machine_name = os.uname()[1]
 
 with open('inf_image_list.txt','r') as inf_obj:
     inf_img_list = [name.strip() for name in inf_obj.readlines()]
@@ -56,7 +56,7 @@ while idx < img_count:
     # get available GPUs
     deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
                                     maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
-    basic.outputlogMessage('available GPUs:'+str(deviceIDs))
+    basic.outputlogMessage('available GPUs:'+str(deviceIDs) + ' on ' + machine_name)
     if len(deviceIDs) < 1:
         time.sleep(60)  # wait one minute, then check the available GPUs again
         continue
