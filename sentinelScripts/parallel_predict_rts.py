@@ -8,15 +8,28 @@ email:huanglingcao@gmail.com
 add time: 24 September, 2019
 """
 
+
 import os, sys
-import os, sys
-# HOME = os.path.expanduser('~')
-# codes_dir2 = HOME +'/codes/PycharmProjects/DeeplabforRS'
-# sys.path.insert(0, codes_dir2)
-#
-# import basic_src.basic as basic
+import time
+
+HOME = os.path.expanduser('~')
+codes_dir2 = HOME +'/codes/PycharmProjects/DeeplabforRS'
+sys.path.insert(0, codes_dir2)
+
+import basic_src.basic as basic
+import basic_src.io_function as io_function
+
+basic.setlogfile('parallel_predict_rtsLog.txt')
+
+predict_script = HOME + '/codes/PycharmProjects/Landuse_DL/sentinelScripts/predict_rts_oneImg.sh'
 
 import GPUtil
+
+# remove previous results
+outdir = 'multi_inf_results'
+io_function.delete_file_or_dir(outdir)
+
+io_function.mkdir(outdir)
 
 # get GPU information on the machine
 # https://github.com/anderskm/gputil
@@ -25,7 +38,43 @@ deviceIDs = GPUtil.getAvailable(order = 'first', limit = 100, maxLoad = 0.5,
 print('available GPUs:',deviceIDs)
 
 
+with open('inf_image_list.txt','r') as inf_obj:
+    inf_img_list = [name.strip() for name in inf_obj.readlines()]
 
-os.environ["CUDA_VISIBLE_DEVICES"] = str(deviceIDs[0])
+img_count = len(inf_img_list)
+if img_count < 1:
+    raise ValueError('No image in inf_image_list.txt')
 
-os.system('echo $CUDA_VISIBLE_DEVICES')
+# parallel inference images
+idx = 0
+while idx < img_count:
+
+    # get available GPUs
+    deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
+                                    maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
+    if len(deviceIDs) < 1:
+        time.sleep(60)  # wait one minute, then check the available again
+        continue
+
+    # set only the first available visible
+    gpuid = deviceIDs[0]
+
+    # run inference
+    save_dir = os.path.join(outdir,'I%d'%idx)
+    inf_list_file = os.path.join(outdir,'%d.txt'%idx)
+
+    # if it already exist, then skip
+    if os.path.isdir(save_dir):
+        continue
+
+    with open(inf_list_file,'w') as inf_obj:
+        inf_obj.writelines(inf_img_list[idx])
+    basic.outputlogMessage('%d: predict image %s on GPU %d'%(idx, inf_img_list[idx], gpuid))
+    command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
+    basic.exec_command_string(command_string)
+    # os.system()
+
+    # wait 30 seconds before next image
+    time.sleep(30)
+
+
