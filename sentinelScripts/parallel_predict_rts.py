@@ -18,10 +18,12 @@ import basic_src.basic as basic
 
 # get GPU information on the machine
 
-gpu_str = basic  os.system('lspci | grep -i nvidia')
+gpu_str = basic.exec_command_string_output_string('lspci | grep -i nvidia')
+print(gpu_str)
+
 for line_str in gpu_str:
     if 'VGA compatible controller: NVIDIA' in line_str:
-
+        pass
 
 # get
 
