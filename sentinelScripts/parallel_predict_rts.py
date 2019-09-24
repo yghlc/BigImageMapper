@@ -24,6 +24,9 @@ basic.setlogfile('parallel_predict_rtsLog.txt')
 predict_script = HOME + '/codes/PycharmProjects/Landuse_DL/sentinelScripts/predict_rts_oneImg.sh'
 
 import GPUtil
+import datetime
+
+start_time = datetime.datetime.now()
 
 # remove previous results
 outdir = 'multi_inf_results'
@@ -82,4 +85,12 @@ while idx < img_count:
     # wait 10 seconds before next image
     time.sleep(10)
 
+
+end_time = datetime.datetime.now()
+
+diff_time = end_time - start_time
+out_str = "str(end_time): time cost of parallel inference: %d seconds"%(diff_time.seconds)
+basic.outputlogMessage(out_str)
+with open ("time_cost.txt",'a') as t_obj:
+    t_obj.writelines(out_str+'\n')
 
