@@ -27,7 +27,8 @@ import GPUtil
 
 # remove previous results
 outdir = 'multi_inf_results'
-io_function.delete_file_or_dir(outdir)
+if os.path.isdir(outdir):
+    io_function.delete_file_or_dir(outdir)
 
 io_function.mkdir(outdir)
 
