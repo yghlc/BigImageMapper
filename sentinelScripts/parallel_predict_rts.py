@@ -36,7 +36,7 @@ io_function.mkdir(outdir)
 # https://github.com/anderskm/gputil
 deviceIDs = GPUtil.getAvailable(order = 'first', limit = 100, maxLoad = 0.5,
                                 maxMemory = 0.5, includeNan=False, excludeID=[], excludeUUID=[])
-print('available GPUs:',deviceIDs)
+# print('available GPUs:',deviceIDs)
 
 
 with open('inf_image_list.txt','r') as inf_obj:
@@ -53,6 +53,7 @@ while idx < img_count:
     # get available GPUs
     deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
                                     maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
+    basic.outputlogMessage('available GPUs:'+str(deviceIDs))
     if len(deviceIDs) < 1:
         time.sleep(60)  # wait one minute, then check the available again
         continue
@@ -72,10 +73,13 @@ while idx < img_count:
         inf_obj.writelines(inf_img_list[idx])
     basic.outputlogMessage('%d: predict image %s on GPU %d'%(idx, inf_img_list[idx], gpuid))
     command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
-    basic.exec_command_string(command_string)
-    # os.system()
+    # status, result = basic.exec_command_string(command_string)  # this will wait command finished
+    # print(status, result)
+    os.system(command_string + "&")
 
-    # wait 30 seconds before next image
-    time.sleep(30)
+    idx += 1
+
+    # wait 10 seconds before next image
+    time.sleep(10)
 
 
