@@ -58,7 +58,7 @@ while idx < img_count:
                                     maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
     basic.outputlogMessage('available GPUs:'+str(deviceIDs))
     if len(deviceIDs) < 1:
-        time.sleep(60)  # wait one minute, then check the available again
+        time.sleep(60)  # wait one minute, then check the available GPUs again
         continue
 
     # set only the first available visible
