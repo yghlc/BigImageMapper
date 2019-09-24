@@ -27,21 +27,23 @@ predict_script = HOME + '/codes/PycharmProjects/Landuse_DL/sentinelScripts/predi
 import GPUtil
 import datetime
 
+machine_name = os.uname()[1]
+
 start_time = datetime.datetime.now()
 
 # remove previous results
 outdir = 'multi_inf_results'
-if os.path.isdir(outdir):
+if os.path.isdir(outdir) and 'chpc' not in machine_name:  # on ITSC service, need to manually deleted previous results
     io_function.delete_file_or_dir(outdir)
 
-io_function.mkdir(outdir)
+os.system('mkdir -p '+ outdir)
 
 # get GPU information on the machine
 # https://github.com/anderskm/gputil
-deviceIDs = GPUtil.getAvailable(order = 'first', limit = 100, maxLoad = 0.5,
-                                maxMemory = 0.5, includeNan=False, excludeID=[], excludeUUID=[])
+# deviceIDs = GPUtil.getAvailable(order = 'first', limit = 100, maxLoad = 0.5,
+#                                 maxMemory = 0.5, includeNan=False, excludeID=[], excludeUUID=[])
 # print('available GPUs:',deviceIDs)
-machine_name = os.uname()[1]
+
 
 with open('inf_image_list.txt','r') as inf_obj:
     inf_img_list = [name.strip() for name in inf_obj.readlines()]
@@ -90,10 +92,10 @@ while idx < img_count:
 
     idx += 1
 
-    # wait until predicted image patches exist or exceed 10 minutes
+    # wait until predicted image patches exist or exceed 20 minutes
     start_time = time.time()
     elapsed_time = time.time() - start_time
-    while elapsed_time < 600:
+    while elapsed_time < 20*60:
         elapsed_time = time.time() - start_time
         file_exist = is_file_exist_in_folder(save_dir)
         if file_exist is True:
