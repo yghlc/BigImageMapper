@@ -84,7 +84,7 @@ while idx < img_count:
 
     with open(inf_list_file,'w') as inf_obj:
         inf_obj.writelines(inf_img_list[idx] + '\n')
-    basic.outputlogMessage('%d: predict image %s on GPU %d'%(idx, inf_img_list[idx], gpuid))
+    basic.outputlogMessage('%d: predict image %s on GPU %d of %s'%(idx, inf_img_list[idx], gpuid,machine_name))
     command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # print(status, result)
