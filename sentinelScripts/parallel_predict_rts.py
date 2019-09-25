@@ -80,6 +80,9 @@ while idx < img_count:
 
     # if it already exist, then skip
     if os.path.isdir(save_dir) and is_file_exist_in_folder(save_dir):
+        basic.outputlogMessage('folder of %dth image (%s) already exist, '
+                               'it has been predicted or is being predicting'%(idx, inf_img_list[idx]))
+        idx += 1
         continue
 
     with open(inf_list_file,'w') as inf_obj:
