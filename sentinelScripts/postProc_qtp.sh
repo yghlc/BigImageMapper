@@ -29,7 +29,7 @@ trail=iter${NUM_ITERATIONS}
 
 testid=$(basename $PWD)_${expr_name}_${trail}
 output=${testid}.tif
-inf_dir=inf_results
+inf_dir=multi_inf_results
 
 SECONDS=0
 
