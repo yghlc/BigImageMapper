@@ -43,6 +43,8 @@ cd ${inf_dir}
     for (( n=0; n<${num}; n++ ));
     do
 
+    cd I${n}
+
     #python ${eo_dir}/gdal_class_mosaic.py -o ${output} -init 0 *_pred.tif
     if [ ! -f I${n}_${output} ]; then
         gdal_merge.py -init 0 -n 0 -a_nodata 0 -o I${n}_${output} I${n}_*.tif
@@ -64,10 +66,12 @@ cd ${inf_dir}
 
 
     # post processing of shapefile
-    cp ../${para_file}  ${para_file}
+    cp ../../${para_file}  ${para_file}
     min_area=$(python2 ${para_py} -p ${para_file} minimum_gully_area)
     min_p_a_r=$(python2 ${para_py} -p ${para_file} minimum_ratio_perimeter_area)
     ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} I${n}_${testid}_prj.shp I${n}_${testid}_prj_post.shp
+
+    cd -
 
     done
 
