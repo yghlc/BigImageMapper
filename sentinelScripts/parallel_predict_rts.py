@@ -70,17 +70,6 @@ idx = 0
 sub_tasks = []
 while idx < img_count:
 
-    # run inference
-    save_dir = os.path.join(outdir,'I%d'%idx)
-    inf_list_file = os.path.join(outdir,'%d.txt'%idx)
-
-    # if it already exist, then skip
-    if os.path.isdir(save_dir) and is_file_exist_in_folder(save_dir):
-        basic.outputlogMessage('folder of %dth image (%s) already exist, '
-                               'it has been predicted or is being predicted'%(idx, inf_img_list[idx]))
-        idx += 1
-        continue
-
     # get available GPUs
     deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
                                     maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
@@ -91,6 +80,17 @@ while idx < img_count:
 
     # set only the first available visible
     gpuid = deviceIDs[0]
+
+    # run inference
+    save_dir = os.path.join(outdir,'I%d'%idx)
+    inf_list_file = os.path.join(outdir,'%d.txt'%idx)
+
+    # if it already exist, then skip
+    if os.path.isdir(save_dir) and is_file_exist_in_folder(save_dir):
+        basic.outputlogMessage('folder of %dth image (%s) already exist, '
+                               'it has been predicted or is being predicted'%(idx, inf_img_list[idx]))
+        idx += 1
+        continue
 
 
     with open(inf_list_file,'w') as inf_obj:
