@@ -47,7 +47,7 @@ cd ${inf_dir}
 
     #python ${eo_dir}/gdal_class_mosaic.py -o ${output} -init 0 *_pred.tif
     if [ ! -f I${n}_${output} ]; then
-        gdal_merge.py -init 0 -n 0 -a_nodata 0 -o I${n}_${output} I${n}_*.tif
+        gdal_merge.py -init 0 -n 0 -a_nodata 0 -o I${n}_${output} I0_*.tif
     fi
 
     #mv ${output} ../.
