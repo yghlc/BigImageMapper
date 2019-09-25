@@ -130,8 +130,8 @@ def b_all_task_finish(all_tasks):
         if task.is_alive():
             return False
     return True
-while b_all_task_finish(sub_tasks):
-    basic.outputlogMessage('wait all task to finish')
+while b_all_task_finish(sub_tasks) is False:
+    basic.outputlogMessage('wait all tasks to finish')
     time.sleep(60)
 
 
