@@ -26,6 +26,7 @@ predict_script = HOME + '/codes/PycharmProjects/Landuse_DL/sentinelScripts/predi
 
 import GPUtil
 import datetime
+from multiprocessing import Process
 
 machine_name = os.uname()[1]
 
@@ -61,6 +62,7 @@ def is_file_exist_in_folder(folder):
 
 # parallel inference images
 idx = 0
+sub_tasks = []
 while idx < img_count:
 
     # get available GPUs
@@ -91,7 +93,12 @@ while idx < img_count:
     command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # print(status, result)
-    os.system(command_string + "&")
+    # os.system(command_string + "&")         # don't know when it finished
+
+    sub_process = Process(target=predict_script, args=(save_dir,inf_list_file,gpuid))
+    sub_process.start()
+    sub_tasks.append(sub_process)
+
 
     idx += 1
 
@@ -110,6 +117,8 @@ while idx < img_count:
     #     time.sleep(60)  # wait 60 second on ITSC services
     # else:
     #     time.sleep(10)
+
+# check all the tasks already finish
 
 
 end_time = datetime.datetime.now()
