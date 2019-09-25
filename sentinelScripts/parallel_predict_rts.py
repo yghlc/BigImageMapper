@@ -118,7 +118,15 @@ while idx < img_count:
     # else:
     #     time.sleep(10)
 
-# check all the tasks already finish
+# check all the tasks already finished
+def b_all_task_finish(all_tasks):
+    for task in all_tasks:
+        if task.is_alive():
+            return False
+    return True
+while b_all_task_finish(sub_tasks):
+    basic.outputlogMessage('wait all task to finish')
+    time.sleep(60)
 
 
 end_time = datetime.datetime.now()
