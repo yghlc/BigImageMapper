@@ -63,7 +63,8 @@ def is_file_exist_in_folder(folder):
 def predict_one_image(save_dir,inf_list_file,gpuid):
     command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
-    os.system(command_string + "&")  # don't know when it finished
+    # os.system(command_string + "&")  # don't know when it finished
+    os.system(command_string )      # this work
 
 # parallel inference images
 idx = 0
