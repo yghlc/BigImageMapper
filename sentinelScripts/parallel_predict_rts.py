@@ -60,10 +60,26 @@ def is_file_exist_in_folder(folder):
     else:
         return False
 
+def predict_one_image(save_dir,inf_list_file,gpuid):
+    command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
+    # status, result = basic.exec_command_string(command_string)  # this will wait command finished
+    os.system(command_string + "&")  # don't know when it finished
+
 # parallel inference images
 idx = 0
 sub_tasks = []
 while idx < img_count:
+
+    # run inference
+    save_dir = os.path.join(outdir,'I%d'%idx)
+    inf_list_file = os.path.join(outdir,'%d.txt'%idx)
+
+    # if it already exist, then skip
+    if os.path.isdir(save_dir) and is_file_exist_in_folder(save_dir):
+        basic.outputlogMessage('folder of %dth image (%s) already exist, '
+                               'it has been predicted or is being predicted'%(idx, inf_img_list[idx]))
+        idx += 1
+        continue
 
     # get available GPUs
     deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
@@ -76,26 +92,16 @@ while idx < img_count:
     # set only the first available visible
     gpuid = deviceIDs[0]
 
-    # run inference
-    save_dir = os.path.join(outdir,'I%d'%idx)
-    inf_list_file = os.path.join(outdir,'%d.txt'%idx)
-
-    # if it already exist, then skip
-    if os.path.isdir(save_dir) and is_file_exist_in_folder(save_dir):
-        basic.outputlogMessage('folder of %dth image (%s) already exist, '
-                               'it has been predicted or is being predicting'%(idx, inf_img_list[idx]))
-        idx += 1
-        continue
 
     with open(inf_list_file,'w') as inf_obj:
         inf_obj.writelines(inf_img_list[idx] + '\n')
     basic.outputlogMessage('%d: predict image %s on GPU %d of %s'%(idx, inf_img_list[idx], gpuid,machine_name))
-    command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
+    # command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # print(status, result)
     # os.system(command_string + "&")         # don't know when it finished
 
-    sub_process = Process(target=predict_script, args=(save_dir,inf_list_file,gpuid))
+    sub_process = Process(target=predict_one_image, args=(save_dir,inf_list_file,gpuid))
     sub_process.start()
     sub_tasks.append(sub_process)
 
