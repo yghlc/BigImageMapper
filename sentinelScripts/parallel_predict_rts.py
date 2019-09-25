@@ -93,10 +93,10 @@ while idx < img_count:
     idx += 1
 
     # wait until predicted image patches exist or exceed 20 minutes
-    start_time = time.time()
-    elapsed_time = time.time() - start_time
+    time0 = time.time()
+    elapsed_time = time.time() - time0
     while elapsed_time < 20*60:
-        elapsed_time = time.time() - start_time
+        elapsed_time = time.time() - time0
         file_exist = is_file_exist_in_folder(save_dir)
         if file_exist is True:
             break
