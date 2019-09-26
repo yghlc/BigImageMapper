@@ -21,6 +21,8 @@ import basic_src.basic as basic
 
 import rasterio
 from rasterio.mask import mask
+from shapely.geometry import mapping # transform to GeJSON format
+
 import geopandas as gpd
 
 def get_image_tile_bound_boxes(image_tile_list):
@@ -38,6 +40,19 @@ def get_image_tile_bound_boxes(image_tile_list):
 
     return boxes
 
+def get_overlap_image_index(polygon_box,image_boxes):
+    '''
+    get the index of images polygon overlap
+    :param polygon_box: the extent of the polygon
+    :param image_boxes: the extent of the all the images
+    :return:
+    '''
+
+    img_idx = []
+    for idx, img_box in enumerate(image_boxes):
+        if rasterio.coords.disjoint_bounds(img_box, polygon_box) is False:
+            img_idx.append(idx)
+    return img_idx
 
 def get_adjacent_polygons(center_polygon, buffer_area):
 
@@ -57,12 +72,19 @@ def get_mask_image(selected_polygons, image_tile_list, image_tile_bounds ):
 
     pass
 
-def get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, saved_dir, dstnodata, brectangle = True):
+def get_one_sub_image_label(center_polygon, class_int, polygons_all,class_int_all, bufferSize, image_list):
+
+
+
+    pass
+
+def get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, dstnodata, brectangle = True):
     '''
     get sub images (and labels ) from training polygons
     :param t_polygons_shp: training polygon
     :param t_polygons_shp_all: the full set of training polygon, t_polygons_shp is a subset or equal to this one.
     :param bufferSize: buffer size of a center polygon to create a sub images
+    :param image_tile_list: image tiles
     :param saved_dir: output dir
     :param dstnodata: nodata when save for the output images
     :param brectangle: True: get the rectangle extent of a images.
@@ -70,25 +92,41 @@ def get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, saved_
     '''
 
 
-
     # read polygons
-    if t_polygons_shp_all == t_polygons_shp:
-        t_shapefile_all = gpd.read_file(t_polygons_shp_all)
-
-        class_labels = t_shapefile_all['class_int'].tolist()
-
-        # read the polygons (in shapely format)
-        center_polygons = t_shapefile_all.geometry.values  # list of shapely geometries
-    else:
-
-        t_shapefile = gpd.read_file(t_polygons_shp)
-        class_labels = t_shapefile['class_int'].tolist()
-        center_polygons = t_shapefile.geometry.values
-
-
-
-
     t_shapefile = gpd.read_file(t_polygons_shp)
+    class_labels = t_shapefile['class_int'].tolist()
+    center_polygons = t_shapefile.geometry.values
+
+    # read the full set of training polygons, used this one to produce the label images
+    t_shapefile_all = gpd.read_file(t_polygons_shp_all)
+    class_labels_all = t_shapefile_all['class_int'].tolist()
+    polygons_all = t_shapefile_all.geometry.values
+
+
+    img_tile_boxes = get_image_tile_bound_boxes(image_tile_list)
+
+    # go through each polygon
+    for idx, c_polygon in enumerate(center_polygons):
+
+        # output message
+        basic.outputlogMessage('obtaining %d sub-image and the corresponding label raster'%idx)
+
+        # find the images which the center polyong overlap (one or two images)
+        c_polygon_json = mapping(c_polygon)
+        shape_bound = rasterio.features.bounds(c_polygon_json)
+        img_index = get_overlap_image_index(shape_bound, img_tile_boxes)
+        if len(img_index) < 1:
+            basic.outputlogMessage('Warining???? stop here')
+
+        # get an image and corresponding label raster
+
+
+
+        # save to dir
+
+        pass
+
+    test = 1
 
 
 
@@ -132,7 +170,7 @@ def main(options, args):
     bufferSize = options.bufferSize
     saved_dir = options.out_dir
     dstnodata = options.dstnodata
-    get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, saved_dir, dstnodata, brectangle=True)
+    get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, dstnodata, brectangle=True)
 
 
 
