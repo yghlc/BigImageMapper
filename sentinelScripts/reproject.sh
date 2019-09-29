@@ -30,9 +30,9 @@ res=10
 
 verdir=sentinel-2_2018_mosaic_v4
 
-out_dir=${verdir}_Albers
+out_dir=8bit_dir/${verdir}_Albers
 
-mkdir -p 8bit_dir/${out_dir}
+mkdir -p ${out_dir}
 
 for tif in $(ls 8bit_dir/${verdir}/*.tif); do
 
@@ -49,7 +49,10 @@ for tif in $(ls 8bit_dir/${verdir}/*.tif); do
     out_name=${filename_no_ext}_Albers.tif
 
     #
-    gdalwarp -overwrite -r bilinear  -s_srs ${s_srs} -t_srs ${t_srs} -tr ${res} ${res} -of GTiff ${tif} ${out_name}
+    gdalwarp -overwrite -r bilinear  -s_srs ${s_srs} -t_srs ${t_srs} -tr ${res} ${res} -of GTiff ${tif} ${out_dir}/${out_name}
+
+    # after reprojection, they they are many pixels around the edge is dark (0), need to set them as zero
+    gdal_edit.py -a_nodata 0  ${out_dir}/${out_name}
 
 
 done
