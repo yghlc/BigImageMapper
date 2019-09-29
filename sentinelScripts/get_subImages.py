@@ -179,7 +179,7 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
     img_index = get_overlap_image_index([selected_polygon], image_tile_bounds)
     if len(img_index) < 1:
         basic.outputlogMessage(
-            'Warning, %dth polygon and the adjacent ones do not overlap any image tile, please check '
+            'Warning, %dth polygon do not overlap any image tile, please check ' #and its buffer area
             '(1) the shape file and raster have the same projection'
             'and (2) this polygon is in the extent of images' % idx)
         return False
@@ -214,12 +214,46 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
         pass
     else:
         # for the case it overlap more than one raster, need to produce a mosaic
-        raise ValueError('TO BE added')
-        pass
+        tmp_saved_files = []
+
+        for k_img,image_path in enumerate(image_list):
+            with rasterio.open(image_path) as src:
+                polygon_json = mapping(selected_polygon)
+                if brectangle:
+                    # polygon_box = selected_polygon.bounds
+                    polygon_json = mapping(selected_polygon.envelope)  # shapely.geometry.Polygon([polygon_box])
+
+                # crop image and saved to disk
+                out_image, out_transform = mask(src, [polygon_json], nodata=dstnodata, all_touched=True, crop=True)
+
+                tmp_saved = os.path.splitext(save_path)[0] +'_%d'%k_img + os.path.splitext(save_path)[1]
+                # test: save it to disk
+                out_meta = src.meta.copy()
+                out_meta.update({"driver": "GTiff",
+                                 "height": out_image.shape[1],
+                                 "width": out_image.shape[2],
+                                 "transform": out_transform})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+                with rasterio.open(tmp_saved, "w", **out_meta) as dest:
+                    dest.write(out_image)
+                tmp_saved_files.append(tmp_saved)
+
+        # mosaic files in tmp_saved_files
+        mosaic_args_list = ['gdal_merge.py', '-o', save_path,'-n',str(dstnodata),'-a_nodata',str(dstnodata)]
+        mosaic_args_list.extend(tmp_saved_files)
+        if basic.exec_command_args_list_one_file(mosaic_args_list,save_path) is False:
+            raise IOError('error, obtain a mosaic (%s) failed'%save_path)
+
+        # # for test
+        # if idx==13:
+        #     raise ValueError('for test')
+
+        # remove the tmp files
+        for tmp_file in tmp_saved_files:
+            io_function.delete_file_or_dir(tmp_file)
 
     # if it will output a very large image (10000 by 10000 pixels), then raise a error
 
-    pass
+    return True
 
 def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_int_all, bufferSize, img_tile_boxes,image_tile_list):
     '''
@@ -364,12 +398,12 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
         # get one sub-image based on the buffer areas
         subimg_saved_path = os.path.join(saved_dir, 'subImages' , pre_name+'_%d_class_%d.tif'%(idx,c_class_int))
         if get_sub_image(idx,expansion_polygon,image_tile_list,img_tile_boxes, subimg_saved_path, dstnodata, brectangle) is False:
-            basic.outputlogMessage('Warning, skip %dth polygon'%idx)
+            basic.outputlogMessage('Warning, skip the %dth polygon'%idx)
             continue
 
         # based on the sub-image, create the corresponding vectors
-        pre_name = 'raster'
-        sublabel_saved_path = os.path.join(saved_dir, 'subLabels', pre_name + '_%d_class_%d.tif' % (idx, c_class_int))
+        # pre_name = 'raster'
+        # sublabel_saved_path = os.path.join(saved_dir, 'subLabels', pre_name + '_%d_class_%d.tif' % (idx, c_class_int))
 
         # save to dir
 
