@@ -31,6 +31,7 @@ from shapely.geometry import mapping # transform to GeJSON format
 import geopandas as gpd
 
 import math
+import numpy as np
 
 def get_image_tile_bound_boxes(image_tile_list):
     '''
@@ -138,18 +139,21 @@ def get_bounds_of_polygons(polygons):
     return (X_min, Y_min, X_max, Y_max)
 
 
-def get_adjacent_polygons(center_polygon, all_polygons, class_int_all, buffer_size):
+def get_adjacent_polygons(center_polygon, all_polygons, class_int_all, buffer_size, brectangle):
     '''
     find the adjacent polygons
     :param center_polygon: a center polygon
     :param all_polygons: the full set of training polygons
     :param class_int_all: the class the full set of training polygons
     :param buffer_size: a size to define adjacent areas e.g., 300m
+    :param brectangle: if brectangle is True, count ajdancet inside the bound
     :return: the list contain adjacent polygons, and their class
     '''
 
     # get buffer area
     expansion_polygon = center_polygon.buffer(buffer_size)
+    if brectangle:
+        expansion_polygon = expansion_polygon.envelope
     adjacent_polygon = []
     adjacent_polygon_class = []
     for idx, polygon in enumerate(all_polygons):
@@ -254,6 +258,59 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
     # if it will output a very large image (10000 by 10000 pixels), then raise a error
 
     return True
+
+def get_sub_label(idx, sub_image_path, center_polygon, class_int, polygons_all, class_int_all, bufferSize, brectangle, save_path):
+    '''
+    create a label raster for a sub-image
+    :param idx: id
+    :param sub_image_path: the path of the sub-image
+    :param center_polygon:  a center polygon
+    :param class_int: class of the center polygon
+    :param polygons_all: he full set of training polygons, for finding adjacent polygons
+    :param class_int_all: the class number for the full set of training polygons
+    :param bufferSize:
+    :param brectangle: if brectangle is True, crop the raster using bounds, else, use the polygon
+    :param save_path: path for saved the image
+    :return:
+    '''
+
+    # center_polygon corresponds to one polygon in the full set of training polygons, so it is not necessary to check
+    # get adjacent polygon
+    adj_polygons, adj_polygons_class = get_adjacent_polygons(center_polygon, polygons_all, class_int_all, bufferSize, brectangle)
+
+    # add the center polygons to adj_polygons
+    adj_polygons.extend([center_polygon])
+    adj_polygons_class.extend([class_int])
+
+    with rasterio.open(sub_image_path) as src:
+
+        transform = src.transform
+
+        burn_out = np.zeros((src.height, src.width))
+
+        # rasterize the shapes
+        burn_shapes = [(item_shape, item_class_int) for (item_shape, item_class_int) in
+                       zip(adj_polygons, adj_polygons_class)]
+        #
+        out_label = rasterize(burn_shapes, out=burn_out, transform=transform,
+                              fill=0, all_touched=False, dtype=rasterio.uint8)
+
+        # test: save it to disk
+        kwargs = src.meta
+        kwargs.update(
+            dtype=rasterio.uint8,
+            count=1)
+        #   width=burn_out.shape[1],
+        #    height=burn_out.shape[0],#transform=transform
+        # remove nodta in the output
+        if 'nodata' in kwargs.keys():
+            del kwargs['nodata']
+
+        with rasterio.open(save_path, 'w', **kwargs) as dst:
+            dst.write_band(1, out_label.astype(rasterio.uint8))
+
+    return True
+
 
 def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_int_all, bufferSize, img_tile_boxes,image_tile_list):
     '''
@@ -383,6 +440,8 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
     img_tile_boxes = get_image_tile_bound_boxes(image_tile_list)
 
+    pre_name_for_label = os.path.splitext(os.path.basename(t_polygons_shp))[0]
+
     # go through each polygon
     for idx, (c_polygon, c_class_int)  in enumerate(zip(center_polygons,class_labels)):
 
@@ -402,10 +461,10 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
             continue
 
         # based on the sub-image, create the corresponding vectors
-        # pre_name = 'raster'
-        # sublabel_saved_path = os.path.join(saved_dir, 'subLabels', pre_name + '_%d_class_%d.tif' % (idx, c_class_int))
-
-        # save to dir
+        sublabel_saved_path = os.path.join(saved_dir, 'subLabels', pre_name_for_label + '_%d_class_%d.tif' % (idx, c_class_int))
+        if get_sub_label(idx,subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize, brectangle, sublabel_saved_path) is False:
+            basic.outputlogMessage('Warning, get the label raster for %dth polygon failed' % idx)
+            continue
 
         pass
 
