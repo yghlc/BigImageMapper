@@ -19,11 +19,18 @@ sys.path.insert(0, codes_dir2)
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
+# import thest two to make sure load GEOS dll before using shapely
+import shapely
+import shapely.geometry
+
 import rasterio
 from rasterio.mask import mask
+from rasterio.features import rasterize
 from shapely.geometry import mapping # transform to GeJSON format
 
 import geopandas as gpd
+
+import math
 
 def get_image_tile_bound_boxes(image_tile_list):
     '''
@@ -40,23 +47,95 @@ def get_image_tile_bound_boxes(image_tile_list):
 
     return boxes
 
-def get_overlap_image_index(polygon_box,image_boxes):
+def get_overlap_image_index(polygons,image_boxes):
     '''
-    get the index of images polygon overlap
-    :param polygon_box: the extent of the polygon
+    get the index of images that the polygons overlap
+    :param polygons: a list of polygons
     :param image_boxes: the extent of the all the images
     :return:
     '''
 
+     # find the images which the polygons overlap (one or two images)
     img_idx = []
+    # for a_poly in polygons:
+    #     a_poly_json = mapping(a_poly)
+    #     polygon_box = rasterio.features.bounds(a_poly_json)
+    polygon_box = get_bounds_of_polygons(polygons)
     for idx, img_box in enumerate(image_boxes):
         if rasterio.coords.disjoint_bounds(img_box, polygon_box) is False:
-            img_idx.append(idx)
+            if idx not in img_idx:
+                img_idx.append(idx)
     return img_idx
 
-def get_adjacent_polygons(center_polygon, buffer_area):
+def check_polygons_invalidity(polygons, shp_path):
+    '''
+    check if all the polygons are valid
+    :param polygons:  polygons in shapely format
+    :param shp_path:  the shape file containing the polygons
+    :return:
+    '''
+    invalid_polygon_idx = []
+    for idx, geom in enumerate(polygons):
+        if geom.is_valid is False:
+            invalid_polygon_idx.append(idx + 1)
 
-    pass
+    if len(invalid_polygon_idx) < 1:
+        return True
+    else:
+        raise ValueError('error, polygons %s (index start from 1) in %s are invalid, please fix them first '%(str(invalid_polygon_idx),shp_path))
+
+def meters_to_degress_onEarth(distance):
+    return (distance/6371000.0)*180.0/math.pi
+
+def get_bounds_of_polygons(polygons):
+    '''
+    Return a (left, bottom, right, top) bounding box for several polygons
+    :param polygons:  a list of polygons
+    :return:
+    '''
+
+    X_min, Y_min, X_max, Y_max = polygons[0].bounds
+    if len(polygons) < 2:
+        return (X_min, Y_min, X_max, Y_max)
+    else:
+        for idx in range(1, len(polygons)):
+            bounds = polygons[idx].bounds  # return (X_min, Y_min, X_max, Y_max)
+            if bounds[0] < X_min: X_min = bounds[0]
+            if bounds[1] < Y_min: Y_min = bounds[1]
+            if bounds[2] > X_max: X_max = bounds[2]
+            if bounds[3] > Y_max: Y_max = bounds[3]
+
+    return (X_min, Y_min, X_max, Y_max)
+
+
+def get_adjacent_polygons(center_polygon, all_polygons, class_int_all, buffer_size):
+    '''
+    find the adjacent polygons
+    :param center_polygon: a center polygon
+    :param all_polygons: the full set of training polygons
+    :param class_int_all: the class the full set of training polygons
+    :param buffer_size: a size to define adjacent areas e.g., 300m
+    :return: the list contain adjacent polygons, and their class
+    '''
+
+    # convert buffer size from meters to degrees
+    # buffer_size = meters_to_degress_onEarth(buffer_size)
+
+    # get buffer area
+    expansion_polygon = center_polygon.buffer(buffer_size)
+    adjacent_polygon = []
+    adjacent_polygon_class = []
+    for idx, polygon in enumerate(all_polygons):
+        # skip itself
+        if polygon == center_polygon:
+            continue
+        # print(idx)
+        inte_res = expansion_polygon.intersection(polygon)
+        if inte_res.is_empty is False:
+            adjacent_polygon.append(polygon)
+            adjacent_polygon_class.append(class_int_all[idx])
+
+    return adjacent_polygon, adjacent_polygon_class
 
 def get_mask_image(selected_polygons, image_tile_list, image_tile_bounds ):
     '''
@@ -72,11 +151,102 @@ def get_mask_image(selected_polygons, image_tile_list, image_tile_bounds ):
 
     pass
 
-def get_one_sub_image_label(center_polygon, class_int, polygons_all,class_int_all, bufferSize, image_list):
+def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_int_all, bufferSize, img_tile_boxes,image_tile_list):
+    '''
+    get an sub image and the corresponding labe raster
+    :param idx: the polygon index
+    :param center_polygon: the polygon in training polygon
+    :param class_int: the class number of this polygon
+    :param polygons_all: the full set of training polygons, for generating label images
+    :param class_int_all: the class number for the full set of training polygons
+    :param bufferSize: the buffer area to generate sub-images
+    :param img_tile_boxes: the bound boxes of all the image tiles
+    :param image_tile_list: the list of image paths
+    :return:
+    '''
+
+    # center_polygon corresponds to one polygon in the full set of training polygons, so it is not necessary to check
+    # get adjacent polygon
+    adj_polygons, adj_polygons_class = get_adjacent_polygons(center_polygon, polygons_all, class_int_all, bufferSize)
+
+    # add the center polygons to adj_polygons
+    adj_polygons.extend([center_polygon])
+    adj_polygons_class.extend([class_int])
+    basic.outputlogMessage('get a sub image covering %d training polygons'%len(adj_polygons))
+
+    # find the images which the center polygon overlap (one or two images)
+    img_index = get_overlap_image_index(adj_polygons, img_tile_boxes)
+    if len(img_index) < 1:
+        basic.outputlogMessage('Warning, %dth polygon and the adjacent ones do not overlap any image tile, please check '
+                               '(1) the shape file and raster have the same projection'
+                               'and (2) this polygon is in the extent of images'%idx)
+
+    image_list = [image_tile_list[item] for item in img_index]
+
+    # open the raster to get projection, resolution
+    # with rasterio.open(image_list[0]) as src:
+    #     resX = src.res[0]
+    #     resY = src.res[1]
+    #     src_profile = src.profile
+    src = rasterio.open(image_list[0])
+    resX = src.res[0]
+    resY = src.res[1]
+    src_profile = src.profile
+
+    # rasterize the shapes
+    burn_shapes = [(item_shape, item_class_int) for (item_shape, item_class_int) in zip(adj_polygons,adj_polygons_class)]
+    burn_boxes = get_bounds_of_polygons(adj_polygons)
+
+    # check weather the extent is too large
+    burn_boxes_width = math.ceil((burn_boxes[2]- burn_boxes[0])/resX)
+    burn_boxes_height = math.ceil((burn_boxes[3] - burn_boxes[1])/resY)
+
+    if  burn_boxes_width*burn_boxes_height > 10000*10000:
+        raise ValueError('error, the polygons want to burn cover a very large area')
+
+    # fill as 255 for region outsize shapes for test purpose
+    # set all_touched as True, may good small shape
+    # new_transform = (burn_boxes[0], resX, 0, burn_boxes[3], 0, -resY )  # (X_min, resX, 0, Y_max, 0, -resY)  # GDAL-style transforms, have been deprecated after raster 1.0
+    # affine.Affine() vs. GDAL-style geotransforms: https://rasterio.readthedocs.io/en/stable/topics/migrating-to-v1.html
+    new_transform = (resX ,0, burn_boxes[0] , 0, -resY, burn_boxes[3])  # (resX, 0, X_min, 0, -resY, Y_max)
+    out_label = rasterize(burn_shapes, out_shape=(burn_boxes_width,burn_boxes_height), transform=new_transform, fill=0, all_touched=False, dtype=rasterio.uint8)
+    print('new_transform', new_transform)
+    print('out_label', out_label.shape)
+
+
+    # test, save to disk
+    kwargs = src.meta
+    kwargs.update(
+        dtype=rasterio.uint8,
+        count=1,
+        width=burn_boxes_width,
+        height = burn_boxes_height,
+        transform=new_transform)
+    with rasterio.open('test_6_albers.tif', 'w', **kwargs) as dst:
+        dst.write_band(1, out_label.astype(rasterio.uint8))
+
+    # mask, get pixels cover by polygons, set all_touched as True
+    polygons_json = [mapping(item) for item in adj_polygons]
+    out_image, out_transform = mask(src, polygons_json, nodata=0, all_touched=True, crop=True)
+
+    #test: output infomation
+    print('out_transform', out_transform)
+    print('out_image',out_image.shape)
+
+    # test: save it to disk
+    out_meta = src.meta.copy()
+    out_meta.update({"driver": "GTiff",
+                     "height": out_image.shape[1],
+                     "width": out_image.shape[2],
+                     "transform": out_transform})   # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+    save_path = "masked_of_polygon_%d.tif"%(idx+1)
+    with rasterio.open(save_path, "w", **out_meta) as dest:
+        dest.write(out_image)
 
 
 
-    pass
+    # return image_array, label_array
+    return 1, 1
 
 def get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, dstnodata, brectangle = True):
     '''
@@ -96,11 +266,13 @@ def get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_
     t_shapefile = gpd.read_file(t_polygons_shp)
     class_labels = t_shapefile['class_int'].tolist()
     center_polygons = t_shapefile.geometry.values
+    check_polygons_invalidity(center_polygons,t_polygons_shp)
 
     # read the full set of training polygons, used this one to produce the label images
     t_shapefile_all = gpd.read_file(t_polygons_shp_all)
     class_labels_all = t_shapefile_all['class_int'].tolist()
     polygons_all = t_shapefile_all.geometry.values
+    check_polygons_invalidity(polygons_all,t_polygons_shp_all)
 
 
     img_tile_boxes = get_image_tile_bound_boxes(image_tile_list)
@@ -111,15 +283,9 @@ def get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_
         # output message
         basic.outputlogMessage('obtaining %d sub-image and the corresponding label raster'%idx)
 
-        # find the images which the center polyong overlap (one or two images)
-        c_polygon_json = mapping(c_polygon)
-        shape_bound = rasterio.features.bounds(c_polygon_json)
-        img_index = get_overlap_image_index(shape_bound, img_tile_boxes)
-        if len(img_index) < 1:
-            basic.outputlogMessage('Warining???? stop here')
 
-        # get an image and corresponding label raster
-
+        # get an image and the corresponding label raster
+        image_array, label_array = get_one_sub_image_label(idx,c_polygon, class_labels[idx], polygons_all, class_labels_all, bufferSize, img_tile_boxes,image_tile_list)
 
 
         # save to dir
@@ -165,9 +331,11 @@ def main(options, args):
         raise IOError('error, failed to get image tiles in folder %s'%image_folder)
 
     #TODO:need to check: the shape file and raster should have the same projection.
+    #TODO: check these are EPSG:4326 projection
 
     #
     bufferSize = options.bufferSize
+
     saved_dir = options.out_dir
     dstnodata = options.dstnodata
     get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, dstnodata, brectangle=True)
