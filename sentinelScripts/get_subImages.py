@@ -115,7 +115,7 @@ def get_projection_proj4(geo_file):
     prj4_str = basic.exec_command_args_list_one_string(shp_args_list)
     if prj4_str is False:
         raise ValueError('error, get projection information of %s failed'%geo_file)
-    return shp_args_list
+    return prj4_str
 
 def get_bounds_of_polygons(polygons):
     '''
@@ -164,15 +164,58 @@ def get_adjacent_polygons(center_polygon, all_polygons, class_int_all, buffer_si
 
     return adjacent_polygon, adjacent_polygon_class
 
-def get_mask_image(selected_polygons, image_tile_list, image_tile_bounds ):
+def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle ):
     '''
-    get a mask image based on selected polygons, this image may cross two image tiles
-    :param selected_polygons: selected polygons
-    :param image_tile_list: image tiles.
-    :return:
+    get a mask image based on a selected polygon, it may cross two image tiles
+    :param selected_polygon: selected polygons
+    :param image_tile_list: image list
+    :param image_tile_bounds: the boxes of images in the list
+    :param save_path: save path
+    :param brectangle: if brectangle is True, crop the raster using bounds, else, use the polygon
+    :return: True is successful, False otherwise
     '''
 
+    # find the images which the center polygon overlap (one or two images)
+    img_index = get_overlap_image_index([selected_polygon], image_tile_bounds)
+    if len(img_index) < 1:
+        basic.outputlogMessage(
+            'Warning, %dth polygon and the adjacent ones do not overlap any image tile, please check '
+            '(1) the shape file and raster have the same projection'
+            'and (2) this polygon is in the extent of images' % idx)
+        return False
+
+    image_list = [image_tile_list[item] for item in img_index]
+
     # check it cross two or more images
+    if len(image_list) == 1:
+        # for the case that the polygon only overlap one raster
+        with rasterio.open(image_list[0]) as src:
+            polygon_json = mapping(selected_polygon)
+
+            # not necessary
+            # overlap_win = rasterio.features.geometry_window(src, [polygon_json], pad_x=0, pad_y=0, north_up=True, rotated=False,
+            #                               pixel_precision=3)
+
+            if brectangle:
+                # polygon_box = selected_polygon.bounds
+                polygon_json = mapping(selected_polygon.envelope) #shapely.geometry.Polygon([polygon_box])
+
+            # crop image and saved to disk
+            out_image, out_transform = mask(src, [polygon_json], nodata=dstnodata, all_touched=True, crop=True)
+
+            # test: save it to disk
+            out_meta = src.meta.copy()
+            out_meta.update({"driver": "GTiff",
+                             "height": out_image.shape[1],
+                             "width": out_image.shape[2],
+                             "transform": out_transform})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+            with rasterio.open(save_path, "w", **out_meta) as dest:
+                dest.write(out_image)
+        pass
+    else:
+        # for the case it overlap more than one raster, need to produce a mosaic
+        raise ValueError('TO BE added')
+        pass
 
     # if it will output a very large image (10000 by 10000 pixels), then raise a error
 
@@ -191,6 +234,8 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
     :param image_tile_list: the list of image paths
     :return:
     '''
+
+    ############# This funciton is not working  #############
 
     # center_polygon corresponds to one polygon in the full set of training polygons, so it is not necessary to check
     # get adjacent polygon
@@ -275,7 +320,7 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
     # return image_array, label_array
     return 1, 1
 
-def get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, dstnodata, brectangle = True):
+def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata, brectangle = True):
     '''
     get sub images (and labels ) from training polygons
     :param t_polygons_shp: training polygon
@@ -305,15 +350,26 @@ def get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_
     img_tile_boxes = get_image_tile_bound_boxes(image_tile_list)
 
     # go through each polygon
-    for idx, c_polygon in enumerate(center_polygons):
+    for idx, (c_polygon, c_class_int)  in enumerate(zip(center_polygons,class_labels)):
 
         # output message
         basic.outputlogMessage('obtaining %d sub-image and the corresponding label raster'%idx)
 
+        ## get an image and the corresponding label raster (has errors)
+        ## image_array, label_array = get_one_sub_image_label(idx,c_polygon, class_labels[idx], polygons_all, class_labels_all, bufferSize, img_tile_boxes,image_tile_list)
 
-        # get an image and the corresponding label raster
-        image_array, label_array = get_one_sub_image_label(idx,c_polygon, class_labels[idx], polygons_all, class_labels_all, bufferSize, img_tile_boxes,image_tile_list)
+        # get buffer area
+        expansion_polygon = c_polygon.buffer(bufferSize)
 
+        # get one sub-image based on the buffer areas
+        subimg_saved_path = os.path.join(saved_dir, 'subImages' , pre_name+'_%d_class_%d.tif'%(idx,c_class_int))
+        if get_sub_image(idx,expansion_polygon,image_tile_list,img_tile_boxes, subimg_saved_path, dstnodata, brectangle) is False:
+            basic.outputlogMessage('Warning, skip %dth polygon'%idx)
+            continue
+
+        # based on the sub-image, create the corresponding vectors
+        pre_name = 'raster'
+        sublabel_saved_path = os.path.join(saved_dir, 'subLabels', pre_name + '_%d_class_%d.tif' % (idx, c_class_int))
 
         # save to dir
 
@@ -373,8 +429,11 @@ def main(options, args):
         bufferSize = options.bufferSize
 
     saved_dir = options.out_dir
+    os.system('mkdir -p ' + os.path.join(saved_dir,'subImages'))
+    os.system('mkdir -p ' + os.path.join(saved_dir,'subLabels'))
     dstnodata = options.dstnodata
-    get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, dstnodata, brectangle=True)
+    pre_name = '_'.join(os.path.basename(image_tile_list[0]).split('_')[:4])
+    get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata, brectangle=True)
 
     # move sub images and sub labels to different folders.
 
@@ -398,7 +457,7 @@ if __name__ == "__main__":
     parser.add_option("-o", "--out_dir",
                       action="store", dest="out_dir",
                       help="the folder path for saving output files")
-    parser.add_option("-n", "--dstnodata",
+    parser.add_option("-n", "--dstnodata", type=int,
                       action="store", dest="dstnodata",
                       help="the nodata in output images")
     parser.add_option("-r", "--rectangle",
