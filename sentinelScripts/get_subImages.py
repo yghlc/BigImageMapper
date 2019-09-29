@@ -84,8 +84,38 @@ def check_polygons_invalidity(polygons, shp_path):
     else:
         raise ValueError('error, polygons %s (index start from 1) in %s are invalid, please fix them first '%(str(invalid_polygon_idx),shp_path))
 
+def check_projection_rasters(image_path_list):
+    '''
+    check the rasters: have the samep projectoin
+    :param image_path_list: a list containing all the images
+    :return:
+    '''
+
+    if len(image_path_list) < 2:
+        return True
+    proj4 = get_projection_proj4(image_path_list[0])
+    for idx in range(1,len(image_path_list)):
+        proj4_tmp = get_projection_proj4(image_path_list[idx])
+        if proj4_tmp != proj4:
+            raise ValueError('error, %s have different projection with the first raster'%image_path_list[idx])
+    return True
+
 def meters_to_degress_onEarth(distance):
     return (distance/6371000.0)*180.0/math.pi
+
+
+def get_projection_proj4(geo_file):
+    '''
+    get the proj4 string
+    :param geo_file: a shape file or raster file
+    :return: projection string in prj4 format
+    '''
+
+    shp_args_list = ['gdalsrsinfo','-o','proj4',geo_file]
+    prj4_str = basic.exec_command_args_list_one_string(shp_args_list)
+    if prj4_str is False:
+        raise ValueError('error, get projection information of %s failed'%geo_file)
+    return shp_args_list
 
 def get_bounds_of_polygons(polygons):
     '''
@@ -117,9 +147,6 @@ def get_adjacent_polygons(center_polygon, all_polygons, class_int_all, buffer_si
     :param buffer_size: a size to define adjacent areas e.g., 300m
     :return: the list contain adjacent polygons, and their class
     '''
-
-    # convert buffer size from meters to degrees
-    # buffer_size = meters_to_degress_onEarth(buffer_size)
 
     # get buffer area
     expansion_polygon = center_polygon.buffer(buffer_size)
@@ -323,6 +350,9 @@ def main(options, args):
         basic.outputlogMessage('Warning, the full set of training polygons is not assigned, '
                                'it will consider the one in input argument is the full set of training polygons')
         t_polygons_shp_all = t_polygons_shp
+    else:
+        if get_projection_proj4(t_polygons_shp) != get_projection_proj4(t_polygons_shp_all):
+            raise ValueError('error, projection insistence between %s and %s'%(t_polygons_shp, t_polygons_shp_all))
     assert io_function.is_file_exist(t_polygons_shp_all)
 
     # get image tile list
@@ -330,16 +360,23 @@ def main(options, args):
     if len(image_tile_list) < 1:
         raise IOError('error, failed to get image tiles in folder %s'%image_folder)
 
-    #TODO:need to check: the shape file and raster should have the same projection.
-    #TODO: check these are EPSG:4326 projection
+    check_projection_rasters(image_tile_list)   # it will raise errors if found problems
 
-    #
-    bufferSize = options.bufferSize
+    #need to check: the shape file and raster should have the same projection.
+    if get_projection_proj4(t_polygons_shp) != get_projection_proj4(image_tile_list[0]):
+        raise ValueError('error, the input raster (e.g., %s) and vector (%s) files don\'t have the same projection'%(image_tile_list[0],t_polygons_shp))
+
+    # check these are EPSG:4326 projection
+    if get_projection_proj4(t_polygons_shp) == '+proj=longlat +datum=WGS84 +no_defs':
+        bufferSize = meters_to_degress_onEarth(options.bufferSize)
+    else:
+        bufferSize = options.bufferSize
 
     saved_dir = options.out_dir
     dstnodata = options.dstnodata
     get_sub_images_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, dstnodata, brectangle=True)
 
+    # move sub images and sub labels to different folders.
 
 
 
