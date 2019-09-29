@@ -16,9 +16,15 @@ para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 para_file=para.ini
 
+# source projection
+# note: gdalsrsinfo require GDAL >= 2.3, or it has wrong information and lead to errors
+s_srs="EPSG:4326"
+
 # target projection
 t_srs=$(python2 ${para_py} -p ${para_file} cartensian_prj)
-echo $t_srs
+#echo $t_srs
+
+##t_srs="EPSG:102025" # Asia_North_Albers_Equal_Area_Conic
 
 res=10
 
@@ -33,8 +39,9 @@ for tif in $(ls 8bit_dir/${verdir}/*.tif); do
     # convert projection
     echo "INPUT tif file:" $tif
 
-    s_srs=$(gdalsrsinfo -o wkt $tif )   # could be
-    echo "The original EPGS is" ${s_srs}
+#    s_srs=$(gdalsrsinfo -o proj4 $tif )   # could be
+#    echo "The original EPGS is" ${s_srs}
+#    s_srs="EPSG:4326"
 
     filename=$(basename "$tif")
     filename_no_ext="${filename%.*}"
