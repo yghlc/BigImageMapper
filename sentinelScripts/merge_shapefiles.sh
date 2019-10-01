@@ -27,7 +27,6 @@ out_name=${testid}_prj_post
 out_shp=${out_name}.shp
 
 cd result_backup
-cp ../${para_file} para.ini
 
 for i in $(ls *_prj_post*.shp)
 do

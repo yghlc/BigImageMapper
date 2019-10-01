@@ -56,9 +56,8 @@ cd ${inf_dir}
     fi
 
     # reproject the shapefile from "GEOGCS (WGS84)" to "Cartesian (XY) projection"
-    # the following projection (wkt string) came from ran.shp (gdalsrsinfo -o wkt ran.shp), the Permafrost map on the Tibetan Plateau
     # need to modify it if switch to other regions
-    t_srs="PROJCS["Krasovsky_1940_Albers",GEOGCS["GCS_WGS_1984",DATUM["WGS_1984",SPHEROID["WGS_84",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["False_Easting",0.0],PARAMETER["False_Northing",0.0],PARAMETER["longitude_of_center",90.0],PARAMETER["Standard_Parallel_1",27.5],PARAMETER["Standard_Parallel_2",37.5],PARAMETER["latitude_of_center",0.0],UNIT["Meter",1.0]]"
+    t_srs=$(python2 ${para_py} -p ${para_file} cartensian_prj)
 
     if [ ! -f I${n}_${testid}_prj.shp ]; then
         ogr2ogr -t_srs  ${t_srs}  I${n}_${testid}_prj.shp I${n}_${testid}.shp
@@ -82,13 +81,21 @@ echo "$(date): time cost of post processing: ${duration} seconds">>"time_cost.tx
 
 ########################################
 # copy results
+#if [ ${num} -lt 2 ] ; then
+#    bak_dir=result_backup
+#    echo "the results contains only one shape file"
+#else
+#    bak_dir=result_backup/${testid}_${test}_tiles
+#    echo "the results containes twor or more shape files"
+#fi
 
-mkdir -p result_backup
+bak_dir=result_backup/${testid}_${test}_tiles
+mkdir -p ${bak_dir}
 for (( n=0; n<${num}; n++ ));
     do
 
-    cp_shapefile ${inf_dir}/I${n}/I${n}_${testid}_prj_post result_backup/I${n}_${testid}_prj_post_${test} | true
-    cp_shapefile ${inf_dir}/I${n}/I${n}_${testid}_prj result_backup/I${n}_${testid}_prj_${test} | true
+    cp_shapefile ${inf_dir}/I${n}/I${n}_${testid}_prj_post ${bak_dir}/I${n}_${testid}_prj_post_${test} | true
+    cp_shapefile ${inf_dir}/I${n}/I${n}_${testid}_prj ${bak_dir}/I${n}_${testid}_prj_${test} | true
 
     cp ${para_file} result_backup/${testid}_para_${test}.ini
 #    cp ${inf_dir}/evaluation_report.txt result_backup/${testid}_eva_report_${test}.txt
