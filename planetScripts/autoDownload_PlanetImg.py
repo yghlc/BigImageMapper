@@ -20,7 +20,258 @@ add time: 30 September, 2019
 
 # pre-install library
 # python 2.7+, better to use Python 3
+# pip install requests
+# pip install retrying
+# pip install jq
 
-# example : https://developers.planet.com/planetschool/downloading-imagery/
+import sys,os
+from optparse import OptionParser
+
+HOME = os.path.expanduser('~')
+
+# path of DeeplabforRS
+codes_dir2 = HOME + '/codes/PycharmProjects/DeeplabforRS'
+sys.path.insert(0, codes_dir2)
+
+import basic_src.io_function as io_function
+import basic_src.basic as basic
+
+# import thest two to make sure load GEOS dll before using shapely
+import shapely
+from shapely.geometry import mapping # transform to GeJSON format
+import geopandas as gpd
+
+import datetime
+import json
+
+import requests
+from requests.auth import HTTPBasicAuth
+
+def get_and_set_Planet_key(user_account):
+    keyfile = HOME+'/.planetkey'
+    with open(keyfile) as f_obj:
+        lines = f_obj.readlines()
+        for line in lines:
+            if user_account in line:
+                key_str = line.split(':')[1]
+                key_str = key_str.strip()       # remove '\n'
+                os.environ["PL_API_KEY"] = key_str
+                return True
+        raise ValueError('account: %s cannot find in %s'%(user_account,keyfile))
+
+def list_ItemTypes():
+
+    # Each class of imagery is identified by its "ItemType".
+    # e.g., "PSOrthoTile" - Images taken by PlanetScope satellites in the OrthoTile format.
+    # e.g., "REOrthoTile" - Images taken by RapidEye satellites in the OrthoTile format.
+
+    command_str = "curl -L -H \"Authorization: api-key $PL_API_KEY\" \'https://api.planet.com/data/v1/item-types\' | jq \'.item_types[].id\'"
+    out_str = basic.exec_command_string_output_string(command_str)
+    print(out_str)
+    return out_str
+
+def read_polygons_json(polygon_shp):
+    '''
+    read polyogns and convert to json format
+    :param polygon_shp: polygon in projection of EPSG:4326
+    :return:
+    '''
+
+    # check projection
+    shp_args_list = ['gdalsrsinfo', '-o', 'EPSG', polygon_shp]
+    epsg_str = basic.exec_command_args_list_one_string(shp_args_list)
+    epsg_str = epsg_str.decode().strip()  # byte to str, remove '\n'
+    if epsg_str != 'EPSG:4326':
+        raise ValueError('Current support shape file in projection of EPSG:4326')
+
+    shapefile = gpd.read_file(polygon_shp)
+    polygons = shapefile.geometry.values
+
+    # check invalidity of polygons
+    invalid_polygon_idx = []
+    for idx, geom in enumerate(polygons):
+        if geom.is_valid is False:
+            invalid_polygon_idx.append(idx + 1)
+    if len(invalid_polygon_idx) > 0:
+        raise ValueError('error, polygons %s (index start from 1) in %s are invalid, please fix them first '%(str(invalid_polygon_idx),polygon_shp))
+
+    # convert to json format
+    polygons_json = [ mapping(item) for item in polygons]
+
+    return polygons_json
+
+def get_a_filter(polygon_json,start_date, end_date, could_cover_thr):
+    # filter for items the overlap with our chosen geometry
+    geometry_filter = {
+        "type": "GeometryFilter",
+        "field_name": "geometry",
+        "config": polygon_json
+    }
+
+    # filter images acquired in a certain date range
+    date_range_filter = {
+        "type": "DateRangeFilter",
+        "field_name": "acquired",
+        "config": {
+            "gte": start_date.strftime("%Y-%m-%dT%H:%M:%SZ"),  # "2016-07-01T00:00:00.000Z"
+            "lte": end_date.strftime("%Y-%m-%dT%H:%M:%SZ"),  # "2016-08-01T00:00:00.000Z"
+        }
+    }
+
+    # filter any images which are more than 50% clouds
+    cloud_cover_filter = {
+        "type": "RangeFilter",
+        "field_name": "cloud_cover",
+        "config": {
+            "lte": could_cover_thr  # 0.5
+        }
+    }
+
+    # create a filter that combines our geo and date filters
+    # could also use an "OrFilter"
+    combined_filters = {
+        "type": "AndFilter",
+        "config": [geometry_filter, date_range_filter, cloud_cover_filter]
+    }
+
+    return combined_filters
+
+def POST_request(url, filter):
+    print(os.environ['PL_API_KEY'])
+    return requests.post(url,
+            auth=HTTPBasicAuth(os.environ['PL_API_KEY'], ''),
+            json=filter)
+
+def search_image_stats_for_a_polygon(polygon_json, item_type, start_date, end_date, could_cover_thr):
+    '''
+    search images with a polyon as input
+    :param polygon_json:
+    :param item_type:
+    :param period:
+    :param could_cover:
+    :return: buckets showing how many images available for each day
+    '''
+
+    combined_filters = get_a_filter(polygon_json, start_date, end_date, could_cover_thr)
+
+    # Stats API request object
+    stats_endpoint_request = {
+        "interval": "day",
+        "item_types": [item_type],
+        "filter": combined_filters
+    }
+
+    # fire off the POST request
+    result = POST_request('https://api.planet.com/data/v1/stats', stats_endpoint_request)
+
+    print(result.text)
+
+    # os.system('jq '+ result.text)
+    result_dict = json.loads(result.text)
+    buckets = result_dict['buckets']
+    for bucket in buckets:
+        print(bucket)
+
+    return True
+
+def search_image_metadata_for_a_polygon(polygon_json, item_type, start_date, end_date, could_cover_thr):
+    '''
+    search images with a polyon as input
+    :param polygon_json:
+    :param item_type:
+    :param period:
+    :param could_cover:
+    :return: image metadata and the corresponding id
+    '''
+
+    combined_filters = get_a_filter(polygon_json, start_date, end_date, could_cover_thr)
+
+    # Stats API request object
+    stats_endpoint_request = {
+        "item_types": [item_type],
+        "filter": combined_filters
+    }
+
+    # fire off the POST request
+    result = POST_request('https://api.planet.com/data/v1/quick-search', stats_endpoint_request)
+
+    print(result.text)
+
+    # os.system('jq '+ result.text)
+    # result_dict = json.loads(result.text)
+    # buckets = result_dict['buckets']
+    # for bucket in buckets:
+    #     print(bucket)
+
+    return True
+
+def download_one_image():
+    pass
+
+def main(options, args):
+
+    # need to set the key first
+    get_and_set_Planet_key('huanglingcao@link.cuhk.edu.hk')
+    # print(os.environ['PL_API_KEY'])
+
+    # list_ItemTypes()
+
+    polygons_shp = args[0]
+    save_folder = args[1]  # folder for saving downloaded images
+
+    # check training polygons
+    assert io_function.is_file_exist(polygons_shp)
+    os.system('mkdir -p ' + save_folder)
+
+    polygons_json = read_polygons_json(polygons_shp)
+
+    item_type = 'PSOrthoTile'
+    start_date = datetime.date(2018, 5, 20) # year, month, day
+    end_date = datetime.date(2018, 6, 1)
+    could_cover_thr = 0.5
+
+    # search_image_stats_for_a_polygon(polygons_json[0], item_type, start_date, end_date, could_cover_thr)
+
+    search_image_metadata_for_a_polygon(polygons_json[0], item_type, start_date, end_date, could_cover_thr)
+
+
+    pass
+
+if __name__ == "__main__":
+
+    usage = "usage: %prog [options] polygon_shp save_dir"
+    parser = OptionParser(usage=usage, version="1.0 2019-10-01")
+    parser.description = 'Introduction: search and download Planet images '
+    parser.add_option("-f", "--all_training_polygons",
+                      action="store", dest="all_training_polygons",
+                      help="the full set of training polygons. If the one in the input argument "
+                           "is a subset of training polygons, this one must be assigned")
+    # parser.add_option("-b", "--bufferSize",
+    #                   action="store", dest="bufferSize", type=float,
+    #                   help="buffer size is in the projection, normally, it is based on meters")
+    # parser.add_option("-e", "--image_ext",
+    #                   action="store", dest="image_ext", default='.tif',
+    #                   help="the extension of the image file")
+    # parser.add_option("-o", "--out_dir",
+    #                   action="store", dest="out_dir",
+    #                   help="the folder path for saving output files")
+    # parser.add_option("-n", "--dstnodata", type=int,
+    #                   action="store", dest="dstnodata",
+    #                   help="the nodata in output images")
+    # parser.add_option("-r", "--rectangle",
+    #                   action="store_true", dest="rectangle", default=False,
+    #                   help="whether use the rectangular extent of the polygon")
+
+    (options, args) = parser.parse_args()
+    # if len(sys.argv) < 2 or len(args) < 1:
+    #     parser.print_help()
+    #     sys.exit(2)
+
+
+    main(options, args)
+
+
+
+
 
 
