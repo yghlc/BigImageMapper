@@ -58,6 +58,7 @@ do
     merge_shp ${out_shp} ${out_name} ${i}
 done
 # convert to KML
+echo $"convert to KML format"
 ogr2ogr -f KML ${out_name}.kml ${out_shp}
 
 
@@ -73,6 +74,7 @@ do
     merge_shp ${out_shp} ${out_name} ${i}
 done
 # convert to KML
+echo $"convert to KML format"
 ogr2ogr -f KML ${out_name}.kml ${out_shp}
 
 cd ..
