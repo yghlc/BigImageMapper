@@ -18,13 +18,13 @@ set -eE -o functrace
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
 
-para_file=para.ini
+para_file=$1
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 
-inf_dir=$1
-inf_list_file=$2
-export CUDA_VISIBLE_DEVICES=$3
+inf_dir=$2
+inf_list_file=$3
+export CUDA_VISIBLE_DEVICES=$4
 ################################################
 
 expr_name=$(python2 ${para_py} -p ${para_file} expr_name)
@@ -40,7 +40,8 @@ SECONDS=0
 ## each time,only inference one image
 inf_batch_size=$(python2 ${para_py} -p ${para_file} inf_batch_size)
 python ${eo_dir}/grss_data_fusion/deeplab_inference.py --frozen_graph=${frozen_graph} \
---inf_output_dir=${inf_dir} --inf_batch_size=${inf_batch_size} --inf_list_file=${inf_list_file}
+--inf_output_dir=${inf_dir} --inf_batch_size=${inf_batch_size} --inf_list_file=${inf_list_file} \
+--inf_para_file=${para_file}
 
 
 duration=$SECONDS
