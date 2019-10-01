@@ -17,34 +17,54 @@ if [ ! -f $para_file ]; then
 fi
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
+test=$2
+
 expr_name=$(python2 ${para_py} -p ${para_file} expr_name)
 NUM_ITERATIONS=$(python2 ${para_py} -p ${para_file} export_iteration_num)
 trail=iter${NUM_ITERATIONS}
 
 testid=$(basename $PWD)_${expr_name}_${trail}
 
-out_name=${testid}_prj_post
-out_shp=${out_name}.shp
-
 cd result_backup
 
-for i in $(ls *_prj_post*.shp)
+tile_dir=${testid}_${test}_tiles
+
+# crop a data set
+function merge_shp() {
+    out_shp=$1
+    out_name=$2
+    i=$3
+
+    if [ -f "$out_shp" ]
+    then
+       echo "updating ${out_shp}"
+       ogr2ogr -f "ESRI Shapefile" -update -append $out_shp $i -nln ${out_name}
+    else
+        echo "creating ${out_shp}"
+        ogr2ogr -f "ESRI Shapefile" $out_shp $i
+    fi
+}
+
+
+out_name=${testid}_prj_post_${test}
+out_shp=${out_name}.shp
+for i in $(ls ${tile_dir}/*_prj_post*.shp)
 do
-
-      if [ -f "$out_shp" ]
-      then
-           echo "updating ${out_shp}"
-           ogr2ogr -f "ESRI Shapefile" -update -append $out_shp $i -nln ${out_name}
-      else
-            echo "creating ${out_shp}"
-            ogr2ogr -f "ESRI Shapefile" $out_shp $i
-#            exit
-      fi
-
+    echo "merging $i"
+    merge_shp ${out_shp} ${out_name} ${i}
 done
-
 # convert to KML
 ogr2ogr -f KML ${out_name}.kml ${out_shp}
 
+
+out_name=${testid}_prj_${test}
+out_shp=${out_name}.shp
+for i in $(ls ${tile_dir}/*_prj*.shp | grep -v post)
+do
+    echo "merging $i"
+    merge_shp ${out_shp} ${out_name} ${i}
+done
+# convert to KML
+ogr2ogr -f KML ${out_name}.kml ${out_shp}
 
 cd ..

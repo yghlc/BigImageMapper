@@ -70,10 +70,10 @@ ${eo_dir}/grss_data_fusion/export_graph.sh ${para_file}
 ${eo_dir}/sentinelScripts/parallel_predict_rts.py ${para_file}
 
 ## post processing and copy results, including output "time_cost.txt"
-${eo_dir}/sentinelScripts/postProc_qtp.sh ${para_file}  1
-
-#${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}
+test_name=1
+${eo_dir}/sentinelScripts/postProc_qtp.sh ${para_file}  ${test_name}
+## merge polygons
+${eo_dir}/sentinelScripts/merge_shapefiles.sh ${para_file} ${test_name}
 
 ################################################
-## merge polygons
-${eo_dir}/sentinelScripts/merge_shapefiles.sh ${para_file}
+#${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}
