@@ -48,6 +48,10 @@ function merge_shp() {
 
 out_name=${testid}_prj_post_${test}
 out_shp=${out_name}.shp
+if [ -f $out_shp ]; then
+    echo "remove previous results"
+    rm ${out_name}.*
+fi
 for i in $(ls ${tile_dir}/*_prj_post*.shp)
 do
     echo "merging $i"
@@ -59,6 +63,10 @@ ogr2ogr -f KML ${out_name}.kml ${out_shp}
 
 out_name=${testid}_prj_${test}
 out_shp=${out_name}.shp
+if [ -f $out_shp ]; then
+    echo "remove previous results"
+    rm ${out_name}.*
+fi
 for i in $(ls ${tile_dir}/*_prj*.shp | grep -v post)
 do
     echo "merging $i"
