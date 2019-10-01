@@ -60,8 +60,8 @@ def is_file_exist_in_folder(folder):
     else:
         return False
 
-def predict_one_image(save_dir,inf_list_file,gpuid):
-    command_string = predict_script + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
+def predict_one_image(para_file,save_dir,inf_list_file,gpuid):
+    command_string = predict_script + ' '+ para_file + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
     os.system(command_string )      # this work
@@ -101,8 +101,8 @@ while idx < img_count:
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # print(status, result)
     # os.system(command_string + "&")         # don't know when it finished
-
-    sub_process = Process(target=predict_one_image, args=(save_dir,inf_list_file,gpuid))
+    para_file = sys.argv[1]
+    sub_process = Process(target=predict_one_image, args=(para_file,save_dir,inf_list_file,gpuid))
     sub_process.start()
     sub_tasks.append(sub_process)
 

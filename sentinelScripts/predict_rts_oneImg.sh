@@ -18,13 +18,13 @@ set -eE -o functrace
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
 
-para_file=para.ini
+para_file=$1
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
 
-inf_dir=$1
-inf_list_file=$2
-export CUDA_VISIBLE_DEVICES=$3
+inf_dir=$2
+inf_list_file=$3
+export CUDA_VISIBLE_DEVICES=$4
 ################################################
 
 expr_name=$(python2 ${para_py} -p ${para_file} expr_name)

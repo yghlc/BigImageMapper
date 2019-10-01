@@ -67,7 +67,7 @@ ${eo_dir}/grss_data_fusion/export_graph.sh ${para_file}
 
 ################################################
 ## inference
-${eo_dir}/sentinelScripts/parallel_predict_rts.py
+${eo_dir}/sentinelScripts/parallel_predict_rts.py ${para_file}
 
 ## post processing and copy results, including output "time_cost.txt"
 ${eo_dir}/sentinelScripts/postProc_qtp.sh ${para_file}  1
