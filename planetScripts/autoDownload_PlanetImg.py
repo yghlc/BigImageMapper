@@ -195,18 +195,111 @@ def search_image_metadata_for_a_polygon(polygon_json, item_type, start_date, end
     # fire off the POST request
     result = POST_request('https://api.planet.com/data/v1/quick-search', stats_endpoint_request)
 
-    print(result.text)
+    # print(result.text)
 
-    # os.system('jq '+ result.text)
-    # result_dict = json.loads(result.text)
+    result_dict = json.loads(result.text)
     # buckets = result_dict['buckets']
     # for bucket in buckets:
     #     print(bucket)
+    print('********************************************************************')
+    # print(result_dict['_links'])
+    print('********************************************************************')
+    ids = []
+    for feature in result_dict['features']:
+        ids.append(feature['id'])
+        # print(feature['id'])
+        # for key in feature.keys():
+        #     print(key,':', feature[key])
+        # break
+        # print(feature['id'])
+        # # return True
 
-    return True
+    return ids
 
-def download_one_image():
-    pass
+def get_asset_type(item_type,item_id):
+
+    url = 'https://api.planet.com/data/v1/item-types/%s/items/%s/assets'%(item_type,item_id)
+
+    command_str = "curl -L -H \"Authorization: api-key $PL_API_KEY\" " + url
+    out_str = basic.exec_command_string_output_string(command_str)
+    asset_types = json.loads(out_str)
+    # print(out_str)
+
+    # test
+
+    for key in asset_types.keys():
+        # print(key)
+        print(asset_types[key])
+
+    return list(asset_types.keys())
+
+
+def activation_a_item(item_id, item_type, asset_type):
+    '''
+    activate a item
+    :param item_id:
+    :param item_type:
+    :param asset_type:
+    :return:
+    '''
+    session = requests.Session()
+    session.auth = (os.environ['PL_API_KEY'], '')
+
+    # request an item
+    item = session.get(
+            ("https://api.planet.com/data/v1/item-types/" +
+             "{}/items/{}/assets/").format(item_type, item_id))
+
+    # extract the activation url from the item for the desired asset
+    item_activation_url = item.json()[asset_type]["_links"]["activate"]
+
+    # request activation
+    response = session.post(item_activation_url)
+
+    #A response of 202 means that the request has been accepted and the activation will begin shortly.
+    # A 204 code indicates that the asset is already active and no further action is needed.
+    #  A 401 code means the user does not have permissions to download this file.
+    if response.status_code == 204:
+        # success, return location
+        url = 'https://api.planet.com/data/v1/item-types/%s/items/%s/assets'%(item_type,item_id)
+        command_str = "curl -L -H \"Authorization: api-key $PL_API_KEY\" " + url
+        out_str = basic.exec_command_string_output_string(command_str)
+        tmp_dict = json.loads(out_str)
+        print(tmp_dict[asset_type]['location'])
+
+        return tmp_dict[asset_type]['location']
+
+
+
+    print (response.status_code)
+
+# def activation_a_item_url(url):
+#     '''
+#     activate a item by url
+#     :param url:
+#     :return:
+#     '''
+#     session = requests.Session()
+#     session.auth = (os.environ['PL_API_KEY'], '')
+#
+#     # request an item
+#     item = session.get(
+#             ("https://api.planet.com/data/v1/item-types/" +
+#              "{}/items/{}/assets/").format(item_type, item_id))
+#
+#     # extract the activation url from the item for the desired asset
+#     item_activation_url = item.json()[asset_type]["_links"]["activate"]
+#
+#     # request activation
+#     response = session.post(item_activation_url)
+#
+#     print (response.status_code)
+
+def download_one_item(download_url, save_path):
+
+    command_str = "curl -L " + download_url + ' > ' +save_path
+    return basic.exec_command_string(command_str)
+
 
 def main(options, args):
 
@@ -225,15 +318,35 @@ def main(options, args):
 
     polygons_json = read_polygons_json(polygons_shp)
 
-    item_type = 'PSOrthoTile'
+    item_type = 'PSOrthoTile'  # PSScene4Band , PSOrthoTile
     start_date = datetime.date(2018, 5, 20) # year, month, day
     end_date = datetime.date(2018, 6, 1)
-    could_cover_thr = 0.5
+    could_cover_thr = 0.3
 
     # search_image_stats_for_a_polygon(polygons_json[0], item_type, start_date, end_date, could_cover_thr)
 
-    search_image_metadata_for_a_polygon(polygons_json[0], item_type, start_date, end_date, could_cover_thr)
+    images_ids = search_image_metadata_for_a_polygon(polygons_json[0], item_type, start_date, end_date, could_cover_thr)
+    [print(item) for item in images_ids ]
 
+    asset_type_list = get_asset_type(item_type, images_ids[1])
+    [print(item) for item in asset_type_list]
+
+    for asset_type in asset_type_list:
+        download_url = activation_a_item(images_ids[0], item_type, asset_type)
+
+        if download_url is None:
+            basic.outputlogMessage('failed to get the location of %s'%asset_type )
+            continue
+
+        # download ehte activated item
+        if 'xml' == asset_type.split('_')[-1]:
+            output = images_ids[0] + '_' + asset_type  + '.xml'
+        elif 'rpc' == asset_type.split('_')[-1]:
+            output = images_ids[0] + '_' + asset_type + '.txt'
+        else:
+            output = images_ids[0] + '_' + asset_type + '.tif'
+        # images_ids[0]+'.tif'
+        download_one_item(download_url,os.path.join(save_folder,output))
 
     pass
 
