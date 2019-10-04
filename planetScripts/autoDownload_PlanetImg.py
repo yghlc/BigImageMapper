@@ -47,6 +47,14 @@ import json
 import requests
 from requests.auth import HTTPBasicAuth
 
+
+from planet import api
+# ClientV1 provides basic low-level access to Planet’s API. Only one ClientV1 should be in existence for an application.
+client = None # api.ClientV1(api_key="abcdef0123456789")  #
+
+def p(data):
+    print(json.dumps(data, indent=2))
+
 def get_and_set_Planet_key(user_account):
     keyfile = HOME+'/.planetkey'
     with open(keyfile) as f_obj:
@@ -56,6 +64,8 @@ def get_and_set_Planet_key(user_account):
                 key_str = line.split(':')[1]
                 key_str = key_str.strip()       # remove '\n'
                 os.environ["PL_API_KEY"] = key_str
+                global client
+                client = api.ClientV1(api_key = key_str)
                 return True
         raise ValueError('account: %s cannot find in %s'%(user_account,keyfile))
 
@@ -303,7 +313,7 @@ def download_one_item(download_url, save_path):
 
 def main(options, args):
 
-    # need to set the key first
+    # need to set the key first, and start API client
     get_and_set_Planet_key('huanglingcao@link.cuhk.edu.hk')
     # print(os.environ['PL_API_KEY'])
 
