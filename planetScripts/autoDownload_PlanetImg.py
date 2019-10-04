@@ -43,14 +43,18 @@ import geopandas as gpd
 
 import datetime
 import json
+import time
 
 import requests
 from requests.auth import HTTPBasicAuth
 
 
 from planet import api
+from planet.api import filters
 # ClientV1 provides basic low-level access to Planet’s API. Only one ClientV1 should be in existence for an application.
 client = None # api.ClientV1(api_key="abcdef0123456789")  #
+
+asset_types=['analytic_sr','analytic_xml','udm']  # surface reflectance, metadata, mask file
 
 def p(data):
     print(json.dumps(data, indent=2))
@@ -64,8 +68,10 @@ def get_and_set_Planet_key(user_account):
                 key_str = line.split(':')[1]
                 key_str = key_str.strip()       # remove '\n'
                 os.environ["PL_API_KEY"] = key_str
+                # set Planet API client
                 global client
                 client = api.ClientV1(api_key = key_str)
+
                 return True
         raise ValueError('account: %s cannot find in %s'%(user_account,keyfile))
 
@@ -145,6 +151,27 @@ def get_a_filter(polygon_json,start_date, end_date, could_cover_thr):
     }
 
     return combined_filters
+
+def get_a_filter_cli_api(polygon_json,start_date, end_date, could_cover_thr):
+
+    geo_filter = filters.geom_filter(polygon_json)
+    date_filter = filters.date_range('acquired', gte=start_date, lte = end_date)
+    cloud_filter = filters.range_filter('cloud_cover', lte=could_cover_thr)
+
+    combined_filters = filters.and_filter(geo_filter, date_filter, cloud_filter)
+
+    return combined_filters
+
+def get_items_count(combined_filter, item_types):
+
+    req = filters.build_search_request(combined_filter, item_types, interval="year") #year  or day
+    stats = client.stats(req).get()
+    # p(stats)
+    total_count = 0
+    for bucket in stats['buckets']:
+        total_count += bucket['count']
+    return total_count
+
 
 def POST_request(url, filter):
     print(os.environ['PL_API_KEY'])
@@ -310,11 +337,63 @@ def download_one_item(download_url, save_path):
     command_str = "curl -L " + download_url + ' > ' +save_path
     return basic.exec_command_string(command_str)
 
+def active_and_downlaod_asset(item,asset_key,save_dir):
+
+    assets = client.get_assets(item).get()
+
+    asset = assets.get(asset_key)
+
+    # activate
+    activation = client.activate(asset)
+
+    print(activation.response.status_code)
+
+    asset_activated = False
+
+    while asset_activated == False:
+        # Get asset and its activation status
+        assets = client.get_assets(item).get()  # need to used client to get the status
+        asset = assets.get(asset_key)
+        asset_status = asset["status"]
+
+        # If asset is already active, we are done
+        if asset_status == 'active':
+            asset_activated = True
+            print("Asset is active and ready to download")
+
+        # Still activating. Wait and check again.
+        else:
+            print("...Still waiting for asset activation...")
+            time.sleep(3)
+
+    output_stream = sys.stdout
+    def download_progress(start=None,wrote=None,total=None, finish=None): #result,skip=None
+        # print(start,wrote,total,finish)
+        # if total:
+        #     # print('received: %.2f K'%(float(total)/1024.0))
+        #     output_stream.write('received: %.2f K'%(float(total)/1024.0))
+        #     output_stream.flush()
+        # if total:
+        #     if finish is None:
+        #         print('received: %.2f K'%(float(total)/1024.0), end='\r')
+        #     else:
+        #         print('received: %.2f K' % (float(total) / 1024.0))
+        pass
+    callback = api.write_to_file(directory=save_dir + '/', callback=download_progress) # save_dir + '/'  #
+    body = client.download(assets[asset_key], callback=callback)
+    # if body._body.name == '':
+    #     basic.outputlogMessage('Warning, the body name is missed, set as the asset key and id: item id: %s, asset %s'%(item['id'],asset_key))
+    #     body._body.name = item['id']+'_'+asset_key  # AttributeError: can't set attribute
+    body.await()
+
+    return True
+
 
 def main(options, args):
 
     # need to set the key first, and start API client
     get_and_set_Planet_key('huanglingcao@link.cuhk.edu.hk')
+    # get_and_set_Planet_key('liulin@cuhk.edu.hk')
     # print(os.environ['PL_API_KEY'])
 
     # list_ItemTypes()
@@ -328,36 +407,97 @@ def main(options, args):
 
     polygons_json = read_polygons_json(polygons_shp)
 
-    item_type = 'PSOrthoTile'  # PSScene4Band , PSOrthoTile
-    start_date = datetime.date(2018, 5, 20) # year, month, day
-    end_date = datetime.date(2018, 6, 1)
+    item_type = 'PSScene4Band'  # PSScene4Band , PSOrthoTile
+    start_date = datetime.datetime(year=2018, month=5, day=20)
+    end_date = datetime.datetime(year=2018, month=6, day=1)
     could_cover_thr = 0.3
 
-    # search_image_stats_for_a_polygon(polygons_json[0], item_type, start_date, end_date, could_cover_thr)
+    # ############################################################################################################
+    # # search and download images using http request
+    # # search_image_stats_for_a_polygon(polygons_json[0], item_type, start_date, end_date, could_cover_thr)
+    #
+    # images_ids = search_image_metadata_for_a_polygon(polygons_json[0], item_type, start_date, end_date, could_cover_thr)
+    # [print(item) for item in images_ids ]
+    #
+    # asset_type_list = get_asset_type(item_type, images_ids[1])
+    # [print(item) for item in asset_type_list]
+    #
+    # for asset_type in asset_type_list:
+    #     download_url = activation_a_item(images_ids[0], item_type, asset_type)
+    #
+    #     if download_url is None:
+    #         basic.outputlogMessage('failed to get the location of %s'%asset_type )
+    #         continue
+    #
+    #     # download ehte activated item
+    #     if 'xml' == asset_type.split('_')[-1]:
+    #         output = images_ids[0] + '_' + asset_type  + '.xml'
+    #     elif 'rpc' == asset_type.split('_')[-1]:
+    #         output = images_ids[0] + '_' + asset_type + '.txt'
+    #     else:
+    #         output = images_ids[0] + '_' + asset_type + '.tif'
+    #     # images_ids[0]+'.tif'
+    #     download_one_item(download_url,os.path.join(save_folder,output))
+    ############################################################################################################
+    # search and donwload using Planet Client API
+    # p(polygons_json[0]) # print a polygon in JSON format
+    geom = polygons_json[0]
+    combined_filter = get_a_filter_cli_api(geom, start_date, end_date, could_cover_thr)
+    # p(combined_filter)
 
-    images_ids = search_image_metadata_for_a_polygon(polygons_json[0], item_type, start_date, end_date, could_cover_thr)
-    [print(item) for item in images_ids ]
+    item_types = ["PSScene4Band"] #, "PSOrthoTile"
 
-    asset_type_list = get_asset_type(item_type, images_ids[1])
-    [print(item) for item in asset_type_list]
+    # get the count number
+    item_count = get_items_count(combined_filter, item_types)
+    basic.outputlogMessage('The total count number is %d'%item_count)
 
-    for asset_type in asset_type_list:
-        download_url = activation_a_item(images_ids[0], item_type, asset_type)
+    req = filters.build_search_request(combined_filter, item_types)
+    p(req)
+    res = client.quick_search(req)
+    if res.response.status_code == 200:
+        # print('good')
+        all_items = []
+        for item in res.items_iter(item_count):
+            # print(item['id'], item['properties']['item_type'])
+            all_items.append(item)
 
-        if download_url is None:
-            basic.outputlogMessage('failed to get the location of %s'%asset_type )
-            continue
+        # sort the item based on cloud cover
+        all_items.sort(key=lambda x: float(x['properties']['cloud_cover']))
+        # [print(item['id'],item['properties']['cloud_cover']) for item in all_items]
 
-        # download ehte activated item
-        if 'xml' == asset_type.split('_')[-1]:
-            output = images_ids[0] + '_' + asset_type  + '.xml'
-        elif 'rpc' == asset_type.split('_')[-1]:
-            output = images_ids[0] + '_' + asset_type + '.txt'
-        else:
-            output = images_ids[0] + '_' + asset_type + '.tif'
-        # images_ids[0]+'.tif'
-        download_one_item(download_url,os.path.join(save_folder,output))
+        # active and download them, only download the SR product
+        for item in all_items:
+            print(item['id'])
+            assets = client.get_assets(item).get()
+            for asset in sorted(assets.keys()):
+                print(asset)
 
+        # I want to download SR, level 3B, product
+        # test: download the first one, all
+        # not all the item has "analytic_sr"
+        item = all_items[0]
+        assets = client.get_assets(item).get()
+        for asset in sorted(assets.keys()):
+            print(asset)
+            if 'basic' in asset:
+                print('skip %s'% asset)
+                continue
+
+            if asset not in asset_types:
+                continue
+
+            # active and download
+            active_and_downlaod_asset(item, asset, save_folder)
+
+        # active_and_downlaod_asset(item, 'analytic_sr', save_folder)
+        # active_and_downlaod_asset(item, 'basic_analytic_dn_nitf', save_folder)
+        # active_and_downlaod_asset(item, 'analytic_sr', save_folder)
+
+    else:
+        print('code {}, text, {}'.format(res.response.status_code, res.response.text))
+
+
+    test = 1
     pass
 
 if __name__ == "__main__":
