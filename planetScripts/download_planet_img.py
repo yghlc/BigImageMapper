@@ -24,13 +24,11 @@ import basic_src.basic as basic
 import shapely
 from shapely.geometry import mapping # transform to GeJSON format
 import geopandas as gpd
+from shapely.geometry import shape
 
 from datetime import datetime
 import json
 import time
-
-import requests
-from requests.auth import HTTPBasicAuth
 
 
 from planet import api
@@ -39,6 +37,9 @@ from planet.api import filters
 client = None # api.ClientV1(api_key="abcdef0123456789")  #
 
 asset_types=['analytic_sr','analytic_xml','udm']  # surface reflectance, metadata, mask file
+
+downloaed_scene_geometry = []       # the geometry (extent) of downloaded images
+manually_excluded_scenes = []       # manually excluded item id
 
 def p(data):
     print(json.dumps(data, indent=2))
@@ -186,6 +187,65 @@ def activate_and_download_asset(item,asset_key,save_dir):
 
     return True
 
+def read_down_load_geometry(folder):
+    '''
+    read geojson files in a folder. geojson file stores the geometry of a file, and save to global varialbes
+    :param folder: the save folder
+    :return:
+    '''
+    global  downloaed_scene_geometry
+    json_list = io_function.get_file_list_by_ext('.geojson',folder, bsub_folder=False)
+    for json_file in json_list:
+
+        # ignore the scenes in the excluded list
+        item_id = os.path.splitext(os.path.basename(json_file))[0]
+        if item_id in manually_excluded_scenes:
+            continue
+
+        with open(json_file) as json_file:
+            data = json.load(json_file)
+            # p(data) # test
+            downloaed_scene_geometry.append(data)
+
+def read_excluded_scenes(folder):
+    '''
+    manually excluded some scenes with small portion of cloud cover,
+    because some of the scenes have cloud cover, but not shown in the metedata
+    :param folder:
+    :return:
+    '''
+    txt_path = os.path.join(folder,'manually_excluded_scenes.txt')
+    global manually_excluded_scenes
+    if os.path.isfile(txt_path):
+        with open(txt_path,'r') as f_obj:
+            lines = f_obj.readlines()
+            for line in lines:
+                if '#' in line or len(line) < 6:
+                    continue
+                manually_excluded_scenes.append(line.strip())
+    else:
+        basic.outputlogMessage('Warning, %s file not exist'%txt_path)
+
+
+def check_geom_polygon_overlap(boundary_list, polygon):
+    '''
+    check if a polygon is covered by any polygons in a geom_list
+    :param boundary_list:  a list containing polygon
+    :param polygon: a polygon
+    :return: True if the polygon was cover a polyon by other, False otherwise
+    '''
+
+    # convert from json format to shapely
+    polygon_shapely = shape(polygon)
+
+    # using shapely to check the overlay
+    for geom in boundary_list:
+        geom_shapely = shape(geom)
+        if geom_shapely.contains(polygon_shapely):
+            return True
+
+    return False
+
 def download_planet_images(polygons_json, start_date, end_date, could_cover_thr, item_types, save_folder):
     '''
     download images from for all polygons, to save quota, each polygon only downlaod one image
@@ -199,12 +259,14 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
 
     for idx, geom in enumerate(polygons_json):
 
-        # for test
-        if idx > 0: break
+        # # for test
+        # if idx > 0: break
 
         ####################################
-        #TODO: check if any image already cover this polygon, if yes, skip downloading
-
+        #check if any image already cover this polygon, if yes, skip downloading
+        if check_geom_polygon_overlap(downloaed_scene_geometry, geom) is True:
+            basic.outputlogMessage('%dth polygon already in the extent of download images, skip it')
+            continue
 
 
         # search and donwload using Planet Client API
@@ -228,26 +290,35 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
             # [print(item['id'],item['properties']['cloud_cover']) for item in all_items]
 
             # active and download them, only download the SR product
+            download_item = all_items[0]
             for item in all_items:
                 print(item['id'])
+                if item['id'] not in manually_excluded_scenes:
+                    download_item = item
+                    break
                 # assets = client.get_assets(item).get()
                 # for asset in sorted(assets.keys()):
                 #     print(asset)
 
             # I want to download SR, level 3B, product
-            item = all_items[0]
-            item_id = item['id']
-            save_dir = os.path.join(save_folder, item_id)
+
+            download_item_id = download_item['id']
+            # p(item['geometry'])
+            save_dir = os.path.join(save_folder, download_item_id)
             os.system('mkdir -p ' + save_dir)
-            assets = client.get_assets(item).get()
+            assets = client.get_assets(download_item).get()
             for asset in sorted(assets.keys()):
                 if asset not in asset_types:
                     continue
 
-                # active and download
-                activate_and_download_asset(item, asset, save_dir)
+                # activate and download
+                activate_and_download_asset(download_item, asset, save_dir)
 
-            #TODO: update the already images
+            # save the geometry of this item to disk
+            with open(os.path.join(save_folder,download_item_id+'.geojson'), 'w') as outfile:
+                json.dump(download_item['geometry'], outfile,indent=2)
+                # update the geometry of already downloaded geometry
+                downloaed_scene_geometry.append(download_item['geometry'])
 
         else:
             print('code {}, text, {}'.format(res.response.status_code, res.response.text))
@@ -277,7 +348,11 @@ def main(options, args):
     # read polygons
     polygons_json = read_polygons_json(polygons_shp)
 
-    #TODO: read images already in "save_folder"
+    read_excluded_scenes(save_folder)   # read the excluded_scenes before read download images
+
+    #read geometry of images already in "save_folder"
+    read_down_load_geometry(save_folder)
+
 
     # download images
     download_planet_images(polygons_json, start_date, end_date, could_cover_thr, item_types, save_folder)
