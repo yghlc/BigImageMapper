@@ -123,8 +123,11 @@ def get_items_count(combined_filter, item_types):
     :return: the count of items
     '''
 
-    req = filters.build_search_request(combined_filter, item_types, interval="year") #year  or day
-    stats = client.stats(req).get()
+    try:
+        req = filters.build_search_request(combined_filter, item_types, interval="year") #year  or day
+        stats = client.stats(req).get()
+    except:
+        return 100000 # return a large number
     # p(stats)
     total_count = 0
     for bucket in stats['buckets']:
