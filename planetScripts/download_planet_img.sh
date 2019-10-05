@@ -11,6 +11,9 @@ set -eE -o functrace
 
 eo_dir=~/codes/PycharmProjects/Landuse_DL
 
+# on Cryo06, to gdalsrsinfro (>2.3) and python 3
+export PATH=~/programs/anaconda3/bin:$PATH
+
 shp_file=~/Data/Qinghai-Tibet/qtp_thaw_slumps/rts_polygons_s2_2018/qtp_train_polygons_s2_2018_v2.shp
 save_folder=planet_sr_images
 
