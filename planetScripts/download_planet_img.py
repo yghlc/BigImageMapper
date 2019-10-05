@@ -32,6 +32,7 @@ import time
 
 
 from planet import api
+from planet.api.exceptions import APIException
 from planet.api import filters
 # ClientV1 provides basic low-level access to Planet’s API. Only one ClientV1 should be in existence for an application.
 client = None # api.ClientV1(api_key="abcdef0123456789")  #
@@ -126,8 +127,10 @@ def get_items_count(combined_filter, item_types):
     try:
         req = filters.build_search_request(combined_filter, item_types, interval="year") #year  or day
         stats = client.stats(req).get()
-    except:
-        return 100000 # return a large number
+    except APIException as e:
+        basic.outputlogMessage(str(e))
+        return 100000  # return a large number
+
     # p(stats)
     total_count = 0
     for bucket in stats['buckets']:
@@ -298,6 +301,9 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
             # [print(item['id'],item['properties']['cloud_cover']) for item in all_items]
 
             # active and download them, only download the SR product
+            if len(all_items) < 1:
+                basic.outputlogMessage('No inquiry results for %dth polygon'%idx)
+                return False
             download_item = all_items[0]
             for item in all_items:
                 print(item['id'])
