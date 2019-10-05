@@ -73,7 +73,7 @@ def read_polygons_json(polygon_shp):
     epsg_str = basic.exec_command_args_list_one_string(shp_args_list)
     epsg_str = epsg_str.decode().strip()  # byte to str, remove '\n'
     if epsg_str != 'EPSG:4326':
-        raise ValueError('Current support shape file in projection of EPSG:4326')
+        raise ValueError('Current support shape file in projection of EPSG:4326, but the input has projection of %s'%epsg_str)
 
     shapefile = gpd.read_file(polygon_shp)
     polygons = shapefile.geometry.values
