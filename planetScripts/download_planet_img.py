@@ -149,6 +149,9 @@ def activate_and_download_asset(item,asset_key,save_dir):
     activation = client.activate(asset)
 
     print(activation.response.status_code)
+    if int(activation.response.status_code) == 401:
+        basic.outputlogMessage('The account does not have permissions to download this file')
+        return False
 
     asset_activated = False
 
