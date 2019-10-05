@@ -12,7 +12,7 @@ set -eE -o functrace
 eo_dir=~/codes/PycharmProjects/Landuse_DL
 
 shp_file=~/Data/Qinghai-Tibet/qtp_thaw_slumps/rts_polygons_s2_2018/qtp_train_polygons_s2_2018_v2.shp
-save_folder=planet_download
+save_folder=planet_sr_images
 
 start_date=2018-05-20
 end_date=2018-06-01
