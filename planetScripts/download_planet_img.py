@@ -183,7 +183,8 @@ def activate_and_download_asset(item,asset_key,save_dir):
         pass
     callback = api.write_to_file(directory=save_dir + '/', callback=download_progress) # save_dir + '/'  #
     body = client.download(assets[asset_key], callback=callback)
-    body.await()
+    # body.await() for version 1.1.0
+    body.wait() # for version > 1.4.2
 
     return True
 
@@ -261,6 +262,7 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
 
         # for test
         if idx > 20: break
+        # if idx != 1: continue
 
         ####################################
         #check if any image already cover this polygon, if yes, skip downloading
