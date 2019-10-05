@@ -489,6 +489,7 @@ def main(options, args):
             # active and download
             active_and_downlaod_asset(item, asset, save_folder)
 
+        # test
         # active_and_downlaod_asset(item, 'analytic_sr', save_folder)
         # active_and_downlaod_asset(item, 'basic_analytic_dn_nitf', save_folder)
         # active_and_downlaod_asset(item, 'analytic_sr', save_folder)
@@ -505,31 +506,31 @@ if __name__ == "__main__":
     usage = "usage: %prog [options] polygon_shp save_dir"
     parser = OptionParser(usage=usage, version="1.0 2019-10-01")
     parser.description = 'Introduction: search and download Planet images '
-    parser.add_option("-f", "--all_training_polygons",
-                      action="store", dest="all_training_polygons",
-                      help="the full set of training polygons. If the one in the input argument "
-                           "is a subset of training polygons, this one must be assigned")
-    # parser.add_option("-b", "--bufferSize",
-    #                   action="store", dest="bufferSize", type=float,
-    #                   help="buffer size is in the projection, normally, it is based on meters")
-    # parser.add_option("-e", "--image_ext",
-    #                   action="store", dest="image_ext", default='.tif',
-    #                   help="the extension of the image file")
-    # parser.add_option("-o", "--out_dir",
-    #                   action="store", dest="out_dir",
-    #                   help="the folder path for saving output files")
-    # parser.add_option("-n", "--dstnodata", type=int,
-    #                   action="store", dest="dstnodata",
-    #                   help="the nodata in output images")
-    # parser.add_option("-r", "--rectangle",
-    #                   action="store_true", dest="rectangle", default=False,
-    #                   help="whether use the rectangular extent of the polygon")
+    parser.add_option("-s", "--start_date",
+                      action="store", dest="start_date",
+                      help="start date for inquiry, with format year-month-day, e.g., 2018-05-23")
+    parser.add_option("-e", "--end_date",
+                      action="store", dest="start_date",
+                      help="the end date for inquiry, with format year-month-day, e.g., 2018-05-23")
+    parser.add_option("-c", "--cloud_cover",
+                      action="store", dest="cloud_cover", type=float,
+                      help="the could cover threshold, only accept images with cloud cover less than the threshold")
+    parser.add_option("-i", "--item_type",
+                      action="store", dest="item_type",
+                      help="the item types, e.g., PSScene4Band,PSOrthoTile")
+    parser.add_option("-o", "--out_dir",
+                      action="store", dest="out_dir",
+                      help="the folder path for saving output files")
+    parser.add_option("-a", "--planet_account",
+                      action="store", dest="planet_account",
+                      help="planet email account, e.g., huanglingcao@link.cuhk.edu.hk")
+
+
 
     (options, args) = parser.parse_args()
-    # if len(sys.argv) < 2 or len(args) < 1:
-    #     parser.print_help()
-    #     sys.exit(2)
-
+    if len(sys.argv) < 2 or len(args) < 1:
+        parser.print_help()
+        sys.exit(2)
 
     main(options, args)
 
