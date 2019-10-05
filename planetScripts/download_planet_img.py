@@ -311,7 +311,7 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
             for asset in sorted(assets.keys()):
                 if asset not in asset_types:
                     continue
-
+                basic.outputlogMessage('download %s'%asset)
                 # activate and download
                 activate_and_download_asset(download_item, asset, save_dir)
 
