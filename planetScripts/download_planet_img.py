@@ -285,6 +285,9 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
 
         # get the count number
         item_count = get_items_count(combined_filter, item_types)
+        if item_count == 100000:
+            basic.outputlogMessage('error, failed to get images of %dth polygon currently, skip it' % idx)
+            continue
         basic.outputlogMessage('The total count number is %d' % item_count)
 
         req = filters.build_search_request(combined_filter, item_types)
