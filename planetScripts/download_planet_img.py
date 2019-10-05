@@ -265,7 +265,7 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
         ####################################
         #check if any image already cover this polygon, if yes, skip downloading
         if check_geom_polygon_overlap(downloaed_scene_geometry, geom) is True:
-            basic.outputlogMessage('%dth polygon already in the extent of download images, skip it')
+            basic.outputlogMessage('%dth polygon already in the extent of download images, skip it'%idx)
             continue
 
 
