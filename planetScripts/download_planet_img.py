@@ -307,6 +307,7 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
             save_dir = os.path.join(save_folder, download_item_id)
             os.system('mkdir -p ' + save_dir)
             assets = client.get_assets(download_item).get()
+            basic.outputlogMessage('download a scene (id: %s) that cover %d polygon' % (download_item_id, idx))
             for asset in sorted(assets.keys()):
                 if asset not in asset_types:
                     continue
