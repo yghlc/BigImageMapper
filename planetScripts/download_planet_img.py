@@ -270,7 +270,7 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
     for idx, geom in enumerate(polygons_json):
 
         # for test
-        if idx > 20: break
+        # if idx > 20: break
         # if idx != 1: continue
 
         ####################################
