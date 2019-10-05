@@ -200,16 +200,15 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
     for idx, geom in enumerate(polygons_json):
 
         # for test
-        if idx > 1: break
+        if idx > 0: break
 
         ####################################
-        # check if any image already cover this polygon, if yes, skip downloading
+        #TODO: check if any image already cover this polygon, if yes, skip downloading
+
+
 
         # search and donwload using Planet Client API
-        # p(polygons_json[0]) # print a polygon in JSON format
-        geom = polygons_json[0]
         combined_filter = get_a_filter_cli_api(geom, start_date, end_date, could_cover_thr)
-        # p(combined_filter)
 
         # get the count number
         item_count = get_items_count(combined_filter, item_types)
@@ -219,7 +218,6 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
         p(req)
         res = client.quick_search(req)
         if res.response.status_code == 200:
-            # print('good')
             all_items = []
             for item in res.items_iter(item_count):
                 # print(item['id'], item['properties']['item_type'])
@@ -232,19 +230,24 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
             # active and download them, only download the SR product
             for item in all_items:
                 print(item['id'])
-                assets = client.get_assets(item).get()
-                for asset in sorted(assets.keys()):
-                    print(asset)
+                # assets = client.get_assets(item).get()
+                # for asset in sorted(assets.keys()):
+                #     print(asset)
 
             # I want to download SR, level 3B, product
             item = all_items[0]
+            item_id = item['id']
+            save_dir = os.path.join(save_folder, item_id)
+            os.system('mkdir -p ' + save_dir)
             assets = client.get_assets(item).get()
             for asset in sorted(assets.keys()):
                 if asset not in asset_types:
                     continue
 
                 # active and download
-                activate_and_download_asset(item, asset, save_folder)
+                activate_and_download_asset(item, asset, save_dir)
+
+            #TODO: update the already images
 
         else:
             print('code {}, text, {}'.format(res.response.status_code, res.response.text))
@@ -274,8 +277,10 @@ def main(options, args):
     # read polygons
     polygons_json = read_polygons_json(polygons_shp)
 
+    #TODO: read images already in "save_folder"
 
-
+    # download images
+    download_planet_images(polygons_json, start_date, end_date, could_cover_thr, item_types, save_folder)
 
 
 
@@ -302,9 +307,6 @@ if __name__ == "__main__":
     parser.add_option("-i", "--item_types",
                       action="store", dest="item_types",default='PSScene4Band',
                       help="the item types, e.g., PSScene4Band,PSOrthoTile")
-    parser.add_option("-o", "--out_dir",
-                      action="store", dest="out_dir",
-                      help="the folder path for saving output files")
     parser.add_option("-a", "--planet_account",
                       action="store", dest="planet_account",default='huanglingcao@link.cuhk.edu.hk',
                       help="planet email account, e.g., huanglingcao@link.cuhk.edu.hk")
