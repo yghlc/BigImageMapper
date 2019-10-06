@@ -256,6 +256,88 @@ def check_geom_polygon_overlap(boundary_list, polygon):
 
     return False
 
+def select_items_to_download(idx, polygon, all_items):
+    """
+    choose which item to download
+    :param idx: the polygon
+    :param polygon: the polygon
+    :param all_items: item list
+    :return: item list if find items to download, false otherwise
+    """
+    if len(all_items) < 1:
+        basic.outputlogMessage('No inquiry results for %dth polygon' % idx)
+        return False
+
+    # sort the item based on cloud cover
+    all_items.sort(key=lambda x: float(x['properties']['cloud_cover']))
+    # [print(item['id'],item['properties']['cloud_cover']) for item in all_items]
+
+    # convert from json format to shapely
+    polygon_shapely = shape(polygon)
+
+    # consider the coverage
+    total_intersect_area = 0
+    merged_item_extent = None
+    selected_items = []
+    for item in all_items:
+        # print(item['id'])
+        if item['id'] in manually_excluded_scenes:
+            continue
+
+        geom = item['geometry']
+        geom_shapely = shape(geom)
+
+        # extent the coverage
+        if merged_item_extent is None:
+            merged_item_extent = geom_shapely
+        else:
+            merged_item_extent.union(geom_shapely)
+
+        # calculate the intersection
+        intersect = polygon_shapely.intersection(merged_item_extent)
+        if intersect.area > total_intersect_area:
+            total_intersect_area = intersect.area
+            selected_items.append(item)
+
+        if total_intersect_area >= polygon_shapely.area:
+            break
+
+    if len(selected_items) < 1:
+        basic.outputlogMessage('No inquiry results for %dth polygon after selecting results' % idx)
+        return False
+
+    return selected_items
+
+
+def check_asset_exist(download_item, asset, save_dir):
+    '''
+    check weather a asset already exist
+    :param download_item:
+    :param asset:
+    :param save_dir:
+    :return:
+    '''
+
+    # asset_types = ['analytic_sr', 'analytic_xml', 'udm']
+    id = download_item['id']
+    if asset=='analytic_sr':
+        output_name = id + '_3B_AnalyticMS_SR.tif'
+    elif asset=='analytic_xml':
+        output_name = id + '_3B_AnalyticMS_metadata.xml'
+    elif asset=='udm':
+        output_name = id + '_3B_AnalyticMS_DN_udm.tif'
+    else:
+        raise ValueError('unsupported asset type')
+        # basic.outputlogMessage('unsupported asset type')
+        # return False
+
+    if os.path.isfile(os.path.join(save_dir, output_name)):
+        basic.outputlogMessage('file %s exist (item id: %s), skip downloading'%(output_name,id))
+        return True
+    else:
+        return False
+
+
 def download_planet_images(polygons_json, start_date, end_date, could_cover_thr, item_types, save_folder):
     '''
     download images from for all polygons, to save quota, each polygon only downlaod one image
@@ -299,44 +381,33 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
                 # print(item['id'], item['properties']['item_type'])
                 all_items.append(item)
 
-            # sort the item based on cloud cover
-            all_items.sort(key=lambda x: float(x['properties']['cloud_cover']))
-            # [print(item['id'],item['properties']['cloud_cover']) for item in all_items]
-
-            # active and download them, only download the SR product
-            if len(all_items) < 1:
-                basic.outputlogMessage('No inquiry results for %dth polygon'%idx)
-                return False
-            download_item = all_items[0]
-            for item in all_items:
-                print(item['id'])
-                if item['id'] not in manually_excluded_scenes:
-                    download_item = item
-                    break
-                # assets = client.get_assets(item).get()
-                # for asset in sorted(assets.keys()):
-                #     print(asset)
 
             # I want to download SR, level 3B, product
+            select_items = select_items_to_download(idx, geom, all_items)
+            if select_items is False:
+                continue
 
-            download_item_id = download_item['id']
-            # p(item['geometry'])
-            save_dir = os.path.join(save_folder, download_item_id)
-            os.system('mkdir -p ' + save_dir)
-            assets = client.get_assets(download_item).get()
-            basic.outputlogMessage('download a scene (id: %s) that cover the %dth polygon' % (download_item_id, idx))
-            for asset in sorted(assets.keys()):
-                if asset not in asset_types:
-                    continue
-                basic.outputlogMessage('download %s'%asset)
-                # activate and download
-                activate_and_download_asset(download_item, asset, save_dir)
+            for download_item in select_items:
+                download_item_id = download_item['id']
+                # p(item['geometry'])
+                save_dir = os.path.join(save_folder, download_item_id)
+                os.system('mkdir -p ' + save_dir)
+                assets = client.get_assets(download_item).get()
+                basic.outputlogMessage('download a scene (id: %s) that cover the %dth polygon' % (download_item_id, idx))
+                for asset in sorted(assets.keys()):
+                    if asset not in asset_types:
+                        continue
+                    if check_asset_exist(download_item, asset, save_dir):
+                        continue
+                    basic.outputlogMessage('download %s'%asset)
+                    # activate and download
+                    activate_and_download_asset(download_item, asset, save_dir)
 
-            # save the geometry of this item to disk
-            with open(os.path.join(save_folder,download_item_id+'.geojson'), 'w') as outfile:
-                json.dump(download_item['geometry'], outfile,indent=2)
-                # update the geometry of already downloaded geometry
-                downloaed_scene_geometry.append(download_item['geometry'])
+                # save the geometry of this item to disk
+                with open(os.path.join(save_folder,download_item_id+'.geojson'), 'w') as outfile:
+                    json.dump(download_item['geometry'], outfile,indent=2)
+                    # update the geometry of already downloaded geometry
+                    downloaed_scene_geometry.append(download_item['geometry'])
 
         else:
             print('code {}, text, {}'.format(res.response.status_code, res.response.text))
