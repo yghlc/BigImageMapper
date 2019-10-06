@@ -21,7 +21,8 @@ start_date=2018-05-20
 end_date=2018-06-01
 cloud_cover_thr=0.3
 item_type=PSScene4Band
-account=huanglingcao@link.cuhk.edu.hk
+#account=huanglingcao@link.cuhk.edu.hk
+account=liulin@cuhk.edu.hk
 
 ${eo_dir}/planetScripts/download_planet_img.py ${shp_file} ${save_folder} \
 -s ${start_date} -e ${end_date} -c ${cloud_cover_thr} -i ${item_type} -a ${account}
