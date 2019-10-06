@@ -291,10 +291,13 @@ def select_items_to_download(idx, polygon, all_items):
         if merged_item_extent is None:
             merged_item_extent = geom_shapely
         else:
-            merged_item_extent.union(geom_shapely)
+            # merged_item_extent.union(geom_shapely)
+            merged_item_extent = merged_item_extent.union(geom_shapely)
+            # merged_item_extent = merged_item_extent.cascaded_union(geom_shapely)
 
         # calculate the intersection
         intersect = polygon_shapely.intersection(merged_item_extent)
+        # print('intersect.area',intersect.area, 'total_intersect_area', total_intersect_area, 'polygon_shapely.area',polygon_shapely.area)
         if intersect.area > total_intersect_area:
             total_intersect_area = intersect.area
             selected_items.append(item)
@@ -354,6 +357,7 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
         # for test
         # if idx > 20: break
         # if idx != 1: continue
+        # if idx != 344: continue
 
         ####################################
         #check if any image already cover this polygon, if yes, skip downloading
@@ -373,7 +377,7 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
         basic.outputlogMessage('The total count number is %d' % item_count)
 
         req = filters.build_search_request(combined_filter, item_types)
-        p(req)
+        # p(req)
         res = client.quick_search(req)
         if res.response.status_code == 200:
             all_items = []
