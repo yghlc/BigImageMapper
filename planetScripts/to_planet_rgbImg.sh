@@ -22,7 +22,7 @@ function to_rgb(){
     output=${filename_no_ext}
 
     # pre-processing images.
-    gdal_contrast_stretch -percentile-range 0.01 0.99 ${output}.tif ${output}_8bit.tif
+    gdal_contrast_stretch -percentile-range 0.01 0.99 ${image_path} ${output}_8bit.tif
 
     # the third band is red, second is green, and first is blue
     gdal_translate -b 3 -b 2 -b 1  ${output}_8bit.tif ${output}_8bit_rgb.tif
