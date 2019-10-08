@@ -50,10 +50,10 @@ function to_rgb(){
     gdal_edit.py -a_nodata 0  ${fin_output}
 
 
-#    rm ${output}_8bit.tif
-#    rm ${output}_8bit_rgb.tif
+    rm ${output}_8bit.tif
+    rm ${output}_8bit_rgb.tif
 
-    exit 1
+#    exit 1
 }
 
 for tif in $(ls ../*/*_SR.tif); do
