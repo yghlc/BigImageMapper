@@ -28,8 +28,11 @@ function to_rgb(){
         return 0
     fi
 
-    # pre-processing images.
-    gdal_contrast_stretch -percentile-range 0.01 0.99 ${image_path} ${output}_8bit.tif
+#    # pre-processing images.
+#    gdal_contrast_stretch -percentile-range 0.01 0.99 ${image_path} ${output}_8bit.tif
+
+    # use fix min and max to make the color be consistent to sentinel-images
+    gdal_translate -ot Byte -scale 0 3000 0 255 ${image_path} ${output}_8bit.tif
 
     # the third band is red, second is green, and first is blue
     gdal_translate -b 3 -b 2 -b 1  ${output}_8bit.tif ${output}_8bit_rgb.tif
@@ -45,6 +48,8 @@ function to_rgb(){
 
     rm ${output}_8bit.tif
     rm ${output}_8bit_rgb.tif
+
+    exit 1
 }
 
 for tif in $(ls ../*/*_SR.tif); do
