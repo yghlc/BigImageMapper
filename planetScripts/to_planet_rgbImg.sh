@@ -32,7 +32,11 @@ function to_rgb(){
 #    gdal_contrast_stretch -percentile-range 0.01 0.99 ${image_path} ${output}_8bit.tif
 
     # use fix min and max to make the color be consistent to sentinel-images
-    gdal_translate -ot Byte -scale 0 3000 0 255 ${image_path} ${output}_8bit.tif
+    src_min=0
+    src_max=3000
+    dst_min=1       # 0 is the nodata, so set as 1
+    dst_max=255
+    gdal_translate -ot Byte -scale ${src_min} ${src_max} ${dst_min} ${dst_max} ${image_path} ${output}_8bit.tif
 
     # the third band is red, second is green, and first is blue
     gdal_translate -b 3 -b 2 -b 1  ${output}_8bit.tif ${output}_8bit_rgb.tif
