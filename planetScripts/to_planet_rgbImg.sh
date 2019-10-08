@@ -20,6 +20,13 @@ function to_rgb(){
     filename_no_ext="${filename%.*}"
 
     output=${filename_no_ext}
+    fin_output=${output}_8bit_rgb_sharpen.tif
+
+    # check weather the output already exist
+    if [ -f $fin_output ]; then
+        echo "Skip, because File ${fin_output} exists in current folder: ${PWD}"
+        return 0
+    fi
 
     # pre-processing images.
     gdal_contrast_stretch -percentile-range 0.01 0.99 ${image_path} ${output}_8bit.tif
@@ -30,7 +37,11 @@ function to_rgb(){
 
     # sharpen the image
     code_dir=~/codes/PycharmProjects/Landuse_DL
-    /usr/bin/python ${code_dir}/planetScripts/prePlanetImage.py ${output}_8bit_rgb.tif ${output}_8bit_rgb_sharpen.tif
+    /usr/bin/python ${code_dir}/planetScripts/prePlanetImage.py ${output}_8bit_rgb.tif ${fin_output}
+
+    # set nodata
+    gdal_edit.py -a_nodata 0  ${fin_output}
+
 
     rm ${output}_8bit.tif
     rm ${output}_8bit_rgb.tif
