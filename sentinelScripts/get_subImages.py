@@ -446,7 +446,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
     for idx, (c_polygon, c_class_int)  in enumerate(zip(center_polygons,class_labels)):
 
         # output message
-        basic.outputlogMessage('obtaining %d sub-image and the corresponding label raster'%idx)
+        basic.outputlogMessage('obtaining %dth sub-image and the corresponding label raster'%idx)
 
         ## get an image and the corresponding label raster (has errors)
         ## image_array, label_array = get_one_sub_image_label(idx,c_polygon, class_labels[idx], polygons_all, class_labels_all, bufferSize, img_tile_boxes,image_tile_list)
