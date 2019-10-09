@@ -55,6 +55,9 @@ cd ${inf_dir}
         gdal_polygonize.py -8 I${n}_${output} -b 1 -f "ESRI Shapefile" I${n}_${testid}.shp
     fi
 
+    # post processing of shapefile
+    cp ../../${para_file}  ${para_file}
+
     # reproject the shapefile from "GEOGCS (WGS84)" to "Cartesian (XY) projection"
     # need to modify it if switch to other regions
     t_srs=$(python2 ${para_py} -p ${para_file} cartensian_prj)
@@ -63,9 +66,6 @@ cd ${inf_dir}
         ogr2ogr -t_srs  ${t_srs}  I${n}_${testid}_prj.shp I${n}_${testid}.shp
     fi
 
-
-    # post processing of shapefile
-    cp ../../${para_file}  ${para_file}
     min_area=$(python2 ${para_py} -p ${para_file} minimum_gully_area)
     min_p_a_r=$(python2 ${para_py} -p ${para_file} minimum_ratio_perimeter_area)
     ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} I${n}_${testid}_prj.shp I${n}_${testid}_prj_post.shp
