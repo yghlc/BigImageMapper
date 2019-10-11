@@ -76,7 +76,7 @@ para_file = sys.argv[1]
 expr_name = parameters.get_string_parameters(para_file,'expr_name')
 NUM_ITERATIONS = parameters.get_string_parameters(para_file,'export_iteration_num')
 trail = 'iter' + NUM_ITERATIONS
-testid = os.path.basename(os.path.curdir()) + '_' + expr_name + '_' + trail
+testid = os.path.basename(os.getcwd()) + '_' + expr_name + '_' + trail
 output = testid + '.tif'
 
 while len(done_list) < img_count:
@@ -105,7 +105,7 @@ while len(done_list) < img_count:
         local_folder = os.path.join(outdir,'I'+task_id)
         copy_remote_file_dir_to_local(re_task_folder,local_folder)
 
-        cwd_dir = os.path.curdir()
+        cwd_dir = os.getcwd()
         os.chdir(local_folder)
         # gdal_merge.py, which is time-consuming
         task_out_tif = 'I' + task_id + '_' + output
