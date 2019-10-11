@@ -104,7 +104,7 @@ while len(done_list) < img_count:
         # copy the remote folder
         re_task_folder =  os.path.join(os.path.dirname(re_task_file), 'I'+task_id)
         local_folder = os.path.join(outdir,'I'+task_id)
-        # copy_remote_file_dir_to_local(re_task_folder,local_folder)
+        copy_remote_file_dir_to_local(re_task_folder,local_folder)
 
         cwd_dir = os.getcwd()
         os.chdir(local_folder)
