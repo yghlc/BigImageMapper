@@ -47,3 +47,6 @@ python ${eo_dir}/grss_data_fusion/deeplab_inference.py --frozen_graph=${frozen_g
 duration=$SECONDS
 echo "$(date): time cost of inference for image in ${inf_list_file}: ${duration} seconds">>"time_cost.txt"
 
+# write a file to indicate that the prediction has done.
+echo ${inf_list_file} > ${inf_list_file}+'_done'
+
