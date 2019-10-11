@@ -18,6 +18,7 @@ sys.path.insert(0, codes_dir2)
 
 import basic_src.basic as basic
 # import basic_src.io_function as io_function
+import parameters
 
 server="s1155090023@chpc-login01.itsc.cuhk.edu.hk"
 remote_workdir='/users/s1155090023/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/autoMapping'
@@ -63,6 +64,21 @@ done_list = []  # a list of files, e.g., 15.txt_done, which incate the task is c
 outdir = 'multi_inf_results'
 os.system('mkdir -p ' + outdir)
 
+para_file = sys.argv[1]
+
+# expr_name=$(python2 ${para_py} -p ${para_file} expr_name)
+# NUM_ITERATIONS=$(python2 ${para_py} -p ${para_file} export_iteration_num)
+# trail=iter${NUM_ITERATIONS}
+#
+# testid=$(basename $PWD)_${expr_name}_${trail}
+# output=${testid}.tif
+
+expr_name = parameters.get_string_parameters(para_file,'expr_name')
+NUM_ITERATIONS = parameters.get_string_parameters(para_file,'export_iteration_num')
+trail = 'iter' + NUM_ITERATIONS
+testid = os.path.basename(os.path.curdir()) + '_' + expr_name + '_' + trail
+output = testid + '.tif'
+
 while len(done_list) < img_count:
     re_file_list = get_remote_file_list(os.path.join(run_folder, outdir, '*.txt_done'))  # + '/multi_inf_results/*.txt_done')
     if re_file_list is False:
@@ -87,18 +103,27 @@ while len(done_list) < img_count:
         # copy the remote folder
         re_task_folder =  os.path.join(os.path.dirname(re_task_file), 'I'+task_id)
         local_folder = os.path.join(outdir,'I'+task_id)
-        # copy_remote_file_dir_to_local(re_task_folder,local_folder)
+        copy_remote_file_dir_to_local(re_task_folder,local_folder)
 
-        # gdal_merge.py, which is time-comsuming
+        cwd_dir = os.path.curdir()
+        os.chdir(local_folder)
+        # gdal_merge.py, which is time-consuming
+        task_out_tif = 'I' + task_id + '_' + output
+        if os.path.isfile(task_out_tif) is False:
+            os.system('gdal_merge.py -init 0 -n 0 -a_nodata 0 -o ' + task_out_tif + ' ' + 'I0_*.tif' )
 
         # gdal_polygonize.py
+        task_out_shp = 'I' + task_id + '_' + testid + '.shp'
+        if os.path.isfile(task_out_shp) is False:
+            os.system('gdal_polygonize.py -8 '+ task_out_tif +  '-b 1 -f "ESRI Shapefile"' + task_out_shp)
+
+        os.chdir(cwd_dir)
 
         # indicating it is done
         copy_remote_file_dir_to_local(re_task_file, os.path.join(outdir, base_name))
         done_list.append(base_name)
 
 
-
-
-    pass
+# after all done,  run exe_qtp.sh for further post-processing and merging of shape file
+os.system('./exe_qtp.sh')
 
