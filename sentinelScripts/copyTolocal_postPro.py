@@ -25,7 +25,7 @@ remote_workdir='/users/s1155090023/Data/Qinghai-Tibet/entire_QTP_images/sentinel
 run_folder=os.path.join(remote_workdir, 'QTP_deeplabV3+_3')
 
 def copy_remote_file_dir_to_local(re_path,local_dir='./'):
-    os.system('scp -rp '+ server + ':'+re_path + ' ' + local_dir)
+    os.system('scp -r '+ server + ':'+re_path + ' ' + local_dir)
 
 def get_remote_file_list(pattern):
     command = 'ssh ' + server + ' ls ' + pattern
