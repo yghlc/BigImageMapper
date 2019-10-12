@@ -112,7 +112,7 @@ while len(done_list) < img_count:
         task_out_tif = 'I' + task_id + '_' + output
         if os.path.isfile(task_out_tif) is False:
             cmd_str = 'gdal_merge.py -init 0 -n 0 -a_nodata 0 -o ' + task_out_tif + ' ' + ' I0_*.tif'
-            if basic.exec_command_args_list_one_file(cmd_str, task_out_tif) is False:
+            if basic.exec_command_string_one_file(cmd_str, task_out_tif) is False:
                 raise IOError('error, failed to generate %s' % os.path.abspath(task_out_tif))
 
 
@@ -121,7 +121,7 @@ while len(done_list) < img_count:
         if os.path.isfile(task_out_shp) is False:
             # os.system('gdal_polygonize.py -8 '+ task_out_tif +  ' -b 1 -f "ESRI Shapefile" ' + task_out_shp)
             cmd_str = 'gdal_polygonize.py -8 '+ task_out_tif +  ' -b 1 -f "ESRI Shapefile" ' + task_out_shp
-            if basic.exec_command_args_list_one_file(cmd_str, task_out_shp) is False:
+            if basic.exec_command_string_one_file(cmd_str, task_out_shp) is False:
                 raise IOError('error, failed to generate %s' % os.path.abspath(task_out_shp))
 
         os.chdir(cwd_dir)
