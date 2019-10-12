@@ -24,7 +24,12 @@ server="s1155090023@chpc-login01.itsc.cuhk.edu.hk"
 remote_workdir='/users/s1155090023/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/autoMapping'
 run_folder=os.path.join(remote_workdir, 'QTP_deeplabV3+_3')
 
-def copy_remote_file_dir_to_local(re_path,local_dir='./'):
+def copy_remote_file_to_local(re_path,local_dir='./'):
+    os.system('scp '+ server + ':'+re_path + ' ' + local_dir)
+
+def copy_remote_dir_to_local(re_path,local_dir='./'):
+    if os.path.isdir(local_dir):
+        local_dir = os.path.dirname(local_dir)
     os.system('scp -r '+ server + ':'+re_path + ' ' + local_dir)
 
 def get_remote_file_list(pattern):
@@ -50,8 +55,8 @@ def get_remote_file_list(pattern):
 
 
 # copy the inf_image_list.txt to local
-copy_remote_file_dir_to_local(os.path.join(run_folder,'inf_image_list.txt'))
-copy_remote_file_dir_to_local(os.path.join(run_folder,'para_qtp.ini'))
+copy_remote_file_to_local(os.path.join(run_folder,'inf_image_list.txt'))
+copy_remote_file_to_local(os.path.join(run_folder,'para_qtp.ini'))
 
 with open('inf_image_list.txt','r') as inf_obj:
     inf_img_list = [name.strip() for name in inf_obj.readlines()]
@@ -104,7 +109,7 @@ while len(done_list) < img_count:
         # copy the remote folder
         re_task_folder =  os.path.join(os.path.dirname(re_task_file), 'I'+task_id)
         local_folder = os.path.join(outdir,'I'+task_id)
-        copy_remote_file_dir_to_local(re_task_folder,local_folder)
+        copy_remote_dir_to_local(re_task_folder,local_folder)
 
         cwd_dir = os.getcwd()
         os.chdir(local_folder)
@@ -127,7 +132,7 @@ while len(done_list) < img_count:
         os.chdir(cwd_dir)
 
         # indicating it is done
-        copy_remote_file_dir_to_local(re_task_file, os.path.join(outdir, base_name))
+        copy_remote_file_to_local(re_task_file, os.path.join(outdir, base_name))
         done_list.append(base_name)
 
 
