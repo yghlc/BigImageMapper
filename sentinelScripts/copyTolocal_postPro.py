@@ -126,5 +126,5 @@ while len(done_list) < img_count:
 
 
 # after all done,  run exe_qtp.sh for further post-processing and merging of shape file
-os.system('./exe_qtp.sh')
+# os.system('./exe_qtp.sh') # use this script in "post_pro_chpc.sh" on Cryo03
 
