@@ -91,7 +91,7 @@ while len(done_list) < img_count:
     if re_file_list is False:
         basic.outputlogMessage('No completed prediction sub-images, wait one more minute ')
         time.sleep(60)  # wait one minute
-
+    print(re_file_list)
     remote_done_count = len(re_file_list)
     if len(done_list) == remote_done_count:
         basic.outputlogMessage('No new completed prediction sub-images, wait one more minute ')
