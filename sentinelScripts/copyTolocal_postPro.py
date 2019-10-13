@@ -17,7 +17,7 @@ codes_dir2 = HOME +'/codes/PycharmProjects/DeeplabforRS'
 sys.path.insert(0, codes_dir2)
 
 import basic_src.basic as basic
-# import basic_src.io_function as io_function
+import basic_src.io_function as io_function
 import parameters
 
 server="s1155090023@chpc-login01.itsc.cuhk.edu.hk"
@@ -50,6 +50,12 @@ def get_remote_file_list(pattern):
         file_list = result.split('\n')
         return file_list
 
+def is_file_exist_in_folder(folder):
+    file_list = io_function.get_file_list_by_pattern(folder, '*.*')
+    if len(file_list) > 0:
+        return True
+    else:
+        return False
 
 # test
 # re_file_list = get_remote_file_list(run_folder +'/multi_inf_results/*.txt')
@@ -117,6 +123,10 @@ while len(done_list) < img_count:
         time0 = time.time()
         re_task_folder =  os.path.join(os.path.dirname(re_task_file), 'I'+task_id)
         local_folder = os.path.join(outdir,'I'+task_id)
+        # if it already exist, then skip to next
+        if os.path.isdir(local_folder) and is_file_exist_in_folder(local_folder):
+            basic.outputlogMessage('folder %s is being processing by other, skip' % local_folder)
+            continue
         copy_remote_dir_to_local(re_task_folder,local_folder)
         basic.outputlogMessage('copying folder %s cost %.2f seconds'%(local_folder,(time.time() - time0)))
 
