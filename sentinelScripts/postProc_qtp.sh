@@ -48,11 +48,15 @@ cd ${inf_dir}
     #python ${eo_dir}/gdal_class_mosaic.py -o ${output} -init 0 *_pred.tif
     if [ ! -f I${n}_${output} ]; then
         gdal_merge.py -init 0 -n 0 -a_nodata 0 -o I${n}_${output} I0_*.tif
+    else
+        echo I${n}_${output} already exist
     fi
 
     #mv ${output} ../.
     if [ ! -f I${n}_${testid}.shp ]; then
         gdal_polygonize.py -8 I${n}_${output} -b 1 -f "ESRI Shapefile" I${n}_${testid}.shp
+    else
+        echo I${n}_${testid}.shp already exist
     fi
 
     # post processing of shapefile
