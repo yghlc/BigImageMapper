@@ -34,7 +34,7 @@ def copy_remote_dir_to_local(re_path,local_dir='./'):
     local_dir = os.path.dirname(local_dir)
     # os.system('scp -r '+ server + ':'+re_path + ' ' + local_dir)
     # rsync options, r for folder, a: archive mode, -z, compress file data during the transfer
-    cmd_str = 'rsync -raz ' + server + ':' + re_path + ' ' + local_dir
+    cmd_str = 'rsync -rz ' + server + ':' + re_path + ' ' + local_dir
     basic.exec_command_string(cmd_str)
 
 def get_remote_file_list(pattern):
