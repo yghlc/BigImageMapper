@@ -48,5 +48,5 @@ duration=$SECONDS
 echo "$(date): time cost of inference for image in ${inf_list_file}: ${duration} seconds">>"time_cost.txt"
 
 # write a file to indicate that the prediction has done.
-echo ${inf_list_file} > ${inf_list_file}+'_done'
+echo ${inf_list_file} > ${inf_list_file}'_done'
 
