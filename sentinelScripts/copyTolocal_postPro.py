@@ -57,6 +57,7 @@ def get_remote_file_list(pattern):
 # copy the inf_image_list.txt to local
 copy_remote_file_to_local(os.path.join(run_folder,'inf_image_list.txt'))
 copy_remote_file_to_local(os.path.join(run_folder,'para_qtp.ini'))
+os.system('sed -i -e  s%/users/s1155090023%/home/hlc%g para_qtp.ini')   # change to local path
 
 with open('inf_image_list.txt','r') as inf_obj:
     inf_img_list = [name.strip() for name in inf_obj.readlines()]
