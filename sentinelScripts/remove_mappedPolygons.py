@@ -49,11 +49,17 @@ def main(options, args):
     remove_polygons(rm_area_save_shp, 'slo_mean', slope_small_thr, b_smaller, rm_slope_save_shp1)
 
 
-    # rm_slope_save_shp2 = io_function.get_name_by_adding_tail(polygons_shp, 'rmslope2')
-    rm_slope_save_shp2 = output                 # final output
+    rm_slope_save_shp2 = io_function.get_name_by_adding_tail(polygons_shp, 'rmslope2')
     slope_large_thr = 20
     b_smaller = False
     remove_polygons(rm_slope_save_shp1, 'slo_mean', slope_large_thr, b_smaller, rm_slope_save_shp2)
+
+    # remove polgyons based on dem
+    rm_dem_save_shp = output  # final output
+    dem_small_thr = 3000
+    b_smaller = True
+    remove_polygons(rm_slope_save_shp1, 'dem_mean', dem_small_thr, b_smaller, rm_dem_save_shp)
+
 
 
     pass
