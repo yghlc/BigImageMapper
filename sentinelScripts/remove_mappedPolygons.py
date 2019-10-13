@@ -58,7 +58,7 @@ def main(options, args):
     rm_dem_save_shp = output  # final output
     dem_small_thr = 3000
     b_smaller = True
-    remove_polygons(rm_slope_save_shp1, 'dem_mean', dem_small_thr, b_smaller, rm_dem_save_shp)
+    remove_polygons(rm_slope_save_shp2, 'dem_mean', dem_small_thr, b_smaller, rm_dem_save_shp)
 
 
 
