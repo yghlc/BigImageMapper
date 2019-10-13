@@ -113,10 +113,13 @@ while len(done_list) < img_count:
             continue
 
         # copy the remote folder
+        time0 = time.time()
         re_task_folder =  os.path.join(os.path.dirname(re_task_file), 'I'+task_id)
         local_folder = os.path.join(outdir,'I'+task_id)
         copy_remote_dir_to_local(re_task_folder,local_folder)
+        basic.outputlogMessage('copying folder %s cost %.2f '%(local_folder,(time.time() - time0)))
 
+        time0 = time.time()
         cwd_dir = os.getcwd()
         os.chdir(local_folder)
         # gdal_merge.py, which is time-consuming
@@ -136,6 +139,7 @@ while len(done_list) < img_count:
                 raise IOError('error, failed to generate %s' % os.path.abspath(task_out_shp))
 
         os.chdir(cwd_dir)
+        basic.outputlogMessage('merging and polygonizing of %s cost %.2f' % (local_folder, (time.time() - time0)))
 
         # indicating it is done
         copy_remote_file_to_local(re_task_file, os.path.join(outdir, base_name))
