@@ -30,7 +30,8 @@ def copy_remote_file_to_local(re_path,local_dir='./'):
 def copy_remote_dir_to_local(re_path,local_dir='./'):
     if os.path.isdir(local_dir):
         local_dir = os.path.dirname(local_dir)
-    os.system('scp -r '+ server + ':'+re_path + ' ' + local_dir)
+    # os.system('scp -r '+ server + ':'+re_path + ' ' + local_dir)
+    os.system('rsync -r ' + server + ':' + re_path + ' ' + local_dir)
 
 def get_remote_file_list(pattern):
     command = 'ssh ' + server + ' ls ' + pattern
