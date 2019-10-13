@@ -125,6 +125,7 @@ while len(done_list) < img_count:
         local_folder = os.path.join(outdir,'I'+task_id)
         # if it already exist, then skip to next
         if os.path.isdir(local_folder) and is_file_exist_in_folder(local_folder):
+            done_list.append(base_name)
             basic.outputlogMessage('folder %s is being processing by other, skip' % local_folder)
             continue
         copy_remote_dir_to_local(re_task_folder,local_folder)
