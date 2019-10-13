@@ -20,7 +20,8 @@ import basic_src.basic as basic
 import basic_src.io_function as io_function
 import parameters
 
-server="s1155090023@chpc-login01.itsc.cuhk.edu.hk"
+# server="s1155090023@chpc-login01.itsc.cuhk.edu.hk"
+server="hlc@10.0.0.203" # test
 remote_workdir='/users/s1155090023/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/autoMapping'
 run_folder=os.path.join(remote_workdir, 'QTP_deeplabV3+_3')
 

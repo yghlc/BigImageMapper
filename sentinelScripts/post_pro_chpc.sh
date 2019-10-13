@@ -19,7 +19,8 @@ script=~/codes/PycharmProjects/Landuse_DL/sentinelScripts/copyTolocal_postPro.py
 # parallel run this, delay 200 second for each job
 cmd="${script} para_qtp.ini"
 #parallel --progress --delay 200 ${script} ${script} ${script} ${script} ${script} ${script} ${script} ${script} ::: para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini
-parallel --progress --delay 200 ${cmd} ${cmd} ::: 1 2
+# the parameter already give in ${cmd}, but still give something after :::
+parallel --progress --delay 200 ${cmd} ${cmd} ${cmd} ${cmd} ${cmd} ${cmd} ${cmd} ${cmd} ::: 1 2 3 4 5 6 7 8
 
 ## post processing and copy results, including output "time_cost.txt"
 test_name=chpc_1
