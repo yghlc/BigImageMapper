@@ -20,6 +20,9 @@ import basic_src.basic as basic
 import basic_src.io_function as io_function
 import parameters
 
+import psutil
+import getpass  # for get current username
+
 server="s1155090023@chpc-login01.itsc.cuhk.edu.hk"
 remote_workdir='/users/s1155090023/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/autoMapping'
 # test
@@ -64,6 +67,17 @@ def is_file_exist_in_folder(folder):
 
 def outputlogMessage(message):
     basic.outputlogMessage(message)
+
+def is_gdal_merge_running():
+    # process_names = [proc.name() for proc in psutil.process_iter()]
+    user = getpass.getuser()
+    for proc in psutil.process_iter():
+        if 'python' in proc.name() and proc.username() == user:
+            cmd_args_list = proc.cmdline()[:20] # only get first 20 arguments (include python)
+            if 'gdal_merge.py' in cmd_args_list[1]:
+                return True
+    return False
+
 
 
 if __name__ == "__main__":
@@ -131,7 +145,7 @@ if __name__ == "__main__":
                 done_list.append(base_name)
                 basic.outputlogMessage('folder %s is being processing by other, skip' % local_folder)
                 continue
-            os.system('mkdir -p '+ local_folder)
+            os.system('mkdir -p '+ local_folder)   # create folder immediately to indicate this task is being handling
             copy_remote_dir_to_local(re_task_folder, local_folder)
             basic.outputlogMessage('copying folder %s cost %.2f seconds' % (local_folder, (time.time() - time0)))
 
@@ -140,6 +154,10 @@ if __name__ == "__main__":
             os.chdir(local_folder)
             # gdal_merge.py, which is time-consuming
             task_out_tif = 'I' + task_id + '_' + output
+            # only allow one gdal_mergy.py is running on a machine
+            while is_gdal_merge_running() is True:
+                time.sleep(3)   # wait three seconds
+
             if os.path.isfile(task_out_tif) is False:
                 cmd_str = 'gdal_merge.py -init 0 -n 0 -a_nodata 0 -o ' + task_out_tif + ' ' + ' I0_*.tif'
                 if basic.exec_command_string_one_file(cmd_str, task_out_tif) is False:
