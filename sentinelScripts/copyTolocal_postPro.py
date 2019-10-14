@@ -154,9 +154,9 @@ if __name__ == "__main__":
             os.chdir(local_folder)
             # gdal_merge.py, which is time-consuming
             task_out_tif = 'I' + task_id + '_' + output
-            # only allow one gdal_mergy.py is running on a machine
-            while is_gdal_merge_running() is True:
-                time.sleep(3)   # wait three seconds
+            # # only allow one gdal_mergy.py is running on a machine (not helpful )
+            # while is_gdal_merge_running() is True:
+            #     time.sleep(3)   # wait three seconds
 
             if os.path.isfile(task_out_tif) is False:
                 cmd_str = 'gdal_merge.py -init 0 -n 0 -a_nodata 0 -o ' + task_out_tif + ' ' + ' I0_*.tif'
