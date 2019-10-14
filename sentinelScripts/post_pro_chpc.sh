@@ -29,7 +29,7 @@ cmd="${script} para_qtp.ini"
 parallel --progress --delay 200 ${cmd} ${cmd} ${cmd}  ::: 1 2 3
 
 ## post processing and copy results, including output "time_cost.txt"
-test_name=chpc_1
+test_name=chpc_2
 ${eo_dir}/sentinelScripts/postProc_qtp.sh ${para_file}  ${test_name}
 ## merge polygons
 ${eo_dir}/sentinelScripts/merge_shapefiles.sh ${para_file} ${test_name}
