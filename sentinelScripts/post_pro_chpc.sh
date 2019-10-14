@@ -16,6 +16,10 @@ eo_dir=~/codes/PycharmProjects/Landuse_DL
 script=~/codes/PycharmProjects/Landuse_DL/sentinelScripts/copyTolocal_postPro.py
 
 #${script} para_qtp.ini
+
+# check remote task available on remote machine, only start the parallel if some task already exist.
+~/codes/PycharmProjects/Landuse_DL/sentinelScripts/check_remote_machine.py
+
 # parallel run this, delay 200 second for each job
 cmd="${script} para_qtp.ini"
 #parallel --progress --delay 200 ${script} ${script} ${script} ${script} ${script} ${script} ${script} ${script} ::: para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini para_qtp.ini
