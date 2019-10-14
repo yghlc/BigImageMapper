@@ -62,6 +62,9 @@ def is_file_exist_in_folder(folder):
     else:
         return False
 
+def outputlogMessage(message):
+    basic.outputlogMessage(message)
+
 
 if __name__ == "__main__":
     # copy the inf_image_list.txt to local
