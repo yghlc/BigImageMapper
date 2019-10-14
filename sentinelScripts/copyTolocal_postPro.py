@@ -127,10 +127,11 @@ if __name__ == "__main__":
             re_task_folder = os.path.join(os.path.dirname(re_task_file), 'I' + task_id)
             local_folder = os.path.join(outdir, 'I' + task_id)
             # if it already exist, then skip to next
-            if os.path.isdir(local_folder) and is_file_exist_in_folder(local_folder):
+            if os.path.isdir(local_folder):# and is_file_exist_in_folder(local_folder):
                 done_list.append(base_name)
                 basic.outputlogMessage('folder %s is being processing by other, skip' % local_folder)
                 continue
+            os.system('mkdir -p '+ local_folder)
             copy_remote_dir_to_local(re_task_folder, local_folder)
             basic.outputlogMessage('copying folder %s cost %.2f seconds' % (local_folder, (time.time() - time0)))
 
