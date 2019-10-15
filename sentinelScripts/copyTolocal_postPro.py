@@ -125,6 +125,7 @@ if __name__ == "__main__":
         if len(done_list) == remote_done_count:
             basic.outputlogMessage('No new completed prediction sub-images, wait one more minute ')
             time.sleep(60)  # wait one minute
+            continue
 
         for re_task_file in re_file_list:
 
