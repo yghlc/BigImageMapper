@@ -22,6 +22,7 @@ import parameters
 
 import psutil
 import getpass  # for get current username
+import random
 
 server="s1155090023@chpc-login01.itsc.cuhk.edu.hk"
 remote_workdir='/users/s1155090023/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/autoMapping'
@@ -117,14 +118,16 @@ if __name__ == "__main__":
         re_file_list = get_remote_file_list(
             os.path.join(run_folder, outdir, '*.txt_done'))  # + '/multi_inf_results/*.txt_done')
         if re_file_list is False:
-            basic.outputlogMessage('No completed prediction sub-images, wait one more minute ')
-            time.sleep(60)  # wait one minute
+            wait_sec = random.randint(60, 120)
+            basic.outputlogMessage('No completed prediction sub-images, wait %d seconds, PID: %d '% (wait_sec,os.getpid()))
+            time.sleep(wait_sec)  # wait one minute
             continue
 
         remote_done_count = len(re_file_list)
         if len(done_list) == remote_done_count:
-            basic.outputlogMessage('No new completed prediction sub-images, wait one more minute ')
-            time.sleep(60)  # wait one minute
+            wait_sec = random.randint(60, 120)
+            basic.outputlogMessage('No completed prediction sub-images, wait %d seconds, PID: %d '% (wait_sec,os.getpid()))
+            time.sleep(wait_sec)  # wait one minute
             continue
 
         for re_task_file in re_file_list:
