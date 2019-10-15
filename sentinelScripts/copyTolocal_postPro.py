@@ -142,7 +142,8 @@ if __name__ == "__main__":
             local_folder = os.path.join(outdir, 'I' + task_id)
             # if it already exist, then skip to next
             if os.path.isdir(local_folder):# and is_file_exist_in_folder(local_folder):
-                done_list.append(base_name)
+                if base_name not in done_list:
+                    done_list.append(base_name)
                 basic.outputlogMessage('folder %s is being processing by other, skip' % local_folder)
                 continue
             os.system('mkdir -p '+ local_folder)   # create folder immediately to indicate this task is being handling
