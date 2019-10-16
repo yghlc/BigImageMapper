@@ -16,5 +16,5 @@ for i in range(0,78):
             print('task %d is completed'%i)
         else:
             print('task %d is not completed, remove the folder' % i)
-            # os.system('rm -rf '+ 'I%d'%i)
+            os.system('rm -rf '+ 'I%d'%i)
 
