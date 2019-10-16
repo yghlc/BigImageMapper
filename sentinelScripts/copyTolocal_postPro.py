@@ -60,11 +60,19 @@ def get_remote_file_list(pattern):
         return file_list
 
 def is_file_exist_in_folder(folder):
-    file_list = io_function.get_file_list_by_pattern(folder, '*.*')
-    if len(file_list) > 0:
-        return True
-    else:
-        return False
+    # only check the first ten files
+    for i in range(10):
+        if os.path.isfile(os.path.join(folder,'I0_%d.tif'%i)):
+            return True
+    return False
+    # file_list = io_function.get_file_list_by_pattern(folder, '*.*')  # this may take time if a lot of file exist
+    # if len(file_list) > 0:
+    #     return True
+    # else:
+    #     return False
+
+    pass
+
 
 def outputlogMessage(message):
     basic.outputlogMessage(message)

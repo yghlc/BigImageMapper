@@ -54,11 +54,16 @@ if img_count < 1:
     raise ValueError('No image in inf_image_list.txt')
 
 def is_file_exist_in_folder(folder):
-    file_list = io_function.get_file_list_by_pattern(folder, '*.*')
-    if len(file_list) > 0:
-        return True
-    else:
-        return False
+    # only check the first ten files
+    for i in range(10):
+        if os.path.isfile(os.path.join(folder,'I0_%d.tif'%i)):
+            return True
+    return False
+    # file_list = io_function.get_file_list_by_pattern(folder, '*.*')  # this may take time if a lot of file exist
+    # if len(file_list) > 0:
+    #     return True
+    # else:
+    #     return False
 
 def predict_one_image(para_file,save_dir,inf_list_file,gpuid):
     command_string = predict_script + ' '+ para_file + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
