@@ -9,7 +9,10 @@
 # Exit immediately if a command exits with a non-zero status. E: error trace
 set -eE -o functrace
 
+word_dir=~/Data/Qinghai-Tibet/entire_QTP_images
 eo_dir=~/codes/PycharmProjects/Landuse_DL
+
+cd ${word_dir}
 
 # on Cryo06, to gdalsrsinfro (>2.3) and python 3
 export PATH=~/programs/anaconda3/bin:$PATH
