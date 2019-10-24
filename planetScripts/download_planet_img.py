@@ -79,13 +79,22 @@ def read_polygons_json(polygon_shp):
     shapefile = gpd.read_file(polygon_shp)
     polygons = shapefile.geometry.values
 
-    # check invalidity of polygons
+    # # check invalidity of polygons
     invalid_polygon_idx = []
-    for idx, geom in enumerate(polygons):
-        if geom.is_valid is False:
+    # for idx, geom in enumerate(polygons):
+    #     if geom.is_valid is False:
+    #         invalid_polygon_idx.append(idx + 1)
+    # if len(invalid_polygon_idx) > 0:
+    #     raise ValueError('error, polygons %s (index start from 1) in %s are invalid, please fix them first '%(str(invalid_polygon_idx),polygon_shp))
+
+    # fix invalid polygons
+    for idx in range(0,len(polygons)):
+        if polygons[idx].is_valid is False:
             invalid_polygon_idx.append(idx + 1)
+            polygons[idx] = polygons[idx].buffer(0.000001)  # trying to solve self-intersection
     if len(invalid_polygon_idx) > 0:
-        raise ValueError('error, polygons %s (index start from 1) in %s are invalid, please fix them first '%(str(invalid_polygon_idx),polygon_shp))
+        basic.outputlogMessage('Warning, polygons %s (index start from 1) in %s are invalid, fix them by the buffer operation '%(str(invalid_polygon_idx),polygon_shp))
+
 
     # convert to json format
     polygons_json = [ mapping(item) for item in polygons]
