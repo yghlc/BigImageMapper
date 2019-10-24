@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Introduction:  Merge NDVI, NDWI, and one RGB band to a three bands image.
+## Introduction: downloaded Planet images
 
 #authors: Huang Lingcao
 #email:huanglingcao@gmail.com
@@ -14,11 +14,15 @@ eo_dir=~/codes/PycharmProjects/Landuse_DL
 # on Cryo06, to gdalsrsinfro (>2.3) and python 3
 export PATH=~/programs/anaconda3/bin:$PATH
 
-shp_file=~/Data/Qinghai-Tibet/qtp_thaw_slumps/rts_polygons_s2_2018/qtp_train_polygons_s2_2018_v2.shp
+#shp_file=~/Data/Qinghai-Tibet/qtp_thaw_slumps/rts_polygons_s2_2018/qtp_train_polygons_s2_2018_v2.shp
+# mapping results
+shp_file=~/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/autoMapping/QTP_deeplabV3+_3/result_backup/QTP_deeplabV3+_3_exp2_iter30000_prj_post2_chpc_2.shp
 save_folder=planet_sr_images
 
+#start_date=2018-05-20
+#end_date=2018-06-01
 start_date=2018-05-20
-end_date=2018-06-01
+end_date=2018-06-30
 cloud_cover_thr=0.3
 item_type=PSScene4Band
 #account=huanglingcao@link.cuhk.edu.hk
