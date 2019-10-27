@@ -525,7 +525,7 @@ def main(options, args):
     os.system('mkdir -p ' + os.path.join(saved_dir,'subImages'))
     os.system('mkdir -p ' + os.path.join(saved_dir,'subLabels'))
     dstnodata = options.dstnodata
-    pre_name = '_'.join(os.path.basename(image_tile_list[0]).split('_')[:4])
+    pre_name = '_'.join(os.path.splitext(os.path.basename(image_tile_list[0]))[0].split('_')[:4])
     get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata, brectangle=True)
 
     # move sub images and sub labels to different folders.
