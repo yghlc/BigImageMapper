@@ -56,8 +56,9 @@ done
 
 #prepare list files
 mkdir -p list
-find ${root}/${test_dir}/split_images/*.png > list/image_list.txt
-find ${root}/${test_dir}/split_labels/*.png > list/label_list.txt
+# remove ${root}/${test_dir}/, using the relative path
+find split_images/*.png > list/image_list.txt
+find split_labels/*.png > list/label_list.txt
 
 paste list/image_list.txt list/label_list.txt | awk ' { print $1 " " $2 }' > list/temp.txt
 cp list/temp.txt list/train_aug.txt
