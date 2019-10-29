@@ -342,7 +342,16 @@ def inf_remoteSensing_image(model,image_path=None):
             multi_image_data = []
             for img_patch in a_batch_of_patches:
                 img_data = build_RS_data.read_patch(img_patch)
+                ## ignore image patch are all black or white
+                if np.std(img_data) < 0.0001:
+                    print('Image:%d patch:%4d is black or white, ignore' %(img_idx, idx))
+                    idx += 1
+                    continue
+
                 multi_image_data.append(img_data)
+            # ignore image patch are all black or white
+            if len(multi_image_data) < 1:
+                continue
             multi_images = np.stack(multi_image_data, axis=0)
 
             # inference them
