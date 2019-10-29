@@ -52,8 +52,10 @@ cd ${inf_dir}
         echo I${n}_${output} already exist
     fi
 
+    shp_pre=I${n}_${testid}
+
     #mv ${output} ../.
-    if [ ! -f I${n}_${testid}.shp ]; then
+    if [ ! -f ${shp_pre}.shp ]; then
         gdal_polygonize.py -8 I${n}_${output} -b 1 -f "ESRI Shapefile" I${n}_${testid}.shp
     else
         echo I${n}_${testid}.shp already exist
@@ -67,13 +69,14 @@ cd ${inf_dir}
     t_srs=$(python2 ${para_py} -p ${para_file} cartensian_prj)
 
     # the file not exist and prjection string is not empty
-    if [ ! -f I${n}_${testid}_prj.shp ] && [ ! -z "$t_srs" ]; then
+    if [ ! -f ${shp_pre}_prj.shp ] && [ ! -z "$t_srs" ]; then
         ogr2ogr -t_srs  ${t_srs}  I${n}_${testid}_prj.shp I${n}_${testid}.shp
+        shp_pre=${shp_pre}_prj
     fi
 
     min_area=$(python2 ${para_py} -p ${para_file} minimum_gully_area)
     min_p_a_r=$(python2 ${para_py} -p ${para_file} minimum_ratio_perimeter_area)
-    ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} I${n}_${testid}_prj.shp I${n}_${testid}_prj_post.shp
+    ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} ${shp_pre}.shp ${shp_pre}_post.shp
 
     cd -
 
@@ -99,8 +102,13 @@ mkdir -p ${bak_dir}
 for (( n=0; n<${num}; n++ ));
     do
 
-    cp_shapefile ${inf_dir}/I${n}/I${n}_${testid}_prj_post ${bak_dir}/I${n}_${testid}_prj_post_${test} | true
-    cp_shapefile ${inf_dir}/I${n}/I${n}_${testid}_prj ${bak_dir}/I${n}_${testid}_prj_${test} | true
+    shp_pre=I${n}_${testid}
+    if [  -f ${inf_dir}/I${n}/${shp_pre}_prj.shp ]; then
+        shp_pre=${shp_pre}_prj
+    fi
+
+    cp_shapefile ${inf_dir}/I${n}/${shp_pre}_post ${bak_dir}/${shp_pre}_post_${test} | true
+    cp_shapefile ${inf_dir}/I${n}/${shp_pre} ${bak_dir}/${shp_pre}_${test} | true
 
     cp ${para_file} result_backup/${testid}_para_${test}.ini
 #    cp ${inf_dir}/evaluation_report.txt result_backup/${testid}_eva_report_${test}.txt
