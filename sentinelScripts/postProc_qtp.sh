@@ -111,7 +111,7 @@ for (( n=0; n<${num}; n++ ));
     cp_shapefile ${inf_dir}/I${n}/${shp_pre} ${bak_dir}/${shp_pre}_${test} | true
 
     cp ${para_file} result_backup/${testid}_para_${test}.ini
-#    cp ${inf_dir}/evaluation_report.txt result_backup/${testid}_eva_report_${test}.txt
+    cp${inf_dir}/I${n}/evaluation_report.txt ${bak_dir}/${shp_pre}_eva_report_${test}.txt  | true
 #    cp otb_acc_log.txt  result_backup/${testid}_otb_acc_${test}.txt
 
     echo "complete: copy result files to result_backup, expriment: $expr_name, iterations: $NUM_ITERATIONS & copyNumber: _$test"
