@@ -66,7 +66,8 @@ cd ${inf_dir}
     # need to modify it if switch to other regions
     t_srs=$(python2 ${para_py} -p ${para_file} cartensian_prj)
 
-    if [ ! -f I${n}_${testid}_prj.shp ]; then
+    # the file not exist and prjection string is not empty
+    if [ ! -f I${n}_${testid}_prj.shp ] && [ ! -z "$t_srs" ]; then
         ogr2ogr -t_srs  ${t_srs}  I${n}_${testid}_prj.shp I${n}_${testid}.shp
     fi
 
