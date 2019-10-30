@@ -46,35 +46,43 @@ function merge_shp() {
 }
 
 
-out_name=${testid}_prj_post_${test}
-out_shp=${out_name}.shp
-if [ -f $out_shp ]; then
-    echo "remove previous results"
-    rm ${out_name}.*
-fi
-for i in $(ls ${tile_dir}/*_prj_post*.shp)
-do
-    echo "merging $i"
-    merge_shp ${out_shp} ${out_name} ${i}
+for first_shp in $(ls ${tile_dir}/I0_*.shp); do
+
+#    out_name=${testid}_prj_post_${test}
+    echo "First sub shape file:" $first_shp
+    basename=$(basename $first_shp)
+    # remove "I0_"
+    out_shp=$(python -c "import sys; print('_'.join(sys.argv[1].split('_')[1:]))" $basename)
+    out_name="${out_shp%.*}"
+    if [ -f $out_shp ]; then
+        echo "remove previous results"
+        rm ${out_name}.*
+    fi
+    for i in $(ls ${tile_dir}/I*_${out_name}.shp)
+    do
+        echo "merging $i"
+        merge_shp ${out_shp} ${out_name} ${i}
+    done
+    # convert to KML
+    echo $"convert to KML format"
+    ogr2ogr -f KML ${out_name}.kml ${out_shp}
+
 done
-# convert to KML
-echo $"convert to KML format"
-ogr2ogr -f KML ${out_name}.kml ${out_shp}
 
 
-out_name=${testid}_prj_${test}
-out_shp=${out_name}.shp
-if [ -f $out_shp ]; then
-    echo "remove previous results"
-    rm ${out_name}.*
-fi
-for i in $(ls ${tile_dir}/*_prj*.shp | grep -v post)
-do
-    echo "merging $i"
-    merge_shp ${out_shp} ${out_name} ${i}
-done
-# convert to KML
-echo $"convert to KML format"
-ogr2ogr -f KML ${out_name}.kml ${out_shp}
+#out_name=${testid}_prj_${test}
+#out_shp=${out_name}.shp
+#if [ -f $out_shp ]; then
+#    echo "remove previous results"
+#    rm ${out_name}.*
+#fi
+#for i in $(ls ${tile_dir}/*_prj*.shp | grep -v post)
+#do
+#    echo "merging $i"
+#    merge_shp ${out_shp} ${out_name} ${i}
+#done
+## convert to KML
+#echo $"convert to KML format"
+#ogr2ogr -f KML ${out_name}.kml ${out_shp}
 
 cd ..
