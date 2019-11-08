@@ -12,7 +12,7 @@ January 2019:
     Supporting of Mask RCNN
 
 March 2019:
-    Many scripts for producing figures of manuscript: Mapping Retrogressive Thaw Slumps in the Beiluhe Region, Tibetan Plateau on Planet CubeSat images using Deep Learning
+    Many scripts for producing figures of manuscript: Using Deep Learning to Map Retrogressive Thaw Slumps in the Beiluhe Region (Tibetan Plateau) from CubeSat Images, Remote sensing of Environment, In press
 
 
 Dependencies:
