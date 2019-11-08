@@ -1,8 +1,8 @@
 # Landuse_DL
-Land use classification or landform delineation from remote sensing images using Deep Learning. This repo contains codes for  for mapping thermokarst landforms including thermo-ersion gullies and retrogressive thaw slumps.
+Land use classification or landform delineation from remote sensing images using Deep Learning. This repo contains codes for  mapping thermokarst landforms including thermo-ersion gullies and retrogressive thaw slumps.
 
 ## Citation
-This repo contains codes for mapping Retrogressive Thaw Slumps on remote sensing images based on [DeepLabv3+](https://github.com/tensorflow/models/tree/master/research/deeplab), which is a segmentation algorithm using Deep Convolutional Neural Network. If any code here is useful for your project, please consider citing [our paper](im press):
+If any code here is useful for your project, please consider citing our papers:
 
 ```
 @article{huang2019using,
@@ -52,5 +52,7 @@ This is a personal repo that we are actively developing. It may not work as expe
 ## TODO
 We will update some of the codes, including bug fix and enhancement because they are used in other projects. 
 If many requests (at least 10) to repeat our results, we will provide a docker distribution and demo. 
+
+Better documents
   
 
