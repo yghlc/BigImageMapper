@@ -54,7 +54,6 @@ These codes are only for research, and please take risks by yourself.
 
 ## TODO
 We will update some of the codes, including bug fix and enhancement because they are used in other projects. 
-If many requests (at least 10) to repeat our results, we will provide a docker distribution and demo. 
 
 Better documents
   
