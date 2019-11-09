@@ -26,7 +26,7 @@ If any code here is useful for your project, please consider citing our papers:
 ```
 
 ## How to use
-See "tutorial" . 
+See the script: thawslumpScripts/exe.sh
 
 ## updates
 March 2018:
