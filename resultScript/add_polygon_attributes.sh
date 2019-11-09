@@ -24,7 +24,10 @@ ground_truth=${res_dir}/identified_thawslumps_utm_post.shp
 #polygon_shp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_post_imgAug16_TP.shp
 
 # the 220 true positives
-polygon_shp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_b_exp10_iter30000_post_imgAug22_TP.shp
+#polygon_shp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_b_exp10_iter30000_post_imgAug22_TP.shp
+
+# calculate the topography info again after fix a bug
+polygon_shp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_b_exp10_iter30000_post_imgAug22_TP_Bugfix.shp
 
 ## polyon without post-processing (removing polygons based on their areas)
 #shp_imgAug16_NOpost=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_exp9_iter30000_imgAug16.shp
@@ -36,27 +39,27 @@ shp_imgAug22_NOpost=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_b_exp
 ### polygon geometric information and IoU
 
 #${code_dir}/resultScript/add_info2Pylygons.py ${shp_imgAug16_NOpost} -v ${ground_truth} -n "IoU"
-${code_dir}/resultScript/add_info2Pylygons.py ${shp_imgAug22_NOpost} -v ${ground_truth} -n "IoU"
+#${code_dir}/resultScript/add_info2Pylygons.py ${shp_imgAug22_NOpost} -v ${ground_truth} -n "IoU"
 
 #${code_dir}/resultScript/add_info2Pylygons.py ${shp_imgAug17_NOpost} -v ${ground_truth} -n "IoU"
 
 ################################################################################
 ### raster
-#pisr=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_utm_basinExt_PISR_total_perDay.tif
-#tpi=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_utm_basinExt_tpi.tif
+pisr=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_utm_basinExt_PISR_total_perDay.tif
+tpi=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/dem_derived/beiluhe_srtm30_utm_basinExt_tpi.tif
 #
-#dem=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt.tif
-#slope=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_slope.tif
+dem=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt.tif
+slope=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_slope.tif
 #aspect=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_apect.tif
 #
 ## inside polygons
-#${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${pisr} -n "pisr"
+${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${pisr} -n "pisr"
 #
-#${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${tpi} -n "tpi"
+${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${tpi} -n "tpi"
 ##
-#${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${slope} -n "slo"
+${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${slope} -n "slo"
 #
-#${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${dem} -n "dem"
+${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${dem} -n "dem"
 #
 #${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${aspect} -n "asp"
 
