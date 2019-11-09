@@ -29,6 +29,10 @@ If any code here is useful for your project, please cite our papers:
 ## How to use
 See the script: thawslumpScripts/exe.sh
 
+## Contributions
+Please let me know or pull a request if you spot any bug or typo. Thanks!
+Any enhancement or new functions are also welcome!
+
 ## updates
 March 2018:
     Land use classification using the data from 2018_IEEE_GRSS_Data_Fusion. Also submitted the result. codes in "grss_data_fusion". 
@@ -43,6 +47,7 @@ January 2019:
 March 2019:
     Many scripts for producing figures of manuscript: Using Deep Learning to Map Retrogressive Thaw Slumps in the Beiluhe Region (Tibetan Plateau) from CubeSat Images, Remote sensing of Environment, In press
 
+More
 
 ## Dependencies:
     Python package: Numpy, sklearn, rasterio, GDAL. Binary package: GDAL, OTB, ASP 
