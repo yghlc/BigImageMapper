@@ -49,7 +49,7 @@ March 2019:
 
 ## Disclaimer
 This is a personal repo that we are actively developing. It may not work as expected. 
-We have all the settings on our workstations and servers. You need to spend some efforts on environment settings on your computers before you running these codes. 
+We have all the settings on our workstations and servers. You need to spend some efforts on environment settings on your computers before running these codes. 
 These codes are only for research, and please take risks by yourself.
 
 ## TODO
