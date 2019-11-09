@@ -350,13 +350,13 @@ def check_asset_exist(download_item, asset, save_dir):
         return False
 
 
-def download_planet_images(polygons_json, start_date, end_date, could_cover_thr, item_types, save_folder):
+def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr, item_types, save_folder):
     '''
     download images from for all polygons, to save quota, each polygon only downlaod one image
     :param polygons_json: a list of polygons in json format
     :param start_date:
     :param end_date:
-    :param could_cover_thr:
+    :param cloud_cover_thr:
     :param save_folder:
     :return: True if successful, false otherwise
     '''
@@ -376,7 +376,7 @@ def download_planet_images(polygons_json, start_date, end_date, could_cover_thr,
 
 
         # search and donwload using Planet Client API
-        combined_filter = get_a_filter_cli_api(geom, start_date, end_date, could_cover_thr)
+        combined_filter = get_a_filter_cli_api(geom, start_date, end_date, cloud_cover_thr)
 
         # get the count number
         item_count = get_items_count(combined_filter, item_types)
@@ -440,7 +440,7 @@ def main(options, args):
 
     start_date = datetime.strptime(options.start_date, '%Y-%m-%d') #datetime(year=2018, month=5, day=20)
     end_date = datetime.strptime(options.end_date, '%Y-%m-%d')  #end_date
-    could_cover_thr = options.cloud_cover           # 0.3
+    cloud_cover_thr = options.cloud_cover           # 0.3
 
     planet_account = options.planet_account
 
@@ -457,7 +457,7 @@ def main(options, args):
 
 
     # download images
-    download_planet_images(polygons_json, start_date, end_date, could_cover_thr, item_types, save_folder)
+    download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr, item_types, save_folder)
 
 
 
