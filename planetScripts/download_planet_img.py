@@ -495,4 +495,6 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(2)
 
+    basic.setlogfile('download_planet_images_%s.log'%str(datetime.date(datetime.now())))
+
     main(options, args)
