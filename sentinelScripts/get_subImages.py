@@ -116,7 +116,7 @@ def get_projection_proj4(geo_file):
     prj4_str = basic.exec_command_args_list_one_string(shp_args_list)
     if prj4_str is False:
         raise ValueError('error, get projection information of %s failed'%geo_file)
-    return prj4_str
+    return prj4_str.decode().strip()
 
 def get_bounds_of_polygons(polygons):
     '''
