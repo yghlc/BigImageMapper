@@ -10,7 +10,7 @@
 ##MAKE SURE the /usr/bin/python, which is python2 on Cryo06
 #export PATH=/usr/bin:$PATH
 # python2 on Cryo03, tensorflow 1.6
-export PATH=~/programs/anaconda2/bin:$PATH
+#export PATH=~/programs/anaconda2/bin:$PATH         # set the PATH outside: in exe.sh or exe_qtb.sh
 
 # Exit immediately if a command exits with a non-zero status. E: error trace
 set -eE -o functrace
