@@ -62,10 +62,11 @@ def get_and_set_Planet_key(user_account):
         raise ValueError('account: %s cannot find in %s'%(user_account,keyfile))
 
 
-def read_polygons_json(polygon_shp):
+def read_polygons_json(polygon_shp, no_json=False):
     '''
     read polyogns and convert to json format
     :param polygon_shp: polygon in projection of EPSG:4326
+    :param no_json: True indicate not json format
     :return:
     '''
 
@@ -95,9 +96,11 @@ def read_polygons_json(polygon_shp):
     if len(invalid_polygon_idx) > 0:
         basic.outputlogMessage('Warning, polygons %s (index start from 1) in %s are invalid, fix them by the buffer operation '%(str(invalid_polygon_idx),polygon_shp))
 
-
-    # convert to json format
-    polygons_json = [ mapping(item) for item in polygons]
+    if no_json:
+        return polygons
+    else:
+        # convert to json format
+        polygons_json = [ mapping(item) for item in polygons]
 
     return polygons_json
 
