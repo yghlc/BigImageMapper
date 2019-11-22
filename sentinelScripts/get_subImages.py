@@ -326,7 +326,7 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
     :return:
     '''
 
-    ############# This funciton is not working  #############
+    ############# This function is not working  #############
 
     # center_polygon corresponds to one polygon in the full set of training polygons, so it is not necessary to check
     # get adjacent polygon
