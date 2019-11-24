@@ -112,11 +112,13 @@ def get_projection_proj4(geo_file):
     :return: projection string in prj4 format
     '''
 
-    shp_args_list = ['gdalsrsinfo','-o','proj4',geo_file]
-    prj4_str = basic.exec_command_args_list_one_string(shp_args_list)
-    if prj4_str is False:
-        raise ValueError('error, get projection information of %s failed'%geo_file)
-    return prj4_str.decode().strip()
+    # shp_args_list = ['gdalsrsinfo','-o','proj4',geo_file]
+    # prj4_str = basic.exec_command_args_list_one_string(shp_args_list)
+    # if prj4_str is False:
+    #     raise ValueError('error, get projection information of %s failed'%geo_file)
+    # return prj4_str.decode().strip()
+    import basic_src.map_projection as map_projection
+    return map_projection.get_raster_or_vector_srs_info_proj4(geo_file)
 
 def get_bounds_of_polygons(polygons):
     '''
