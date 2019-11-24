@@ -51,7 +51,7 @@ def main(options, args):
     # remove  polygons based on slope information
     rm_slope_save_shp1 = io_function.get_name_by_adding_tail(polygons_shp, 'rmslope1')
     # slope_small_thr = 2
-    slope_small_thr = parameters.get_digit_parameters_None_if_absence(para_file,'min_slope','float')
+    slope_small_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_slope','float')
     b_smaller = True
     if slope_small_thr is not None:
         remove_polygons(rm_area_save_shp, 'slo_mean', slope_small_thr, b_smaller, rm_slope_save_shp1)
