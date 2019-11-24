@@ -60,11 +60,7 @@ def remove_polygons_outside_extent(input_shp, extent_shp, output):
 
 def copy_shape_file(input, output):
 
-    assert io_function.is_file_exist(input)
-    arg1 = os.path.splitext(input)[0]
-    arg2 = os.path.splitext(output)[0]
-    arg_list = ['cp_shapefile', arg1, arg2]
-    return basic.exec_command_args_list_one_file(arg_list, output)
+    return io_function.copy_shape_file(input, output)
 
 def main(options, args):
     polygons_shp = args[0]
