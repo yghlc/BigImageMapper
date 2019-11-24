@@ -20,18 +20,55 @@ import parameters
 
 import basic_src.io_function as io_function
 import basic_src.basic as basic
+import basic_src.map_projection as map_projection
 import vector_features
 from vector_features import shape_opeation
 
 def remove_polygons(shapefile,field_name, threshold, bsmaller,output):
-    #  remove the not narrow polygon based on ratio_p_a
+    '''
+    remove polygons based on attribute values.
+    :param shapefile: input shapefile name
+    :param field_name:
+    :param threshold:
+    :param bsmaller:
+    :param output:
+    :return:
+    '''
     operation_obj = shape_opeation()
     if operation_obj.remove_shape_baseon_field_value(shapefile, output, field_name, threshold, smaller=bsmaller) is False:
         return False
 
+def remove_polygons_outside_extent(input_shp, extent_shp, output):
+    '''
+    remove polygons not in the extent
+    :param input_shp:
+    :param extent_shp:
+    :param output:
+    :return:
+    '''
+
+    # check projection, must be the same
+    input_proj4 = map_projection.get_raster_or_vector_srs_info_proj4(input_shp)
+    extent_proj4 = map_projection.get_raster_or_vector_srs_info_proj4(extent_shp)
+    if input_proj4 != extent_proj4:
+        raise ValueError('error, projection insistence between %s and %s'%(input_shp, extent_shp))
+
+    ## -progress: Only works if input layers have the “fast feature count” capability.
+    # ogr2ogr - progress - clipsrc ${extent_shp} ${save_shp} ${input_shp}
+    arg_list = ['ogr2ogr', '-progress', '-clipsrc', extent_shp, output, input_shp]
+    return basic.exec_command_args_list_one_file(arg_list, output)
+
+def copy_shape_file(input, output):
+
+    assert io_function.is_file_exist(input)
+    arg1 = os.path.splitext(input)[0]
+    arg2 = os.path.splitext(output)[0]
+    arg_list = ['cp_shapefile', arg1, arg2]
+    return basic.exec_command_args_list_one_file(arg_list, output)
 
 def main(options, args):
     polygons_shp = args[0]
+    polygons_shp_backup = args[0]
 
     output = options.output
     if output is None:
@@ -41,37 +78,50 @@ def main(options, args):
     assert io_function.is_file_exist(polygons_shp)
 
     # remove polygons based on area
-    rm_area_save_shp = io_function.get_name_by_adding_tail(polygons_shp,'rmArea')
     # area_thr = 1000  #10 pixels
     area_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_gully_area','int')
     b_smaller = True
     if area_thr is not None:
+        rm_area_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmArea')
         remove_polygons(polygons_shp, 'INarea', area_thr, b_smaller, rm_area_save_shp)
+        polygons_shp = rm_area_save_shp
 
     # remove  polygons based on slope information
-    rm_slope_save_shp1 = io_function.get_name_by_adding_tail(polygons_shp, 'rmslope1')
     # slope_small_thr = 2
     slope_small_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_slope','float')
     b_smaller = True
     if slope_small_thr is not None:
-        remove_polygons(rm_area_save_shp, 'slo_mean', slope_small_thr, b_smaller, rm_slope_save_shp1)
+        rm_slope_save_shp1 = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmslope1')
+        remove_polygons(polygons_shp, 'slo_mean', slope_small_thr, b_smaller, rm_slope_save_shp1)
+        polygons_shp = rm_slope_save_shp1
 
-
-    rm_slope_save_shp2 = io_function.get_name_by_adding_tail(polygons_shp, 'rmslope2')
     # slope_large_thr = 20
     slope_large_thr = parameters.get_digit_parameters_None_if_absence(para_file,'max_slope','float')
     b_smaller = False
     if slope_large_thr is not None:
-        remove_polygons(rm_slope_save_shp1, 'slo_mean', slope_large_thr, b_smaller, rm_slope_save_shp2)
+        rm_slope_save_shp2 = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmslope2')
+        remove_polygons(polygons_shp, 'slo_mean', slope_large_thr, b_smaller, rm_slope_save_shp2)
+        polygons_shp = rm_slope_save_shp2
 
     # remove polgyons based on dem
-    rm_dem_save_shp = output  # final output
     # dem_small_thr = 3000
     dem_small_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_elevation','int')
     b_smaller = True
     if dem_small_thr is not None:
-        remove_polygons(rm_slope_save_shp2, 'dem_mean', dem_small_thr, b_smaller, rm_dem_save_shp)
+        rm_dem_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmDEM')
+        remove_polygons(polygons_shp, 'dem_mean', dem_small_thr, b_smaller, rm_dem_save_shp)
+        polygons_shp = rm_dem_save_shp
 
+    # remove polygons not in the extent
+    outline_shp = parameters.get_string_parameters_None_if_absence(para_file,'target_outline_shp')
+    if outline_shp is not None:
+        rm_outline_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmOutline')
+        remove_polygons_outside_extent(polygons_shp, outline_shp, rm_outline_save_shp)
+        polygons_shp = rm_outline_save_shp
+
+
+    # copy to final output
+    copy_shape_file(polygons_shp,output)
 
     pass
 
