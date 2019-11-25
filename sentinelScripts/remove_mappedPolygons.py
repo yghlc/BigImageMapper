@@ -43,7 +43,7 @@ def main(options, args):
     # remove polygons based on area
     rm_area_save_shp = io_function.get_name_by_adding_tail(polygons_shp,'rmArea')
     # area_thr = 1000  #10 pixels
-    area_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_gully_area','int')
+    area_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_area','int')
     b_smaller = True
     if area_thr is not None:
         remove_polygons(polygons_shp, 'INarea', area_thr, b_smaller, rm_area_save_shp)
