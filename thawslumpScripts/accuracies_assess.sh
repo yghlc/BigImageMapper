@@ -21,6 +21,9 @@ deeplabRS=~/codes/PycharmProjects/DeeplabforRS
 
 para_py=~/codes/PycharmProjects/DeeplabforRS/parameters.py
 
+# source OTB environment for otbcli_ComputeConfusionMatrix
+source ${HOME}/programs/OTB-6.6.1-Linux64/otbenv.profile
+
 expr_name=$(python2 ${para_py} -p ${para_file} expr_name)
 NUM_ITERATIONS=$(python2 ${para_py} -p ${para_file} export_iteration_num)
 trail=iter${NUM_ITERATIONS}
