@@ -74,9 +74,9 @@ cd ${inf_dir}
         shp_pre=${shp_pre}_prj
     fi
 
-    min_area=$(python2 ${para_py} -p ${para_file} minimum_gully_area)
-    min_p_a_r=$(python2 ${para_py} -p ${para_file} minimum_ratio_perimeter_area)
-    ${deeplabRS}/polygon_post_process.py -p ${para_file} -a ${min_area} -r ${min_p_a_r} ${shp_pre}.shp ${shp_pre}_post_NOrm.shp
+    # min_area=$(python2 ${para_py} -p ${para_file} minimum_gully_area)
+    # min_p_a_r=$(python2 ${para_py} -p ${para_file} minimum_ratio_perimeter_area)
+    ${deeplabRS}/polygon_post_process.py -p ${para_file} ${shp_pre}.shp ${shp_pre}_post_NOrm.shp
 
     ## remove polygons based on an attributes values
     ${eo_dir}/sentinelScripts/remove_mappedPolygons.py -p ${para_file} -o ${shp_pre}_post.shp ${shp_pre}_post_NOrm.shp
