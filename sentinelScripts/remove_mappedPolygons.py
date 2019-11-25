@@ -59,7 +59,7 @@ def main(options, args):
 
     rm_slope_save_shp2 = io_function.get_name_by_adding_tail(polygons_shp, 'rmslope2')
     # slope_large_thr = 20
-    slope_large_thr = parameters.get_digit_parameters_None_if_absence(para_file,'max_slope','float')
+    slope_large_thr = parameters.get_digit_parameters_None_if_absence(para_file,'maximum_slope','float')
     b_smaller = False
     if slope_large_thr is not None:
         remove_polygons(rm_slope_save_shp1, 'slo_mean', slope_large_thr, b_smaller, rm_slope_save_shp2)
