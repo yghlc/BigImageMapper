@@ -53,7 +53,7 @@ def remove_polygons_outside_extent(input_shp, extent_shp, output):
     if input_proj4 != extent_proj4:
         raise ValueError('error, projection insistence between %s and %s'%(input_shp, extent_shp))
 
-    ## -progress: Only works if input layers have the “fast feature count” capability.
+    ## -progress: Only works if input layers have the "fast feature count" capability.
     # ogr2ogr - progress - clipsrc ${extent_shp} ${save_shp} ${input_shp}
     arg_list = ['ogr2ogr', '-progress', '-clipsrc', extent_shp, output, input_shp]
     return basic.exec_command_args_list_one_file(arg_list, output)
