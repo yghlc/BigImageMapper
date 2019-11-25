@@ -21,7 +21,7 @@ OSVersion: ubuntu:16.4
 
 %post
 	apt-get update
-	apt-get install -y wget git vim libsm6 libopencv-dev locales
+	apt-get install -y wget git vim libsm6 libopencv-dev locales tzdata
 	apt-get clean
 #	mkdir bin
 
