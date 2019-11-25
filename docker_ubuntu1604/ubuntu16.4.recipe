@@ -25,6 +25,12 @@ OSVersion: ubuntu:16.4
 	apt-get clean
 #	mkdir bin
 
+    # local setting
+    echo "LC_ALL=en_US.UTF-8" >> /etc/environment
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+    echo "LANG=en_US.UTF-8" > /etc/locale.conf
+    locale-gen en_US.UTF-8
+
     # it seems this not work during runtime,
     # one simple solution is to set env during run time: e.g.
     # SINGULARITYENV_PATH=$PATH, then the PATH inside the container is the same as the host machine.
