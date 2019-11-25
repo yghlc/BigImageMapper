@@ -1,7 +1,19 @@
 #!/bin/bash
 
-# run exe.sh or other script with the environment of singularity
+# run the script inside a singularity container.
+# before running this script, need to set environment using 'env_setting.sh'
+
+# I test this setting and environment on our workstation (Cryo03) in /home/hlctest/test_singularity_landuse_dl
+
+#authors: Huang Lingcao
+#email:huanglingcao@gmail.com
+#add time: 25 November, 2019
+
+## run exe.sh or other script with the environment of singularity
+# to install packages, environment setting inside the container
 exe_script=./setting_in_sing.sh
+
+# run data preparing, training, inference, and post processing
 #exe_script=./exe.sh
 
 sing_dir=/home/hlctest/test_singularity_landuse_dl
