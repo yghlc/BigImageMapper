@@ -75,7 +75,7 @@ def main(options, args):
 
     # remove polygons based on area
     # area_thr = 1000  #10 pixels
-    area_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_gully_area','int')
+    area_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_area','int')
     b_smaller = True
     if area_thr is not None:
         rm_area_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmArea')
@@ -92,7 +92,7 @@ def main(options, args):
         polygons_shp = rm_slope_save_shp1
 
     # slope_large_thr = 20
-    slope_large_thr = parameters.get_digit_parameters_None_if_absence(para_file,'max_slope','float')
+    slope_large_thr = parameters.get_digit_parameters_None_if_absence(para_file,'maximum_slope','float')
     b_smaller = False
     if slope_large_thr is not None:
         rm_slope_save_shp2 = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmslope2')
