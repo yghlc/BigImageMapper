@@ -24,14 +24,19 @@ export PATH=~/programs/anaconda3/bin:$PATH
 # ground truths of thaw slumps in Beiluhe
 shp_file=~/Data/Qinghai-Tibet/beiluhe/thaw_slumps/train_polygons_for_planet_2018_revised_2019/identified_thawslumps_264_latlon.shp
 
-save_folder=planet_sr_images
+#save_folder=planet_sr_images
 
 #start_date=2018-05-20
 #end_date=2018-06-01
 #start_date=2018-05-20
 #end_date=2018-06-30
+
+
+# download images of 2016
 start_date=2016-07-01
 end_date=2016-08-31
+save_folder=planet_sr_images/2016_Jul_Aug
+
 cloud_cover_thr=0.3
 item_type=PSScene4Band
 account=huanglingcao@link.cuhk.edu.hk
