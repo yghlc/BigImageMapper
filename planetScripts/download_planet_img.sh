@@ -32,10 +32,15 @@ shp_file=~/Data/Qinghai-Tibet/beiluhe/thaw_slumps/train_polygons_for_planet_2018
 #end_date=2018-06-30
 
 
-# download images of 2016
-start_date=2016-07-01
-end_date=2016-08-31
-save_folder=planet_sr_images/2016_Jul_Aug
+## download images of 2016
+#start_date=2016-07-01
+#end_date=2016-08-31
+#save_folder=planet_sr_images/2016_Jul_Aug
+
+# download images of 2017
+start_date=2017-07-01
+end_date=2017-08-31
+save_folder=planet_sr_images/2017_Jul_Aug
 
 cloud_cover_thr=0.3
 item_type=PSScene4Band
