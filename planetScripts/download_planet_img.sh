@@ -19,24 +19,24 @@ export PATH=~/programs/anaconda3/bin:$PATH
 
 #shp_file=~/Data/Qinghai-Tibet/qtp_thaw_slumps/rts_polygons_s2_2018/qtp_train_polygons_s2_2018_v2.shp
 # mapping results
-#shp_file=~/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/autoMapping/QTP_deeplabV3+_3/result_backup/QTP_deeplabV3+_3_exp2_iter30000_prj_post2_chpc_2_latlon.shp
+shp_file=~/Data/Qinghai-Tibet/entire_QTP_images/sentinel-2/autoMapping/QTP_deeplabV3+_3/result_backup/QTP_deeplabV3+_3_exp2_iter30000_prj_post2_chpc_2_latlon.shp
 
 # ground truths of thaw slumps in Beiluhe
-shp_file=~/Data/Qinghai-Tibet/beiluhe/thaw_slumps/train_polygons_for_planet_2018_revised_2019/identified_thawslumps_264_latlon.shp
+#shp_file=~/Data/Qinghai-Tibet/beiluhe/thaw_slumps/train_polygons_for_planet_2018_revised_2019/identified_thawslumps_264_latlon.shp
 
 #save_folder=planet_sr_images
 
 ### download images of 2018
 ##start_date=2018-05-20
 ##end_date=2018-06-01
-#start_date=2018-05-20
-#end_date=2018-06-30
-#save_folder=planet_sr_images/2018_May_Jun
+start_date=2018-05-20
+end_date=2018-06-30
+save_folder=planet_sr_images/2018_May_Jun
 
-# download images of 2018 July, August
-start_date=2018-07-01
-end_date=2018-08-31
-save_folder=planet_sr_images/2018_Jul_Aug
+## download images of 2018 July, August
+#start_date=2018-07-01
+#end_date=2018-08-31
+#save_folder=planet_sr_images/2018_Jul_Aug
 
 ## download images of 2016
 #start_date=2016-07-01
