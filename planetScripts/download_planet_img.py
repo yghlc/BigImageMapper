@@ -19,6 +19,7 @@ sys.path.insert(0, codes_dir2)
 
 import basic_src.io_function as io_function
 import basic_src.basic as basic
+import vector_gpd
 
 # import thest two to make sure load GEOS dll before using shapely
 import shapely
@@ -69,40 +70,8 @@ def read_polygons_json(polygon_shp, no_json=False):
     :param no_json: True indicate not json format
     :return:
     '''
+    return vector_gpd.read_polygons_json(polygon_shp, no_json)
 
-    # check projection
-    shp_args_list = ['gdalsrsinfo', '-o', 'EPSG', polygon_shp]
-    epsg_str = basic.exec_command_args_list_one_string(shp_args_list)
-    epsg_str = epsg_str.decode().strip()  # byte to str, remove '\n'
-    if epsg_str != 'EPSG:4326':
-        raise ValueError('Current support shape file in projection of EPSG:4326, but the input has projection of %s'%epsg_str)
-
-    shapefile = gpd.read_file(polygon_shp)
-    polygons = shapefile.geometry.values
-
-    # # check invalidity of polygons
-    invalid_polygon_idx = []
-    # for idx, geom in enumerate(polygons):
-    #     if geom.is_valid is False:
-    #         invalid_polygon_idx.append(idx + 1)
-    # if len(invalid_polygon_idx) > 0:
-    #     raise ValueError('error, polygons %s (index start from 1) in %s are invalid, please fix them first '%(str(invalid_polygon_idx),polygon_shp))
-
-    # fix invalid polygons
-    for idx in range(0,len(polygons)):
-        if polygons[idx].is_valid is False:
-            invalid_polygon_idx.append(idx + 1)
-            polygons[idx] = polygons[idx].buffer(0.000001)  # trying to solve self-intersection
-    if len(invalid_polygon_idx) > 0:
-        basic.outputlogMessage('Warning, polygons %s (index start from 1) in %s are invalid, fix them by the buffer operation '%(str(invalid_polygon_idx),polygon_shp))
-
-    if no_json:
-        return polygons
-    else:
-        # convert to json format
-        polygons_json = [ mapping(item) for item in polygons]
-
-    return polygons_json
 
 def get_a_filter_cli_api(polygon_json,start_date, end_date, could_cover_thr):
     '''
