@@ -9,7 +9,7 @@
 
 ## run exe.sh or other script with the environment of singularity
 # to install packages, environment setting inside the container
-exe_script=./setting_in_sing.sh
+exe_script=${HOME}/packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/setting_in_sing.sh
 
 # run data preparing, training, inference, and post processing
 #exe_script=./exe.sh
