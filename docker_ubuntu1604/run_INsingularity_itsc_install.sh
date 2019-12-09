@@ -22,7 +22,7 @@ env_home=${sing_dir}/packages
 # set environment 
 SINGULARITYENV_HOME=${sing_dir}/packages \
 SINGULARITYENV_TZ=Asia/Hong_Kong \
-SINGULARITYENV_PATH=${env_home}/bin:${env_home}/programs/miniconda2/bin:$PATH \
+SINGULARITYENV_PATH=/bin:${env_home}/bin:${env_home}/programs/miniconda2/bin:$PATH \
 SINGULARITYENV_GDAL_DATA=${env_home}/programs/miniconda2/share/gdal \
 SINGULARITYENV_LD_LIBRARY_PATH=${env_home}/programs/cuda-9.0/lib64:${env_home}/programs/cuDNN_7.0/cuda/lib64:${env_home}/programs/miniconda2/lib:$LD_LIBRARY_PATH \
 singularity exec --nv ${sing_img} ${exe_script}
