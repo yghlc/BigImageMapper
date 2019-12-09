@@ -59,9 +59,29 @@ Clone codes from GitHub:
 Because some of the sub-folders don't change the group info to "LinLiu", we modify them again.
     
     chgrp -R LinLiu packages
+
+Install python using miniconda 
+
+    wget https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh
+    sh Miniconda2-latest-Linux-x86_64.sh -p $HOME/packages/programs/miniconda2 -b
+
+    
+Install tensorflow 1.6 (a relative old version) and other python packages. <!-- The installation will run inside 
+the container, so we need to submit a job for running singularity. -->
+    
+    ${HOME}/packages/programs/miniconda2/bin/pip install tensorflow-gpu==1.6
+    ${HOME}/packages/programs/miniconda2/bin/conda install gdal=2.3
+    ${HOME}/packages/programs/miniconda2/bin/pip install rasterio
+    ${HOME}/packages/programs/miniconda2/bin/pip install pyshp==1.2.12
+    ${HOME}/packages/programs/miniconda2/bin/pip install rasterstats
+    ${HOME}/packages/programs/miniconda2/bin/pip install pillow
+    ${HOME}/packages/programs/miniconda2/bin/pip install imgaug
     
 
 
+
+    cp packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/singularity.sh .
+    sbatch singularity.sh
 
 ## How to use
 See the script: thawslumpScripts/exe.sh
