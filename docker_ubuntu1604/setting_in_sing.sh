@@ -7,8 +7,8 @@ echo "LD_LIBRARY_PATH: " $LD_LIBRARY_PATH
 
 
 # install miniconda (different machine, the path can change, so need to install it again)
-#wget https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh
-#sh Miniconda2-latest-Linux-x86_64.sh -p $HOME/programs/miniconda2 -b
+wget https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh
+sh Miniconda2-latest-Linux-x86_64.sh -p $HOME/programs/miniconda2 -b
 
 # install OTB-6.6.1-Linux64.run (different machine, the path can change, so need to install it again)
 #sh OTB-6.6.1-Linux64.run --accept --target ${HOME}/programs/OTB-6.6.1-Linux64
@@ -27,21 +27,21 @@ date
 
 
 ## install tensorflow, the same as cryo03 
-#pip install tensorflow-gpu==1.6
-
-## install  rasterio
-#pip install rasterio
+pip install tensorflow-gpu==1.6
 
 ## install gdal
-#conda install gdal=2.3
+conda install gdal=2.3
+
+## install  rasterio
+pip install rasterio
 
 ## for model shapefile
-#pip install pyshp==1.2.12
+pip install pyshp==1.2.12
 
-#pip install rasterstats
+pip install rasterstats
 
 # for PIL
-#pip install pillow
+pip install pillow
 
 # for image augmentation
-#pip install imgaug
+pip install imgaug
