@@ -14,7 +14,7 @@ exe_script=${HOME}/packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/s
 # run data preparing, training, inference, and post processing
 #exe_script=./exe.sh
 
-sing_dir=${HOME}/test_singularity_landuse_dl
+sing_dir=${HOME}
 sing_img=${sing_dir}/ubuntu16.04_itsc_tf.simg
 
 env_home=${sing_dir}/packages
