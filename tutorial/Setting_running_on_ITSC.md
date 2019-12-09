@@ -77,11 +77,16 @@ the container, so we need to submit a job for running singularity. -->
     ${HOME}/packages/programs/miniconda2/bin/pip install pillow
     ${HOME}/packages/programs/miniconda2/bin/pip install imgaug
     
+We need to run our scripts inside a singularity container by submitting jobs. Copy a slurm example to current folder, 
+
+    cp ~/packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/singularity.sh .
+
+Copy an example for running scripts inside the singularity container to current folder:
+    
+    cp ~/packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh .
+    
 
 
-
-    cp packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/singularity.sh .
-    sbatch singularity.sh
 
 ## How to use
 See the script: thawslumpScripts/exe.sh

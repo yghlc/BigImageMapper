@@ -7,4 +7,4 @@
 
 
 # the task
-./run_INsingularity_itsc_miniconda.sh
+./run_INsingularity_miniconda.sh
