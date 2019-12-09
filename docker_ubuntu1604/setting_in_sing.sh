@@ -5,6 +5,8 @@ echo "HOME: " $HOME
 echo "PATH: " $PATH
 echo "LD_LIBRARY_PATH: " $LD_LIBRARY_PATH
 
+# however, it turns out it not necessary install  miniconda and the python packages inside container,
+# tye can also be install outside the container, which is more convenient
 
 # install miniconda (different machine, the path can change, so need to install it again)
 #wget https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh
