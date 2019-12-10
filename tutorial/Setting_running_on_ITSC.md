@@ -9,7 +9,7 @@ Before the setting, it is good to know the [policies](https://www.cuhk.edu.hk/it
 submit a job for running computing script using [Slurm](https://www.cuhk.edu.hk/itsc/hpc/slurm.html). 
 [Singularity](https://www.cuhk.edu.hk/itsc/hpc/singularity.html) can create a isolated software environment for running scripts. 
 
-Due to small size of home folder (20 GB), data should be stored in other places. 
+Due to the small size of home folder (20 GB), data should be stored in other places. 
 
 #### Step 1: copy a singularity image
 For easy use and convenience, I have built a singularity image and uploaded it to Dropbox. 
@@ -20,7 +20,7 @@ After logining to the ITSC server, to download the image, run:
 #### Step 2: install dependencies
 We create a folder named "packages" under the home folder. Because ITSC uses the group
 information to manage the storage, to reduce the storage of home folder, we change 
-the group infomation to "LinLiu". As the following commands:
+the group information to "LinLiu". As the following commands:
 
     mkdir packages
     chgrp -R LinLiu packages
@@ -127,9 +127,6 @@ Modify it according if you want to run other script. *Landuse_DL/docker_ubuntu16
 *singularity.sh* is for submitting a job. Please also modify it accordingly. Please refer to ITSC
 website ([Slurm](https://www.cuhk.edu.hk/itsc/hpc/slurm.html)) for details. 
 *Landuse_DL/docker_ubuntu1604/singularity.sh* is an example. 
-
-
-. 
 
 
 
