@@ -86,25 +86,52 @@ Copy an example for running scripts inside the singularity container to current 
     
     cp ~/packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh .
     
+ <!-- on ITSC server, I failed to set "HOME" inside the singularity, 
+ maybe we remove "packages" and use the HOME of the host machine.
+   -->
 
-## How to use
-See the script: thawslumpScripts/exe_qtp.sh
-
-## Contributions
-
-
-## updates
-
-## Dependencies and setting:
-    Python package: Numpy, rasterio, GDAL 2.3, tensorflow-gpu 1.6, pyshp 1.2.12, pillow, imgaug
-    Other: GDAL, OTB, ASP, CUDA 9.0, cudnn 7.0.
-    More information on the setting can be found in 'docker_ubuntu1604/run_INsingularity_hlctest.sh'
+## Running training, prediction
+After the environment for running Landuse_DL is ready, you can start training your model as well as prediction. 
+Suppose your working folder is *test_deeplabV3+_1*, in this folder, a list of files should be presented:
     
+    exe.sh
+    para.ini
+    inf_image_list.txt
+    run_INsingularity_miniconda.sh 
+    singularity.sh
 
-## Disclaimer
+*exe.sh* is a script for running the whole process, including preparing training images, 
+training, prediction, and post-processing. You may want to comment out some of the lines in this file 
+if you just want to run a few steps. This file can be copied from *Landuse_DL/thawslumpScripts/exe_qtp.sh*.
+In this file, you may also need to some input file, such as change *para_qtp.ini* to *para.ini*, 
+comment out lines related to *PATH* and *CUDA_VISIBLE_DEVICES*, and the value of *gpu_num*.
 
 
-## TODO
+*para.ini* is the file where you define input files and parameters. Please edit it accordingly. 
+An example of *para.ini* is available at *Landuse_DL/thawslumpScripts/para_qtp.ini*.
+
+*inf_image_list.txt* stores the image file names for prediction as follows,
+
+    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000000000_8bit_Albers.tif
+    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000026880_8bit_Albers.tif
+    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000053760_8bit_Albers.tif
+    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000080640_8bit_Albers.tif
+    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000107520_8bit_Albers.tif
+
+*run_INsingularity_miniconda.sh* is need to run the script inside the [Singularity](https://www.cuhk.edu.hk/itsc/hpc/singularity.html) container. 
+Modify it according if you want to run other script. *Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh*
+ is an example. 
+
+    exe_script=./exe.sh
+
+*singularity.sh* is for submitting a job. Please also modify it accordingly. Please refer to ITSC
+website ([Slurm](https://www.cuhk.edu.hk/itsc/hpc/slurm.html)) for details. 
+*Landuse_DL/docker_ubuntu1604/singularity.sh* is an example. 
+
+
+. 
+
+
 
 
 
