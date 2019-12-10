@@ -100,7 +100,7 @@ Copy an example for running scripts inside the singularity container to current 
  maybe we remove "packages" and use the HOME of the host machine.
    -->
 
-## Running training, prediction
+## Run training, prediction, and post-processing
 After the environment for running Landuse_DL is ready, you can start training your model as well as prediction. 
 Suppose your working folder is *test_deeplabV3+_1*, in this folder, a list of files should be presented:
     
