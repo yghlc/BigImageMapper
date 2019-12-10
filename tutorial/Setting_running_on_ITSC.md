@@ -18,9 +18,9 @@ After logining to the ITSC server, to download the image, run:
     wget https://www.dropbox.com/s/pu95hkn93tmhx05/ubuntu16.04_itsc_tf.simg?dl=0 --output-document=ubuntu16.04_itsc_tf.simg
 
 #### Step 2: install dependencies
-We create a folder named "packages" under the home folder. Because ITSC uses the group
+We install all the dependencies under the home folder. Because ITSC uses the group
 information to manage the storage, to reduce the storage of home folder, we change 
-the group information to "LinLiu". As the following commands:
+the group information to *LinLiu*. As the following commands:
 
     mkdir packages
     chgrp -R LinLiu packages
@@ -29,63 +29,73 @@ Install CUDA 9.0 and cuDNN 7.0, these are required by tensorflow 1.6.
 These should be downloaded via NVIDIA website, but for this tutorial, you can download them
 from my Dropbox. 
     
-    wget https://www.dropbox.com/s/1bi3udi48dsw2c1/cuda-9.0.tar.gz?dl=0 --output-document=packages/cuda-9.0.tar.gz 
-    wget https://www.dropbox.com/s/2v4sfdjbsgwzi1t/cuDNN_7.0.tar.gz?dl=0 --output-document=packages/cuDNN_7.0.tar.gz
+    wget https://www.dropbox.com/s/1bi3udi48dsw2c1/cuda-9.0.tar.gz?dl=0 --output-document=cuda-9.0.tar.gz 
+    wget https://www.dropbox.com/s/2v4sfdjbsgwzi1t/cuDNN_7.0.tar.gz?dl=0 --output-document=cuDNN_7.0.tar.gz
 
-Then we unpackage these to the folder "packages/programs" 
+Then we unpackage these to the folder "programs" 
  
-    mkdir -p packages/programs
-    tar xvf packages/cuDNN_7.0.tar.gz -C packages/programs
-    tar xvf packages/cuda-9.0.tar.gz -C packages/programs
+    mkdir -p programs
+    tar xvf cuDNN_7.0.tar.gz -C programs
+    tar xvf cuda-9.0.tar.gz -C programs
 
 DeepLabv3+ provides some [pre-trained model](https://github.com/tensorflow/models/blob/master/research/deeplab/g3doc/model_zoo.md), 
-in this tutorial, we use one of them and download it to "packages"
+in this tutorial, we use one of them and download it to *Data*
 
-    mkdir -p ./packages/Data/deeplab/v3+/pre-trained_model
-    wget https://www.dropbox.com/s/0h7g5cjyvxywkt1/deeplabv3_xception_2018_01_04.tar.gz?dl=0 --output-document=./packages/Data/deeplab/v3+/pre-trained_model/deeplabv3_xception_2018_01_04.tar.gz
+    mkdir -p ./Data/deeplab/v3+/pre-trained_model
+    wget https://www.dropbox.com/s/0h7g5cjyvxywkt1/deeplabv3_xception_2018_01_04.tar.gz?dl=0 --output-document=./Data/deeplab/v3+/pre-trained_model/deeplabv3_xception_2018_01_04.tar.gz
 
 Download a script which may be used in some of the codes, and make it executable.
 
-    mkdir -p ./packages/bin
-    wget https://www.dropbox.com/s/6sdwu3tx9jwzfsm/cp_shapefile?dl=0 --output-document=./packages/bin/cp_shapefile
-    chmod a+x ./packages/bin/cp_shapefile
+    mkdir -p ./bin
+    wget https://www.dropbox.com/s/6sdwu3tx9jwzfsm/cp_shapefile?dl=0 --output-document=./bin/cp_shapefile
+    chmod a+x ./bin/cp_shapefile
 
 Clone codes from GitHub:
 
-    git clone https://github.com/yghlc/DeeplabforRS.git ./packages/codes/PycharmProjects/DeeplabforRS
-    git clone https://github.com/yghlc/Landuse_DL ./packages/codes/PycharmProjects/Landuse_DL
-    git clone https://github.com/yghlc/models.git ./packages/codes/PycharmProjects/tensorflow/yghlc_tf_model
+    git clone https://github.com/yghlc/DeeplabforRS.git ./codes/PycharmProjects/DeeplabforRS
+    git clone https://github.com/yghlc/Landuse_DL ./codes/PycharmProjects/Landuse_DL
+    git clone https://github.com/yghlc/models.git ./codes/PycharmProjects/tensorflow/yghlc_tf_model
 
 
 Install python using miniconda 
 
     wget https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh
-    sh Miniconda2-latest-Linux-x86_64.sh -p $HOME/packages/programs/miniconda2 -b
+    sh Miniconda2-latest-Linux-x86_64.sh -p $HOME/programs/miniconda2 -b
 
     
 Install tensorflow 1.6 (a relative old version) and other python packages. <!-- The installation will run inside 
 the container, so we need to submit a job for running singularity. -->
     
-    ${HOME}/packages/programs/miniconda2/bin/pip install tensorflow-gpu==1.6
-    ${HOME}/packages/programs/miniconda2/bin/conda install gdal=2.3
-    ${HOME}/packages/programs/miniconda2/bin/pip install rasterio
-    ${HOME}/packages/programs/miniconda2/bin/pip install pyshp==1.2.12
-    ${HOME}/packages/programs/miniconda2/bin/pip install rasterstats
-    ${HOME}/packages/programs/miniconda2/bin/pip install pillow
-    ${HOME}/packages/programs/miniconda2/bin/pip install imgaug
+    ${HOME}/programs/miniconda2/bin/pip install tensorflow-gpu==1.6
+    ${HOME}/programs/miniconda2/bin/conda install gdal=2.3
+    ${HOME}/programs/miniconda2/bin/pip install rasterio
+    ${HOME}/programs/miniconda2/bin/pip install pyshp==1.2.12
+    ${HOME}/programs/miniconda2/bin/pip install rasterstats
+    ${HOME}/programs/miniconda2/bin/pip install pillow
+    ${HOME}/programs/miniconda2/bin/pip install imgaug
 
-Because some of the sub-folders don't change the group info to "LinLiu", we modify them again.
+Because some of the sub-folders don't change the group info to *LinLiu* or *LinLiuScratch*, we modify them again.
     
-    chgrp -R LinLiu packages
-    
-We need to run our scripts inside a singularity container by submitting jobs. Copy a slurm example to current folder, 
+    chgrp -R LinLiu programs
+    chgrp -R LinLiuScratch Data
+    chgrp -R LinLiu codes
 
-    cp ~/packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/singularity.sh .
+To inquire the storage quota of you home folder, please run:
+    
+    lfs quota -gh username /lustre    #  replace username as your user name
+
+
+
+ <!--We need to run our scripts inside a singularity container by submitting jobs. Copy a slurm example to current folder, 
+
+    cp ~/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/singularity.sh .
 
 Copy an example for running scripts inside the singularity container to current folder:
     
-    cp ~/packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh .
-    
+    cp ~/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh .
+ 
+ -->
+  
  <!-- on ITSC server, I failed to set "HOME" inside the singularity, 
  maybe we remove "packages" and use the HOME of the host machine.
    -->
@@ -127,6 +137,9 @@ Modify it according if you want to run other script. *Landuse_DL/docker_ubuntu16
 *singularity.sh* is for submitting a job. Please also modify it accordingly. Please refer to ITSC
 website ([Slurm](https://www.cuhk.edu.hk/itsc/hpc/slurm.html)) for details. 
 *Landuse_DL/docker_ubuntu1604/singularity.sh* is an example. 
+Running the following script for submiting a job. 
+    
+    sbatch singularity.sh
 
 
 
