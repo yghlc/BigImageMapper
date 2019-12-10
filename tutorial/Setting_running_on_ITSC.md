@@ -56,9 +56,6 @@ Clone codes from GitHub:
     git clone https://github.com/yghlc/Landuse_DL ./packages/codes/PycharmProjects/Landuse_DL
     git clone https://github.com/yghlc/models.git ./packages/codes/PycharmProjects/tensorflow/yghlc_tf_model
 
-Because some of the sub-folders don't change the group info to "LinLiu", we modify them again.
-    
-    chgrp -R LinLiu packages
 
 Install python using miniconda 
 
@@ -76,6 +73,10 @@ the container, so we need to submit a job for running singularity. -->
     ${HOME}/packages/programs/miniconda2/bin/pip install rasterstats
     ${HOME}/packages/programs/miniconda2/bin/pip install pillow
     ${HOME}/packages/programs/miniconda2/bin/pip install imgaug
+
+Because some of the sub-folders don't change the group info to "LinLiu", we modify them again.
+    
+    chgrp -R LinLiu packages
     
 We need to run our scripts inside a singularity container by submitting jobs. Copy a slurm example to current folder, 
 
@@ -86,14 +87,11 @@ Copy an example for running scripts inside the singularity container to current 
     cp ~/packages/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh .
     
 
-
-
 ## How to use
-See the script: thawslumpScripts/exe.sh
+See the script: thawslumpScripts/exe_qtp.sh
 
 ## Contributions
-Please let me know or pull a request if you spot any bug or typo. Thanks!
-Any enhancement or new functions are also welcome!
+
 
 ## updates
 
