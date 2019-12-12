@@ -24,7 +24,7 @@ export PATH=~/programs/anaconda3/bin:$PATH
 # ground truths of thaw slumps in Beiluhe
 #shp_file=~/Data/Qinghai-Tibet/beiluhe/thaw_slumps/train_polygons_for_planet_2018_revised_2019/identified_thawslumps_264_latlon.shp
 
-# beiluhe river basin extent.
+# beiluhe river basin extent. (error: message is too long)
 shp_file=~/Data/Qinghai-Tibet/beiluhe/beiluhe_reiver_basin_extent/beiluhe_reiver_basin_extent.shp
 
 #save_folder=planet_sr_images
