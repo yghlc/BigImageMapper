@@ -6,33 +6,33 @@ It also provides a reference for setting and running on your own workstations.
 ## Setting on the ITSC GPU cluster
 Before the setting, it is good to know the [policies](https://www.cuhk.edu.hk/itsc/hpc/policies.html) and 
 [storage](https://www.cuhk.edu.hk/itsc/hpc/storage.html). It also requires users to 
-submit a job for running computing script using [Slurm](https://www.cuhk.edu.hk/itsc/hpc/slurm.html). 
-[Singularity](https://www.cuhk.edu.hk/itsc/hpc/singularity.html) can create a isolated software environment for running scripts. 
+submit a job for running scripts (computing tasks) using [Slurm](https://www.cuhk.edu.hk/itsc/hpc/slurm.html). 
+[Singularity](https://www.cuhk.edu.hk/itsc/hpc/singularity.html) can create an isolated software environment. 
 
-Due to the small size of home folder (20 GB), data should be stored in other places. 
+Due to the small size of the home folder (20 GB), data should be stored in other places or change group information of folders. 
 
 #### Step 1: copy a singularity image
-For easy use and convenience, I have built a singularity image and uploaded it to Dropbox. 
+For easy use and convenience, I have built a singularity image and uploaded it to my Dropbox. 
 After logining to the ITSC server, to download the image, run:
 
     wget https://www.dropbox.com/s/pu95hkn93tmhx05/ubuntu16.04_itsc_tf.simg?dl=0 --output-document=ubuntu16.04_itsc_tf.simg
 
 #### Step 2: install dependencies
 We install all the dependencies under the home folder. Because ITSC uses the group
-information to manage the storage, to reduce the storage of home folder, we change 
+information to manage the storage, to reduce the storage of the home folder, we change 
 the group information to *LinLiu*. As the following commands:
 
     mkdir packages
     chgrp -R LinLiu packages
 
 Install CUDA 9.0 and cuDNN 7.0, these are required by tensorflow 1.6. 
-These should be downloaded via NVIDIA website, but for this tutorial, you can download them
+They should be downloaded via NVIDIA website, but for this tutorial, you can download them
 from my Dropbox. 
     
     wget https://www.dropbox.com/s/1bi3udi48dsw2c1/cuda-9.0.tar.gz?dl=0 --output-document=cuda-9.0.tar.gz 
     wget https://www.dropbox.com/s/2v4sfdjbsgwzi1t/cuDNN_7.0.tar.gz?dl=0 --output-document=cuDNN_7.0.tar.gz
 
-Then we unpackage these to the folder "programs" 
+Then we unpackage them to the folder "programs" 
  
     mkdir -p programs
     tar xvf cuDNN_7.0.tar.gz -C programs
@@ -80,9 +80,9 @@ Because some of the sub-folders don't change the group info to *LinLiu* or *LinL
     chgrp -R LinLiuScratch Data
     chgrp -R LinLiu codes
 
-To inquire the storage quota of you home folder, please run:
+To inquire the storage quota of your home folder, please run:
     
-    lfs quota -gh username /lustre    #  replace username as your user name
+    lfs quota -gh username /lustre    #  replace username with your real name
 
 
 
@@ -112,9 +112,9 @@ Suppose your working folder is *test_deeplabV3+_1*, in this folder, a list of fi
 
 *exe.sh* is a script for running the whole process, including preparing training images, 
 training, prediction, and post-processing. You may want to comment out some of the lines in this file 
-if you just want to run a few steps. This file can be copied from *Landuse_DL/thawslumpScripts/exe_qtp.sh*.
-In this file, you may also need to some input file, such as change *para_qtp.ini* to *para.ini*, 
-comment out lines related to *PATH* and *CUDA_VISIBLE_DEVICES*, and the value of *gpu_num*.
+if you just want to run a few steps of them. This file can be copied from *Landuse_DL/thawslumpScripts/exe_qtp.sh*.
+In this file, you may also need to modify some input files, such as change *para_qtp.ini* to *para.ini*, 
+comment out lines related to *PATH* and *CUDA_VISIBLE_DEVICES*. <!--, and the value of *gpu_num*. -->
 
 
 *para.ini* is the file where you define input files and parameters. Please edit it accordingly. 
@@ -129,7 +129,7 @@ An example of *para.ini* is available at *Landuse_DL/thawslumpScripts/para_qtp.i
     qtb_sentinel2_2018_JJA_mosaic-0000000000-0000107520_8bit_Albers.tif
 
 *run_INsingularity_miniconda.sh* is need to run the script inside the [Singularity](https://www.cuhk.edu.hk/itsc/hpc/singularity.html) container. 
-Modify it according if you want to run other script. *Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh*
+Modify it accordingly if you want to run other script. *Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh*
  is an example. 
 
     exe_script=./exe.sh
