@@ -83,7 +83,7 @@ cd ${inf_dir}
     ${eo_dir}/sentinelScripts/remove_mappedPolygons.py -p ${para_file} -o ${shp_pre}_post.shp ${shp_pre}_post_NOrm.shp
 
     ## evaluate the mapping results
-    ${deeplabRS}/polygon_post_process.py -p ${para_file} ${shp_pre}_post.shp
+    ${deeplabRS}/evaluation_result.py -p ${para_file} ${shp_pre}_post.shp
 
     cd -
 
