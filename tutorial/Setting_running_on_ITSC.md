@@ -1,7 +1,7 @@
 # Setting and running this repo
 
-This file introduce how to setting this environment on the ITSC GPU clusters. 
-It also provides a reference for setting and running this repo in your own workstation.
+This file introduces how to setting the environment for this reso on the ITSC GPU clusters. 
+It also provides a reference for setting and running on your own workstations.
 
 ## Setting on the ITSC GPU cluster
 Before the setting, it is good to know the [policies](https://www.cuhk.edu.hk/itsc/hpc/policies.html) and 
