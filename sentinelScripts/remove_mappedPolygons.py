@@ -81,6 +81,8 @@ def main(options, args):
         rm_area_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmArea')
         remove_polygons(polygons_shp, 'INarea', area_thr, b_smaller, rm_area_save_shp)
         polygons_shp = rm_area_save_shp
+    else:
+        basic.outputlogMessage('warning, minimum_area is absent in the para file, skip removing polygons based on areas')
 
     # remove  polygons based on slope information
     # slope_small_thr = 2
@@ -90,6 +92,8 @@ def main(options, args):
         rm_slope_save_shp1 = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmslope1')
         remove_polygons(polygons_shp, 'slo_mean', slope_small_thr, b_smaller, rm_slope_save_shp1)
         polygons_shp = rm_slope_save_shp1
+    else:
+        basic.outputlogMessage('warning, minimum_slope is absent in the para file, skip removing polygons based on minimum slope')
 
     # slope_large_thr = 20
     slope_large_thr = parameters.get_digit_parameters_None_if_absence(para_file,'maximum_slope','float')
@@ -98,6 +102,8 @@ def main(options, args):
         rm_slope_save_shp2 = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmslope2')
         remove_polygons(polygons_shp, 'slo_mean', slope_large_thr, b_smaller, rm_slope_save_shp2)
         polygons_shp = rm_slope_save_shp2
+    else:
+        basic.outputlogMessage('warning, maximum_slope is absent in the para file, skip removing polygons based on maximum slope')
 
     # remove polgyons based on dem
     # dem_small_thr = 3000
@@ -107,6 +113,8 @@ def main(options, args):
         rm_dem_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmDEM')
         remove_polygons(polygons_shp, 'dem_mean', dem_small_thr, b_smaller, rm_dem_save_shp)
         polygons_shp = rm_dem_save_shp
+    else:
+        basic.outputlogMessage('warning, minimum_elevation is absent in the para file, skip removing polygons based on minimum elevation')
 
     # remove polygons not in the extent
     outline_shp = parameters.get_string_parameters_None_if_absence(para_file,'target_outline_shp')
@@ -114,6 +122,8 @@ def main(options, args):
         rm_outline_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmOutline')
         remove_polygons_outside_extent(polygons_shp, outline_shp, rm_outline_save_shp)
         polygons_shp = rm_outline_save_shp
+    else:
+        basic.outputlogMessage('warning, target_outline_shp is absent in the para file, skip removing polygons based on outlines')
 
 
     # copy to final output
