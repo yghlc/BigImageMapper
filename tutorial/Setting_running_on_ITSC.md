@@ -1,6 +1,6 @@
 # Setting and running this repo
 
-This file introduces how to setting the environment for this reso on the ITSC GPU clusters. 
+This file introduces how to set the environment for this reso on the ITSC GPU clusters.
 It also provides a reference for setting and running on your own workstations.
 
 ## Setting on the ITSC GPU cluster
