@@ -32,7 +32,7 @@ from my Dropbox.
     wget https://www.dropbox.com/s/1bi3udi48dsw2c1/cuda-9.0.tar.gz?dl=0 --output-document=cuda-9.0.tar.gz 
     wget https://www.dropbox.com/s/2v4sfdjbsgwzi1t/cuDNN_7.0.tar.gz?dl=0 --output-document=cuDNN_7.0.tar.gz
 
-Then we unpackage them to the folder "programs" 
+Then we unpack them to the folder "programs"
  
     mkdir -p programs
     tar xvf cuDNN_7.0.tar.gz -C programs
