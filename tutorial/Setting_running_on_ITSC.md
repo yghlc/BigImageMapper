@@ -1,6 +1,6 @@
 # Setting and running this repo
 
-This file introduces how to setting the environment for this reso on the ITSC GPU clusters. 
+This file introduces how to set the environment for this reso on the ITSC GPU clusters. 
 It also provides a reference for setting and running on your own workstations.
 
 ## Setting on the ITSC GPU cluster
@@ -13,6 +13,7 @@ Due to the small size of the home folder (20 GB), data should be stored in other
 
 #### Step 1: copy a singularity image
 For easy use and convenience, I have built a singularity image and uploaded it to my Dropbox. 
+This file and other dependencies are also available at */project/LinLiu/Landuse_DL_packages*.
 After logining to the ITSC server, to download the image, run:
 
     wget https://www.dropbox.com/s/pu95hkn93tmhx05/ubuntu16.04_itsc_tf.simg?dl=0 --output-document=ubuntu16.04_itsc_tf.simg
