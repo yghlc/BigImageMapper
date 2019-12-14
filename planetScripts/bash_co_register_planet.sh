@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # co-registration of images
-# run this script in ~/Data/Qinghai-Tibet/beiluhe/beiluhe_ZY3/zy3_blhGooImgExt/prj_ext
+# run this script in ~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/co_register
 # since we utilize "ImageMatchsiftGPU" to automatically find tie-points, which only available on Cryo06
 
 #authors: Huang Lingcao
@@ -12,10 +12,9 @@
 set -eE -o functrace
 
 
-#ref_img='beiluhe_spot5_pan_20061109.tif'
-#ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/201805/20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt.tif
+ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/201805/20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt.tif
 
-ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_google_img/beiluhe_google_img_zoomIn2_2010_utm.tif
+#ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_google_img/beiluhe_google_img_zoomIn2_2010_utm.tif
 
 #new_img='../beiluhe_spot5_pan_20090501.tif'
 para_file=para.ini
@@ -43,8 +42,7 @@ function co_register() {
 }
 
 
-#for img in $(ls -d beiluhe_spot5*.tif |grep -v new | grep -v 20061109); do
-for img in $(ls *3B_AnalyticMS_SR_mosaic*.tif |grep -v new ); do
+for img in $(ls ../201?07/*rgb_basinExt.tif |grep -v new ); do
     echo $img
 
     co_register $img
