@@ -518,7 +518,7 @@ def main(options, args):
         raise ValueError('error, the input raster (e.g., %s) and vector (%s) files don\'t have the same projection'%(image_tile_list[0],t_polygons_shp))
 
     # check these are EPSG:4326 projection
-    if get_projection_proj4(t_polygons_shp) == '+proj=longlat +datum=WGS84 +no_defs':
+    if get_projection_proj4(t_polygons_shp).strip() == '+proj=longlat +datum=WGS84 +no_defs':
         bufferSize = meters_to_degress_onEarth(options.bufferSize)
     else:
         bufferSize = options.bufferSize
