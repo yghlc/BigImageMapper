@@ -4,6 +4,9 @@
 # run this script in ~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/co_register
 # since we utilize "ImageMatchsiftGPU" to automatically find tie-points, which only available on Cryo06
 
+# note that: ImageMatchsiftGPU must be run on Cryo06 through a desktop environment,
+# it cannot run through tmate or others
+
 #authors: Huang Lingcao
 #email:huanglingcao@gmail.com
 #add time: 3 June, 2019
