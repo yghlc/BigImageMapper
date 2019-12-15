@@ -14,6 +14,10 @@
 # Exit immediately if a command exits with a non-zero status. E: error trace
 set -eE -o functrace
 
+# on Cryo06, libs in /home/hlc/programs/anaconda3/lib leads to the crash of ImageMatchsiftGPU, gdal failed to reproject
+# so set LD_LIBRARY_PATH manually, 15 Dec 2019
+export LD_LIBRARY_PATH=/home/hlc/programs/lib:/home/hlc/programs/cuda-9.0/lib64:/usr/lib/x86_64-linux-gnu/mesa:/usr/lib/x86_64-linux-gnu/dri:/usr/lib/x86_64-linux-gnu/gallium-pipe:/home/hlc/bin/GMT_4.5.14/lib
+
 
 ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/201805/20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt.tif
 
