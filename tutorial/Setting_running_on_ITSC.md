@@ -130,11 +130,10 @@ An example of *para.ini* is available at *Landuse_DL/thawslumpScripts/para_qtp.i
     qtb_sentinel2_2018_JJA_mosaic-0000000000-0000080640_8bit_Albers.tif
     qtb_sentinel2_2018_JJA_mosaic-0000000000-0000107520_8bit_Albers.tif
 
-*run_INsingularity_miniconda.sh* is need to run the script inside the [Singularity](https://www.cuhk.edu.hk/itsc/hpc/singularity.html) container. 
-Modify it accordingly if you want to run other script. *Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh*
+*run_INsingularity_miniconda.sh* is needed to run the script inside the [Singularity](https://www.cuhk.edu.hk/itsc/hpc/singularity.html) container. 
+In this file, modify the line *exe_script=./exe.sh* accordingly if you want to run another script. *Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh*
  is an example. 
 
-    exe_script=./exe.sh
 
 *singularity.sh* is for submitting a job. Please also modify it accordingly. Please refer to ITSC
 website ([Slurm](https://www.cuhk.edu.hk/itsc/hpc/slurm.html)) for details. 
