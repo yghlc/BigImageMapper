@@ -55,7 +55,7 @@ More
 ## Dependencies and setting:
     Python package: Numpy, rasterio, GDAL 2.3, tensorflow-gpu 1.6, pyshp 1.2.12, pillow, imgaug
     Other: GDAL, OTB, ASP, CUDA 9.0, cudnn 7.0.
-    More information on the setting can be found in 'docker_ubuntu1604/run_INsingularity_hlctest.sh'
+    More information on the setting can be found in 'docker_ubuntu1604/run_INsingularity_hlctest.sh' and 'tutorial/Setting_running_on_ITSC.md'
     
 
 ## Disclaimer
