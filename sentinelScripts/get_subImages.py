@@ -431,13 +431,13 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
     t_shapefile = gpd.read_file(t_polygons_shp)
     class_labels = t_shapefile['class_int'].tolist()
     center_polygons = t_shapefile.geometry.values
-    check_polygons_invalidity(center_polygons,t_polygons_shp)
+    # check_polygons_invalidity(center_polygons,t_polygons_shp)
 
     # read the full set of training polygons, used this one to produce the label images
     t_shapefile_all = gpd.read_file(t_polygons_shp_all)
     class_labels_all = t_shapefile_all['class_int'].tolist()
     polygons_all = t_shapefile_all.geometry.values
-    check_polygons_invalidity(polygons_all,t_polygons_shp_all)
+    # check_polygons_invalidity(polygons_all,t_polygons_shp_all)
 
 
     img_tile_boxes = get_image_tile_bound_boxes(image_tile_list)
