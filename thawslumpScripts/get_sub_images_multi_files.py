@@ -20,6 +20,7 @@ deeplabRS=os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
 sys.path.insert(0, deeplabRS)
 
 import parameters
+import basic_src.io_function as io_function
 
 eo_dir=os.path.expanduser("~/codes/PycharmProjects/Landuse_DL")
 get_subImage_script=os.path.join(eo_dir,'sentinelScripts', 'get_subImages.py')
@@ -68,3 +69,9 @@ else:
         get_subImage_subLabel_one_shp(train_polygon_shp, buffersize, dstnodata, rectangle_ext, train_polygon_shp, image_folder, file_pattern=pattern)
 
 
+# check weather they have the same subImage and subLabel
+sub_image_list = io_function.get_file_list_by_pattern('subImages','*.tif')
+sub_label_list = io_function.get_file_list_by_pattern('split_labels','*.tif')
+if len(sub_image_list) != len(sub_label_list):
+    raise ValueError('the count of subImage (%d) and subLabel (%d) is different'
+                     %(len(sub_image_list),len(sub_label_list)))
