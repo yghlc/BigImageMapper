@@ -507,7 +507,8 @@ def main(options, args):
     assert io_function.is_file_exist(t_polygons_shp_all)
 
     # get image tile list
-    image_tile_list = io_function.get_file_list_by_ext(options.image_ext, image_folder, bsub_folder=False)
+    # image_tile_list = io_function.get_file_list_by_ext(options.image_ext, image_folder, bsub_folder=False)
+    image_tile_list = io_function.get_file_list_by_pattern(image_folder,options.image_ext)
     if len(image_tile_list) < 1:
         raise IOError('error, failed to get image tiles in folder %s'%image_folder)
 
@@ -552,8 +553,8 @@ if __name__ == "__main__":
                       action="store", dest="bufferSize",type=float,
                       help="buffer size is in the projection, normally, it is based on meters")
     parser.add_option("-e", "--image_ext",
-                      action="store", dest="image_ext",default = '.tif',
-                      help="the extension of the image file")
+                      action="store", dest="image_ext",default = '*.tif',
+                      help="the image pattern of the image file")
     parser.add_option("-o", "--out_dir",
                       action="store", dest="out_dir",
                       help="the folder path for saving output files")
