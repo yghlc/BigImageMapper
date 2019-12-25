@@ -71,7 +71,7 @@ else:
 
 # check weather they have the same subImage and subLabel
 sub_image_list = io_function.get_file_list_by_pattern('subImages','*.tif')
-sub_label_list = io_function.get_file_list_by_pattern('split_labels','*.tif')
+sub_label_list = io_function.get_file_list_by_pattern('subLabels','*.tif')
 if len(sub_image_list) != len(sub_label_list):
     raise ValueError('the count of subImage (%d) and subLabel (%d) is different'
                      %(len(sub_image_list),len(sub_label_list)))
