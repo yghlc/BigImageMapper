@@ -35,7 +35,8 @@ SECONDS=0
 ${eo_dir}/thawslumpScripts/remove_previous_data.sh ${para_file}
 
 #extract sub_images based on the training polgyons
-${eo_dir}/thawslumpScripts/get_sub_images_qtp.sh ${para_file}
+#${eo_dir}/thawslumpScripts/get_sub_images_qtp.sh ${para_file}
+${eo_dir}/thawslumpScripts/get_sub_images_multi_files.py ${para_file}
 
 ################################################
 ## preparing training images.
