@@ -444,6 +444,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
     pre_name_for_label = os.path.splitext(os.path.basename(t_polygons_shp))[0]
 
+    list_txt_obj = open('sub_images_labels_list.txt','a')
     # go through each polygon
     for idx, (c_polygon, c_class_int)  in enumerate(zip(center_polygons,class_labels)):
 
@@ -457,19 +458,23 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
         expansion_polygon = c_polygon.buffer(bufferSize)
 
         # get one sub-image based on the buffer areas
-        subimg_saved_path = os.path.join(saved_dir, 'subImages' , pre_name+'_%d_class_%d.tif'%(idx,c_class_int))
+        subimg_shortName = os.path.join('subImages' , pre_name+'_%d_class_%d.tif'%(idx,c_class_int))
+        subimg_saved_path = os.path.join(saved_dir, subimg_shortName)
         if get_sub_image(idx,expansion_polygon,image_tile_list,img_tile_boxes, subimg_saved_path, dstnodata, brectangle) is False:
             basic.outputlogMessage('Warning, skip the %dth polygon'%idx)
             continue
 
         # based on the sub-image, create the corresponding vectors
-        sublabel_saved_path = os.path.join(saved_dir, 'subLabels', pre_name_for_label + '_%d_class_%d.tif' % (idx, c_class_int))
+        sublabel_shortName = os.path.join('subLabels', pre_name_for_label + '_%d_class_%d.tif' % (idx, c_class_int))
+        sublabel_saved_path = os.path.join(saved_dir, sublabel_shortName)
         if get_sub_label(idx,subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize, brectangle, sublabel_saved_path) is False:
             basic.outputlogMessage('Warning, get the label raster for %dth polygon failed' % idx)
             continue
 
+        list_txt_obj.writelines(subimg_shortName + ":"+sublabel_shortName+'\n')
         pass
 
+    list_txt_obj.close()
     test = 1
 
 

@@ -33,6 +33,8 @@ dstnodata = parameters.get_string_parameters(para_file, 'dst_nodata')
 buffersize = parameters.get_string_parameters(para_file, 'buffer_size')
 rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
 
+if os.path.isfile('sub_images_labels_list.txt'):
+    io_function.delete_file_or_dir('sub_images_labels_list.txt')
 
 def get_subImage_subLabel_one_shp(all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp, input_image_dir, file_pattern = None):
     if file_pattern is None:
