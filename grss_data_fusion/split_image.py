@@ -79,7 +79,7 @@ def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj
 
 
 
-def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_overlay_y=0,out_format='PNG'):
+def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_overlay_y=0,out_format='PNG', pre_name = None):
     """
     split a large image to many separate patches
     Args:
@@ -115,7 +115,8 @@ def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_o
         patch_boundary = patch_boundary_unique
 
     index = 0
-    pre_name = os.path.splitext(os.path.basename(input))[0]
+    if pre_name is None:
+        pre_name = os.path.splitext(os.path.basename(input))[0]
     f_obj = open('split_image_info.txt', 'a+')
     f_obj.writelines("pre FileName:"+pre_name+'_p_\n')
     f_obj.close()
