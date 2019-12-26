@@ -41,7 +41,7 @@ ${eo_dir}/thawslumpScripts/get_sub_images_multi_files.py ${para_file}
 ## preparing training images.
 # there is another script ("build_RS_data.py"), but seem have not finished.  26 Oct 2018 hlc
 
-${eo_dir}/thawslumpScripts/split_sub_images.sh ${para_file}
+${eo_dir}/thawslumpScripts/split_sub_images.py ${para_file}
 ${eo_dir}/thawslumpScripts/training_img_augment.sh ${para_file}
 
 ## convert to TFrecord
