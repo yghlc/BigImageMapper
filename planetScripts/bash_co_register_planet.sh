@@ -48,8 +48,11 @@ function co_register() {
     echo "$(date): time cost of co-registration for ${new_img}: ${duration} seconds">>"time_cost.txt"
 }
 
+# for the image inside the beiluhe extent
+#for img in $(ls ../201?07/*rgb_basinExt.tif |grep -v new ); do
 
-for img in $(ls ../201?07/*rgb_basinExt.tif |grep -v new ); do
+# for the image have been sharpened, we need this to delineate boundaries
+for img in $(ls ../201?07/*8bit_rgb_sharpen.tif |grep -v new ); do
     echo $img
 
     co_register $img
