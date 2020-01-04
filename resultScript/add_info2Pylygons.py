@@ -11,6 +11,8 @@ add time: 25 February, 2019
 import os,sys
 from optparse import OptionParser
 
+import math
+
 HOME = os.path.expanduser('~')
 # path of DeeplabforRS
 codes_dir2 = HOME + '/codes/PycharmProjects/DeeplabforRS'
@@ -148,6 +150,26 @@ def add_adjacent_polygon_count(polygons_shp,buffer_size,field_name):
     # print(len(counts))
     return operation_obj.add_one_field_records_to_shapefile(polygons_shp, counts, field_name)
 
+def add_polygon_circularity_info(shp_path):
+    '''
+    add circularity of polygons, in this process, it will also add area and peremeter
+    :param shp_path: the input shape file, this would modify the shapefile
+    :return:
+    '''
+
+    # get the area and perimeter first
+    if vector_features.cal_area_length_of_polygon(shp_path) is False:
+        return False
+
+    operation_obj = shape_opeation()
+    perimeter_area_list = operation_obj.get_shape_records_value(shp_path, attributes=['INperimete', 'INarea'])
+
+    # add circularity (4*pi*area/perimeter**2)
+    circularity = []
+    for perimeter_area in perimeter_area_list:
+        value = (4*math.pi*perimeter_area[1] / perimeter_area[0] ** 2)
+        circularity.append(value)
+    return operation_obj.add_one_field_records_to_shapefile(shp_path, circularity, 'circularit')
 
 
 def main(options, args):
@@ -181,6 +203,10 @@ def main(options, args):
     if field_name=="adj_count":
         buffer_meters = options.buffer_meters
         add_adjacent_polygon_count(polygons_shp, buffer_meters, field_name)
+
+    if field_name=='circularity':
+        add_polygon_circularity_info(polygons_shp)
+
 
 
 if __name__ == "__main__":
