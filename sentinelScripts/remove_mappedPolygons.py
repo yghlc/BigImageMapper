@@ -105,7 +105,7 @@ def main(options, args):
     else:
         basic.outputlogMessage('warning, maximum_slope is absent in the para file, skip removing polygons based on maximum slope')
 
-    # remove polgyons based on dem
+    # remove polygons based on dem
     # dem_small_thr = 3000
     dem_small_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_elevation','int')
     b_smaller = True
