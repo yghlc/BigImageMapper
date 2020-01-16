@@ -13,7 +13,8 @@ exe_script=./exe.sh
 sing_dir=${HOME}
 sing_img=${sing_dir}/ubuntu16.04_itsc_tf.simg
 
-env_home=${sing_dir}/packages
+#env_home=${sing_dir}/packages
+env_home=${sing_dir}
 
 # some issues related to ENV variable setting on ITSC services, but is ok on Cryo03.
 # https://github.com/sylabs/singularity/issues/3510
