@@ -13,7 +13,7 @@ import math
 import os.path
 import sys
 import build_data
-import tensorflow as tf
+# import tensorflow as tf
 
 HOME = os.path.expanduser('~')
 basicCodes_path = HOME + '/codes/PycharmProjects/DeeplabforRS'
@@ -30,34 +30,34 @@ import parameters
 
 import json
 
-FLAGS = tf.app.flags.FLAGS
-
-tf.app.flags.DEFINE_string('image_folder',
-                           './Lidar_GeoTiff_Rasters/Intensity_C1',
-                           'Folder remote sensing images.')
-
-tf.app.flags.DEFINE_string(
-    'label_image_folder',
-    './GT',
-    'Folder containing label images.')
-
-tf.app.flags.DEFINE_string(
-    'list_file',
-    './image_list',
-    'file containing lists for remote sensing and label images')
-
-tf.app.flags.DEFINE_bool('is_training', True,
-                         'whether these data are for training (including labels)? ')
-
-tf.app.flags.DEFINE_string(
-    'para_file',
-    'para.ini',
-    'The parameter file containing file path and parameters')
-
-tf.app.flags.DEFINE_string(
-    'output_dir',
-    './tfrecord',
-    'Path to save converted SSTable of TensorFlow examples.')
+# FLAGS = tf.app.flags.FLAGS
+#
+# tf.app.flags.DEFINE_string('image_folder',
+#                            './Lidar_GeoTiff_Rasters/Intensity_C1',
+#                            'Folder remote sensing images.')
+#
+# tf.app.flags.DEFINE_string(
+#     'label_image_folder',
+#     './GT',
+#     'Folder containing label images.')
+#
+# tf.app.flags.DEFINE_string(
+#     'list_file',
+#     './image_list',
+#     'file containing lists for remote sensing and label images')
+#
+# tf.app.flags.DEFINE_bool('is_training', True,
+#                          'whether these data are for training (including labels)? ')
+#
+# tf.app.flags.DEFINE_string(
+#     'para_file',
+#     'para.ini',
+#     'The parameter file containing file path and parameters')
+#
+# tf.app.flags.DEFINE_string(
+#     'output_dir',
+#     './tfrecord',
+#     'Path to save converted SSTable of TensorFlow examples.')
 
 
 
@@ -602,128 +602,129 @@ def make_dataset(root,list_txt,patch_w,patch_h,adj_overlay_x,adj_overlay_y,train
     return dataset
 
 
-def _convert_dataset(dataset_patches,train=True):
-    """Converts the specified dataset split to TFRecord format.
-
-    Args:
-      dataset_split: The patches of remote sensing dataset (e.g., train, test).
-      train: True means that one patch contains both a remote sensing image and a label image,
-             False means that one patch only contains a Remote sensing image
-
-    Raises:
-      RuntimeError: If loaded image and label have different shape.
-    """
-    # notes: http://warmspringwinds.github.io/tensorflow/tf-slim/2016/12/21/tfrecords-guide/
-    # notes: https://gist.github.com/swyoon/8185b3dcf08ec728fb22b99016dd533f
-
-    num_images = len(dataset_patches)
-    num_per_shard = int(math.ceil(num_images / float(_NUM_SHARDS)))
-
-    # use the first image name as dataset_name
-    org_img = dataset_patches[0][0].org_img
-    dataset_name = os.path.splitext(os.path.basename(org_img))[0]
-
-    if train:
-
-        for idx in range(num_images):
-
-            img_patch, gt_patch = dataset_patches[idx]
-
-            image_data = read_patch(img_patch)
-            label_data = read_patch(gt_patch) #build_data.ImageReader('png', channels=1)
-
-            for shard_id in range(_NUM_SHARDS):
-                output_filename = os.path.join(
-                    FLAGS.output_dir,
-                    '%s-%05d-of-%05d.tfrecord' % (dataset_name, shard_id, _NUM_SHARDS))
-                with tf.python_io.TFRecordWriter(output_filename) as tfrecord_writer:
-                    start_idx = shard_id * num_per_shard
-                    end_idx = min((shard_id + 1) * num_per_shard, num_images)
-                    for i in range(start_idx, end_idx):
-                        sys.stdout.write('\r>> Converting image %d/%d shard %d' % (
-                            i + 1, num_images, shard_id))
-                        sys.stdout.flush()
-                        # Read the image.
-                        org_img = img_patch.org_img
-                        file_name = os.path.splitext(os.path.basename(org_img))[0] + '_' + str(i)
-
-                        # image_filename = os.path.join(
-                        #     FLAGS.image_folder, filenames[i] + '.' + FLAGS.image_format)
-                        # image_data = tf.gfile.FastGFile(image_filename, 'r').read()
-                        # height, width = image_reader.read_image_dims(image_data)
-                        image_shape = image_data.shape
-                        height, width = image_shape[1],image_shape[2]
-                        # # Read the semantic segmentation annotation.
-                        # seg_filename = os.path.join(
-                        #     FLAGS.semantic_segmentation_folder,
-                        #     filenames[i] + '.' + FLAGS.label_format)
-                        # seg_data = tf.gfile.FastGFile(seg_filename, 'r').read()
-                        label_shape = label_data.shape
-                        label_height, label_width = image_shape[1],image_shape[2]
-                        # seg_height, seg_width = label_reader.read_image_dims(seg_data)
-                        if height != label_height or width != label_width:
-                            raise RuntimeError('Shape mismatched between image and label.')
-                        # Convert to tf example.
-                        example = build_data.image_seg_to_tfexample(
-                            image_data, file_name, height, width, label_data)
-                        tfrecord_writer.write(example.SerializeToString())
-                sys.stdout.write('\n')
-                sys.stdout.flush()
-
-    else:
-        # img_patch = self.patches[idx]
-        # patch_info = [img_patch.org_img, img_patch.boundary]
-        # # img_name_noext = os.path.splitext(os.path.basename(img_patch.org_img))[0]+'_'+str(idx)
-        # img = read_patch(img_patch)
-        # # img.resize(self.nRow,self.nCol)
-        # img = img[:, 0:self.nRow, 0:self.nCol]
-        # img = np.atleast_3d(img).astype(np.float32)
-        # if (img.max() - img.min()) < 0.01:
-        #     pass
-        # else:
-        #     img = (img - img.min()) / (img.max() - img.min())
-        # img = torch.from_numpy(img).float()
-        # return img, patch_info
-
-        # dataset = os.path.basename(dataset_split)[:-4]
-        # sys.stdout.write('Processing ' + dataset)
-
-
-
-        pass
+# def _convert_dataset(dataset_patches,train=True):
+#     """Converts the specified dataset split to TFRecord format.
+#
+#     Args:
+#       dataset_split: The patches of remote sensing dataset (e.g., train, test).
+#       train: True means that one patch contains both a remote sensing image and a label image,
+#              False means that one patch only contains a Remote sensing image
+#
+#     Raises:
+#       RuntimeError: If loaded image and label have different shape.
+#     """
+#     # notes: http://warmspringwinds.github.io/tensorflow/tf-slim/2016/12/21/tfrecords-guide/
+#     # notes: https://gist.github.com/swyoon/8185b3dcf08ec728fb22b99016dd533f
+#
+#     num_images = len(dataset_patches)
+#     num_per_shard = int(math.ceil(num_images / float(_NUM_SHARDS)))
+#
+#     # use the first image name as dataset_name
+#     org_img = dataset_patches[0][0].org_img
+#     dataset_name = os.path.splitext(os.path.basename(org_img))[0]
+#
+#     if train:
+#
+#         for idx in range(num_images):
+#
+#             img_patch, gt_patch = dataset_patches[idx]
+#
+#             image_data = read_patch(img_patch)
+#             label_data = read_patch(gt_patch) #build_data.ImageReader('png', channels=1)
+#
+#             for shard_id in range(_NUM_SHARDS):
+#                 output_filename = os.path.join(
+#                     FLAGS.output_dir,
+#                     '%s-%05d-of-%05d.tfrecord' % (dataset_name, shard_id, _NUM_SHARDS))
+#                 with tf.python_io.TFRecordWriter(output_filename) as tfrecord_writer:
+#                     start_idx = shard_id * num_per_shard
+#                     end_idx = min((shard_id + 1) * num_per_shard, num_images)
+#                     for i in range(start_idx, end_idx):
+#                         sys.stdout.write('\r>> Converting image %d/%d shard %d' % (
+#                             i + 1, num_images, shard_id))
+#                         sys.stdout.flush()
+#                         # Read the image.
+#                         org_img = img_patch.org_img
+#                         file_name = os.path.splitext(os.path.basename(org_img))[0] + '_' + str(i)
+#
+#                         # image_filename = os.path.join(
+#                         #     FLAGS.image_folder, filenames[i] + '.' + FLAGS.image_format)
+#                         # image_data = tf.gfile.FastGFile(image_filename, 'r').read()
+#                         # height, width = image_reader.read_image_dims(image_data)
+#                         image_shape = image_data.shape
+#                         height, width = image_shape[1],image_shape[2]
+#                         # # Read the semantic segmentation annotation.
+#                         # seg_filename = os.path.join(
+#                         #     FLAGS.semantic_segmentation_folder,
+#                         #     filenames[i] + '.' + FLAGS.label_format)
+#                         # seg_data = tf.gfile.FastGFile(seg_filename, 'r').read()
+#                         label_shape = label_data.shape
+#                         label_height, label_width = image_shape[1],image_shape[2]
+#                         # seg_height, seg_width = label_reader.read_image_dims(seg_data)
+#                         if height != label_height or width != label_width:
+#                             raise RuntimeError('Shape mismatched between image and label.')
+#                         # Convert to tf example.
+#                         example = build_data.image_seg_to_tfexample(
+#                             image_data, file_name, height, width, label_data)
+#                         tfrecord_writer.write(example.SerializeToString())
+#                 sys.stdout.write('\n')
+#                 sys.stdout.flush()
+#
+#     else:
+#         # img_patch = self.patches[idx]
+#         # patch_info = [img_patch.org_img, img_patch.boundary]
+#         # # img_name_noext = os.path.splitext(os.path.basename(img_patch.org_img))[0]+'_'+str(idx)
+#         # img = read_patch(img_patch)
+#         # # img.resize(self.nRow,self.nCol)
+#         # img = img[:, 0:self.nRow, 0:self.nCol]
+#         # img = np.atleast_3d(img).astype(np.float32)
+#         # if (img.max() - img.min()) < 0.01:
+#         #     pass
+#         # else:
+#         #     img = (img - img.min()) / (img.max() - img.min())
+#         # img = torch.from_numpy(img).float()
+#         # return img, patch_info
+#
+#         # dataset = os.path.basename(dataset_split)[:-4]
+#         # sys.stdout.write('Processing ' + dataset)
+#
+#
+#
+#         pass
 
 
 
 def main(unused_argv):
-    # dataset_splits = glob.glob(os.path.join(FLAGS.list_file, '*.txt'))
+    # # dataset_splits = glob.glob(os.path.join(FLAGS.list_file, '*.txt'))
+    # #
+    # # for dataset_split in dataset_splits:
+    # #     _convert_dataset(dataset_split)
     #
-    # for dataset_split in dataset_splits:
-    #     _convert_dataset(dataset_split)
-
-    #how about the mean value?
-
-    #split images
-    data_root = FLAGS.image_folder
-    list_txt = FLAGS.list_file
-
-    ############## dataset processing
-    parameters.set_saved_parafile_path(FLAGS.para_file)
-    patch_w = parameters.get_digit_parameters("", "train_patch_width", None, 'int')
-    patch_h = parameters.get_digit_parameters("", "train_patch_height", None, 'int')
-    overlay_x = parameters.get_digit_parameters("", "train_pixel_overlay_x", None, 'int')
-    overlay_y = parameters.get_digit_parameters("", "train_pixel_overlay_y", None, 'int')
-
-    patches = make_dataset(data_root, list_txt, patch_w, patch_h, overlay_x,overlay_y, train=FLAGS.is_training)
-
-    os.system("mkdir -p " + FLAGS.output_dir)
-
-    #convert images
-    patches_1d = [item for alist in patches for item in alist]  # convert 2D list to 1D
-    _convert_dataset(patches_1d,train=FLAGS.is_training)
+    # #how about the mean value?
+    #
+    # #split images
+    # data_root = FLAGS.image_folder
+    # list_txt = FLAGS.list_file
+    #
+    # ############## dataset processing
+    # parameters.set_saved_parafile_path(FLAGS.para_file)
+    # patch_w = parameters.get_digit_parameters("", "train_patch_width", None, 'int')
+    # patch_h = parameters.get_digit_parameters("", "train_patch_height", None, 'int')
+    # overlay_x = parameters.get_digit_parameters("", "train_pixel_overlay_x", None, 'int')
+    # overlay_y = parameters.get_digit_parameters("", "train_pixel_overlay_y", None, 'int')
+    #
+    # patches = make_dataset(data_root, list_txt, patch_w, patch_h, overlay_x,overlay_y, train=FLAGS.is_training)
+    #
+    # os.system("mkdir -p " + FLAGS.output_dir)
+    #
+    # #convert images
+    # patches_1d = [item for alist in patches for item in alist]  # convert 2D list to 1D
+    # _convert_dataset(patches_1d,train=FLAGS.is_training)
     pass
 
 
 
 if __name__ == '__main__':
-  tf.app.run()
+  # tf.app.run()
+  pass
 
