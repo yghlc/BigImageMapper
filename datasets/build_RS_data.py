@@ -12,7 +12,7 @@ import glob
 import math
 import os.path
 import sys
-import build_data
+# import build_data
 # import tensorflow as tf
 
 HOME = os.path.expanduser('~')
