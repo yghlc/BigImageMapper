@@ -266,8 +266,10 @@ def save_patch_oneband_8bit(patch_obj,img_data,save_path):
     # check width and height
     height,width = img_data.shape
     if xsize != width or ysize != height:
-        basic.outputlogMessage("Error, the Size of the saved numpy array is different from the original patch")
-        return False
+        # basic.outputlogMessage("Error, the Size of the saved numpy array is different from the original patch")
+        # return False
+        raise ValueError("Error, the Size of the saved numpy array is different from the original patch,"
+                         " expected (%d, %d), but get (%d, %d)"%(xsize,ysize, width, height))
 
     window = ((boundary[1], boundary[1] + ysize), (boundary[0], boundary[0] + xsize))
 
