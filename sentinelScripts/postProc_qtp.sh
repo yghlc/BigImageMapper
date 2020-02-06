@@ -128,6 +128,9 @@ for (( n=0; n<${num}; n++ ));
     if [  -f inf_image_list.txt ]; then
         cp inf_image_list.txt ${bak_dir}/.
     fi
+    if [  -f multi_validate_shapefile.txt ]; then
+        cp multi_validate_shapefile.txt ${bak_dir}/.
+    fi
 
     echo "complete: copy result files to result_backup, experiment: $expr_name, iterations: $NUM_ITERATIONS & copyNumber: _$test"
 
