@@ -32,12 +32,6 @@ machine_name = os.uname()[1]
 
 start_time = datetime.datetime.now()
 
-# remove previous results
-outdir = 'multi_inf_results'
-if os.path.isdir(outdir) and 'chpc' not in machine_name:  # on ITSC service, need to manually deleted previous results
-    io_function.delete_file_or_dir(outdir)
-
-os.system('mkdir -p '+ outdir)
 
 # get GPU information on the machine
 # https://github.com/anderskm/gputil
@@ -52,6 +46,19 @@ with open('inf_image_list.txt','r') as inf_obj:
 img_count = len(inf_img_list)
 if img_count < 1:
     raise ValueError('No image in inf_image_list.txt')
+
+# remove previous results
+outdir = 'multi_inf_results'
+if os.path.isdir(outdir):
+    # on ITSC service, also need multiple nodes (each node has 8 GPUs) for prediction,
+    # then we need to manually delete previous results
+    if 'chpc' in machine_name and img_count > 8:
+        pass
+    else:
+        io_function.delete_file_or_dir(outdir)
+
+os.system('mkdir -p '+ outdir)
+
 
 def is_file_exist_in_folder(folder):
     # only check the first ten files
