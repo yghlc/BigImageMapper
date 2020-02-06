@@ -121,7 +121,15 @@ for (( n=0; n<${num}; n++ ));
     cp ${inf_dir}/I${n}/evaluation_report.txt ${bak_dir}/${shp_pre}_eva_report_${test}.txt  | true
 #    cp otb_acc_log.txt  result_backup/${testid}_otb_acc_${test}.txt
 
-    echo "complete: copy result files to result_backup, expriment: $expr_name, iterations: $NUM_ITERATIONS & copyNumber: _$test"
+    # backup multi_training_files.txt and inf_image_list.txt if they exist
+    if [  -f multi_training_files.txt ]; then
+        cp multi_training_files.txt ${bak_dir}/.
+    fi
+    if [  -f inf_image_list.txt ]; then
+        cp inf_image_list.txt ${bak_dir}/.
+    fi
+
+    echo "complete: copy result files to result_backup, experiment: $expr_name, iterations: $NUM_ITERATIONS & copyNumber: _$test"
 
 done
 
