@@ -139,6 +139,21 @@ def _convert_dataset(dataset_split):
 
 
 def main(unused_argv):
+
+    # similar to VOC dataset, we only used 1449 images for validation (because the data also used for training,
+    # so it is training accuracy, not validation accuracy)
+    with open(os.path.join(FLAGS.list_folder, 'trainval.txt'),'r') as f_obj:
+        file_names = f_obj.readlines()
+        if len(file_names) < 1449:
+            pass        # val.txt is identical to trainval.txt
+        else:
+            # randomly get 1449 image from trainval.txt
+            import random
+            sel_file_index = random.sample(range(len(file_names)), 1449)  # get a list of number without duplicates
+            with open(os.path.join(FLAGS.list_folder, 'val.txt'),'w') as w_obj:
+                sel_file_names = [ file_names[item] for item in sel_file_index ]
+                w_obj.writelines(sel_file_names)
+
     dataset_splits = glob.glob(os.path.join(FLAGS.list_folder, '*val.txt'))
     for dataset_split in dataset_splits:
         _convert_dataset(dataset_split)
