@@ -21,7 +21,7 @@ sys.path.insert(0, codes_dir)
 import vector_features
 from vector_features import shape_opeation
 
-import resultScript.add_info2Pylygons as add_info2Pylygons
+import resultScript.add_info2Polygons as add_info2Pylygons
 
 
 org_gtPolygons = HOME + '/Data/Qinghai-Tibet/beiluhe/thaw_slumps/' \

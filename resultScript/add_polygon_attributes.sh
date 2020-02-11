@@ -38,10 +38,10 @@ shp_imgAug22_NOpost=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_b_exp
 ################################################################################
 ### polygon geometric information and IoU
 
-#${code_dir}/resultScript/add_info2Pylygons.py ${shp_imgAug16_NOpost} -v ${ground_truth} -n "IoU"
-#${code_dir}/resultScript/add_info2Pylygons.py ${shp_imgAug22_NOpost} -v ${ground_truth} -n "IoU"
+#${code_dir}/resultScript/add_info2Polygons.py ${shp_imgAug16_NOpost} -v ${ground_truth} -n "IoU"
+#${code_dir}/resultScript/add_info2Polygons.py ${shp_imgAug22_NOpost} -v ${ground_truth} -n "IoU"
 
-#${code_dir}/resultScript/add_info2Pylygons.py ${shp_imgAug17_NOpost} -v ${ground_truth} -n "IoU"
+#${code_dir}/resultScript/add_info2Polygons.py ${shp_imgAug17_NOpost} -v ${ground_truth} -n "IoU"
 
 ################################################################################
 ### raster
@@ -61,12 +61,12 @@ ${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${slope} -n "slo
 #
 ${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${dem} -n "dem"
 #
-#${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${aspect} -n "asp"
+#${code_dir}/resultScript/add_info2Polygons.py ${polygon_shp} -r ${aspect} -n "asp"
 
 
 
 # in the buffer area
-#./add_info2Pylygons.py ${polygon_shp} -r ${pisr} -n "pisr" -b 30
+#./add_info2Polygons.py ${polygon_shp} -r ${pisr} -n "pisr" -b 30
 
 
 ################################################################################

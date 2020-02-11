@@ -41,7 +41,7 @@ shp_imgAug22_NOpost_tp=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_b_
 shp_imgAug22_NOpost_tp_intersec1=${res_dir}/img_aug_test_results/BLH_basin_deeplabV3+_1_b_exp10_iter30000_imgAug22_TP_intersec1.shp
 
 # step 1: get the count of adjacent polygons based on ground_truths
-#${code_dir}/resultScript/add_info2Pylygons.py ${ground_truth}  -n "adj_count" -b 300
+#${code_dir}/resultScript/add_info2Polygons.py ${ground_truth}  -n "adj_count" -b 300
 
 # step 2: get new polygons by interest ground truths with mapped ones (e.g., shp_imgAug17_NOpost or shp_imgAug16_NOpost)
 #${code_dir}/resultScript/get_intersection.py ${ground_truth} ${shp_imgAug17_NOpost_tp} \
@@ -65,9 +65,9 @@ ${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug22_NOpost_tp} -o ${shp_i
 #    -v ${ground_truth}  -c "adj_count"
 
 # step 3: calculate the IOU values
-#${code_dir}/resultScript/add_info2Pylygons.py ${res_dir}/intersect_ground_truth_imgAug17_NOpost_tp.shp -v ${ground_truth} -n "IoU"
+#${code_dir}/resultScript/add_info2Polygons.py ${res_dir}/intersect_ground_truth_imgAug17_NOpost_tp.shp -v ${ground_truth} -n "IoU"
 #
-#${code_dir}/resultScript/add_info2Pylygons.py ${res_dir}/intersect_ground_truth_imgAug16_NOpost_tp.shp -v ${ground_truth} -n "IoU"
+#${code_dir}/resultScript/add_info2Polygons.py ${res_dir}/intersect_ground_truth_imgAug16_NOpost_tp.shp -v ${ground_truth} -n "IoU"
 
 
 # step 4: plot scatter figure
