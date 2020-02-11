@@ -52,16 +52,16 @@ shp_imgAug22_NOpost_tp_intersec1=${res_dir}/img_aug_test_results/BLH_basin_deepl
 
 # also step 2: by with different method: only keep the mapped polygons intersect with one ground truth
 # need modify to get ${shp_imgAug16_NOpost_tp_intersec2p}, which only keep the polygons intersect with 2+ ground truths
-#${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug16_NOpost_tp} -o ${shp_imgAug16_NOpost_tp_intersec2p} \
+#${code_dir}/resultScript/remove_polygons.py ${shp_imgAug16_NOpost_tp} -o ${shp_imgAug16_NOpost_tp_intersec2p} \
 #    -v ${ground_truth}  -c "adj_count"
 
-#${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug16_NOpost_tp} -o ${shp_imgAug16_NOpost_tp_intersec1} \
+#${code_dir}/resultScript/remove_polygons.py ${shp_imgAug16_NOpost_tp} -o ${shp_imgAug16_NOpost_tp_intersec1} \
 #    -v ${ground_truth}  -c "adj_count"
 
 ${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug22_NOpost_tp} -o ${shp_imgAug22_NOpost_tp_intersec1} \
     -v ${ground_truth}  -c "adj_count"
 
-#${code_dir}/resultScript/remove_polyongs.py ${shp_imgAug17_NOpost_tp} -o ${shp_imgAug17_NOpost_tp_intersec1} \
+#${code_dir}/resultScript/remove_polygons.py ${shp_imgAug17_NOpost_tp} -o ${shp_imgAug17_NOpost_tp_intersec1} \
 #    -v ${ground_truth}  -c "adj_count"
 
 # step 3: calculate the IOU values
