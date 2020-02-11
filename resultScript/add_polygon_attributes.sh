@@ -53,13 +53,13 @@ slope=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_slope
 #aspect=~/Data/Qinghai-Tibet/beiluhe/DEM/srtm_30/beiluhe_srtm30_utm_basinExt_apect.tif
 #
 ## inside polygons
-${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${pisr} -n "pisr"
+${code_dir}/resultScript/add_info2Polygons.py ${polygon_shp} -r ${pisr} -n "pisr"
 #
-${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${tpi} -n "tpi"
+${code_dir}/resultScript/add_info2Polygons.py ${polygon_shp} -r ${tpi} -n "tpi"
 ##
-${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${slope} -n "slo"
+${code_dir}/resultScript/add_info2Polygons.py ${polygon_shp} -r ${slope} -n "slo"
 #
-${code_dir}/resultScript/add_info2Pylygons.py ${polygon_shp} -r ${dem} -n "dem"
+${code_dir}/resultScript/add_info2Polygons.py ${polygon_shp} -r ${dem} -n "dem"
 #
 #${code_dir}/resultScript/add_info2Polygons.py ${polygon_shp} -r ${aspect} -n "asp"
 

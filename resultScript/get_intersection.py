@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Filename: add_info2Pylygons 
+# Filename: get_intersection 
 """
 introduction: get intersection polygons
 

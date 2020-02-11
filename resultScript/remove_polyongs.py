@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Filename: add_info2Pylygons 
+# Filename: remove_polygons.py
 """
 introduction: keep the true positive only, i.e., remove polygons with IOU less than or equal to 0.5.
 

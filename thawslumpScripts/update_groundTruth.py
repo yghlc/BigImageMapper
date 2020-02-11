@@ -21,7 +21,7 @@ sys.path.insert(0, codes_dir)
 import vector_features
 from vector_features import shape_opeation
 
-import resultScript.add_info2Polygons as add_info2Pylygons
+import resultScript.add_info2Polygons as add_info2Polygons
 
 
 org_gtPolygons = HOME + '/Data/Qinghai-Tibet/beiluhe/thaw_slumps/' \
@@ -34,7 +34,7 @@ new_polygons = HOME + '/Data/Qinghai-Tibet/beiluhe/thaw_slumps/' \
 
 # org_gtPolygons like ground truths
 # new_polygons as mapping results
-add_info2Pylygons.add_IoU_values(new_polygons,org_gtPolygons,'IOU_old')
+add_info2Polygons.add_IoU_values(new_polygons,org_gtPolygons,'IOU_old')
 
 # then check polygons one by one manually, and then add some of them to ground truths
 

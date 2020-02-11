@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Filename: add_info2Pylygons 
+# Filename: add_info2Polygons
 """
 introduction: add information to polygons as new attribute
 
