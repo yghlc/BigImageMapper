@@ -139,4 +139,4 @@ done
 ########################################
 
 # remove mapping polygons based on previous previous results
-${eo_dir}/sentinelScripts/remove_polygons_multTemporal.py -p ${para_file} ${bak_dir} I${n}_${testid}*post_${test}.shp
+${eo_dir}/sentinelScripts/remove_polygons_multTemporal.py -p ${para_file} ${bak_dir} I*_${testid}*post_${test}.shp
