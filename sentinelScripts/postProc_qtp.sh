@@ -137,3 +137,6 @@ for (( n=0; n<${num}; n++ ));
 done
 
 ########################################
+
+# remove mapping polygons based on previous previous results
+${eo_dir}/sentinelScripts/remove_polygons_multTemporal.py -p ${para_file} ${bak_dir} I*post*.shp
