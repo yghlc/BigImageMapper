@@ -77,3 +77,8 @@ ${eo_dir}/sentinelScripts/merge_shapefiles.sh ${para_file} ${test_name}
 
 ################################################
 #${eo_dir}/thawslumpScripts/accuracies_assess.sh ${para_file}
+
+################################################
+## conduct polygon-based change detection based on the multi-temporal mapping results
+cd_code=~/codes/PycharmProjects/ChangeDet_DL
+${cd_code}/thawSlumpChangeDet/polygons_cd_multi_exe.py ${para_file} ${test_name}
