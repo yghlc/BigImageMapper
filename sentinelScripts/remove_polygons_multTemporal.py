@@ -77,13 +77,15 @@ def main(options, args):
 
         I_idx_str = re.findall('I\d+', os.path.basename(shp_rmTimeiou))
 
-        old_eva_report = io_function.get_file_list_by_pattern(shp_dir, I_idx_str+'*eva_report*'+'.txt')
+        old_eva_report = io_function.get_file_list_by_pattern(shp_dir, I_idx_str[0]+'*eva_report*'+'.txt')
         old_eva_report = [ item for item in old_eva_report if 'rmTimeiou' not in item]
 
-        eva_report_name = io_function.get_name_by_adding_tail(old_eva_report[0],'rmTimeiou')
+        old_eva_report_name = old_eva_report[0]
+
+        eva_report_name = io_function.get_name_by_adding_tail(old_eva_report_name,'rmTimeiou')
         # io_function.move_file_to_dst(old_eva_report,backup_eva_report)
         # io_function.move_file_to_dst('evaluation_report.txt', old_eva_report)
-        io_function.move_file_to_dst(old_eva_report, eva_report_name)
+        io_function.move_file_to_dst('evaluation_report.txt', eva_report_name,overwrite=True)
 
         # back up the shape files (no_need)
 
