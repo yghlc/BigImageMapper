@@ -35,6 +35,7 @@ def main(options, args):
     b_remove = parameters.get_bool_parameters_None_if_absence(para_file,'b_remove_polygons_using_multitemporal_results')
     # exit
     if b_remove is None or b_remove is False:
+        basic.outputlogMessage('Warning, b_remove_polygons_using_multitemporal_results not set or is NO')
         return True
 
     shp_dir = args[0]
@@ -42,6 +43,12 @@ def main(options, args):
     polyon_shps_list = io_function.get_file_list_by_pattern(shp_dir,file_pattern)
     if len(polyon_shps_list) < 2:
         raise ValueError('Error, less than two shapefiles, cannot conduct multi-polygon anlysis')
+
+    # make polyon_shps_list in order: I0 to In
+    polyon_shps_list.sort(key=lambda x: int(re.findall('I\d+',os.path.basename(x))[0][1:]))
+
+    # print(polyon_shps_list)
+    # sys.exit()
 
     # check projection of the shape file, should be the same
     new_shp_proj4 = map_projection.get_raster_or_vector_srs_info_proj4(polyon_shps_list[0])
@@ -57,10 +64,11 @@ def main(options, args):
     remove_nonActive_thawSlumps.remove_non_active_thaw_slumps(polyon_shps_list, para_file)
 
     # back up files and conduct evaluation
-    for shp_path in polyon_shps_list:
+    for idx, shp_path in enumerate(polyon_shps_list):
 
         # evaluation files
         shp_rmTimeiou = io_function.get_name_by_adding_tail(shp_path,'rmTimeiou')
+        basic.outputlogMessage('(%d/%d) evaluation of %s'%(idx,len(polyon_shps_list),shp_rmTimeiou))
 
         # evaluation
         args_list = [os.path.join(deeplabRS,'evaluation_result.py'), '-p', para_file, shp_rmTimeiou]
