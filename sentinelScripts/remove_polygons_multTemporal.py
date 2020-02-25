@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Filename: rm_polygons_multTemporal 
 """
 introduction: remove mappping polygons based on multi-temporal results
