@@ -89,7 +89,7 @@ def main(options, args):
 
         # back up the shape files (no_need)
 
-
+    basic.outputlogMessage('Finish removing polygons using multi-temporal mapping results')
 
 
 
