@@ -23,6 +23,8 @@ import basic_src.io_function as io_function
 import basic_src.basic as basic
 
 log = "time_cost.txt"
+
+# remember to modify this if it has change
 trained_model_dir = 'exp6'
 
 def print2file(save_file, string):
