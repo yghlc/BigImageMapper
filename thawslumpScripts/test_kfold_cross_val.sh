@@ -42,7 +42,7 @@ function train_kfold_cross_val() {
     if [ ! -d "${dir_sub}" ]; then
         mkdir -p ${dir_sub}
         cd ${dir_sub}
-        ${deeplabRS}/get_trianing_polygons.py ${train_shp_all} ${filename} -k ${kvalue}
+        ${deeplabRS}/get_training_polygons.py ${train_shp_all} ${filename} -k ${kvalue}
         cd -
     else
         # check shapefiles exist
@@ -53,7 +53,7 @@ function train_kfold_cross_val() {
         else
             # create new
             cd ${dir_sub}
-            ${deeplabRS}/get_trianing_polygons.py ${train_shp_all} ${filename} -k ${kvalue}
+            ${deeplabRS}/get_training_polygons.py ${train_shp_all} ${filename} -k ${kvalue}
             cd -
         fi
 
