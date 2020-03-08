@@ -99,10 +99,10 @@ def train_kfold_cross_val(multi_training_files_allPolygons, multi_training_files
         # replace shape file path in multi_training_files
         for training_shpAll in training_shp_all:
             dir = os.path.dirname(training_shpAll)
-            file_name_no_ext = os.path.basename(training_shpAll)
+            file_name_no_ext = os.path.splitext(os.path.basename(training_shpAll))[0]
             dir_sub = os.path.join(dir, '%d-fold_cross_val_t%d' % (k_value, test_num))
 
-            new_shp_path = os.path.join(dir_sub,'%s_%dfold_%d'%(file_name_no_ext,k_value,idx))
+            new_shp_path = os.path.join(dir_sub,'%s_%dfold_%d.shp'%(file_name_no_ext,k_value,idx))
             repalce_string_in_file(multi_training_files,training_shpAll,new_shp_path)
 
         # modify exe.sh
@@ -117,7 +117,7 @@ def train_kfold_cross_val(multi_training_files_allPolygons, multi_training_files
         else:
             # run training
             print2file(log,"start: test:%d the %d_th fold"%(test_num,idx))
-            argslist = ['exe_qtp.sh']
+            argslist = ['./exe_qtp.sh']
             basic.exec_command_args_list(argslist)
 
     pass
