@@ -146,7 +146,7 @@ def main(options, args):
     if os.path.isfile(training_files_allPolygons) is False:
         io_function.copy_file_to_dst(multi_training_files, training_files_allPolygons)
     else:
-        basic.outputlogMessage('The full set polygons already exist'%multi_training_files)
+        basic.outputlogMessage('The full set polygons already exist') #%multi_training_files
 
     # training on using the k subset
     train_kfold_cross_val(training_files_allPolygons, multi_training_files ,k_value,test_num)
