@@ -63,12 +63,29 @@ else:
     # get subImage and subLabel for multi training polygons
     with open(multi_training_files, 'r') as txt_obj:
         line_list = [name.strip() for name in txt_obj.readlines()]
-    for line in line_list:
+
+    # if the full set of training polygons exists
+    line_contain_all_train_shp = None
+    training_files_allPolygons = io_function.get_name_by_adding_tail(multi_training_files, 'allPolygons')
+    if os.path.isfile(training_files_allPolygons):
+        with open(training_files_allPolygons, 'r') as txt_obj:
+            line_contain_all_train_shp = [name.strip() for name in txt_obj.readlines()]
+        if len(line_contain_all_train_shp) != len(line_list):
+            raise ValueError('The count of all_train_shp is not equal to the one of train_shp')
+
+    for idx in range(len(line_list)):
+        line = line_list[idx]
         folder, pattern, train_polygon_shp = line.split(':')
+
+        if line_contain_all_train_shp is not None:
+            folder, pattern, all_train_shp = line_contain_all_train_shp[idx].split(':')
+        else:
+            all_train_shp = train_polygon_shp
+
         image_folder = os.path.join(input_image_dir,folder)
         print('extract training data from image folder (%s) and polgyons (%s)' % (image_folder, train_polygon_shp))
 
-        get_subImage_subLabel_one_shp(train_polygon_shp, buffersize, dstnodata, rectangle_ext, train_polygon_shp, image_folder, file_pattern=pattern)
+        get_subImage_subLabel_one_shp(all_train_shp, buffersize, dstnodata, rectangle_ext, train_polygon_shp, image_folder, file_pattern=pattern)
 
 
 # check weather they have the same subImage and subLabel
