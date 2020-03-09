@@ -146,14 +146,14 @@ def main(options, args):
     if os.path.isfile(training_files_allPolygons) is False:
         io_function.copy_file_to_dst(multi_training_files, training_files_allPolygons)
     else:
-        basic.outputlogMessage('Warning, the backup of %s already exist'%multi_training_files)
+        basic.outputlogMessage('The full set polygons already exist'%multi_training_files)
 
     # training on using the k subset
     train_kfold_cross_val(training_files_allPolygons, multi_training_files ,k_value,test_num)
 
     # remove the backup of multi_training_files
-    io_function.copy_file_to_dst(training_files_allPolygons,multi_training_files)
-    io_function.delete_file_or_dir(training_files_allPolygons)
+    # io_function.copy_file_to_dst(training_files_allPolygons,multi_training_files)
+    # io_function.delete_file_or_dir(training_files_allPolygons)
 
 
 
