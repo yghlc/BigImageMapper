@@ -92,7 +92,7 @@ cd ${inf_dir}
 cd ..
 
 duration=$SECONDS
-echo "$(date): time cost of post processing: ${duration} seconds">>"time_cost.txt"
+echo "$(date): time cost of post processing (merge, polygonize, polygon_post_process,remove_mappedPolygons,evaluation_result): ${duration} seconds">>"time_cost.txt"
 
 ########################################
 # copy results
@@ -137,6 +137,9 @@ for (( n=0; n<${num}; n++ ));
 done
 
 ########################################
-
+SECONDS=0
 # remove mapping polygons based on previous previous results
 ${eo_dir}/sentinelScripts/remove_polygons_multTemporal.py -p ${para_file} ${bak_dir} I*_${testid}*post_${test}.shp
+
+duration=$SECONDS
+echo "$(date): time cost of removing incorrect polygons multi-temporal mapping results: ${duration} seconds">>"time_cost.txt"
