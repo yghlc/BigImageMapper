@@ -118,7 +118,10 @@ def train_kfold_cross_val(multi_training_files_allPolygons, multi_training_files
             # run training
             print2file(log,"start: test:%d the %d_th fold"%(test_num,idx))
             argslist = ['./exe_qtp.sh']
-            basic.exec_command_args_list(argslist)
+            return_code = basic.exec_command_args_list(argslist)
+            # exit code is not 0, means something wrong, then quit
+            if return_code != 0:
+                sys.exit(return_code)
 
     pass
 
