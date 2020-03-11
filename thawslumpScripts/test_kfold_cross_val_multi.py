@@ -111,7 +111,7 @@ def train_kfold_cross_val(multi_training_files_allPolygons, multi_training_files
         repalce_string_in_file('exe_qtp.sh', 'x_test_num', new_line)
 
         # check results existence
-        result_shp = io_function.get_file_list_by_pattern('result_backup','*new_line*/*.shp')
+        result_shp = io_function.get_file_list_by_pattern('result_backup','*'+new_line+'*/*.shp')
         if len(result_shp) > 0:
             print2file(log,"results of test: %s already exist, skip"%new_line)
         else:
