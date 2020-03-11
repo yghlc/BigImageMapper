@@ -120,6 +120,10 @@ for (( n=0; n<${num}; n++ ));
     cp ${para_file} result_backup/${testid}_para_${test}.ini
     cp ${inf_dir}/I${n}/evaluation_report.txt ${bak_dir}/${shp_pre}_eva_report_${test}.txt  | true
 #    cp otb_acc_log.txt  result_backup/${testid}_otb_acc_${test}.txt
+    # backup exe_qtp.sh
+    if [  -f exe_qtp.sh ]; then
+        cp exe_qtp.sh ${bak_dir}/.
+    fi
 
     # backup multi_training_files.txt and inf_image_list.txt if they exist
     if [  -f multi_training_files.txt ]; then
