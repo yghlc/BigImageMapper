@@ -25,7 +25,7 @@ import basic_src.basic as basic
 log = "time_cost.txt"
 
 # remember to modify this if it has change
-trained_model_dir = 'exp6'
+trained_model_dir = 'exp6'      # read from para_file
 
 def print2file(save_file, string):
     print(string)
@@ -136,6 +136,9 @@ def main(options, args):
 
     print2file(log,'kvalue : %d'%k_value)
     print2file(log,'test_num : %d'%test_num)
+
+    global trained_model_dir
+    trained_model_dir = parameters.get_string_parameters(para_file,'expr_name')
 
     # get the path of multi training polygons
     multi_training_files = parameters.get_string_parameters_None_if_absence(para_file,'multi_training_files')
