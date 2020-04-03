@@ -19,7 +19,10 @@ set -eE -o functrace
 export LD_LIBRARY_PATH=/home/hlc/programs/lib:/home/hlc/programs/cuda-9.0/lib64:/usr/lib/x86_64-linux-gnu/mesa:/usr/lib/x86_64-linux-gnu/dri:/usr/lib/x86_64-linux-gnu/gallium-pipe:/home/hlc/bin/GMT_4.5.14/lib
 
 
-ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/201805/20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt.tif
+#ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_basin/201805/20180522_035755_3B_AnalyticMS_SR_mosaic_8bit_rgb_basinExt.tif
+
+# Beiluhe test area
+ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_planet/beiluhe_test_area/201805/20180523_3B_AnalyticMS_SR_mosaic_8bit_rgb_sharpen.tif
 
 #ref_img=~/Data/Qinghai-Tibet/beiluhe/beiluhe_google_img/beiluhe_google_img_zoomIn2_2010_utm.tif
 
