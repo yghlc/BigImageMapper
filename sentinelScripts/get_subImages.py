@@ -530,10 +530,13 @@ def main(options, args):
         bufferSize = options.bufferSize
 
     saved_dir = options.out_dir
-    if os.system('mkdir -p ' + os.path.join(saved_dir,'subImages')) != 0:
-        sys.exit(1)
-    if os.system('mkdir -p ' + os.path.join(saved_dir,'subLabels')) !=0:
-        sys.exit(1)
+    # if os.system('mkdir -p ' + os.path.join(saved_dir,'subImages')) != 0:
+    #     sys.exit(1)
+    # if os.system('mkdir -p ' + os.path.join(saved_dir,'subLabels')) !=0:
+    #     sys.exit(1)
+    io_function.mkdir(os.path.join(saved_dir,'subImages'))
+    io_function.mkdir(os.path.join(saved_dir,'subLabels'))
+
     dstnodata = options.dstnodata
     if 'qtb_sentinel2' in image_tile_list[0]:
         # for qtb_sentinel-2 mosaic
