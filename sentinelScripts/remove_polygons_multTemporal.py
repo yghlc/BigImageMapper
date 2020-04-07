@@ -22,8 +22,7 @@ import parameters
 
 # add ChangeDet_DL folder
 sys.path.insert(0, os.path.expanduser('~/codes/PycharmProjects/ChangeDet_DL/thawSlumpChangeDet'))
-import remove_nonActive_thawSlumps
-import polygons_change_analyze
+
 
 
 import re
@@ -56,6 +55,9 @@ def main(options, args):
         shp_proj4 = map_projection.get_raster_or_vector_srs_info_proj4(polyon_shps_list[ idx+1 ])
         if shp_proj4 != new_shp_proj4:
             raise ValueError('error, projection insistence between %s and %s'%(new_shp_proj4, shp_proj4))
+
+    import remove_nonActive_thawSlumps
+    import polygons_change_analyze
 
     # polygon change analysis
     polygons_change_analyze.cal_multi_temporal_iou_and_occurrence(polyon_shps_list, para_file)
