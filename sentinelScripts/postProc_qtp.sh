@@ -35,6 +35,10 @@ SECONDS=0
 
 # the number of images in the list for inference
 num=$(cat inf_image_list.txt | wc -l)
+if [ $num -eq 0 ]; then
+    echo "the line number in inf_image_list.txt is zero, please check this file and make use each LINE has a end marker (when create it on Window)"
+    exit 1
+fi
 
 # merge patches
 ### post processing
