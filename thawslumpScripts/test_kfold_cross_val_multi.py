@@ -51,7 +51,11 @@ def repalce_string_in_file(txt_path, old_str, new_str):
     for line in fileinput.input(txt_path, inplace=True):
         # inside this loop the STDOUT will be redirected to the file
         # the comma after each print statement is needed to avoid double line breaks
+
+        # for python 3
         print(line.replace(old_str, new_str), end="")
+        # # for python2
+        # print(line.replace(old_str, new_str)),
 
 def train_kfold_cross_val(multi_training_files_allPolygons, multi_training_files, k_value, test_num):
 
