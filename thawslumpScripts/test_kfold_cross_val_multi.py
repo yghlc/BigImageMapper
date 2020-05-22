@@ -53,9 +53,11 @@ def repalce_string_in_file(txt_path, old_str, new_str):
         # the comma after each print statement is needed to avoid double line breaks
 
         # for python 3
-        print(line.replace(old_str, new_str), end="")
-        # # for python2
-        # print(line.replace(old_str, new_str)),
+        if sys.version_info.major == 3:
+            print(line.replace(old_str, new_str), end="")
+        else:
+            # # for python2
+            print(line.replace(old_str, new_str)),
 
 def train_kfold_cross_val(multi_training_files_allPolygons, multi_training_files, k_value, test_num):
 
