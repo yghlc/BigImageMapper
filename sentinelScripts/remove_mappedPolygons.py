@@ -79,8 +79,10 @@ def main(options, args):
     b_smaller = True
     if area_thr is not None:
         rm_area_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmArea')
-        remove_polygons(polygons_shp, 'INarea', area_thr, b_smaller, rm_area_save_shp)
-        polygons_shp = rm_area_save_shp
+        if remove_polygons(polygons_shp, 'INarea', area_thr, b_smaller, rm_area_save_shp) is False:
+            basic.outputlogMessage("error, removing polygons based on size failed")
+        else:
+            polygons_shp = rm_area_save_shp
     else:
         basic.outputlogMessage('warning, minimum_area is absent in the para file, skip removing polygons based on areas')
 
@@ -90,8 +92,10 @@ def main(options, args):
     b_smaller = True
     if slope_small_thr is not None:
         rm_slope_save_shp1 = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmslope1')
-        remove_polygons(polygons_shp, 'slo_mean', slope_small_thr, b_smaller, rm_slope_save_shp1)
-        polygons_shp = rm_slope_save_shp1
+        if remove_polygons(polygons_shp, 'slo_mean', slope_small_thr, b_smaller, rm_slope_save_shp1) is False:
+            basic.outputlogMessage("error, removing polygons based on slo_mean failed")
+        else:
+            polygons_shp = rm_slope_save_shp1
     else:
         basic.outputlogMessage('warning, minimum_slope is absent in the para file, skip removing polygons based on minimum slope')
 
@@ -100,8 +104,10 @@ def main(options, args):
     b_smaller = False
     if slope_large_thr is not None:
         rm_slope_save_shp2 = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmslope2')
-        remove_polygons(polygons_shp, 'slo_mean', slope_large_thr, b_smaller, rm_slope_save_shp2)
-        polygons_shp = rm_slope_save_shp2
+        if remove_polygons(polygons_shp, 'slo_mean', slope_large_thr, b_smaller, rm_slope_save_shp2) is False:
+            basic.outputlogMessage("error, removing polygons based on slo_mean (2) failed")
+        else:
+            polygons_shp = rm_slope_save_shp2
     else:
         basic.outputlogMessage('warning, maximum_slope is absent in the para file, skip removing polygons based on maximum slope')
 
@@ -111,8 +117,10 @@ def main(options, args):
     b_smaller = True
     if dem_small_thr is not None:
         rm_dem_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmDEM')
-        remove_polygons(polygons_shp, 'dem_mean', dem_small_thr, b_smaller, rm_dem_save_shp)
-        polygons_shp = rm_dem_save_shp
+        if remove_polygons(polygons_shp, 'dem_mean', dem_small_thr, b_smaller, rm_dem_save_shp) is False:
+            basic.outputlogMessage("error, removing polygons based on dem_mean failed")
+        else:
+            polygons_shp = rm_dem_save_shp
     else:
         basic.outputlogMessage('warning, minimum_elevation is absent in the para file, skip removing polygons based on minimum elevation')
 
