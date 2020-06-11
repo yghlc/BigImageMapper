@@ -74,7 +74,7 @@ the container, so we need to submit a job for running singularity. -->
     ${HOME}/programs/miniconda2/bin/pip install pyshp==1.2.12
     ${HOME}/programs/miniconda2/bin/pip install rasterstats
     ${HOME}/programs/miniconda2/bin/pip install pillow
-    ${HOME}/programs/miniconda2/bin/pip install imgaug
+    ${HOME}/programs/miniconda2/bin/pip install imgaug==0.2.6
     ${HOME}/programs/miniconda2/bin/pip install geopandas
 
 Because some of the sub-folders don't change the group info to *LinLiu* or *LinLiuScratch*, we modify them again.
