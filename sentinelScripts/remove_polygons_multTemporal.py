@@ -41,7 +41,7 @@ def main(options, args):
     file_pattern = args[1]
     polyon_shps_list = io_function.get_file_list_by_pattern(shp_dir,file_pattern)
     if len(polyon_shps_list) < 2:
-        raise ValueError('Error, less than two shapefiles, cannot conduct multi-polygon anlysis')
+        raise ValueError('Error, less than two shapefiles, cannot conduct multi-polygon analysis')
 
     # make polyon_shps_list in order: I0 to In
     polyon_shps_list.sort(key=lambda x: int(re.findall('I\d+',os.path.basename(x))[0][1:]))
