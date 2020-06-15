@@ -81,6 +81,13 @@ def get_test_num(file_name):
         return False
         # raise ValueError('unknow test type')
 
+def check_duplicated_records(shapefile_str):
+    for res in result_list:
+        if res['shapefile'] == shapefile_str:
+            print("Warning, %s in the acc_log file has duplicates, skip it")
+            return True
+    return False
+
 def parse_acc_log_file(acc_log_file):
     '''
 
@@ -99,7 +106,11 @@ def parse_acc_log_file(acc_log_file):
         if "calculate precision recall curve for" in log_lines[l_idx]:
             tmp_str = log_lines[l_idx].split(' for ')[-1].strip()
             # print(tmp_str)
-            result['shapefile']  = os.path.basename(tmp_str)
+            shapefile_str = os.path.basename(tmp_str)
+            if check_duplicated_records(shapefile_str):
+                continue
+            else:
+                result['shapefile']  = shapefile_str
             l_idx += 1
 
             iou_thr_list = []
