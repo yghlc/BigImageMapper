@@ -13,6 +13,8 @@ import re
 
 from optparse import OptionParser
 
+import pandas as pd
+
 # only output the accuracies when IOU_thr are in
 # output_iou=[0.8,0.6,0.4,0.2,0]
 output_iou=[0,0.4,0.8]
@@ -274,6 +276,13 @@ def main(options, args):
 
     csv_file = options.output # "accuracy_table.csv"
     save_to_csv_file(csv_file)
+
+    # save a copy to xlsx file
+    if os.path.isfile(csv_file):
+        xlsx_file = os.path.splitext(csv_file)[0] + '.xlsx'
+        read_file = pd.read_csv(csv_file)
+        read_file.to_excel(xlsx_file, index=None, header=True)
+        print("save a copy of csv file (%s) to excel file (%s)"%(csv_file,xlsx_file))
 
 
 if __name__ == "__main__":
