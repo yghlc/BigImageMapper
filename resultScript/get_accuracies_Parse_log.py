@@ -84,7 +84,7 @@ def get_test_num(file_name):
 def check_duplicated_records(shapefile_str):
     for res in result_list:
         if res['shapefile'] == shapefile_str:
-            print("Warning, %s in the acc_log file has duplicates, skip it")
+            print("Warning, %s in the acc_log file has duplicates, skip it"%shapefile_str)
             return True
     return False
 
@@ -108,6 +108,8 @@ def parse_acc_log_file(acc_log_file):
             # print(tmp_str)
             shapefile_str = os.path.basename(tmp_str)
             if check_duplicated_records(shapefile_str):
+                # move to next line
+                l_idx += 1
                 continue
             else:
                 result['shapefile']  = shapefile_str
