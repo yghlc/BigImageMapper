@@ -84,7 +84,7 @@ def get_test_num(file_name):
 def check_duplicated_records(shapefile_str):
     for res in result_list:
         if res['shapefile'] == shapefile_str:
-            print("Warning, %s in the acc_log file has duplicates, skip it"%shapefile_str)
+            print("warning, %s in the acc_log file has duplicates, skip it"%shapefile_str)
             return True
     return False
 
@@ -104,6 +104,12 @@ def parse_acc_log_file(acc_log_file):
         result = {}
 
         if "calculate precision recall curve for" in log_lines[l_idx]:
+
+            # check this is an valid section, that is, next line has 'iou_thr'
+            if 'iou_thr' not in log_lines[l_idx + 1]:
+                l_idx += 1
+                continue
+
             tmp_str = log_lines[l_idx].split(' for ')[-1].strip()
             # print(tmp_str)
             shapefile_str = os.path.basename(tmp_str)
@@ -217,13 +223,46 @@ def reorder_result():
     '''
 
     if 'test_num' not in result_list[0].keys():
-        print('dont have test number, skip reording')
+        print('do not have test number, skip reordering')
         return False
     # sorted(result_list, key=lambda x: result_list[x]['test_num'])
     # for result in result_list:
     #     print(result['test_num'])
     result_list.sort(key=lambda x: x['test_num'])
 
+def reorder_for_k_fold_tests():
+    '''
+    rearrange the order of results for k-fold tests
+    '''
+
+    for res in result_list:
+        if 'fold' not in res['shapefile']:
+            print("shapefile does not have 'fold', seems not k-fold test results")
+            return False
+
+        # 3fold_3_t1
+        k_fold_str = re.findall('\d+fold_\d+_t\d+',res['shapefile'])[0]
+        if len(k_fold_str) < 1:
+            print("no k-fold string (e.g., 3fold_3_t1 ) in the file name")
+            return False
+        tmp_strs = k_fold_str.split('_')
+        k = int(tmp_strs[0][:-4])
+        test_num = int(tmp_strs[2][1:])
+        fold_num = int(tmp_strs[1])
+
+        res['k_value'] = k
+        res['test_num'] = test_num
+        res['fold_num'] = fold_num
+
+        if 'rmTimeiou' in res['shapefile']:
+            res['rmTimeiou'] = 1
+        else:
+            res['rmTimeiou'] = 0
+
+    result_list.sort(key=lambda x: (x['k_value'],x['test_num'],x['fold_num'],x['rmTimeiou']))
+
+
+    pass
 
 def save_to_csv_file(save_path):
     # save to file
@@ -289,6 +328,8 @@ def main(options, args):
     parse_time_cost(time_cost_file)
 
     reorder_result()
+
+    reorder_for_k_fold_tests()
 
     csv_file = options.output # "accuracy_table.csv"
     save_to_csv_file(csv_file)
