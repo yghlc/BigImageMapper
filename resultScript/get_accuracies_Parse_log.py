@@ -156,6 +156,9 @@ def parse_average_precision_file(average_prec):
     ap_lines = read_txt_file(average_prec)
     ap_lines = ap_lines[1:]    # remove the first line
     for ap_line in ap_lines:
+        # if this is headling line, skip it (heading exists in the middle of files when the ap file was merged from multiple files)
+        if 'average_precision' in ap_line:
+            continue
         ap_str = re.findall('\d+\.\d+',ap_line)[0]
         shapefile = os.path.basename(ap_line.split()[0])
 
