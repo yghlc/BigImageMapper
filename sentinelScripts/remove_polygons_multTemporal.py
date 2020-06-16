@@ -39,9 +39,20 @@ def main(options, args):
 
     shp_dir = args[0]
     file_pattern = args[1]
-    polyon_shps_list = io_function.get_file_list_by_pattern(shp_dir,file_pattern)
+    if len(args) == 2:
+        print(shp_dir)
+        print(file_pattern)
+        polyon_shps_list = io_function.get_file_list_by_pattern(shp_dir,file_pattern)
+    elif len(args) > 2:
+        polyon_shps_list = [ args[idx] for idx in range(1,len(args)) ]
+    else:
+        raise ValueError('not enough input parameters')
+
     if len(polyon_shps_list) < 2:
         raise ValueError('Error, less than two shapefiles, cannot conduct multi-polygon analysis')
+
+    for shp_path in polyon_shps_list:
+        print(shp_path)
 
     # make polyon_shps_list in order: I0 to In
     polyon_shps_list.sort(key=lambda x: int(re.findall('I\d+',os.path.basename(x))[0][1:]))
