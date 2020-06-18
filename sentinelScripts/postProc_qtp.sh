@@ -147,7 +147,13 @@ done
 ########################################
 SECONDS=0
 # remove mapping polygons based on previous previous results
-${eo_dir}/sentinelScripts/remove_polygons_multTemporal.py -p ${para_file} ${bak_dir} I*_${testid}*post_${test}.shp
+b_multi_image=$(python2 ${para_py} -p ${para_file} b_remove_polygons_using_multitemporal_results)
+if [ $b_multi_image == "Yes" ]; then
+    echo $b_multi_image
+    ${eo_dir}/sentinelScripts/remove_polygons_multTemporal.py -p ${para_file} ${bak_dir} I*_${testid}*post_${test}.shp
+else
+  echo "b_remove_polygons_using_multitemporal_results" = $b_multi_image
+fi
 
 duration=$SECONDS
 echo "$(date): time cost of removing incorrect polygons multi-temporal mapping results: ${duration} seconds">>"time_cost.txt"
