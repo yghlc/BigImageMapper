@@ -92,7 +92,7 @@ def add_raster_info_insidePolygons(polygons_shp,raster_file,raster_name):
 
     # #DEM
 
-    stats_list = ['min', 'max', 'mean', 'std']  # ['min', 'max', 'mean', 'count','median','std']
+    stats_list = ['min', 'max', 'mean','median', 'std']  # ['min', 'max', 'mean', 'count','median','std']
     if operation_obj.add_fields_from_raster(polygons_shp, raster_file, raster_name, band=1, stats_list=stats_list,
                                                 all_touched=all_touched) is False:
         return False
