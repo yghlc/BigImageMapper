@@ -38,6 +38,13 @@ def main(options, args):
 
     eva_reports = [item for item in args]
     eva_reports.sort()
+
+    eva_report_rmTimeiou = [item for item in eva_reports if 'rmTimeiou' in item ]
+    eva_report_NO_rmTimeiou = [item for item in eva_reports if 'rmTimeiou' not in item ]
+
+    eva_report_NO_rmTimeiou.extend(eva_report_rmTimeiou)
+    eva_reports = eva_report_NO_rmTimeiou
+
     print('Input %d reports:'%len(eva_reports))
     for report in eva_reports:
         print(report)
