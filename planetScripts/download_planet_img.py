@@ -392,21 +392,22 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
                 basic.outputlogMessage('download a scene (id: %s) that cover the %dth polygon' % (download_item_id, idx))
 
                 #####################################
-                # for asset in sorted(assets.keys()):
-                #     if asset not in asset_types:
-                #         continue
-                #     if check_asset_exist(download_item, asset, save_dir):
-                #         continue
-                #     basic.outputlogMessage('download %s'%asset)
-                #     # activate and download
-                #     activate_and_download_asset(download_item, asset, save_dir)
+                for asset in sorted(assets.keys()):
+                    if asset not in asset_types:
+                        continue
+                    if check_asset_exist(download_item, asset, save_dir):
+                        continue
+                    basic.outputlogMessage('download %s'%asset)
+                    # activate and download
+                    activate_and_download_asset(download_item, asset, save_dir)
 
                 ##############parallel version ##############
-                # Rate Limiting, https://developers.planet.com/docs/data/api-mechanics/#rate-limiting, to safe, set it job as 5
-                num_thread = 5
-                theadPool = Pool(num_thread)  # multi processes
-                parameters_list = [ (download_item, asset, save_dir) for asset in sorted(assets.keys()) ]
-                results = theadPool.starmap(activate_and_download_asset_thread, parameters_list)  # need python3
+                # some error like: requests.exceptions.SSLError: HTTPSConnectionPool(host='api.planet.com', port=443): Max retries exceeded with url: /data/v1/item-types/PSScene4Band/items/20190829_030847_0f49/assets/
+                # # Rate Limiting, https://developers.planet.com/docs/data/api-mechanics/#rate-limiting, to safe, set it job as 5
+                # num_thread = 5
+                # theadPool = Pool(num_thread)  # multi processes
+                # parameters_list = [ (download_item, asset, save_dir) for asset in sorted(assets.keys()) ]
+                # results = theadPool.starmap(activate_and_download_asset_thread, parameters_list)  # need python3
 
                 # save the geometry of this item to disk
                 with open(os.path.join(save_folder,download_item_id+'.geojson'), 'w') as outfile:
