@@ -44,7 +44,11 @@ function to_rgb(){
 
     # sharpen the image
     code_dir=~/codes/PycharmProjects/Landuse_DL
-    /usr/bin/python ${code_dir}/planetScripts/prePlanetImage.py ${output}_8bit_rgb.tif ${fin_output}
+    if [ $(hostname) = "Cryo06" ]; then
+        /usr/bin/python ${code_dir}/planetScripts/prePlanetImage.py ${output}_8bit_rgb.tif ${fin_output}
+    else
+        python ${code_dir}/planetScripts/prePlanetImage.py ${output}_8bit_rgb.tif ${fin_output}
+    fi
 
     # set nodata
     gdal_edit.py -a_nodata 0  ${fin_output}
@@ -56,11 +60,16 @@ function to_rgb(){
 #    exit 1
 }
 
-for tif in $(ls ../*/*_SR.tif); do
+#for tif in $(ls ../*/*_SR.tif); do
+#
+#    echo $tif
+#    to_rgb $tif
+#
+#done
 
+for tif in $(cat planet_sr_image_poly_0.txt); do
     echo $tif
     to_rgb $tif
-
 done
 
 
