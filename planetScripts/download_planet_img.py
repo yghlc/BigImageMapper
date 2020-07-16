@@ -31,6 +31,8 @@ from datetime import datetime
 import json
 import time
 
+import multiprocessing
+from multiprocessing import Pool
 
 from planet import api
 from planet.api.exceptions import APIException
@@ -321,6 +323,15 @@ def check_asset_exist(download_item, asset, save_dir):
     else:
         return False
 
+def activate_and_download_asset_thread(download_item, asset, save_dir):
+    if asset not in asset_types:
+        return False
+    if check_asset_exist(download_item, asset, save_dir):
+        return True
+    basic.outputlogMessage('download %s' % asset)
+    # activate and download
+    return activate_and_download_asset(download_item, asset, save_dir)
+
 
 def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr, item_types, save_folder):
     '''
@@ -379,14 +390,23 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
                 os.system('mkdir -p ' + save_dir)
                 assets = client.get_assets(download_item).get()
                 basic.outputlogMessage('download a scene (id: %s) that cover the %dth polygon' % (download_item_id, idx))
-                for asset in sorted(assets.keys()):
-                    if asset not in asset_types:
-                        continue
-                    if check_asset_exist(download_item, asset, save_dir):
-                        continue
-                    basic.outputlogMessage('download %s'%asset)
-                    # activate and download
-                    activate_and_download_asset(download_item, asset, save_dir)
+
+                #####################################
+                # for asset in sorted(assets.keys()):
+                #     if asset not in asset_types:
+                #         continue
+                #     if check_asset_exist(download_item, asset, save_dir):
+                #         continue
+                #     basic.outputlogMessage('download %s'%asset)
+                #     # activate and download
+                #     activate_and_download_asset(download_item, asset, save_dir)
+
+                ##############parallel version ##############
+                # Rate Limiting, https://developers.planet.com/docs/data/api-mechanics/#rate-limiting, to safe, set it job as 5
+                num_thread = 5
+                theadPool = Pool(num_thread)  # multi processes
+                parameters_list = [ (download_item, asset, save_dir) for asset in sorted(assets.keys()) ]
+                results = theadPool.starmap(activate_and_download_asset_thread, parameters_list)  # need python3
 
                 # save the geometry of this item to disk
                 with open(os.path.join(save_folder,download_item_id+'.geojson'), 'w') as outfile:
