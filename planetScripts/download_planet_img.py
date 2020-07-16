@@ -387,6 +387,10 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
                 download_item_id = download_item['id']
                 # p(item['geometry'])
                 save_dir = os.path.join(save_folder, download_item_id)
+                save_geojson_path = os.path.join(save_folder, download_item_id + '.geojson')
+                if os.path.isfile(save_geojson_path) and os.path.isdir(save_dir):
+                    basic.outputlogMessage('scene %s has been downloaded: %s'%(download_item_id,save_dir))
+
                 os.system('mkdir -p ' + save_dir)
                 assets = client.get_assets(download_item).get()
                 basic.outputlogMessage('download a scene (id: %s) that cover the %dth polygon' % (download_item_id, idx))
@@ -410,7 +414,7 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
                 # results = theadPool.starmap(activate_and_download_asset_thread, parameters_list)  # need python3
 
                 # save the geometry of this item to disk
-                with open(os.path.join(save_folder,download_item_id+'.geojson'), 'w') as outfile:
+                with open(save_geojson_path, 'w') as outfile:
                     json.dump(download_item['geometry'], outfile,indent=2)
                     # update the geometry of already downloaded geometry
                     downloaed_scene_geometry.append(download_item['geometry'])
