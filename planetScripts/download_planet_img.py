@@ -390,6 +390,7 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
                 save_geojson_path = os.path.join(save_folder, download_item_id + '.geojson')
                 if os.path.isfile(save_geojson_path) and os.path.isdir(save_dir):
                     basic.outputlogMessage('scene %s has been downloaded: %s'%(download_item_id,save_dir))
+                    continue
 
                 os.system('mkdir -p ' + save_dir)
                 assets = client.get_assets(download_item).get()
