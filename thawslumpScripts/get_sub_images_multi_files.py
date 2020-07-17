@@ -62,14 +62,14 @@ if multi_training_files is None:
 else:
     # get subImage and subLabel for multi training polygons
     with open(multi_training_files, 'r') as txt_obj:
-        line_list = [name.strip() for name in txt_obj.readlines()]
+        line_list = [name.strip() for name in txt_obj.readlines() if len(name) > 1]
 
     # if the full set of training polygons exists
     line_contain_all_train_shp = None
     training_files_allPolygons = io_function.get_name_by_adding_tail(multi_training_files, 'allPolygons')
     if os.path.isfile(training_files_allPolygons):
         with open(training_files_allPolygons, 'r') as txt_obj:
-            line_contain_all_train_shp = [name.strip() for name in txt_obj.readlines()]
+            line_contain_all_train_shp = [name.strip() for name in txt_obj.readlines() if len(name) > 1]
         if len(line_contain_all_train_shp) != len(line_list):
             raise ValueError('The count of all_train_shp is not equal to the one of train_shp')
 
