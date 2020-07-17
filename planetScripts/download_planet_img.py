@@ -380,6 +380,7 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
 
             # I want to download SR, level 3B, product
             select_items = select_items_to_download(idx, geom, all_items)
+            basic.outputlogMessage('After selection, the number of images need to download is %d' % len(select_items))
             if select_items is False:
                 continue
 
