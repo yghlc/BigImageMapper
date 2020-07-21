@@ -52,7 +52,7 @@ outdir = 'multi_inf_results'
 if os.path.isdir(outdir):
     # on ITSC service, also need multiple nodes (each node has 8 GPUs) for prediction,
     # then we need to manually delete previous results
-    if 'chpc' in machine_name and img_count > 8:
+    if img_count > 8:   # 'chpc' in machine_name and, if img_count> 8, not good to delete multi_inf_results automatically
         pass
     else:
         io_function.delete_file_or_dir(outdir)
