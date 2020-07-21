@@ -62,7 +62,9 @@ os.system('mkdir -p '+ outdir)
 
 def is_file_exist_in_folder(folder):
     # only check the first ten files
-    for i in range(10):
+    # update on July 21, 2020. For some case, the first 10 may not exist (ignore if they are black)
+    # so, if we find any file exist from 0 to 1000000, then return True
+    for i in range(1000000):
         if os.path.isfile(os.path.join(folder,'I0_%d.tif'%i)):
             return True
     return False
