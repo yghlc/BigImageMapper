@@ -44,7 +44,10 @@ import datasets.build_RS_data as build_RS_data
 
 import tensorflow as tf
 
-if tf.__version__ < '1.5.0':
+from distutils.version import LooseVersion
+
+# if tf.__version__ < '1.5.0':
+if LooseVersion(tf.__version__) < ('1.5.0'):
     raise ImportError('Please upgrade your tensorflow installation to v1.5.0 or newer!')
 
 FLAGS = tf.app.flags.FLAGS
