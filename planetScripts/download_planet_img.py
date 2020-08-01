@@ -454,7 +454,7 @@ def main(options, args):
         latlon_shp = io_function.get_name_by_adding_tail(polygons_shp,'latlon')
         vector_gpd.reproject_shapefile(polygons_shp,'EPSG:4326',latlon_shp)
         polygons_shp = latlon_shp
-        basic.outputlogMessage('save new shapefile to %s for download images' % polygons_shp)
+        basic.outputlogMessage('save new shapefile to %s for downloading images' % polygons_shp)
 
     # read polygons
     polygons_json = read_polygons_json(polygons_shp)
