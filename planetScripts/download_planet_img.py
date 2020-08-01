@@ -20,6 +20,7 @@ sys.path.insert(0, codes_dir2)
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 import vector_gpd
+import basic_src.map_projection as map_projection
 
 # import thest two to make sure load GEOS dll before using shapely
 import shapely
@@ -445,6 +446,15 @@ def main(options, args):
 
     # set Planet API key
     get_and_set_Planet_key(planet_account)
+
+    shp_prj = map_projection.get_raster_or_vector_srs_info_proj4(polygons_shp).strip()
+    if shp_prj != '+proj=longlat +datum=WGS84 +no_defs':
+        # reproject to 4326 projection
+        basic.outputlogMessage('reproject %s to latlon'%polygons_shp)
+        latlon_shp = io_function.get_name_by_adding_tail(polygons_shp,'latlon')
+        vector_gpd.reproject_shapefile(polygons_shp,'EPSG:4326',latlon_shp)
+        polygons_shp = latlon_shp
+        basic.outputlogMessage('save new shapefile to %s for download images' % polygons_shp)
 
     # read polygons
     polygons_json = read_polygons_json(polygons_shp)
