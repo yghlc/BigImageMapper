@@ -469,8 +469,8 @@ def main(options, args):
     download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr, item_types, save_folder)
 
     #check each downloaded ones are completed, otherwise, remove the incompleted ones
-    geojson_list = io_function.get_file_list_by_ext('*.geojson',save_folder,bsub_folder=False)
-    print(geojson_list)
+    geojson_list = io_function.get_file_list_by_ext('.geojson',save_folder,bsub_folder=False)
+    # print(geojson_list)
     incom_dir = os.path.join(save_folder, 'incomplete_scenes')
     io_function.mkdir(incom_dir)
 
@@ -478,7 +478,7 @@ def main(options, args):
         scene_id = os.path.splitext(os.path.basename(geojson_file))[0]
         scene_dir = os.path.join(save_folder,scene_id)
         files = io_function.get_file_list_by_pattern(scene_dir,scene_id+'*')
-        print(files)
+        # print(files)
         if len(files) != len(asset_types):
             basic.outputlogMessage('downloading of %s is not completed, move to incomplete_scenes '%scene_id)
             io_function.movefiletodir(scene_dir,incom_dir,overwrite=True)
