@@ -480,7 +480,7 @@ def main(options, args):
         files = io_function.get_file_list_by_pattern(scene_dir,scene_id+'*')
         # print(files)
         if len(files) != len(asset_types):
-            basic.outputlogMessage('downloading of %s is not completed, move to incomplete_scenes '%scene_id)
+            basic.outputlogMessage('warning, downloading of %s is not completed, move to incomplete_scenes '%scene_id)
             io_function.movefiletodir(scene_dir,incom_dir,overwrite=True)
             io_function.movefiletodir(geojson_file,incom_dir,overwrite=True)
 
