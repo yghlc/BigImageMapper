@@ -470,6 +470,7 @@ def main(options, args):
 
     #check each downloaded ones are completed, otherwise, remove the incompleted ones
     geojson_list = io_function.get_file_list_by_ext('*.geojson',save_folder,bsub_folder=False)
+    print(geojson_list)
     incom_dir = os.path.join(save_folder, 'incomplete_scenes')
     io_function.mkdir(incom_dir)
 
