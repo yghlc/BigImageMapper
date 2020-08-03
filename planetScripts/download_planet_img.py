@@ -218,7 +218,7 @@ def read_excluded_scenes(folder):
                     continue
                 manually_excluded_scenes.append(line.strip())
     else:
-        basic.outputlogMessage('Warning, %s file not exist'%txt_path)
+        basic.outputlogMessage('Warning, %s file does not exist'%txt_path)
 
 
 def check_geom_polygon_overlap(boundary_list, polygon):
@@ -355,7 +355,7 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
         ####################################
         #check if any image already cover this polygon, if yes, skip downloading
         if check_geom_polygon_overlap(downloaed_scene_geometry, geom) is True:
-            basic.outputlogMessage('%dth polygon already in the extent of download images, skip it'%idx)
+            basic.outputlogMessage('%dth polygon already in the extent of downloaded images, skip it'%idx)
             continue
 
 
@@ -468,6 +468,19 @@ def main(options, args):
     # download images
     download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr, item_types, save_folder)
 
+    #check each downloaded ones are completed, otherwise, remove the incompleted ones
+    geojson_list = io_function.get_file_list_by_ext('*.geojson',save_folder,bsub_folder=False)
+    incom_dir = os.path.join(save_folder, 'incomplete_scenes')
+    io_function.mkdir(incom_dir)
+
+    for geojson_file in geojson_list:
+        scene_id = os.path.splitext(os.path.basename(geojson_file))[0]
+        scene_dir = os.path.join(save_folder,scene_id)
+        files = io_function.get_file_list_by_pattern(scene_dir,scene_id+'*')
+        if len(files) != len(asset_types):
+            basic.outputlogMessage('downloading of %s is not completed, move to incomplete_scenes '%scene_id)
+            io_function.movefiletodir(scene_dir,incom_dir,overwrite=True)
+            io_function.movefiletodir(geojson_file,incom_dir,overwrite=True)
 
 
     test = 1
