@@ -41,7 +41,11 @@ from planet.api import filters
 # ClientV1 provides basic low-level access to Planet’s API. Only one ClientV1 should be in existence for an application.
 client = None # api.ClientV1(api_key="abcdef0123456789")  #
 
+# more on the asset type are available at: https://developers.planet.com/docs/data/psscene4band/
+
 asset_types=['analytic_sr','analytic_xml','udm']  # surface reflectance, metadata, mask file
+# if analytic_sr not available, we will download analytic (supplementary asset types)
+supp_asset_types = ['analytic']
 
 downloaed_scene_geometry = []       # the geometry (extent) of downloaded images
 manually_excluded_scenes = []       # manually excluded item id
@@ -240,6 +244,12 @@ def check_geom_polygon_overlap(boundary_list, polygon):
 
     return False
 
+def get_downloadable_assets(scene_item):
+    permissions = scene_item['_permissions']
+    # e.g., assets.analytic:download  remove: assets and download
+    valid_assets = [ item.split(':')[0].split('.')[1] for item in permissions]
+    return valid_assets
+
 def select_items_to_download(idx, polygon, all_items):
     """
     choose which item to download
@@ -255,6 +265,31 @@ def select_items_to_download(idx, polygon, all_items):
     # sort the item based on cloud cover
     all_items.sort(key=lambda x: float(x['properties']['cloud_cover']))
     # [print(item['id'],item['properties']['cloud_cover']) for item in all_items]
+
+    # for item in all_items:
+    #     print(item)
+
+    # items with surface
+    all_items_sr = []
+    all_items_NOsr = []
+    items_other = []
+    for item in all_items:
+        valid_assets = get_downloadable_assets(item)
+        if 'analytic_sr' in valid_assets:
+            all_items_sr.append(item)
+            continue
+        if 'analytic' in valid_assets:
+            all_items_NOsr.append(item)
+        else:
+            items_other.append(item)
+
+    # put the one with 'analytic_sr' before others
+    all_items = []
+    all_items.extend(all_items_sr)
+    all_items.extend(all_items_NOsr)
+    all_items.extend(items_other)
+    basic.outputlogMessage('Among the scenes, %d, %d, and %d of them have analytic_sr, only have analytic, '
+                           'and do not have analytic or analytic_sr asset'%(len(all_items_sr), len(all_items_NOsr),len(items_other)))
 
     # convert from json format to shapely
     polygon_shapely = shape(polygon)
@@ -309,6 +344,8 @@ def check_asset_exist(download_item, asset, save_dir):
     id = download_item['id']
     if asset=='analytic_sr':
         output_name = id + '_3B_AnalyticMS_SR.tif'
+    elif asset=='analytic':
+        output_name = id + '_3B_AnalyticMS.tif'
     elif asset=='analytic_xml':
         output_name = id + '_3B_AnalyticMS_metadata.xml'
     elif asset=='udm':
@@ -398,13 +435,22 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
                 assets = client.get_assets(download_item).get()
                 basic.outputlogMessage('download a scene (id: %s) that cover the %dth polygon' % (download_item_id, idx))
 
+                # check 'analytic_sr' is available, if not, d
+                valid_assets = get_downloadable_assets(download_item)
+                # print(valid_assets)
+                download_asset_types = asset_types.copy()
+                if 'analytic_sr' not in valid_assets:
+                    basic.outputlogMessage('warning, analytic_sr is not available in the scene (id: %s), download analytic instead'%download_item_id)
+                    download_asset_types.remove('analytic_sr')
+                    download_asset_types.extend(supp_asset_types) # 'analytic'
+
                 #####################################
                 for asset in sorted(assets.keys()):
-                    if asset not in asset_types:
+                    if asset not in download_asset_types:
                         continue
                     if check_asset_exist(download_item, asset, save_dir):
                         continue
-                    basic.outputlogMessage('download %s'%asset)
+                    basic.outputlogMessage('download asset type: %s of scene (%s)'%(asset,download_item_id))
                     # activate and download
                     activate_and_download_asset(download_item, asset, save_dir)
 
