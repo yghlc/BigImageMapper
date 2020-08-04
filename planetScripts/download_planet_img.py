@@ -200,6 +200,12 @@ def read_down_load_geometry(folder):
         if item_id in manually_excluded_scenes:
             continue
 
+        scene_folder = os.path.splitext(json_file)[0]
+        asset_files = io_function.get_file_list_by_pattern(scene_folder,'*')
+        if len(asset_files) < 3:
+            basic.outputlogMessage('downloading of scene %s is not compelte, ignore it'%item_id)
+            continue
+
         with open(json_file) as json_file:
             data = json.load(json_file)
             # p(data) # test
