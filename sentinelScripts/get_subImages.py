@@ -187,7 +187,7 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
         basic.outputlogMessage(
             'Warning, %dth polygon do not overlap any image tile, please check ' #and its buffer area
             '(1) the shape file and raster have the same projection'
-            'and (2) this polygon is in the extent of images' % idx)
+            ' and (2) this polygon is in the extent of images' % idx)
         return False
 
     image_list = [image_tile_list[item] for item in img_index]
