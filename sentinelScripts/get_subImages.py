@@ -87,7 +87,7 @@ def check_polygons_invalidity(polygons, shp_path):
 
 def check_projection_rasters(image_path_list):
     '''
-    check the rasters: have the samep projectoin
+    check the rasters: have the same projection
     :param image_path_list: a list containing all the images
     :return:
     '''
