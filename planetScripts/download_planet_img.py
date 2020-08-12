@@ -31,6 +31,7 @@ from shapely.geometry import shape
 from datetime import datetime
 import json
 import time
+import random
 
 import multiprocessing
 from multiprocessing import Pool
@@ -164,7 +165,8 @@ def activate_and_download_asset(item,asset_key,save_dir):
         else:
             print("...Still waiting for asset activation...")
             # time.sleep(3)
-            time.sleep(10)
+            waitime = random.randint(10,30)
+            time.sleep(waitime)
 
     output_stream = sys.stdout
     def download_progress(start=None,wrote=None,total=None, finish=None): #result,skip=None
