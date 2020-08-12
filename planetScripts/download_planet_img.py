@@ -163,7 +163,8 @@ def activate_and_download_asset(item,asset_key,save_dir):
         # Still activating. Wait and check again.
         else:
             print("...Still waiting for asset activation...")
-            time.sleep(3)
+            # time.sleep(3)
+            time.sleep(10)
 
     output_stream = sys.stdout
     def download_progress(start=None,wrote=None,total=None, finish=None): #result,skip=None
