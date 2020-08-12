@@ -44,6 +44,7 @@ def main():
         print(' processing %dth permafrost area'%idx)
         # if the permafrost area is < 50*50 km^2, then do not split it to smaller ones.
         if size < 2500:
+            perma_poly = vector_gpd.fill_holes_in_a_polygon(perma_poly)
             small_perma_areas_list.append(perma_poly)
             continue
 
