@@ -102,6 +102,13 @@ def main(options, args):
     with pd.ExcelWriter(output_file) as writer:
         acc_table_pd.to_excel(writer, sheet_name='accuracy table')
         acc_table_IOU_version_pd.to_excel(writer, sheet_name='accuracy table IOU version')
+        # set format
+        workbook = writer.book
+        format = workbook.add_format({'num_format': '#0.000'})
+        acc_talbe_sheet = writer.sheets['accuracy table']
+        acc_talbe_sheet.set_column('G:I',None,format)
+        acc_iou_talbe_sheet = writer.sheets['accuracy table IOU version']
+        acc_iou_talbe_sheet.set_column('G:I', None, format)
 
     pass
 
