@@ -59,7 +59,10 @@ def main(options, args):
     io_function.mkdir(bak_dir)
     for item in rm_sences:
         # move folder
-        io_function.movefiletodir(item,bak_dir)
+        if os.path.isdir(item):
+            io_function.movefiletodir(item,bak_dir)
+        else:
+            print('%s does not exist, please consider updating %s using get_scene_list_xlsx.sh'%(item,scene_list_xlsx))
 
         geojson = item + '.geojson'
         # move geojson
