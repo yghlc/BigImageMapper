@@ -46,6 +46,8 @@ def main(options, args):
     if len(incomplete_scenes) > 0:
         basic.outputlogMessage('Warning, there are %d out of %d incomplete scenes in the table (%s), please consider handling this' %
                                (len(incomplete_scenes), scene_count, scene_list_xlsx))
+    if len(rm_sences) < 1:
+        return False
 
     scene_dir = os.path.dirname(rm_sences[0])
     if os.path.isdir(scene_dir) is False:
@@ -74,7 +76,7 @@ if __name__ == "__main__":
 
     parser.add_option("-c", "--cloud_cover",
                       action="store", dest="cloud_cover", type=float, default=30,
-                      help="the could cover threshold,  images with cloud cover greater than this threshold will be removed")
+                      help="the could cover threshold, images with cloud cover greater than this threshold will be removed")
 
 
     (options, args) = parser.parse_args()
