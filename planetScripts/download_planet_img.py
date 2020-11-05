@@ -271,12 +271,24 @@ def select_items_to_download(idx, polygon, all_items):
         basic.outputlogMessage('No inquiry results for %dth polygon' % idx)
         return False
 
+    # Update on 5 November 2020
+    # for some of the scenes, cloud cover is not the real cloud cover,
+    # maybe due to Usable Data Masks https://developers.planet.com/docs/data/udm-2/
+    # in this case, we should use 'cloud_percent' (int 0-100), otherwise, use 'cloud_cover' (double, 0-1)
+
+    cloud_key = 'cloud_cover'  # double 0-1
+    if 'cloud_percent' in all_items[0]['properties']:
+        cloud_key = 'cloud_percent'     # int 0-100
+        basic.outputlogMessage('Warning, cloud_percent exist and would be used (cloud_cover will be ignored), maybe these images are acquired after August 2018')
+
     # sort the item based on cloud cover
-    all_items.sort(key=lambda x: float(x['properties']['cloud_cover']))
-    # [print(item['id'],item['properties']['cloud_cover']) for item in all_items]
+    all_items.sort(key=lambda x: float(x['properties'][cloud_key]))
+    # [print(item['id'],item['properties'][cloud_key]) for item in all_items]
 
     # for item in all_items:
     #     print(item)
+    pre_sel_cloud_list = [str(item['properties'][cloud_key]) for item in all_items]
+    basic.outputlogMessage('Before selection, could covers after sort: %s'%'_'.join(pre_sel_cloud_list))
 
     # items with surface
     all_items_sr = []
@@ -336,6 +348,9 @@ def select_items_to_download(idx, polygon, all_items):
     if len(selected_items) < 1:
         basic.outputlogMessage('No inquiry results for %dth polygon after selecting results' % idx)
         return False
+
+    sel_cloud_list = [str(item['properties'][cloud_key]) for item in selected_items]
+    basic.outputlogMessage('After selection, could covers of images are: %s'%'_'.join(sel_cloud_list))
 
     return selected_items
 
