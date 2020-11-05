@@ -63,7 +63,8 @@ def main(options, args):
 
         geojson = item + '.geojson'
         # move geojson
-        io_function.movefiletodir(geojson, bak_dir)
+        if os.path.isfile(geojson):
+            io_function.movefiletodir(geojson, bak_dir)
 
     pass
 
