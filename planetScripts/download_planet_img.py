@@ -277,9 +277,19 @@ def select_items_to_download(idx, polygon, all_items):
     # in this case, we should use 'cloud_percent' (int 0-100), otherwise, use 'cloud_cover' (double, 0-1)
 
     cloud_key = 'cloud_cover'  # double 0-1
-    if 'cloud_percent' in all_items[0]['properties']:
+    cloud_percent_count = 0
+    cloud_cover_count = 0
+    for item in all_items:
+        if 'cloud_percent' in item['properties']:
+            cloud_percent_count += 1
+        if 'cloud_cover' in item['properties']:
+            cloud_cover_count += 1
+
+    if cloud_percent_count == len(all_items):
         cloud_key = 'cloud_percent'     # int 0-100
-        basic.outputlogMessage('Warning, cloud_percent exist and would be used (cloud_cover will be ignored), maybe these images are acquired after August 2018')
+        basic.outputlogMessage('Warning, cloud_percent exists and would be used (cloud_cover will be ignored), maybe these images are acquired after August 2018')
+    else:
+        basic.outputlogMessage('Warning, cloud_percent exists, but only %d out of %d, %d ones have cloud_cover'%(cloud_percent_count,len(all_items),cloud_cover_count))
 
     # sort the item based on cloud cover
     all_items.sort(key=lambda x: float(x['properties'][cloud_key]))
