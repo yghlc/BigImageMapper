@@ -279,17 +279,30 @@ def select_items_to_download(idx, polygon, all_items):
     cloud_key = 'cloud_cover'  # double 0-1
     cloud_percent_count = 0
     cloud_cover_count = 0
+    all_count = len(all_items)
     for item in all_items:
         if 'cloud_percent' in item['properties']:
             cloud_percent_count += 1
         if 'cloud_cover' in item['properties']:
             cloud_cover_count += 1
 
-    if cloud_percent_count == len(all_items):
+    if cloud_percent_count == all_count:
         cloud_key = 'cloud_percent'     # int 0-100
         basic.outputlogMessage('Warning, cloud_percent exists and would be used (cloud_cover will be ignored), maybe these images are acquired after August 2018')
+    elif cloud_percent_count > all_count/2:
+        cloud_key = 'cloud_percent'  # int 0-100
+        basic.outputlogMessage('Warning, more than half scenes have cloud_percent (only %d out of %d), %d ones have cloud_cover, cloud_percent will be used'
+                               %(cloud_percent_count,all_count,cloud_cover_count))
+
+        # remove items without cloud_percent
+        all_items = [ item for item in all_items if 'cloud_percent' in item['properties']]
+        basic.outputlogMessage('Warning, removed %d scenes without cloud_percent, remain % ones'%(all_count-len(all_items), len(all_items)))
+        all_count = len(all_items)
+
     else:
-        basic.outputlogMessage('Warning, cloud_percent exists, but only %d out of %d, %d ones have cloud_cover'%(cloud_percent_count,len(all_items),cloud_cover_count))
+        basic.outputlogMessage('Warning, cloud_percent exists, but only %d out of %d (less than half), %d ones have cloud_cover, cloud_cover will be used'
+                               % (cloud_percent_count, len(all_items), cloud_cover_count))
+
 
     # sort the item based on cloud cover
     all_items.sort(key=lambda x: float(x['properties'][cloud_key]))
