@@ -296,7 +296,7 @@ def select_items_to_download(idx, polygon, all_items):
 
         # remove items without cloud_percent
         all_items = [ item for item in all_items if 'cloud_percent' in item['properties']]
-        basic.outputlogMessage('Warning, removed %d scenes without cloud_percent, remain % ones'%(all_count-len(all_items), len(all_items)))
+        basic.outputlogMessage('Warning, removed %d scenes without cloud_percent, remain %d ones'%(all_count-len(all_items), len(all_items)))
         all_count = len(all_items)
 
     else:
