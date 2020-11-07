@@ -44,7 +44,7 @@ client = None # api.ClientV1(api_key="abcdef0123456789")  #
 
 # more on the asset type are available at: https://developers.planet.com/docs/data/psscene4band/
 
-asset_types=['analytic_sr','analytic_xml','udm']  # surface reflectance, metadata, mask file
+asset_types=['analytic_sr','analytic_xml'] # 'udm'  # surface reflectance, metadata, mask file
 # if analytic_sr not available, we will download analytic (supplementary asset types)
 supp_asset_types = ['analytic']
 
