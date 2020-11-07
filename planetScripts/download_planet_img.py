@@ -497,9 +497,10 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
                         continue
                     if check_asset_exist(download_item, asset, save_dir):
                         continue
-                    basic.outputlogMessage('download asset type: %s of scene (%s)'%(asset,download_item_id))
+
                     # activate and download
-                    activate_and_download_asset(download_item, asset, save_dir)
+                    if activate_and_download_asset(download_item, asset, save_dir):
+                        basic.outputlogMessage('downloaded asset type: %s of scene (%s)' % (asset, download_item_id))
 
                 ##############parallel version ##############
                 # some error like: requests.exceptions.SSLError: HTTPSConnectionPool(host='api.planet.com', port=443): Max retries exceeded with url: /data/v1/item-types/PSScene4Band/items/20190829_030847_0f49/assets/
