@@ -32,9 +32,6 @@ Also, set the PATH and LD_LIBRARY_PATH in .bashrc, for example:
     
     noted: replace the "HOME" as your home folder, e.g., /home/hlc
 
-Lastly, 
-
-    source .bashrc
 
 DeepLabv3+ provides some [pre-trained model](https://github.com/tensorflow/models/blob/master/research/deeplab/g3doc/model_zoo.md), 
 in this tutorial, we use one of them and download it to *Data*
@@ -47,6 +44,14 @@ Download a script which may be used in some of the codes, and make it executable
     mkdir -p ./bin
     wget https://www.dropbox.com/s/6sdwu3tx9jwzfsm/cp_shapefile?dl=0 --output-document=./bin/cp_shapefile
     chmod a+x ./bin/cp_shapefile
+
+Also also set env as below in the .bashrc:
+    
+     export PATH=$HOME/bin:$PATH
+
+Lastly, 
+
+    source .bashrc
 
 Clone codes from GitHub:
 
