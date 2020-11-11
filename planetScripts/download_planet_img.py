@@ -198,7 +198,7 @@ def activate_and_download_asset(item,asset_key,save_dir):
     try:
         body.wait() # for version > 1.4.2
     except APIException as e:
-        output_planetAPI_error('An APIException occurs when try to download %s'%asset_key)
+        output_planetAPI_error('An APIException occurs when try to download %s (id: %s)'%(asset_key,item['id']))
         output_planetAPI_error(str(e))
         return False  # return a large number
 
