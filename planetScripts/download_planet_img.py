@@ -80,6 +80,16 @@ def read_polygons_json(polygon_shp, no_json=False):
     '''
     return vector_gpd.read_polygons_json(polygon_shp, no_json)
 
+def output_planetAPI_error(message):
+    logfile = 'planet_APIException.txt'
+    timestr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime() )
+    outstr = timestr +': '+ message
+    print(outstr)
+    f=open(logfile,'a')
+    f.writelines(outstr+'\n')
+    f.close()
+
+    pass
 
 def get_a_filter_cli_api(polygon_json,start_date, end_date, could_cover_thr):
     '''
@@ -117,7 +127,8 @@ def get_items_count(combined_filter, item_types):
         req = filters.build_search_request(combined_filter, item_types, interval="year") #year  or day
         stats = client.stats(req).get()
     except APIException as e:
-        basic.outputlogMessage(str(e))
+        # basic.outputlogMessage(str(e))
+        output_planetAPI_error(str(e))
         return 100000  # return a large number
 
     # p(stats)
@@ -184,7 +195,13 @@ def activate_and_download_asset(item,asset_key,save_dir):
     callback = api.write_to_file(directory=save_dir + '/', callback=download_progress) # save_dir + '/'  #
     body = client.download(assets[asset_key], callback=callback)
     # body.await() for version 1.1.0
-    body.wait() # for version > 1.4.2
+    try:
+        body.wait() # for version > 1.4.2
+    except APIException as e:
+        output_planetAPI_error('An APIException occurs when try to download %s'%asset_key)
+        output_planetAPI_error(str(e))
+        return False  # return a large number
+
 
     return True
 
