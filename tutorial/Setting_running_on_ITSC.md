@@ -93,11 +93,11 @@ To inquire the storage quota of your home folder, please run:
 
  <!--We need to run our scripts inside a singularity container by submitting jobs. Copy a slurm example to current folder, 
 
-    cp ~/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/singularity.sh .
+    cp ~/codes/PycharmProjects/Landuse_DL/docker_ubuntu/singularity.sh .
 
 Copy an example for running scripts inside the singularity container to current folder:
     
-    cp ~/codes/PycharmProjects/Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh .
+    cp ~/codes/PycharmProjects/Landuse_DL/docker_ubuntu/run_INsingularity_miniconda.sh .
  
  -->
   
@@ -134,13 +134,13 @@ An example of *para.ini* is available at *Landuse_DL/thawslumpScripts/para_qtp.i
     qtb_sentinel2_2018_JJA_mosaic-0000000000-0000107520_8bit_Albers.tif
 
 *run_INsingularity_miniconda.sh* is needed to run the script inside the [Singularity](https://www.cuhk.edu.hk/itsc/hpc/singularity.html) container. 
-In this file, modify the line *exe_script=./exe.sh* accordingly if you want to run another script. *Landuse_DL/docker_ubuntu1604/run_INsingularity_miniconda.sh*
+In this file, modify the line *exe_script=./exe.sh* accordingly if you want to run another script. *Landuse_DL/docker_ubuntu/run_INsingularity_miniconda.sh*
  is an example. 
 
 
 *singularity.sh* is for submitting a job. Please also modify it accordingly. Please refer to ITSC
 website ([Slurm](https://www.cuhk.edu.hk/itsc/hpc/slurm.html)) for details. 
-*Landuse_DL/docker_ubuntu1604/singularity.sh* is an example. 
+*Landuse_DL/docker_ubuntu/singularity.sh* is an example. 
 Running the following script for submiting a job. 
     
     sbatch singularity.sh
