@@ -21,7 +21,7 @@ OSVersion: ubuntu:20.4
 
 %post
 	apt-get update
-	apt-get install -y wget git vim libsm6 locales tzdata
+	apt-get install -y wget git vim libsm6 locales tzdata libfontconfig1 libxrender1
 	apt-get clean
 #	mkdir bin
 
