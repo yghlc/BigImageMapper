@@ -17,7 +17,7 @@ sudo singularity build --sandbox ubuntu16.04_itsc_tf.img ubuntu16.4.recipe
 # build to squashfs format, cannot modified insides
 sudo singularity build ubuntu16.04_itsc_tf.simg ubuntu16.4.recipe
 
-sudo singularity build ubuntu20.04_itsc_tf.simg ubuntu20.4.recipe
+sudo singularity build ubuntu20.04_curc.simg ubuntu20.4.recipe
 
 # Using shell to explore and modify containers
 # it is nice that the container have the same user and home folder on the host machine
