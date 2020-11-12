@@ -28,7 +28,7 @@ SINGULARITYENV_HOME=${HOME} \
 SINGULARITYENV_TZ=America/Denver \
 SINGULARITYENV_PATH=/bin:${env_home}/bin:${env_home}/programs/miniconda3/bin:$PATH \
 SINGULARITYENV_GDAL_DATA=${env_home}/programs/miniconda3/share/gdal \
-SINGULARITYENV_LD_LIBRARY_PATH=${env_home}/programs/miniconda2/lib:$LD_LIBRARY_PATH \
+SINGULARITYENV_LD_LIBRARY_PATH=${env_home}/programs/miniconda3/lib:$LD_LIBRARY_PATH \
 singularity exec ${sing_img} ${exe_script}
 
 
