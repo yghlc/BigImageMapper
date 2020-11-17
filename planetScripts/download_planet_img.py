@@ -276,10 +276,11 @@ def get_downloadable_assets(scene_item):
     valid_assets = [ item.split(':')[0].split('.')[1] for item in permissions]
     return valid_assets
 
-def select_items_to_download(idx, polygon, all_items):
+def select_items_to_download(idx, cloud_cover_thr, polygon, all_items):
     """
     choose which item to download
     :param idx: the polygon
+    :param cloud_cover_thr, cloud cover threshold
     :param polygon: the polygon
     :param all_items: item list
     :return: item list if find items to download, false otherwise
@@ -385,6 +386,18 @@ def select_items_to_download(idx, polygon, all_items):
         if total_intersect_area >= polygon_shapely.area:
             break
 
+    # remove some scenes with cloud cover greater than cloud_cover_thr.
+    # We also used cloud_cover_thr (0-1) when inquiring images, this may apply to 'cloud_cover' key (double 0-1), but this 'cloud_cover' may wrong
+    # we sort the images based on cloud cover, but still may have some scenes has large cloud cover based on 'cloud_percent'(int 0-100)
+    # here, we remove scenes 'cloud_percent' > cloud_cover_thr*100
+    if cloud_key == 'cloud_percent':
+        cloud_cover_thr_int = int(cloud_cover_thr * 100)
+        count_before = len(selected_items)
+        selected_items = [item  for item in selected_items if item['properties'][cloud_key] < cloud_cover_thr_int ]
+        count_after = len(selected_items)
+        basic.outputlogMessage('After sorting (cloud), selecting based on geometry, '
+                               'still remove %d scenes based on cloud_percent smaller than %d'%((count_after-count_before),cloud_cover_thr_int))
+
     if len(selected_items) < 1:
         basic.outputlogMessage('No inquiry results for %dth polygon after selecting results' % idx)
         return False
@@ -481,7 +494,7 @@ def download_planet_images(polygons_json, start_date, end_date, cloud_cover_thr,
 
 
             # I want to download SR, level 3B, product
-            select_items = select_items_to_download(idx, geom, all_items)
+            select_items = select_items_to_download(idx,cloud_cover_thr, geom, all_items)
             if select_items is False:
                 continue
             basic.outputlogMessage('After selection, the number of images need to download is %d' % len(select_items))
