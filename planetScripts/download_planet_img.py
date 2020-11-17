@@ -396,7 +396,7 @@ def select_items_to_download(idx, cloud_cover_thr, polygon, all_items):
         selected_items = [item  for item in selected_items if item['properties'][cloud_key] < cloud_cover_thr_int ]
         count_after = len(selected_items)
         basic.outputlogMessage('After sorting (cloud), selecting based on geometry, '
-                               'still remove %d scenes based on cloud_percent smaller than %d'%((count_after-count_before),cloud_cover_thr_int))
+                               'still remove %d scenes based on cloud_percent smaller than %d'%((count_before-count_after),cloud_cover_thr_int))
 
     if len(selected_items) < 1:
         basic.outputlogMessage('No inquiry results for %dth polygon after selecting results' % idx)
