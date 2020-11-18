@@ -24,8 +24,8 @@ def sharpen_planetImage(image_path,save_path):
     :return: True if successful, False otherwise
     """
 
-    image = cv2.imread(image_path)
-    print(image.shape)
+    # image = cv2.imread(image_path)
+    #     # print(image.shape)
     # cv2.imshow('Original', image)
     # Create our shapening kernel, it must equal to one eventually
     # kernel_sharpening = np.array([[-1,-1,-1],
