@@ -63,6 +63,7 @@ def sharpen_planetImage(image_path,save_path):
     # print("shape after filter", sharpened.shape)
     sharpened = np.transpose(sharpened,(2,0,1))
     # print("shape before save",sharpened.shape)
+    profile.update(driver='GTiff')      # make sure the the output format is tif to avoid error: Writing through VRTSourcedRasterBand is not supported.
     with rasterio.open(save_path, "w", **profile) as dst:
         dst.write(sharpened.astype(rasterio.uint8), indexes)
         print('save result in %s' % save_path)
