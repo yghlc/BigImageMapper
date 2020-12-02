@@ -439,8 +439,11 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
     # read the full set of training polygons, used this one to produce the label images
     t_shapefile_all = gpd.read_file(t_polygons_shp_all)
-    class_labels_all = t_shapefile_all['class_int'].tolist()
     polygons_all = t_shapefile_all.geometry.values
+    if b_label:
+        class_labels_all = t_shapefile_all['class_int'].tolist()
+    else:
+        class_labels_all = [0]*len(polygons_all)
     # check_polygons_invalidity(polygons_all,t_polygons_shp_all)
 
 
