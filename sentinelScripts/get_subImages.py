@@ -413,7 +413,7 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
     # return image_array, label_array
     return 1, 1
 
-def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata, brectangle = True):
+def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata, brectangle = True, b_label=True):
     '''
     get sub images (and labels ) from training polygons
     :param t_polygons_shp: training polygon
@@ -423,14 +423,18 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
     :param saved_dir: output dir
     :param dstnodata: nodata when save for the output images
     :param brectangle: True: get the rectangle extent of a images.
+    :param b_label: True: create the corresponding label images.
     :return:
     '''
 
 
     # read polygons
     t_shapefile = gpd.read_file(t_polygons_shp)
-    class_labels = t_shapefile['class_int'].tolist()
     center_polygons = t_shapefile.geometry.values
+    if b_label:
+        class_labels = t_shapefile['class_int'].tolist()
+    else:
+        class_labels = [0]*len(center_polygons)
     # check_polygons_invalidity(center_polygons,t_polygons_shp)
 
     # read the full set of training polygons, used this one to produce the label images
@@ -467,9 +471,10 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
         # based on the sub-image, create the corresponding vectors
         sublabel_shortName = os.path.join('subLabels', pre_name_for_label + '_%d_class_%d.tif' % (idx, c_class_int))
         sublabel_saved_path = os.path.join(saved_dir, sublabel_shortName)
-        if get_sub_label(idx,subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize, brectangle, sublabel_saved_path) is False:
-            basic.outputlogMessage('Warning, get the label raster for %dth polygon failed' % idx)
-            continue
+        if b_label:
+            if get_sub_label(idx,subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize, brectangle, sublabel_saved_path) is False:
+                basic.outputlogMessage('Warning, get the label raster for %dth polygon failed' % idx)
+                continue
 
         list_txt_obj.writelines(subimg_shortName + ":"+sublabel_shortName+'\n')
         pass
@@ -498,6 +503,8 @@ def main(options, args):
 
     t_polygons_shp = args[0]
     image_folder = args[1]   # folder for store image tile (many split block of a big image)
+
+    b_label_image = options.no_label_image
 
     # check training polygons
     assert io_function.is_file_exist(t_polygons_shp)
@@ -535,7 +542,8 @@ def main(options, args):
     # if os.system('mkdir -p ' + os.path.join(saved_dir,'subLabels')) !=0:
     #     sys.exit(1)
     io_function.mkdir(os.path.join(saved_dir,'subImages'))
-    io_function.mkdir(os.path.join(saved_dir,'subLabels'))
+    if b_label_image:
+        io_function.mkdir(os.path.join(saved_dir,'subLabels'))
 
     dstnodata = options.dstnodata
     if 'qtb_sentinel2' in image_tile_list[0]:
@@ -544,7 +552,7 @@ def main(options, args):
     else:
         pre_name = os.path.splitext(os.path.basename(image_tile_list[0]))[0]
     get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list,
-                              saved_dir, pre_name, dstnodata, brectangle=options.rectangle)
+                              saved_dir, pre_name, dstnodata, brectangle=options.rectangle, b_label=b_label_image)
 
     # move sub images and sub labels to different folders.
 
@@ -574,9 +582,13 @@ if __name__ == "__main__":
     parser.add_option("-r", "--rectangle",
                       action="store_true", dest="rectangle",default=False,
                       help="whether use the rectangular extent of the polygon")
+    parser.add_option("-l", "--no_label_image",
+                      action="store_false", dest="no_label_image",default=True,
+                      help="Default will create label images, add this option will not create label images")
 
 
     (options, args) = parser.parse_args()
+    # print(options.no_label_image)
     if len(sys.argv) < 2 or len(args) < 1:
         parser.print_help()
         sys.exit(2)
