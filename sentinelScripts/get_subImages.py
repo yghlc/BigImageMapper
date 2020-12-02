@@ -580,7 +580,7 @@ if __name__ == "__main__":
                       action="store", dest="out_dir", default='./',
                       help="the folder path for saving output files")
     parser.add_option("-n", "--dstnodata", type=int,
-                      action="store", dest="dstnodata",
+                      action="store", dest="dstnodata", default=0,
                       help="the nodata in output images")
     parser.add_option("-r", "--rectangle",
                       action="store_true", dest="rectangle",default=False,
