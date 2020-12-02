@@ -574,7 +574,7 @@ if __name__ == "__main__":
                       action="store", dest="image_ext",default = '*.tif',
                       help="the image pattern of the image file")
     parser.add_option("-o", "--out_dir",
-                      action="store", dest="out_dir",
+                      action="store", dest="out_dir", default='./',
                       help="the folder path for saving output files")
     parser.add_option("-n", "--dstnodata", type=int,
                       action="store", dest="dstnodata",
