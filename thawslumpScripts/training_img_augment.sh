@@ -84,7 +84,7 @@ cd ..
 if [ -f "list/images_including_aug.txt" ]; then
    cp list/images_including_aug.txt list/trainval.txt
 else
-   echo "list/images_including_aug.txt does not exist because no data agumentation strings"
+   echo "list/images_including_aug.txt does not exist because no data augmentation strings"
 fi
 
 # copy the training data for elevation
