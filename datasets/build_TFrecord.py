@@ -89,6 +89,14 @@ tf.app.flags.DEFINE_string(
 
 _NUM_SHARDS = 4
 
+para_file = sys.argv[1]
+if os.path.isfile(para_file) is False:
+    raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
+
+code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+sys.path.insert(0, code_dir)
+import parameters
+
 
 def _convert_dataset(dataset_split):
     """Converts the specified dataset split to TFRecord format.
@@ -108,6 +116,8 @@ def _convert_dataset(dataset_split):
     # image_reader = build_data.ImageReader('jpeg', channels=3)
     image_reader = build_data.ImageReader('png', channels=3)
     label_reader = build_data.ImageReader('png', channels=1)
+
+    os.system("mkdir -p " + FLAGS.output_dir)
 
     for shard_id in range(_NUM_SHARDS):
         output_filename = os.path.join(
@@ -142,9 +152,26 @@ def _convert_dataset(dataset_split):
 
 
 def main(unused_argv):
-  dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, '*val.txt'))
-  for dataset_split in dataset_splits:
-    _convert_dataset(dataset_split)
+    train_sample_txt = parameters.get_string_parameters_None_if_absence(para_file,'training_sample_list_txt')
+    val_sample_txt = parameters.get_string_parameters_None_if_absence(para_file,'validation_sample_list_txt')
+    if train_sample_txt is not None and val_sample_txt is not None:
+        train_sample_txt = os.path.join(FLAGS.list_folder, train_sample_txt)
+        val_sample_txt = os.path.join(FLAGS.list_folder, val_sample_txt)
+    else:
+        raise ValueError('training_sample_list_txt or validation_sample_list_txt are not in %s'%para_file)
+
+    if os.path.isfile(train_sample_txt) is False:
+        raise IOError('%s does not exist'%train_sample_txt)
+    if os.path.isfile(val_sample_txt) is False:
+        raise IOError('%s does not exist'%val_sample_txt)
+
+    dataset_splits = [train_sample_txt,val_sample_txt]
+    # dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, '*val.txt'))
+    print(dataset_splits)
+
+
+    for dataset_split in dataset_splits:
+        _convert_dataset(dataset_split)
 
 
 if __name__ == '__main__':
