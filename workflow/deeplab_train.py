@@ -11,13 +11,14 @@ add time: 19 January, 2021
 import os, sys
 
 
-def train_deeplab(train_script,train_split,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
+def train_deeplab(train_script,dataset,train_split,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
                   atrous_rates1,atrous_rates2,atrous_rates3,output_stride,batch_size,iteration_num):
 
     # for more information, run: "python deeplab/train.py --help" or "python deeplab/train.py --helpfull"
     command_string = 'python ' \
         + train_script \
         + ' --logtostderr' \
+        + '--dataset='+dataset \
         + ' --train_split=%s '%train_split \
         + ' --base_learning_rate='+ str(base_learning_rate) \
         + ' --model_variant='+model_variant \
@@ -196,7 +197,8 @@ if __name__ == '__main__':
     model_variant = parameters.get_string_parameters(network_setting_ini, 'model_variant')
     checkpoint = parameters.get_string_parameters(network_setting_ini, 'tf_initial_checkpoint')
     init_checkpoint = os.path.join(INIT_FOLDER,checkpoint)
-    train_deeplab(train_script, train_split, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
+    dataset = parameters.get_string_parameters(para_file,'dataset_name')
+    train_deeplab(train_script,dataset, train_split, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                   dataset_dir, gpu_num,
                   atrous_rates1, atrous_rates2, atrous_rates3, output_stride, batch_size, iteration_num)
 
