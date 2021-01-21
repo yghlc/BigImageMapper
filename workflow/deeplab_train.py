@@ -18,7 +18,7 @@ def train_deeplab(train_script,dataset,train_split,base_learning_rate,model_vari
     command_string = 'python ' \
         + train_script \
         + ' --logtostderr' \
-        + '--dataset='+dataset \
+        + ' --dataset='+dataset \
         + ' --train_split=%s '%train_split \
         + ' --base_learning_rate='+ str(base_learning_rate) \
         + ' --model_variant='+model_variant \
@@ -70,7 +70,7 @@ def evaluation_deeplab(evl_script,dataset, evl_split,model_variant,train_logdir,
     command_string = 'python ' \
                      + evl_script \
                      + ' --logtostderr' \
-                     + '--dataset='+dataset \
+                     + ' --dataset='+dataset \
                      + ' --eval_split=%s ' % evl_split \
                      + ' --model_variant=' + model_variant \
                      + ' --atrous_rates=' + str(atrous_rates1) \
@@ -196,17 +196,19 @@ if __name__ == '__main__':
     checkpoint = parameters.get_string_parameters(network_setting_ini, 'tf_initial_checkpoint')
     init_checkpoint = os.path.join(INIT_FOLDER,checkpoint)
     dataset = parameters.get_string_parameters(para_file,'dataset_name')
-    train_deeplab(train_script,dataset, train_split, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
+    res = train_deeplab(train_script,dataset, train_split, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                   dataset_dir, gpu_num,
                   atrous_rates1, atrous_rates2, atrous_rates3, output_stride, batch_size, iteration_num)
-
+    if res != 0:
+        sys.exit(1)
 
     # run evaluation
     evl_script = os.path.join(deeplab_dir, 'eval.py')
     evl_split = os.path.splitext(parameters.get_string_parameters(para_file,'validation_sample_list_txt'))[0]
     max_eva_number = 1
-    evaluation_deeplab(evl_script,dataset, evl_split, model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
-
+    res = evaluation_deeplab(evl_script,dataset, evl_split, model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
+    if res != 0:
+        sys.exit(1)
 
 
 
