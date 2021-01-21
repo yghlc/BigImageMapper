@@ -1,0 +1,5 @@
+sklearn
+tf_slim
+rasterio
+imgaug==0.2.6
+GPUtil
