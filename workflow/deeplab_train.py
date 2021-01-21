@@ -59,7 +59,7 @@ def train_deeplab(train_script,dataset,train_split,base_learning_rate,model_vari
 #   --dataset_dir="${DATASET}" \
 #   --num_clones=${gpu_num}
 
-def evaluation_deeplab(evl_script,evl_split,model_variant,train_logdir, evl_logdir,dataset_dir, max_eva_number):
+def evaluation_deeplab(evl_script,dataset, evl_split,model_variant,train_logdir, evl_logdir,dataset_dir, max_eva_number):
 
     # for information, run "python deeplab/eval.py  --helpfull"
 
