@@ -27,8 +27,7 @@ def train_deeplab(train_script,dataset,train_split,base_learning_rate,model_vari
         + ' --atrous_rates='+str(atrous_rates3) \
         + ' --output_stride='+ str(output_stride) \
         + ' --decoder_output_stride=4 ' \
-        + ' --train_crop_size=513' \
-        + ' --train_crop_size=513' \
+        + ' --train_crop_size=513,513' \
         + ' --train_batch_size='+str(batch_size) \
         + ' --training_number_of_steps=' + str(iteration_num)\
         + ' --fine_tune_batch_norm=False' \
