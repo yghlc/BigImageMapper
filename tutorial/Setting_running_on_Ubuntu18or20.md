@@ -69,7 +69,7 @@ Install python using miniconda
 Install tensorflow 1.14 (a relative old version) and other python packages. <!-- The installation will run inside 
 the container, so we need to submit a job for running singularity. -->
     
-    ${HOME}/programs/miniconda2/bin/pip install tensorflow-gpu==1.14
+    ${HOME}/programs/miniconda2/bin/pip install tensorflow-gpu==1.14    # need python3.7 or 3.6 (python 3.8 cannot found 1.x version)
     ${HOME}/programs/miniconda2/bin/pip install tf_slim     # need this to run "deeplab/model_test.py"
     ${HOME}/programs/miniconda2/bin/conda install gdal=2.3
     ${HOME}/programs/miniconda2/bin/pip install rasterio
