@@ -11,7 +11,7 @@ add time: 19 January, 2021
 import os, sys
 
 
-def train_deeplab(train_script,dataset,train_split,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
+def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
                   atrous_rates1,atrous_rates2,atrous_rates3,output_stride,batch_size,iteration_num):
 
     # for more information, run: "python deeplab/train.py --help" or "python deeplab/train.py --helpfull"
@@ -19,6 +19,7 @@ def train_deeplab(train_script,dataset,train_split,base_learning_rate,model_vari
         + train_script \
         + ' --logtostderr' \
         + ' --dataset='+dataset \
+        + ' --num_classes='+str(num_of_classes) \
         + ' --train_split=%s '%train_split \
         + ' --base_learning_rate='+ str(base_learning_rate) \
         + ' --model_variant='+model_variant \
@@ -59,7 +60,7 @@ def train_deeplab(train_script,dataset,train_split,base_learning_rate,model_vari
 #   --dataset_dir="${DATASET}" \
 #   --num_clones=${gpu_num}
 
-def evaluation_deeplab(evl_script,dataset, evl_split,model_variant,train_logdir, evl_logdir,dataset_dir, max_eva_number):
+def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_variant,train_logdir, evl_logdir,dataset_dir, max_eva_number):
 
     # for information, run "python deeplab/eval.py  --helpfull"
 
@@ -71,6 +72,7 @@ def evaluation_deeplab(evl_script,dataset, evl_split,model_variant,train_logdir,
                      + evl_script \
                      + ' --logtostderr' \
                      + ' --dataset='+dataset \
+                     + ' --num_classes='+str(num_of_classes) \
                      + ' --eval_split=%s ' % evl_split \
                      + ' --model_variant=' + model_variant \
                      + ' --atrous_rates=' + str(atrous_rates1) \
@@ -196,7 +198,10 @@ if __name__ == '__main__':
     checkpoint = parameters.get_string_parameters(network_setting_ini, 'tf_initial_checkpoint')
     init_checkpoint = os.path.join(INIT_FOLDER,checkpoint)
     dataset = parameters.get_string_parameters(para_file,'dataset_name')
-    res = train_deeplab(train_script,dataset, train_split, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
+    num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
+    assert num_classes_noBG != None
+    num_of_classes = num_classes_noBG + 1
+    res = train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                   dataset_dir, gpu_num,
                   atrous_rates1, atrous_rates2, atrous_rates3, output_stride, batch_size, iteration_num)
     if res != 0:
@@ -206,7 +211,7 @@ if __name__ == '__main__':
     evl_script = os.path.join(deeplab_dir, 'eval.py')
     evl_split = os.path.splitext(parameters.get_string_parameters(para_file,'validation_sample_list_txt'))[0]
     max_eva_number = 1
-    res = evaluation_deeplab(evl_script,dataset, evl_split, model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
+    res = evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
     if res != 0:
         sys.exit(1)
 
