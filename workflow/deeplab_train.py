@@ -70,6 +70,7 @@ def evaluation_deeplab(evl_script,evl_split,model_variant,train_logdir, evl_logd
     command_string = 'python ' \
                      + evl_script \
                      + ' --logtostderr' \
+                     + '--dataset='+dataset \
                      + ' --eval_split=%s ' % evl_split \
                      + ' --model_variant=' + model_variant \
                      + ' --atrous_rates=' + str(atrous_rates1) \
@@ -204,7 +205,7 @@ if __name__ == '__main__':
     evl_script = os.path.join(deeplab_dir, 'eval.py')
     evl_split = os.path.splitext(parameters.get_string_parameters(para_file,'validation_sample_list_txt'))[0]
     max_eva_number = 1
-    evaluation_deeplab(evl_script, evl_split, model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
+    evaluation_deeplab(evl_script,dataset, evl_split, model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
 
 
 
