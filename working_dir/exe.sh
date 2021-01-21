@@ -26,22 +26,22 @@ eo_dir=~/codes/PycharmProjects/Landuse_DL
 ################################################
 SECONDS=0
 # remove previous data or results if necessary
-${eo_dir}/workflow/remove_previous_data.py ${para_file}
+#${eo_dir}/workflow/remove_previous_data.py ${para_file}
 
 #extract sub_images based on the training polgyons
-${eo_dir}/workflow/get_sub_images_multi_regions.py ${para_file}
+#${eo_dir}/workflow/get_sub_images_multi_regions.py ${para_file}
 
-exit
 
 ################################################
 ## preparing training images.
 # there is another script ("build_RS_data.py"), but seem have not finished.
 
-${eo_dir}/thawslumpScripts/split_sub_images.py ${para_file}
-${eo_dir}/thawslumpScripts/training_img_augment.sh ${para_file}
+#${eo_dir}/workflow/split_sub_images.py ${para_file}
+#${eo_dir}/workflow/training_img_augment.py ${para_file}
+#${eo_dir}/workflow/split_train_val.py ${para_file}
 
 ## convert to TFrecord
-python ${eo_dir}/datasets/build_muti_lidar_data.py
+#python ${eo_dir}/datasets/build_TFrecord.py ${para_file}
 
 #exit
 duration=$SECONDS
@@ -50,8 +50,9 @@ SECONDS=0
 ################################################
 ## training
 
-${eo_dir}/grss_data_fusion/deeplab_mutiLidar_train.sh ${para_file} ${gpu_num}
-
+#${eo_dir}/grss_data_fusion/deeplab_mutiLidar_train.sh ${para_file} ${gpu_num}
+${eo_dir}/workflow/deeplab_train.py ${para_file} ${gpu_num}
+exit
 duration=$SECONDS
 echo "$(date): time cost of training: ${duration} seconds">>"time_cost.txt"
 SECONDS=0
