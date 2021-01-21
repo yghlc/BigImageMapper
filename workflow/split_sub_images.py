@@ -58,12 +58,12 @@ if __name__ == '__main__':
     labelImg_dir=parameters.get_string_parameters(para_file,'input_label_dir')
 
     if os.path.isdir(trainImg_dir) is False:
-        raise ('%s not in the current folder, please get subImages first'%trainImg_dir)
+        raise IOError('%s not in the current folder, please get subImages first'%trainImg_dir)
     if os.path.isdir(labelImg_dir) is False:
-        raise ('%s not in the current folder, please get subImages first'%labelImg_dir)
+        raise IOError('%s not in the current folder, please get subImages first'%labelImg_dir)
     sub_img_label_txt = 'sub_images_labels_list.txt'
     if os.path.isfile(sub_img_label_txt) is False:
-        raise ('%s not in the current folder, please get subImages first' % sub_img_label_txt)
+        raise IOError('%s not in the current folder, please get subImages first' % sub_img_label_txt)
 
     with open(sub_img_label_txt) as txt_obj:
         line_list = [name.strip() for name in txt_obj.readlines()]
