@@ -77,8 +77,7 @@ def evaluation_deeplab(evl_script,evl_split,model_variant,train_logdir, evl_logd
                      + ' --atrous_rates=' + str(atrous_rates3) \
                      + ' --output_stride=' + str(output_stride) \
                      + ' --decoder_output_stride=4 ' \
-                     + ' --eval_crop_size=513' \
-                     + ' --eval_crop_size=513' \
+                     + ' --eval_crop_size=513,513' \
                      + ' --checkpoint_dir=' + train_logdir \
                      + ' --eval_logdir=' + evl_logdir \
                      + ' --dataset_dir=' + dataset_dir \
@@ -202,7 +201,10 @@ if __name__ == '__main__':
 
 
     # run evaluation
-
+    evl_script = os.path.join(deeplab_dir, 'eval.py')
+    evl_split = os.path.splitext(parameters.get_string_parameters(para_file,'validation_sample_list_txt'))[0]
+    max_eva_number = 1
+    evaluation_deeplab(evl_script, evl_split, model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
 
 
 
