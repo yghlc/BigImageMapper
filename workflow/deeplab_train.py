@@ -190,7 +190,6 @@ if __name__ == '__main__':
 
 
     # run training
-    gpu_num = 1
     train_script = os.path.join(deeplab_dir, 'train.py')
     train_split = os.path.splitext(parameters.get_string_parameters(para_file,'training_sample_list_txt'))[0]
     model_variant = parameters.get_string_parameters(network_setting_ini, 'model_variant')
