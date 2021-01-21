@@ -16,6 +16,9 @@
 
 # modify from build_voc2012_data.py
 
+# for more information on pascal_voc_seg: http://host.robots.ox.ac.uk/pascal/VOC/voc2012/#data
+# voc2012, has 20 classes, label from 1 to 20. background has label 0.
+# label 255 are boundaries and will be ignore in DeepLab
 
 """Converts PASCAL VOC 2012 data to TFRecord file format with Example protos.
 
