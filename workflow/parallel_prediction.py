@@ -6,6 +6,7 @@ introduction: parallel run inference (prediction) using multiple GPUs
 authors: Huang Lingcao
 email:huanglingcao@gmail.com
 add time: 24 September, 2019
+modified: 21 January, 2021
 """
 
 # note: it seems the codes cannot run on multi-nodes on ITSC services. So I have to submit jobs using different separately
@@ -126,13 +127,10 @@ if __name__ == '__main__':
         area_name = parameters.get_string_parameters_None_if_absence(area_ini,'area_name')
         area_remark = parameters.get_string_parameters_None_if_absence(area_ini,'area_remark')
 
-        inf_image_dir = parameters.get_directory_None_if_absence(area_ini, 'inf_image_dir')
-        if inf_image_dir is None:
-            raise ValueError('%s not set in %s'%('inf_image_dir', area_ini))
+        inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
+
         # it is ok consider a file name as pattern and pass it the following functions to get file list
-        inf_image_or_pattern = parameters.get_string_parameters_None_if_absence(area_ini, 'inf_image_or_pattern')
-        if inf_image_or_pattern is None:
-            raise ValueError('%s not set in %s' % ('inf_image_or_pattern', area_ini))
+        inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
 
         inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir,inf_image_or_pattern)
         img_count = len(inf_img_list)
