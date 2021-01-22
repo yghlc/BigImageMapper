@@ -41,8 +41,7 @@ def read_Parameters_file(parafile,parameter):
             value = lineStrs[1].strip()
             break
     inputfile.close()
-    global saved_parafile_path
-    saved_parafile_path = parafile
+
     return value
 
 
