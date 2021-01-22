@@ -241,9 +241,9 @@ def run_demo_image(model,image_name):
         image_path = os.path.join(IMAGE_DIR, image_name)
         orignal_im = Image.open(image_path)
     except IOError:
-        print 'Failed to read image from %s.' % image_path 
+        print ('Failed to read image from %s.' % image_path )
         return 
-    print 'running deeplab on image %s...' % image_name
+    print ('running deeplab on image %s...' % image_name)
     resized_im, seg_map = model.run(orignal_im)
     
     vis_segmentation(resized_im, seg_map)
