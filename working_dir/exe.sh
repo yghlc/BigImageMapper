@@ -50,21 +50,21 @@ SECONDS=0
 ################################################
 ## training
 
-#${eo_dir}/grss_data_fusion/deeplab_mutiLidar_train.sh ${para_file} ${gpu_num}
-${eo_dir}/workflow/deeplab_train.py ${para_file} ${gpu_num}
-exit
+#${eo_dir}/workflow/deeplab_train.py ${para_file} ${gpu_num}
+
 duration=$SECONDS
 echo "$(date): time cost of training: ${duration} seconds">>"time_cost.txt"
 SECONDS=0
 ################################################
 
 #export model
-${eo_dir}/grss_data_fusion/export_graph.sh ${para_file}
+#${eo_dir}/workflow/export_graph.py ${para_file}
+
 
 
 ################################################
 ## inference
-rm -r multi_inf_results
+#rm -r multi_inf_results
 ${eo_dir}/sentinelScripts/parallel_predict_rts.py ${para_file}
 
 ## post processing and copy results, including output "time_cost.txt"
