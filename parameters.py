@@ -99,6 +99,12 @@ def get_directory_None_if_absence(parafile,name):
         return None
     return os.path.expanduser(value)
 
+def get_directory(parafile,name):
+    value = get_string_parameters_None_if_absence(parafile,name)
+    if value is None:
+        raise ValueError('%s not set in %s'%(name,parafile))
+    return os.path.expanduser(value)
+
 def get_file_path_parameters_None_if_absence(parafile,name):
     value = get_string_parameters_None_if_absence(parafile, name)
     if value is None:
@@ -117,6 +123,11 @@ def get_bool_parameters_None_if_absence(parafile,name):
     else:
         return False
 
+def get_bool_parameters(parafile,name):
+    value = get_bool_parameters_None_if_absence(parafile,name)
+    if value is None:
+        raise ValueError(' %s not set in %s' % (name, parafile))
+    return value
 
 def get_digit_parameters_None_if_absence(parafile,name,datatype):
     if parafile =='':
@@ -134,6 +145,13 @@ def get_digit_parameters_None_if_absence(parafile,name,datatype):
 
     return digit_value
 
+def get_digit_parameters(parafile,name,datatype):
+    value = get_digit_parameters_None_if_absence(parafile, name, datatype)
+    if value is None:
+        raise ValueError(' %s not set in %s'%(name, parafile))
+    return value
+
+
 def get_string_list_parameters_None_if_absence(parafile,name):
     str_value = get_string_parameters(parafile, name)
     attributes_list = []
@@ -150,6 +168,11 @@ def get_string_list_parameters_None_if_absence(parafile,name):
         else:
             return attributes_list
 
+def get_string_list_parameters(parafile,name):
+    str_value = get_string_list_parameters_None_if_absence(parafile,name)
+    if str_value is None or len(str_value) < 1:
+        raise ValueError('No inference area is set in %s' % parafile)
+    return str_value
 
 
 

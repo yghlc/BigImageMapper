@@ -64,8 +64,10 @@ SECONDS=0
 
 ################################################
 ## inference
-#rm -r multi_inf_results
-${eo_dir}/sentinelScripts/parallel_predict_rts.py ${para_file}
+rm -r multi_inf_results || true
+${eo_dir}/workflow/parallel_prediction.py ${para_file}
+
+exit
 
 ## post processing and copy results, including output "time_cost.txt"
 test_name=1
