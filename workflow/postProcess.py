@@ -41,9 +41,9 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     out_shp_path = os.path.join(img_save_dir,out_shp)
     return out_shp_path
 
-def add_polygon_attributes(script, in_shp_path, save_shp_path, para_file):
+def add_polygon_attributes(script, in_shp_path, save_shp_path, para_file, data_para_file):
 
-    command_string = script +' -p %s %s %s' % (para_file, in_shp_path, save_shp_path)
+    command_string = script +' -p %s -d %s %s %s' % (para_file,data_para_file, in_shp_path, save_shp_path)
     # print(command_string)
     res = os.system(command_string)
     print(res)
@@ -137,7 +137,7 @@ if __name__ == '__main__':
         # add attributes to shapefile
         add_attributes_script = os.path.join(deeplabRS ,'polygon_post_process.py')
         shp_attributes = os.path.join(area_save_dir, shp_pre+'_post_NOrm.shp')
-        add_polygon_attributes(add_attributes_script,merged_shp, shp_attributes, area_ini )
+        add_polygon_attributes(add_attributes_script,merged_shp, shp_attributes, para_file, area_ini )
 
         # remove polygons
         rm_polygon_script = os.path.join(code_dir,'datasets', 'polygon_post_process.py')
