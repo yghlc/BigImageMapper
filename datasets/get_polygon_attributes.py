@@ -253,8 +253,10 @@ def remove_small_round_polygons(input_shp,output_shp,area_thr,ratio_thr):
 
 def get_file_path_parameter(parafile, data_dir, data_name_or_pattern):
 
-    data_dir = parameters.get_directory(parafile, data_dir)
-    data_name_or_pattern = parameters.get_string_parameters(parafile, data_name_or_pattern)
+    data_dir = parameters.get_directory_None_if_absence(parafile, data_dir)
+    data_name_or_pattern = parameters.get_string_parameters_None_if_absence(parafile, data_name_or_pattern)
+    if data_dir is None or data_name_or_pattern is None:
+        return None
     file_list = io_function.get_file_list_by_pattern(data_dir,data_name_or_pattern)
 
     if len(file_list) < 1:
