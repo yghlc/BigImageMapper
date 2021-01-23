@@ -25,7 +25,7 @@ def evaluation_result(result_shp,val_shp,evaluation_txt=None):
     operation_obj = shape_opeation()
     operation_obj.add_one_field_records_to_shapefile(result_shp, IoUs, 'IoU')
 
-    iou_threshold = parameters.get_IOU_threshold()
+    iou_threshold = parameters.get_digit_parameters('','IOU_threshold','float')
     true_pos_count = 0
     false_pos_count = 0
     val_polygon_count = operation_obj.get_shapes_count(val_shp)
@@ -101,15 +101,9 @@ def main(options, args):
     input = args[0]
 
     # evaluation result
-    multi_val_files = parameters.get_string_parameters_None_if_absence('','validation_shape_list')
-    if multi_val_files is None:
-        val_path = parameters.get_validation_shape()
-    else:
-        val_path = io_function.get_path_from_txt_list_index(multi_val_files)
-        # try to change the home folder path if the file does not exist
-        val_path = io_function.get_file_path_new_home_folder(val_path)
+    val_path = parameters.get_string_parameters_None_if_absence('','validation_shape')
 
-    if os.path.isfile(val_path):
+    if val_path is not None and os.path.isfile(val_path):
         basic.outputlogMessage('Start evaluation, input: %s, validation file: %s'%(input, val_path))
         evaluation_result(input, val_path)
     else:
