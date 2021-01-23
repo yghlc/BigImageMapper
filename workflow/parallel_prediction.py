@@ -38,7 +38,7 @@ def predict_one_image_deeplab(deeplab_inf_script, para_file,network_ini, save_di
     # use a specific GPU for prediction, only inference one image
     time0 = time.time()
     if gpuid is not None:
-        os.environ['CUDA_VISIBLE_DEVICES'] = gpuid
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(gpuid)
 
     # command_string = deeplab_predict_script + ' '+ para_file + ' ' + save_dir + ' ' + inf_list_file + ' ' + str(gpuid)
     # # status, result = basic.exec_command_string(command_string)  # this will wait command finished
