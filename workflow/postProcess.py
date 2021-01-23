@@ -82,9 +82,6 @@ if __name__ == '__main__':
     code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
     sys.path.insert(0, code_dir)
     import parameters
-
-    deeplabRS = parameters.get_directory(para_file, 'deeplabRS_dir')
-    sys.path.insert(0, deeplabRS)
     import basic_src.io_function as io_function
 
     sys.path.insert(0, os.path.join(code_dir,'datasets'))

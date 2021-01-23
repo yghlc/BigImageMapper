@@ -326,8 +326,6 @@ if __name__ == "__main__":
     sys.path.insert(0, code_dir)
     import parameters
 
-    deeplabRS = parameters.get_directory_None_if_absence(options.para_file, 'deeplabRS_dir')
-    sys.path.insert(0, deeplabRS)
 
     import basic_src.basic as basic
     import basic_src.io_function as io_function

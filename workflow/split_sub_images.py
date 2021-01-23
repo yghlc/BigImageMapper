@@ -36,8 +36,7 @@ if __name__ == '__main__':
     import parameters
     import datasets.split_image as split_image
 
-    deeplabRS = parameters.get_directory_None_if_absence(para_file, 'deeplabRS_dir')
-    sys.path.insert(0, deeplabRS)
+
     import basic_src.io_function as io_function
 
     if os.path.isdir('split_images'):

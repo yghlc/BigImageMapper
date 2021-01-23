@@ -24,10 +24,6 @@ if __name__ == '__main__':
     sys.path.insert(0, code_dir)
     import parameters
 
-    deeplabRS = parameters.get_directory_None_if_absence(para_file, 'deeplabRS_dir')
-    # print(deeplabRS)
-    sys.path.insert(0, deeplabRS)
-    # print(sys.path)
     import basic_src.io_function as io_function
 
     subImage_dir = parameters.get_string_parameters_None_if_absence(para_file,'input_train_dir')
