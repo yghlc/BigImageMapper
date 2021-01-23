@@ -63,7 +63,7 @@ def calculate_polygon_topography(polygons_shp,dem_file,slope_file,aspect_file=No
     ## calculate the topography information from the buffer area
 
     # the para file was set in parameters.set_saved_parafile_path(options.para_file)
-    b_use_buffer_area = parameters.get_bool_parameters('','b_topo_use_buffer_area', None)
+    b_use_buffer_area = parameters.get_bool_parameters('','b_topo_use_buffer_area')
 
     if b_use_buffer_area is True:
 
