@@ -164,12 +164,12 @@ if __name__ == '__main__':
             bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,test_note]) + '.shp')
             bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,'post',test_note]) + '.shp')
             bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre,'eva_report',test_note]) + '.txt')
-            bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre,'para',test_note]) + '.ini')
+            bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre,'region',test_note]) + '.ini')
         else:
             bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre]) + '.shp')
             bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre, 'post']) + '.shp')
             bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre, 'eva_report']) + '.txt')
-            bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre, 'para']) + '.ini')
+            bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre, 'region']) + '.ini')
 
         io_function.copy_shape_file(merged_shp,bak_merged_shp)
         io_function.copy_shape_file(shp_post, bak_post_shp)
@@ -178,9 +178,12 @@ if __name__ == '__main__':
 
     if len(test_note) > 0:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id,'para',test_note]) + '.ini' )
+        bak_network_ini = os.path.join(backup_dir, '_'.join([test_id,'network',test_note]) + '.ini' )
     else:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id, 'para']) + '.ini')
+        bak_network_ini = os.path.join(backup_dir, '_'.join([test_id, 'network']) + '.ini')
     io_function.copy_file_to_dst(para_file, bak_para_ini)
+    io_function.copy_file_to_dst(network_setting_ini, bak_network_ini)
 
 
 
