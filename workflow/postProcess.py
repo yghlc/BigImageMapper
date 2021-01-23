@@ -135,12 +135,12 @@ if __name__ == '__main__':
         merge_shape_files(result_shp_list,merged_shp)
 
         # add attributes to shapefile
-        add_attributes_script = os.path.join(deeplabRS ,'polygon_post_process.py')
+        add_attributes_script = os.path.join(code_dir,'datasets', 'get_polygon_attributes.py')
         shp_attributes = os.path.join(area_save_dir, shp_pre+'_post_NOrm.shp')
         add_polygon_attributes(add_attributes_script,merged_shp, shp_attributes, para_file, area_ini )
 
         # remove polygons
-        rm_polygon_script = os.path.join(code_dir,'datasets', 'polygon_post_process.py')
+        rm_polygon_script = os.path.join(code_dir,'datasets', 'remove_mappedPolygons.py')
         shp_removed = os.path.join(area_save_dir, shp_pre+'_post.shp')
         remove_polygons(rm_polygon_script,shp_attributes, shp_removed, para_file)
 
