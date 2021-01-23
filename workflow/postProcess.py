@@ -155,7 +155,10 @@ if __name__ == '__main__':
 
         ##### copy and backup files ######
         # copy files to result_backup
-        backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark)
+        if len(test_note) > 0:
+            backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark + '_' + test_id + '_' + test_note)
+        else:
+            backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark + '_' + test_id )
         io_function.mkdir(backup_dir_area)
         if len(test_note) > 0:
             bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,test_note]) + '.shp')
