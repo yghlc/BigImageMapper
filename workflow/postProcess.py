@@ -58,9 +58,9 @@ def remove_polygons(script, in_shp_path, save_shp_path, para_file):
     if res != 0:
         sys.exit(res)
 
-def evaluation_polygons(script, in_shp_path, para_file, data_para_file):
+def evaluation_polygons(script, in_shp_path, para_file, data_para_file,out_report):
 
-    command_string = script + ' -p %s -d %s %s' % (para_file, data_para_file, in_shp_path)
+    command_string = script + ' -p %s -d %s -o %s %s' % (para_file, data_para_file, out_report, in_shp_path)
     res = os.system(command_string)
     if res != 0:
         sys.exit(res)
@@ -124,26 +124,29 @@ if __name__ == '__main__':
         result_shp_list = []
         for img_idx, img_path in enumerate(inf_img_list):
             out_shp = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
-            result_shp_list.append(out_shp)
+            result_shp_list.append(os.path.join(WORK_DIR,out_shp))
+
 
         # merge shapefiles
         shp_pre = os.path.basename(area_save_dir) + '_' + test_id
-        merged_shp =  os.path.join(area_save_dir, shp_pre + '.shp')
+        merged_shp =  os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
         merge_shape_files(result_shp_list,merged_shp)
 
         # add attributes to shapefile
         add_attributes_script = os.path.join(code_dir,'datasets', 'get_polygon_attributes.py')
-        shp_attributes = os.path.join(area_save_dir, shp_pre+'_post_NOrm.shp')
+        shp_attributes = os.path.join(WORK_DIR,area_save_dir, shp_pre+'_post_NOrm.shp')
+
         add_polygon_attributes(add_attributes_script,merged_shp, shp_attributes, para_file, area_ini )
 
         # remove polygons
         rm_polygon_script = os.path.join(code_dir,'datasets', 'remove_mappedPolygons.py')
-        shp_removed = os.path.join(area_save_dir, shp_pre+'_post.shp')
+        shp_removed = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_post.shp')
         remove_polygons(rm_polygon_script,shp_attributes, shp_removed, para_file)
 
         # evaluate the mapping results
         eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
-        evaluation_polygons(eval_shp_script, shp_removed, para_file, area_ini)
+        out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
+        evaluation_polygons(eval_shp_script, shp_removed, para_file, area_ini,out_report)
 
 
 
