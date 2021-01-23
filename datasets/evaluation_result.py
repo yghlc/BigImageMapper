@@ -101,7 +101,7 @@ def main(options, args):
     input = args[0]
 
     # evaluation result
-    val_path = parameters.get_string_parameters_None_if_absence('','validation_shape')
+    val_path = parameters.get_file_path_parameters_None_if_absence('','validation_shape')
 
     if val_path is not None and os.path.isfile(val_path):
         basic.outputlogMessage('Start evaluation, input: %s, validation file: %s'%(input, val_path))
