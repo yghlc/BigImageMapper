@@ -327,15 +327,6 @@ def main(options, args):
         # return False   #  don't return
 
 
-    # add hydrology information
-    flow_accum = parameters.get_flow_accumulation()
-    if os.path.isfile(flow_accum):
-        if calculate_hydrology(output, flow_accum) is False:
-            basic.outputlogMessage('Warning: calculate information of hydrology failed')
-            # return False  #  don't return
-    else:
-        basic.outputlogMessage("warning, flow accumulation file not exist, skip the calculation of flow accumulation")
-
     # # evaluation result
     # val_path = parameters.get_validation_shape()
     # if os.path.isfile(val_path):
