@@ -37,28 +37,10 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         + ' --dataset_dir='+dataset_dir \
         + ' --num_clones=' + str(gpu_num)
 
-    return os.system(command_string)
+    res = os.system(command_string)
+    if res != 0:
+        sys.exit(res)
 
-# NUM_ITERATIONS=${iteration_num}
-# python "${deeplab_dir}"/train.py \
-#   --logtostderr \
-#   --train_split="trainval" \
-#   --base_learning_rate=${base_learning_rate} \
-#   --model_variant="xception_65" \
-#   --atrous_rates=${atrous_rates1} \
-#   --atrous_rates=${atrous_rates2} \
-#   --atrous_rates=${atrous_rates3} \
-#   --output_stride=${output_stride} \
-#   --decoder_output_stride=4 \
-#   --train_crop_size=513 \
-#   --train_crop_size=513 \
-#   --train_batch_size=${batch_size} \
-#   --training_number_of_steps="${NUM_ITERATIONS}" \
-#   --fine_tune_batch_norm=False \
-#   --tf_initial_checkpoint="${INIT_FOLDER}/xception/model.ckpt" \
-#   --train_logdir="${TRAIN_LOGDIR}" \
-#   --dataset_dir="${DATASET}" \
-#   --num_clones=${gpu_num}
 
 def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_variant,train_logdir, evl_logdir,dataset_dir, max_eva_number):
 
@@ -86,23 +68,10 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
                      + ' --dataset_dir=' + dataset_dir \
                      + ' --max_number_of_evaluations=' + str(max_eva_number)
 
-    return os.system(command_string)
+    res = os.system(command_string)
+    if res != 0:
+        sys.exit(res)
 
-        # python "${deeplab_dir}"/eval.py \
-    # --logtostderr \
-    # --eval_split="val" \
-    # --model_variant="xception_65" \
-    # --atrous_rates=${atrous_rates1} \
-    # --atrous_rates=${atrous_rates2} \
-    # --atrous_rates=${atrous_rates3} \
-    # --output_stride=${output_stride} \
-    # --decoder_output_stride=4 \
-    # --eval_crop_size=513 \
-    # --eval_crop_size=513 \
-    # --checkpoint_dir="${TRAIN_LOGDIR}" \
-    # --eval_logdir="${EVAL_LOGDIR}" \
-    # --dataset_dir="${DATASET}" \
-    # --max_number_of_evaluations=1
 
     pass
 
@@ -199,19 +168,16 @@ if __name__ == '__main__':
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
     num_of_classes = num_classes_noBG + 1
-    res = train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
+    train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                   dataset_dir, gpu_num,
                   atrous_rates1, atrous_rates2, atrous_rates3, output_stride, batch_size, iteration_num)
-    if res != 0:
-        sys.exit(1)
 
     # run evaluation
     evl_script = os.path.join(deeplab_dir, 'eval.py')
     evl_split = os.path.splitext(parameters.get_string_parameters(para_file,'validation_sample_list_txt'))[0]
     max_eva_number = 1
-    res = evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
-    if res != 0:
-        sys.exit(1)
+    evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
+
 
 
 
