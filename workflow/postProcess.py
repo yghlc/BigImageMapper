@@ -74,10 +74,11 @@ if __name__ == '__main__':
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
+    # the test string in 'exe.sh'
     if len(sys.argv) > 2:
-        post_note = sys.argv[2]
+        test_note = sys.argv[2]
     else:
-        post_note = ''
+        test_note = ''
 
     code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
     sys.path.insert(0, code_dir)
@@ -102,6 +103,9 @@ if __name__ == '__main__':
 
     # run post-processing parallel
     # max_parallel_postProc_task = 8
+
+    backup_dir = os.path.join(WORK_DIR, 'result_backup')
+    io_function.mkdir(backup_dir)
 
     # loop each inference regions
     sub_tasks = []
@@ -140,15 +144,40 @@ if __name__ == '__main__':
 
         # remove polygons
         rm_polygon_script = os.path.join(code_dir,'datasets', 'remove_mappedPolygons.py')
-        shp_removed = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_post.shp')
-        remove_polygons(rm_polygon_script,shp_attributes, shp_removed, para_file)
+        shp_post = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_post.shp')
+        remove_polygons(rm_polygon_script,shp_attributes, shp_post, para_file)
 
         # evaluate the mapping results
         eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
         out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
-        evaluation_polygons(eval_shp_script, shp_removed, para_file, area_ini,out_report)
+        evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
 
 
+        ##### copy and backup files ######
+        # copy files to result_backup
+        backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark)
+        io_function.mkdir(backup_dir_area)
+        if len(test_note) > 0:
+            bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,test_note]) + '.shp')
+            bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,'post',test_note]) + '.shp')
+            bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre,'eva_report',test_note]) + '.txt')
+            bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre,'para',test_note]) + '.ini')
+        else:
+            bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre]) + '.shp')
+            bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre, 'post']) + '.shp')
+            bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre, 'eva_report']) + '.txt')
+            bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre, 'para']) + '.ini')
+
+        io_function.copy_shape_file(merged_shp,bak_merged_shp)
+        io_function.copy_shape_file(shp_post, bak_post_shp)
+        io_function.copy_file_to_dst(out_report, bak_eva_report)
+        io_function.copy_file_to_dst(area_ini, bak_area_ini)
+
+    if len(test_note) > 0:
+        bak_para_ini = os.path.join(backup_dir, '_'.join([test_id,'para',test_note]) + '.ini' )
+    else:
+        bak_para_ini = os.path.join(backup_dir, '_'.join([test_id, 'para']) + '.ini')
+    io_function.copy_file_to_dst(para_file, bak_para_ini)
 
 
 
