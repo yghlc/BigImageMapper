@@ -58,9 +58,9 @@ def remove_polygons(script, in_shp_path, save_shp_path, para_file):
     if res != 0:
         sys.exit(res)
 
-def evaluation_polygons(script, in_shp_path, para_file):
+def evaluation_polygons(script, in_shp_path, para_file, data_para_file):
 
-    command_string = script + ' -p %s %s' % (para_file, in_shp_path)
+    command_string = script + ' -p %s -d %s %s' % (para_file, data_para_file, in_shp_path)
     res = os.system(command_string)
     if res != 0:
         sys.exit(res)
@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
         # evaluate the mapping results
         eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
-        evaluation_polygons(eval_shp_script, shp_removed, area_ini)
+        evaluation_polygons(eval_shp_script, shp_removed, para_file, area_ini)
 
 
 
