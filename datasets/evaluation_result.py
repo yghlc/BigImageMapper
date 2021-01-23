@@ -9,7 +9,7 @@ add time: 13 December, 2019
 """
 
 
-def evaluation_result(result_shp,val_shp,evaluation_txt=None):
+def evaluation_result(para_file, result_shp,val_shp,evaluation_txt=None):
     """
     evaluate the result based on IoU
     :param result_shp: result shape file contains detected polygons
@@ -25,7 +25,7 @@ def evaluation_result(result_shp,val_shp,evaluation_txt=None):
     operation_obj = shape_opeation()
     operation_obj.add_one_field_records_to_shapefile(result_shp, IoUs, 'IoU')
 
-    iou_threshold = parameters.get_digit_parameters('','IOU_threshold','float')
+    iou_threshold = parameters.get_digit_parameters(para_file,'IOU_threshold','float')
     true_pos_count = 0
     false_pos_count = 0
     val_polygon_count = operation_obj.get_shapes_count(val_shp)
@@ -100,12 +100,16 @@ def evaluation_result(result_shp,val_shp,evaluation_txt=None):
 def main(options, args):
     input = args[0]
 
+    data_para_file = options.data_para
+    if data_para_file is None:
+        data_para_file = options.para_file
+
     # evaluation result
-    val_path = parameters.get_file_path_parameters_None_if_absence('','validation_shape')
+    val_path = parameters.get_file_path_parameters_None_if_absence(data_para_file,'validation_shape')
 
     if val_path is not None and os.path.isfile(val_path):
         basic.outputlogMessage('Start evaluation, input: %s, validation file: %s'%(input, val_path))
-        evaluation_result(input, val_path)
+        evaluation_result(options.para_file, input, val_path)
     else:
         basic.outputlogMessage("warning, validation polygon (%s) not exist, skip evaluation"%val_path)
 
@@ -133,6 +137,10 @@ if __name__=='__main__':
     parser.add_option("-p", "--para",
                       action="store", dest="para_file",
                       help="the parameters file")
+
+    parser.add_option("-d", "--data_para",
+                      action="store", dest="data_para",
+                      help="the parameters file for data")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2 or len(args) < 1:
