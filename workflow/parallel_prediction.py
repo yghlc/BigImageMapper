@@ -176,6 +176,11 @@ if __name__ == '__main__':
             sub_process.start()
             sub_tasks.append(sub_process)
 
+            if b_use_multiGPUs is False:
+                # wait until previous one finished
+                while sub_process.is_alive():
+                    time.sleep(5)
+
             idx += 1
 
             # wait until predicted image patches exist or exceed 20 minutes
