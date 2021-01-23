@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
         # evaluate the mapping results
         eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
-        evaluation_polygons(eval_shp_script, shp_removed,para_file)
+        evaluation_polygons(eval_shp_script, shp_removed, area_ini)
 
 
 
