@@ -142,7 +142,7 @@ if __name__ == '__main__':
         remove_polygons(rm_polygon_script,shp_attributes, shp_removed, para_file)
 
         # evaluate the mapping results
-        eval_shp_script = os.path.join(deeplabRS, 'evaluation_result.py')
+        eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
         evaluation_polygons(eval_shp_script, shp_removed,para_file)
 
 
