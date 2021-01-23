@@ -30,27 +30,31 @@ If codes here are useful for your project, please cite our papers:
 ```
 
 ## How to use
-See the script: thawslumpScripts/exe.sh
+See the script: working_dir/exe.sh
 
 ## Contributions
 Please let me know or pull a request if you spot any bug or typo. Thanks!
 Any enhancement or new functions are also welcome!
 
 ## updates
-March 2018:
-    Land use classification using the data from 2018_IEEE_GRSS_Data_Fusion. Also submitted the result. codes in "grss_data_fusion". 
-    The method utilized Deeplab V4(+3), a semantic segmentation algorithm, to classify land use (20 classes). 
-    
-August 2018:
-    Delineate retrogressive thaw slumps from Planet CubeSat images.
-    
+January 2021:
+    Clean or re-organize the scripts; re-define the input parameter files, separate them into main ini, network defined ini, 
+    and regions defined ini, making it easy to different regions or networks for training and inference;
+
+March 2019:
+    Many scripts for producing figures of manuscript: Using Deep Learning to Map Retrogressive Thaw Slumps in the Beiluhe Region (Tibetan Plateau) from CubeSat Images, Remote sensing of Environment.
+
 January 2019:
     Supporting of Mask RCNN
 
-March 2019:
-    Many scripts for producing figures of manuscript: Using Deep Learning to Map Retrogressive Thaw Slumps in the Beiluhe Region (Tibetan Plateau) from CubeSat Images, Remote sensing of Environment, In press
+August 2018:
+    Delineate retrogressive thaw slumps from Planet CubeSat images.
 
-More
+March 2018:
+    Land use classification using the data from 2018_IEEE_GRSS_Data_Fusion. Also submitted the result. codes in "grss_data_fusion". 
+    The method utilized Deeplab V4(+3), a semantic segmentation algorithm, to classify land use (20 classes). 
+  
+
 
 ## Dependencies and setting:
     Python package: Numpy, rasterio, GDAL 2.3, tensorflow-gpu 1.6, pyshp 1.2.12, pillow, imgaug
