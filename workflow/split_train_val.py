@@ -26,6 +26,11 @@ if __name__ == '__main__':
     script = os.path.join(code_dir, 'datasets', 'train_test_split.py')
 
     training_data_per = parameters.get_digit_parameters_None_if_absence(para_file, 'training_data_per','float')
+    train_sample_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
+    val_sample_txt = parameters.get_string_parameters(para_file, 'validation_sample_list_txt')
 
-    command_string = script + ' -t ' + str(training_data_per) + ' --shuffle ' + 'list/trainval.txt'
+    command_string = script + ' -t ' + str(training_data_per) + \
+                     ' -s ' + train_sample_txt  + \
+                     ' -v ' + val_sample_txt  + \
+                     ' --shuffle ' + 'list/trainval.txt'
     os.system(command_string)

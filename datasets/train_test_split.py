@@ -22,6 +22,9 @@ def main(options, args):
     print('split images in %s to train and test, with'%input_file)
     print('train percentage: %.4f and shuffle: %s'%(train_per,str(Do_shuffle)))
 
+    train_sample_txt = options.train_list_txt
+    val_sample_txt = options.val_list_txt
+
     with open(input_file,'r') as f_obj:
         dir = os.path.dirname(input_file)
 
@@ -30,13 +33,15 @@ def main(options, args):
         train_list, val_list = train_test_split(files_list, train_size=train_per, shuffle=Do_shuffle)
 
         # save split list
-        train_list_txt = os.path.join(dir,'train_list.txt')
-        val_list_txt = os.path.join(dir,'val_list.txt')
+        train_list_txt = os.path.join(dir,train_sample_txt)
+        val_list_txt = os.path.join(dir, val_sample_txt)
         with open(train_list_txt, 'w') as t_obj:
             t_obj.writelines(train_list)
+            print('saved training samples to %s'%train_list_txt)
 
         with open(val_list_txt, 'w') as v_obj:
             v_obj.writelines(val_list)
+            print('saved validation samples to %s' % val_list_txt)
 
 
 
@@ -48,6 +53,14 @@ if __name__ == "__main__":
     parser.add_option('-t','--train_per',
                       action='store',dest='train_per',type='float',default=0.8,
                       help="percentage of training data, a float value from 0 to 1")
+
+    parser.add_option('-s','--train_list_txt',
+                      action='store',dest='train_list_txt',default ='train_list.txt',
+                      help="the txt file name for saving training samples")
+
+    parser.add_option('-v','--val_list_txt',
+                      action='store',dest='val_list_txt',default ='val_list.txt',
+                      help="the txt file name for saving validation samples")
 
     parser.add_option('-s','--shuffle',
                       action='store_true',dest='Do_shuffle',default=False,
