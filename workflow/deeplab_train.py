@@ -182,6 +182,29 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                                dataset_dir, max_eva_number)
 
 
+def init_for_test_function():
+    code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
+    sys.path.insert(0, code_dir)
+    import parameters
+    global parameters   # use global to make parameters be visiable in this file.
+    import basic_src.io_function as io_function
+    global io_function
+    import basic_src.basic as basic
+    global basic
+
+    global work_dir
+    work_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL/working_dir')
+
+def test_get_train_val_sample_count():
+    # we may use pytest to run this funciton,
+    # run "py -s deeplab_train.py" can call this function for test, "-s " will output print info for debug.
+
+    init_for_test_function()
+
+    os.chdir(work_dir)
+    para_file = 'main_para.ini'
+    print(get_train_val_sample_count(work_dir, para_file))
+
 if __name__ == '__main__':
     print("%s : train deeplab" % os.path.basename(sys.argv[0]))
 
