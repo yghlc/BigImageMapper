@@ -164,7 +164,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant,
                            atrous_rates1,atrous_rates2,atrous_rates3,output_stride,TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
     else:
-        basic.outputlogMessage('training to %d, and evaluating very %d epoch(es)' % (iteration_num,validation_interval))
+        basic.outputlogMessage('training to the maximum iteration of %d, and evaluating very %d epoch(es)' % (iteration_num,validation_interval))
         for epoch in range(1, total_epoches + validation_interval, validation_interval):
 
             to_iter_num = min(epoch*iter_per_epoch, iteration_num)
