@@ -73,8 +73,6 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
         sys.exit(res)
 
 
-    pass
-
 if __name__ == '__main__':
     print("%s : train deeplab" % os.path.basename(sys.argv[0]))
 
@@ -122,11 +120,11 @@ if __name__ == '__main__':
     VIS_LOGDIR = os.path.join(WORK_DIR,EXP_FOLDER,'vis')
     EXPORT_DIR = os.path.join(WORK_DIR,EXP_FOLDER,'export')
 
-    os.system('mkdir -p %s'%INIT_FOLDER)
-    os.system('mkdir -p %s'%TRAIN_LOGDIR)
-    os.system('mkdir -p %s'%EVAL_LOGDIR)
-    os.system('mkdir -p %s'%VIS_LOGDIR)
-    os.system('mkdir -p %s'%EXPORT_DIR)
+    io_function.mkdir(INIT_FOLDER)
+    io_function.mkdir(TRAIN_LOGDIR)
+    io_function.mkdir(EVAL_LOGDIR)
+    io_function.mkdir(VIS_LOGDIR)
+    io_function.mkdir(EXPORT_DIR)
 
     # prepare the tensorflow check point (pretrained model) for training
     pre_trained_dir = parameters.get_directory_None_if_absence(network_setting_ini, 'pre_trained_model_folder')
@@ -136,7 +134,9 @@ if __name__ == '__main__':
         print('pre-trained model: %s not exist, try to download'%pre_trained_path)
         # try to download the file
         pre_trained_url = parameters.get_string_parameters_None_if_absence(network_setting_ini, 'pre_trained_model_url')
-        os.system('wget %s '%pre_trained_url)
+        res  = os.system('wget %s '%pre_trained_url)
+        if res != 0:
+            sys.exit(res)
         io_function.movefiletodir(pre_trained_tar,pre_trained_dir)
 
     # unpack pre-trained model to INIT_FOLDER
