@@ -9,7 +9,20 @@ add time: 19 January, 2021
 """
 
 import os, sys
+import math
 
+def get_train_val_sample_count(work_dir, para_file):
+
+    train_sample_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
+    val_sample_txt = parameters.get_string_parameters(para_file, 'validation_sample_list_txt')
+    train_list_txt = os.path.join(work_dir,'list', train_sample_txt)
+    val_list_txt = os.path.join(work_dir, 'list', val_sample_txt)
+
+    train_lines = io_function.read_list_from_txt(train_list_txt)
+    val_lines = io_function.read_list_from_txt(val_list_txt)
+    basic.outputlogMessage('The count of training and validation samples are %d and %d'%(len(train_lines), len(val_lines)))
+
+    return len(train_lines), len(val_lines)
 
 def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
                   atrous_rates1,atrous_rates2,atrous_rates3,output_stride,batch_size,iteration_num):
@@ -42,7 +55,9 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         sys.exit(res)
 
 
-def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_variant,train_logdir, evl_logdir,dataset_dir, max_eva_number):
+
+def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_variant,
+                       atrous_rates1,atrous_rates2,atrous_rates3,output_stride,train_logdir, evl_logdir,dataset_dir, max_eva_number):
 
     # for information, run "python deeplab/eval.py  --helpfull"
 
@@ -72,45 +87,7 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
     if res != 0:
         sys.exit(res)
 
-
-if __name__ == '__main__':
-    print("%s : train deeplab" % os.path.basename(sys.argv[0]))
-
-    para_file = sys.argv[1]
-    gpu_num = int(sys.argv[2])
-    if os.path.isfile(para_file) is False:
-        raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
-
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-
-    import basic_src.io_function as io_function
-
-
-    tf_research_dir = parameters.get_directory_None_if_absence(para_file,'tf_research_dir')
-    print(tf_research_dir)
-    if tf_research_dir is None:
-        raise ValueError('tf_research_dir is not in %s'%para_file)
-    if os.path.isdir(tf_research_dir) is False:
-        raise ValueError('%s does not exist' % tf_research_dir)
-    # sys.path.insert(0, tf_research_dir)
-    # sys.path.insert(0, os.path.join(tf_research_dir,'slim'))
-    # print(sys.path)
-    # need to change PYTHONPATH, otherwise, deeplab cannot be found
-    if os.getenv('PYTHONPATH'):
-        os.environ['PYTHONPATH'] = os.getenv('PYTHONPATH') + ':' + tf_research_dir + ':' +os.path.join(tf_research_dir,'slim')
-    else:
-        os.environ['PYTHONPATH'] = tf_research_dir + ':' +os.path.join(tf_research_dir,'slim')
-    # os.system('echo $PYTHONPATH ')
-
-    deeplab_dir = os.path.join(tf_research_dir,'deeplab')
-    WORK_DIR = os.getcwd()
-
-
-
-    expr_name = parameters.get_string_parameters(para_file,'expr_name')
-    network_setting_ini = parameters.get_string_parameters(para_file,'network_setting_ini')
+def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_setting_ini):
 
     # prepare training folder
     EXP_FOLDER = expr_name
@@ -157,8 +134,6 @@ if __name__ == '__main__':
     atrous_rates2 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'atrous_rates2','int')
     atrous_rates3 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'atrous_rates3','int')
 
-
-    # run training
     train_script = os.path.join(deeplab_dir, 'train.py')
     train_split = os.path.splitext(parameters.get_string_parameters(para_file,'training_sample_list_txt'))[0]
     model_variant = parameters.get_string_parameters(network_setting_ini, 'model_variant')
@@ -168,15 +143,84 @@ if __name__ == '__main__':
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
     num_of_classes = num_classes_noBG + 1
-    train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
-                  dataset_dir, gpu_num,
-                  atrous_rates1, atrous_rates2, atrous_rates3, output_stride, batch_size, iteration_num)
 
-    # run evaluation
     evl_script = os.path.join(deeplab_dir, 'eval.py')
     evl_split = os.path.splitext(parameters.get_string_parameters(para_file,'validation_sample_list_txt'))[0]
     max_eva_number = 1
-    evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant, TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
+
+    # validation interval (epoch)
+    validation_interval = parameters.get_digit_parameters_None_if_absence(para_file,'validation_interval','int')
+    train_count, val_count = get_train_val_sample_count(WORK_DIR, para_file)
+    iter_per_epoch = math.ceil(train_count/batch_size)
+    total_epoches = math.ceil(iteration_num/iter_per_epoch)
+    if validation_interval is None:
+        basic.outputlogMessage('No input validation_interval, so training to %d, then evaluating in the end'%iteration_num)
+        # run training
+        train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
+                      dataset_dir, gpu_num,
+                      atrous_rates1, atrous_rates2, atrous_rates3, output_stride, batch_size, iteration_num)
+
+        # run evaluation
+        evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant,
+                           atrous_rates1,atrous_rates2,atrous_rates3,output_stride,TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir, max_eva_number)
+    else:
+        basic.outputlogMessage('training to %d, and evaluating very %d epoch(es)' % (iteration_num,validation_interval))
+        for epoch in range(1, total_epoches + iter_per_epoch,iter_per_epoch):
+
+            to_iter_num = min(epoch*iter_per_epoch, iteration_num)
+            basic.outputlogMessage('training and evaluating to %d epoches (to iteration: %d)' % (epoch,to_iter_num))
+
+            # run training
+            train_deeplab(train_script, dataset, train_split, num_of_classes, base_learning_rate, model_variant,
+                          init_checkpoint, TRAIN_LOGDIR,
+                          dataset_dir, gpu_num,
+                          atrous_rates1, atrous_rates2, atrous_rates3, output_stride, batch_size, to_iter_num)
+
+            # run evaluation
+            evaluation_deeplab(evl_script, dataset, evl_split, num_of_classes, model_variant,
+                               atrous_rates1, atrous_rates2, atrous_rates3, output_stride, TRAIN_LOGDIR, EVAL_LOGDIR,
+                               dataset_dir, max_eva_number)
+
+
+if __name__ == '__main__':
+    print("%s : train deeplab" % os.path.basename(sys.argv[0]))
+
+    para_file = sys.argv[1]
+    gpu_num = int(sys.argv[2])
+    if os.path.isfile(para_file) is False:
+        raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
+
+    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+    sys.path.insert(0, code_dir)
+    import parameters
+
+    import basic_src.io_function as io_function
+    import basic_src.basic as basic
+
+
+    tf_research_dir = parameters.get_directory_None_if_absence(para_file,'tf_research_dir')
+    print(tf_research_dir)
+    if tf_research_dir is None:
+        raise ValueError('tf_research_dir is not in %s'%para_file)
+    if os.path.isdir(tf_research_dir) is False:
+        raise ValueError('%s does not exist' % tf_research_dir)
+    # sys.path.insert(0, tf_research_dir)
+    # sys.path.insert(0, os.path.join(tf_research_dir,'slim'))
+    # print(sys.path)
+    # need to change PYTHONPATH, otherwise, deeplab cannot be found
+    if os.getenv('PYTHONPATH'):
+        os.environ['PYTHONPATH'] = os.getenv('PYTHONPATH') + ':' + tf_research_dir + ':' +os.path.join(tf_research_dir,'slim')
+    else:
+        os.environ['PYTHONPATH'] = tf_research_dir + ':' +os.path.join(tf_research_dir,'slim')
+    # os.system('echo $PYTHONPATH ')
+
+    deeplab_dir = os.path.join(tf_research_dir,'deeplab')
+    WORK_DIR = os.getcwd()
+
+    expr_name = parameters.get_string_parameters(para_file,'expr_name')
+    network_setting_ini = parameters.get_string_parameters(para_file,'network_setting_ini')
+
+    train_evaluation_deeplab(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini)
 
 
 
