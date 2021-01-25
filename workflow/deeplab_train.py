@@ -169,7 +169,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     total_epoches = math.ceil(iteration_num/iter_per_epoch)
     already_trained_iteration  = get_trained_iteration(TRAIN_LOGDIR)
     if already_trained_iteration >= iteration_num:
-        basic.outputlogMessage('Training alreay run %d iteration, skip'%already_trained_iteration)
+        basic.outputlogMessage('Training already run %d iterations, skip'%already_trained_iteration)
         return True
     if validation_interval is None:
         basic.outputlogMessage('No input validation_interval, so training to %d, then evaluating in the end'%iteration_num)
