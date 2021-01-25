@@ -10,6 +10,7 @@ add time: 19 January, 2021
 
 import os, sys
 import math
+import re
 
 def get_train_val_sample_count(work_dir, para_file):
 
@@ -87,6 +88,19 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
     if res != 0:
         sys.exit(res)
 
+def get_trained_iteration(TRAIN_LOGDIR):
+    checkpoint = os.path.join(TRAIN_LOGDIR,'checkpoint')
+    if os.path.isfile(checkpoint):
+        with open(checkpoint,'r') as f_obj:
+            lines = f_obj.readlines()
+            strings = re.findall(r'ckpt-\d+',lines[0])
+            if len(strings) < 0:
+                return 0
+            else:
+                return int(strings[0][5:])
+    else:
+        return 0
+
 def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_setting_ini):
 
     # prepare training folder
@@ -153,6 +167,10 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     train_count, val_count = get_train_val_sample_count(WORK_DIR, para_file)
     iter_per_epoch = math.ceil(train_count/batch_size)
     total_epoches = math.ceil(iteration_num/iter_per_epoch)
+    already_trained_iteration  = get_trained_iteration(TRAIN_LOGDIR)
+    if already_trained_iteration >= iteration_num:
+        basic.outputlogMessage('Training alreay run %d iteration, skip'%already_trained_iteration)
+        return True
     if validation_interval is None:
         basic.outputlogMessage('No input validation_interval, so training to %d, then evaluating in the end'%iteration_num)
         # run training
@@ -168,6 +186,8 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         for epoch in range(1, total_epoches + validation_interval, validation_interval):
 
             to_iter_num = min(epoch*iter_per_epoch, iteration_num)
+            if to_iter_num <= already_trained_iteration:
+                continue
             basic.outputlogMessage('training and evaluating to %d epoches (to iteration: %d)' % (epoch,to_iter_num))
 
             # run training
@@ -204,6 +224,11 @@ def test_get_train_val_sample_count():
     os.chdir(work_dir)
     para_file = 'main_para.ini'
     print(get_train_val_sample_count(work_dir, para_file))
+
+def test_get_trained_iteration():
+    train_log_dir = os.path.join(work_dir, 'exp1','train')
+    iter = get_trained_iteration(train_log_dir)
+    print('iteration number in the folder',iter)
 
 if __name__ == '__main__':
     print("%s : train deeplab" % os.path.basename(sys.argv[0]))
