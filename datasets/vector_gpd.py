@@ -1,0 +1,713 @@
+#!/usr/bin/env python
+# Filename: vector_gpd
+"""
+introduction: similar to vector_features.py, by use geopandas to read and write shapefile
+
+authors: Huang Lingcao
+email:huanglingcao@gmail.com
+add time: 08 December, 2019
+"""
+
+import os,sys
+from optparse import OptionParser
+
+
+# import these two to make sure load GEOS dll before using shapely
+import shapely
+from shapely.geometry import mapping # transform to GeJSON format
+from shapely.geometry import MultiPolygon
+from shapely.geometry import Polygon
+import geopandas as gpd
+from shapely.geometry import Point
+import pandas as pd
+
+import math
+import numpy as np
+
+import basic_src.basic as basic
+
+import basic_src.map_projection as map_projection
+
+def read_polygons_json(polygon_shp, no_json=False):
+    '''
+    read polyogns and convert to json format
+    :param polygon_shp: polygon in projection of EPSG:4326
+    :param no_json: True indicate not json format
+    :return:
+    '''
+
+    # check projection
+    shp_args_list = ['gdalsrsinfo', '-o', 'EPSG', polygon_shp]
+    epsg_str = basic.exec_command_args_list_one_string(shp_args_list)
+    epsg_str = epsg_str.decode().strip()  # byte to str, remove '\n'
+    if epsg_str != 'EPSG:4326':
+        raise ValueError('Current support shape file in projection of EPSG:4326, but the input has projection of %s'%epsg_str)
+
+    shapefile = gpd.read_file(polygon_shp)
+    polygons = shapefile.geometry.values
+
+    # # check invalidity of polygons
+    invalid_polygon_idx = []
+    # for idx, geom in enumerate(polygons):
+    #     if geom.is_valid is False:
+    #         invalid_polygon_idx.append(idx + 1)
+    # if len(invalid_polygon_idx) > 0:
+    #     raise ValueError('error, polygons %s (index start from 1) in %s are invalid, please fix them first '%(str(invalid_polygon_idx),polygon_shp))
+
+    # fix invalid polygons
+    polygons = fix_invalid_polygons(polygons)
+
+    if no_json:
+        return polygons
+    else:
+        # convert to json format
+        polygons_json = [ mapping(item) for item in polygons]
+
+    return polygons_json
+
+def fix_invalid_polygons(polygons, buffer_size = 0.000001):
+    '''
+    fix invalid polygon by using buffer operation.
+    :param polygons: polygons in shapely format
+    :param buffer_size: buffer size
+    :return: polygons after checking invalidity
+    '''
+    invalid_polygon_idx = []
+    for idx in range(0,len(polygons)):
+        if polygons[idx].is_valid is False:
+            invalid_polygon_idx.append(idx + 1)
+            polygons[idx] = polygons[idx].buffer(buffer_size)  # trying to solve self-intersection
+    if len(invalid_polygon_idx) > 0:
+        basic.outputlogMessage('Warning, polygons %s (index start from 1) in are invalid, fix them by the buffer operation '%(str(invalid_polygon_idx)))
+
+    return polygons
+
+def read_lines_gpd(lines_shp):
+    shapefile = gpd.read_file(lines_shp)
+    lines = shapefile.geometry.values
+    # check are lines
+    return lines
+
+def find_one_line_intersect_Polygon(polygon, line_list, line_check_list):
+    for idx, (line, b_checked) in enumerate(zip(line_list,line_check_list)):
+        if b_checked:
+            continue
+        if polygon.intersection(line).is_empty is False:
+            line_check_list[idx] = True
+            return line
+    return None
+
+def find_polygon_intersec_polygons(shp_path):
+
+    basic.outputlogMessage('Checking duplicated polygons in %s'%shp_path)
+
+    polygons = read_polygons_gpd(shp_path)
+
+    count = len(polygons)
+
+    for idx, poly in enumerate(polygons):
+        for kk in range(idx+1,count):
+            inter = poly.intersection(polygons[kk])
+            if inter.is_empty is False:
+                basic.outputlogMessage('warning, %d th polygon has intersection with %d th polygon'%(idx+1, kk+1))
+                # break
+    basic.outputlogMessage('finished checking of polygons intersect other polygons')
+
+def read_shape_gpd_to_NewPrj(shp_path, prj_str):
+    '''
+    read polyogns using geopandas, and reproejct to a projection.
+    :param polygon_shp:
+    :param prj_str:  project string, like EPSG:4326
+    :return:
+    '''
+    shapefile = gpd.read_file(shp_path)
+    # print(shapefile.crs)
+
+    # shapefile  = shapefile.to_crs(prj_str)
+    if gpd.__version__ >= '0.7.0':
+        shapefile = shapefile.to_crs(prj_str)
+    else:
+        shapefile  = shapefile.to_crs({'init':prj_str})
+    # print(shapefile.crs)
+    polygons = shapefile.geometry.values
+    # fix invalid polygons
+    polygons = fix_invalid_polygons(polygons)
+
+    return polygons
+
+def reproject_shapefile(shp_path, prj_str,save_path):
+    '''
+    reprject a shapefile and save to another path
+    :param shp_path: EPSG:4326
+    :param prj_str: e.g., EPSG:4326
+    :param save_path: save path
+    :return:
+    '''
+    shapefile = gpd.read_file(shp_path)
+    # print(shapefile.crs)
+
+    # shapefile  = shapefile.to_crs(prj_str)
+    if gpd.__version__ >= '0.7.0':
+        shapefile = shapefile.to_crs(prj_str)
+    else:
+        shapefile = shapefile.to_crs({'init': prj_str})
+
+    return shapefile.to_file(save_path, driver = 'ESRI Shapefile')
+
+def read_polygons_gpd(polygon_shp):
+    '''
+    read polyogns using geopandas
+    :param polygon_shp: polygon in projection of EPSG:4326
+    :param no_json: True indicate not json format
+    :return:
+    '''
+
+    shapefile = gpd.read_file(polygon_shp)
+    polygons = shapefile.geometry.values
+
+    # # check invalidity of polygons
+    invalid_polygon_idx = []
+    # for idx, geom in enumerate(polygons):
+    #     if geom.is_valid is False:
+    #         invalid_polygon_idx.append(idx + 1)
+    # if len(invalid_polygon_idx) > 0:
+    #     raise ValueError('error, polygons %s (index start from 1) in %s are invalid, please fix them first '%(str(invalid_polygon_idx),polygon_shp))
+
+    # fix invalid polygons
+    polygons = fix_invalid_polygons(polygons)
+
+    return polygons
+
+def read_attribute_values_list(polygon_shp, field_name):
+    '''
+    read the attribute value to a list
+    :param polygon_shp:
+    :param field_name:
+    :return: a list containing the attribute values
+    '''
+
+    shapefile = gpd.read_file(polygon_shp)
+    if field_name in shapefile.keys():
+        attribute_values = shapefile[field_name]
+        return attribute_values.tolist()
+    else:
+        basic.outputlogMessage('Warning: %s not in the shape file, will return None'%field_name)
+        return None
+
+def remove_polygon_equal(shapefile,field_name, expect_value, b_equal, output):
+    '''
+    remove polygons the the attribute value is not equal to a specific value
+    :param shapefile:
+    :param field_name:
+    :param threshold:
+    :param b_equal: if True, remove records not equal to expect_value, otherwise, remove the one equal to expect_value
+    :param output:
+    :return:
+    '''
+
+    shapefile = gpd.read_file(shapefile)
+
+    remove_count = 0
+
+    for idx,row in shapefile.iterrows():
+
+        # polygon = row['geometry']
+        # go through post-processing to decide to keep or remove it
+        if b_equal:
+            if row[field_name] != expect_value:
+                shapefile.drop(idx, inplace=True)
+                remove_count += 1
+        else:
+            if row[field_name] == expect_value:
+                shapefile.drop(idx, inplace=True)
+                remove_count += 1
+
+    basic.outputlogMessage('remove %d polygons based on %s, remain %d ones saving to %s' %
+                           (remove_count, field_name, len(shapefile.geometry.values), output))
+    # save results
+    shapefile.to_file(output, driver='ESRI Shapefile')
+
+def remove_polygon_time_index(shapefile,field_name, time_count, output):
+    '''
+    remove polygons if the time index is not monotonically increasing and not follow the pattern
+    :param shapefile:
+    :param field_name:
+    :param time_count:
+    :param output:
+    :return:
+    '''
+    remove_count = 0
+    shapefile = gpd.read_file(shapefile)
+
+    for idx, row in shapefile.iterrows():
+        idx_string = row[field_name]
+        num_list = [int(item) for item in idx_string.split('_')]
+        # the number list should be one of the pattern: 0, 1, 2...n  or 1, 2,...n or n, not only monotonically increasing
+        pattern_int = [str(item) for item in range(num_list[0],time_count)]
+        pattern_str = '_'.join(pattern_int)
+        # if np.all(np.diff(num_list) >= 1):
+        if idx_string == pattern_str:
+            pass
+        else:
+            shapefile.drop(idx, inplace=True)
+            remove_count += 1
+
+    basic.outputlogMessage('remove %d polygons based on %s, remain %d ones saving to %s' %
+                           (remove_count, field_name, len(shapefile.geometry.values), output))
+    # save results
+    return shapefile.to_file(output, driver='ESRI Shapefile')
+
+def remove_polygon_index_string(shapefile,field_name, index_list, output):
+    '''
+    remove polygons the the attribute value is not equal to a specific value
+    :param shapefile:
+    :param field_name:
+    :param threshold:
+    :param b_equal: if True, remove records not equal to expect_value, otherwise, remove the one equal to expect_value
+    :param output:
+    :return:
+    '''
+    if len(index_list) < 1:
+        raise ValueError('Wrong input index_list, it size is zero')
+
+    shapefile = gpd.read_file(shapefile)
+
+    remove_count = 0
+
+    for idx,row in shapefile.iterrows():
+
+        # polygon = row['geometry']
+        # go through post-processing to decide to keep or remove it
+        idx_string = row[field_name]
+        num_list =  [ int(item) for item in idx_string.split('_')]
+
+        # if all the index in index_list found in num_list, then keep it, otherwise, remove it
+        for index in index_list:
+            if index not in num_list:
+                shapefile.drop(idx, inplace=True)
+                remove_count += 1
+                break
+
+    basic.outputlogMessage('remove %d polygons based on %s, remain %d ones saving to %s' %
+                           (remove_count, field_name, len(shapefile.geometry.values), output))
+    # save results
+    shapefile.to_file(output, driver='ESRI Shapefile')
+
+def remove_polygons_not_in_range(shapefile,field_name, min_value, max_value,output):
+    '''
+    remove polygon not in range (min, max]
+    :param shapefile:
+    :param field_name:
+    :param min_value:
+    :param max_value:
+    :param output:
+    :return:
+    '''
+    # read polygons as shapely objects
+    shapefile = gpd.read_file(shapefile)
+
+    remove_count = 0
+
+    for idx, row in shapefile.iterrows():
+
+        # polygon = row['geometry']
+        # go through post-processing to decide to keep or remove it
+        if row[field_name] < min_value or row[field_name] >= max_value:
+            shapefile.drop(idx, inplace=True)
+            remove_count += 1
+
+    basic.outputlogMessage('remove %d polygons based on %s, remain %d ones saving to %s' %
+                           (remove_count, field_name, len(shapefile.geometry.values), output))
+    # save results
+    shapefile.to_file(output, driver='ESRI Shapefile')
+
+def remove_polygons_based_values(shapefile,value_list, threshold, bsmaller,output):
+    '''
+    remove polygons based on attribute values
+    :param shapefile:
+    :param value_list: values for removing polygons, its number should be the same polygon numbers in shapefile
+    :param threshold:
+    :param bsmaller:
+    :param output:
+    :return:
+    '''
+    # read polygons as shapely objects
+    shapefile = gpd.read_file(shapefile)
+
+    remove_count = 0
+    for (idx,row), value in zip(shapefile.iterrows(),value_list):
+        if bsmaller:
+            if value < threshold:
+                shapefile.drop(idx, inplace=True)
+                remove_count += 1
+        else:
+            if value >= threshold:
+                shapefile.drop(idx, inplace=True)
+                remove_count += 1
+
+    basic.outputlogMessage('remove %d polygons, remain %d ones saving to %s' %
+                           (remove_count, len(shapefile.geometry.values), output))
+    # save results
+    shapefile.to_file(output, driver='ESRI Shapefile')
+
+def remove_polygons(shapefile,field_name, threshold, bsmaller,output):
+    '''
+    remove polygons based on attribute values
+    :param shapefile:
+    :param field_name:
+    :param threshold:
+    :param bsmaller:
+    :param output:
+    :return:
+    '''
+    # another version
+    # operation_obj = shape_opeation()
+    # if operation_obj.remove_shape_baseon_field_value(shapefile, output, field_name, threshold, smaller=bsmaller) is False:
+    #     return False
+
+    # read polygons as shapely objects
+    shapefile = gpd.read_file(shapefile)
+
+    remove_count = 0
+
+    for idx,row in shapefile.iterrows():
+
+        # polygon = row['geometry']
+        # go through post-processing to decide to keep or remove it
+
+        if bsmaller:
+            if row[field_name] < threshold:
+                shapefile.drop(idx, inplace=True)
+                remove_count += 1
+        else:
+            if row[field_name] >= threshold:
+                shapefile.drop(idx, inplace=True)
+                remove_count += 1
+
+    basic.outputlogMessage('remove %d polygons based on %s, remain %d ones saving to %s' %
+                           (remove_count, field_name, len(shapefile.geometry.values), output))
+    # save results
+    shapefile.to_file(output, driver='ESRI Shapefile')
+
+def calculate_polygon_shape_info(polygon_shapely):
+    '''
+    calculate the shape information of a polygon, including area, perimeter, circularity,
+    WIDTH and HEIGHT based on minimum_rotated_rectangle,
+    :param polygon_shapely: a polygon (shapely object)
+    :return:
+    '''
+    shape_info = {}
+    shape_info['INarea'] = polygon_shapely.area
+    shape_info['INperimete']  = polygon_shapely.length
+
+    # circularity
+    circularity = (4 * math.pi *  polygon_shapely.area / polygon_shapely.length** 2)
+    shape_info['circularit'] = circularity
+
+    minimum_rotated_rectangle = polygon_shapely.minimum_rotated_rectangle
+
+    points = list(minimum_rotated_rectangle.boundary.coords)
+    point1 = Point(points[0])
+    point2 = Point(points[1])
+    point3 = Point(points[2])
+    width = point1.distance(point2)
+    height = point2.distance(point3)
+
+    shape_info['WIDTH'] = width
+    shape_info['HEIGHT'] = height
+    if width > height:
+        shape_info['ratio_w_h'] = height / width
+    else:
+        shape_info['ratio_w_h'] = width / height
+
+    #added number of holes
+    shape_info['hole_count'] = len(list(polygon_shapely.interiors))
+
+    return shape_info
+
+def save_shapefile_subset_as(data_poly_indices, org_shp, save_path):
+    '''
+    save subset of shapefile
+    :param data_poly_indices: polygon index
+    :param org_shp: orignal shapefile
+    :param save_path: save path
+    :return: True if successful
+    '''
+    if len(data_poly_indices) < 1:
+        raise ValueError('no input index')
+
+    save_count = len(data_poly_indices)
+    shapefile = gpd.read_file(org_shp)
+    nrow, ncol = shapefile.shape
+
+    selected_list = [False]*nrow
+    for idx in data_poly_indices:
+        selected_list[idx] = True
+
+    shapefile_sub = shapefile[selected_list]
+    shapefile_sub.to_file(save_path, driver='ESRI Shapefile')
+    basic.outputlogMessage('save subset (%d geometry) of shapefile to %s'%(save_count,save_path))
+
+    return True
+
+def save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path):
+    '''
+    :param data_frame: include polygon list and the corresponding attributes
+    :param geometry_name: dict key for the polgyon in the DataFrame
+    :param wkt_string: wkt string (projection)
+    :param save_path: save path
+    :return:
+    '''
+    # data_frame[geometry_name] = data_frame[geometry_name].apply(wkt.loads)
+    poly_df = gpd.GeoDataFrame(data_frame, geometry=geometry_name)
+    poly_df.crs = wkt_string # or poly_df.crs = {'init' :'epsg:4326'}
+    poly_df.to_file(save_path, driver='ESRI Shapefile')
+
+    return True
+
+def remove_narrow_parts_of_a_polygon(shapely_polygon, rm_narrow_thr):
+    '''
+    try to remove the narrow (or thin) parts of a polygon by using buffer opeartion
+    :param shapely_polygon: a shapely object, Polygon or MultiPolygon
+    :param rm_narrow_thr: how narrow
+    :return: the shapely polygon, multipolygons or polygons
+    '''
+
+    # A positive distance has an effect of dilation; a negative distance, erosion.
+    # object.buffer(distance, resolution=16, cap_style=1, join_style=1, mitre_limit=5.0)
+
+    enlarge_factor = 1.6
+    # can return multiple polygons
+    # remain_polygon_parts = shapely_polygon.buffer(-rm_narrow_thr)
+    # remain_polygon_parts = shapely_polygon.buffer(-rm_narrow_thr).buffer(rm_narrow_thr * enlarge_factor)
+    remain_polygon_parts = shapely_polygon.buffer(-rm_narrow_thr).buffer(rm_narrow_thr * enlarge_factor).intersection(shapely_polygon)
+
+    return remain_polygon_parts
+
+def remove_narrow_parts_of_polygons_shp_NOmultiPolygon(input_shp,out_shp,rm_narrow_thr):
+    # read polygons as shapely objects
+    shapefile = gpd.read_file(input_shp)
+
+    attribute_names = None
+    new_polygon_list = []
+    polygon_attributes_list = []  # 2d list
+
+    for idx, row in shapefile.iterrows():
+        if idx==0:
+            attribute_names = row.keys().to_list()[:-1]  # the last one is 'geometry'
+        print('removing narrow parts of %dth polygon (total: %d)'%(idx+1,len(shapefile.geometry.values)))
+        shapely_polygon = row['geometry']
+        if shapely_polygon.is_valid is False:
+            shapely_polygon = shapely_polygon.buffer(0.000001)
+            basic.outputlogMessage('warning, %d th polygon is is_valid, fix it by the buffer operation'%idx)
+        out_geometry = remove_narrow_parts_of_a_polygon(shapely_polygon, rm_narrow_thr)
+        # if out_polygon.is_empty is True:
+        #     print(idx, out_polygon)
+        if out_geometry.is_empty is True:
+            basic.outputlogMessage('Warning, remove %dth (0 index) polygon in %s because it is empty after removing narrow parts'%
+                                   (idx, os.path.basename(input_shp)))
+            # continue, don't save
+            # shapefile.drop(idx, inplace=True),
+        else:
+            out_polygon_list = MultiPolygon_to_polygons(idx, out_geometry)
+            if len(out_polygon_list) < 1:
+                continue
+            new_polygon_list.extend(out_polygon_list)
+            attributes = [row[key] for key in attribute_names]
+            for idx in range(len(out_polygon_list)):
+                # copy the attributes (Not area and perimeter, etc)
+                polygon_attributes_list.append(attributes)        # last one is 'geometry'
+            # copy attributes
+
+    if len(new_polygon_list) < 1:
+        basic.outputlogMessage('Warning, no polygons in %s'%input_shp)
+        return False
+
+    save_polyons_attributes = {}
+    for idx, attribute in enumerate(attribute_names):
+        # print(idx, attribute)
+        values = [item[idx] for item in polygon_attributes_list]
+        save_polyons_attributes[attribute] = values
+
+    save_polyons_attributes["Polygons"] = new_polygon_list
+    polygon_df = pd.DataFrame(save_polyons_attributes)
+
+    basic.outputlogMessage('After removing the narrow parts, obtaining %d polygons'%len(new_polygon_list))
+    print(out_shp, isinstance(out_shp,list))
+    basic.outputlogMessage('will be saved to %s'%out_shp)
+    wkt_string = map_projection.get_raster_or_vector_srs_info_wkt(input_shp)
+    return save_polygons_to_files(polygon_df, 'Polygons', wkt_string, out_shp)
+
+def remove_narrow_parts_of_polygons_shp(input_shp,out_shp,rm_narrow_thr):
+    # read polygons as shapely objects
+    shapefile = gpd.read_file(input_shp)
+
+    attribute_names = None
+    new_polygon_list = []
+    polygon_attributes_list = []  # 2d list
+
+    for idx, row in shapefile.iterrows():
+        if idx==0:
+            attribute_names = row.keys().to_list()[:-1]  # the last one is 'geometry'
+        print('removing narrow parts of %dth polygon (total: %d)'%(idx+1,len(shapefile.geometry.values)))
+        shapely_polygon = row['geometry']
+        out_polygon = remove_narrow_parts_of_a_polygon(shapely_polygon, rm_narrow_thr)
+        # if out_polygon.is_empty is True:
+        #     print(idx, out_polygon)
+        if out_polygon.is_empty is True:
+            basic.outputlogMessage('Warning, remove %dth (0 index) polygon in %s because it is empty after removing narrow parts'%
+                                   (idx, os.path.basename(input_shp)))
+            # continue, don't save
+            # shapefile.drop(idx, inplace=True),
+        else:
+            new_polygon_list.append(out_polygon)
+            attributes = [row[key] for key in attribute_names]
+            polygon_attributes_list.append(attributes)        # last one is 'geometry'
+            # copy attributes
+
+    save_polyons_attributes = {}
+    for idx, attribute in enumerate(attribute_names):
+        # print(idx, attribute)
+        values = [item[idx] for item in polygon_attributes_list]
+        save_polyons_attributes[attribute] = values
+
+    save_polyons_attributes["Polygons"] = new_polygon_list
+    polygon_df = pd.DataFrame(save_polyons_attributes)
+
+    basic.outputlogMessage('After removing the narrow parts, obtaining %d polygons'%len(new_polygon_list))
+    print(out_shp, isinstance(out_shp,list))
+    basic.outputlogMessage('will be saved to %s'%out_shp)
+    wkt_string = map_projection.get_raster_or_vector_srs_info_wkt(input_shp)
+    return save_polygons_to_files(polygon_df, 'Polygons', wkt_string, out_shp)
+
+def polygons_to_a_MultiPolygon(polygon_list):
+    if isinstance(polygon_list,list) is False:
+        raise ValueError('the input is a not list')
+    if len(polygon_list) < 1:
+        raise ValueError('There is no polygon in the input')
+    return MultiPolygon(polygon_list)
+
+def MultiPolygon_to_polygons(idx, multiPolygon, attributes=None):
+    ''''''
+
+    if multiPolygon.geom_type == 'GeometryCollection':
+        polygons = []
+        # print(multiPolygon)
+        # geometries = list(multiPolygon)
+        # print(geometries)
+        for geometry in multiPolygon:
+            # print(geometry)
+            if geometry.geom_type == 'Polygon':
+                polygons.append(geometry)
+            elif geometry.geom_type == 'MultiPolygon':
+                polygons.extend(list(geometry))
+            else:
+                basic.outputlogMessage("Warning, abandon a %s derived from the %d th polygon "%(geometry.geom_type,idx))
+
+    elif multiPolygon.geom_type == 'MultiPolygon':
+        polygons = list(multiPolygon)
+    elif multiPolygon.geom_type == 'Polygon':
+        polygons = [multiPolygon]
+    else:
+        raise ValueError('Currently, only support Polygon and MultiPolygon, but input is %s' % multiPolygon.geom_type)
+
+
+    # # TODO: calculate new information each polygon
+    # polygon_attributes_list = []        # 2D list for polygons
+    # for p_idx, polygon in enumerate(polygons):
+    #     # print(polyon.area)
+    #     # calculate area, circularity, oriented minimum bounding box
+    #     polygon_shape = calculate_polygon_shape_info(polygon)
+    #     if idx == 0 and p_idx == 0:
+    #         [attribute_names.append(item) for item in polygon_shape.keys()]
+    #
+    #     [polygon_attributes.append(polygon_shape[item]) for item in polygon_shape.keys()]
+    #     polygon_attributes_list.append(polygon_attributes)
+    #     polygon_list.append(polygon)
+
+    return polygons
+
+def fill_holes_in_a_polygon(polygon):
+    '''
+    fill holes in a polygon
+    :param polygon: a polygon object (shapely)
+    :return:
+    '''
+    if polygon.interiors:
+        return Polygon(list(polygon.exterior.coords))
+    else:
+        return polygon
+
+def get_poly_index_within_extent(polygon_list, extent_poly):
+    '''
+    get id of polygons intersecting with an extent
+    (may also consider using ogr2ogr to crop the shapefile, also can use remove functions)
+    :param polygon_list: polygons list (polygon is in shapely format)
+    :param extent_poly: extent polygon (shapely format)
+    :return: id list
+    '''
+    idx_list = []
+    for idx, poly in enumerate(polygon_list):
+        inter = extent_poly.intersection(poly)
+        if inter.is_empty is False:
+            idx_list.append(idx)
+
+    return idx_list
+
+def main(options, args):
+
+    # ###############################################################
+    # # test reading polygons with holes
+    # polygons = read_polygons_gpd(args[0])
+    # for idx, polygon in enumerate(polygons):
+    #     if idx == 268:
+    #         test = 1
+    #         # print(polygon)
+    #     print(idx, list(polygon.interiors))
+    #     for inPoly in list(polygon.interiors):      # for holes
+    #         print(inPoly)
+
+    ###############################################################
+    # test thinning a polygon
+    input_shp = args[0]
+    save_shp = args[1]
+    # out_polygons_list = []
+    # polygons = read_polygons_gpd(input_shp)
+    # for idx, polygon in enumerate(polygons):
+    #     # print(idx, polygon)
+    #
+    #     out_polygons = remove_narrow_parts_of_a_polygon(polygon,1.5)
+    #     # save them
+    #     out_polygons_list.append(out_polygons)
+    #     print(idx)
+    # import pandas as pd
+    # import basic_src.map_projection as map_projection
+    # out_polygon_df = pd.DataFrame({'out_Polygons': out_polygons_list
+    #                             })
+    #
+    # wkt_string = map_projection.get_raster_or_vector_srs_info_wkt(input_shp)
+    # save_polygons_to_files(out_polygon_df,'out_Polygons', wkt_string, save_shp)
+
+    remove_narrow_parts_of_polygons_shp(input_shp,save_shp, 1.5)
+
+
+    pass
+
+
+
+if __name__=='__main__':
+    usage = "usage: %prog [options] input_path output_file"
+    parser = OptionParser(usage=usage, version="1.0 2016-10-26")
+    parser.add_option("-p", "--para",
+                      action="store", dest="para_file",
+                      help="the parameters file")
+    # parser.add_option("-s", "--used_file", action="store", dest="used_file",
+    #                   help="the selectd used files,only need when you set --action=2")
+    # parser.add_option('-o', "--output", action='store', dest="output",
+    #                   help="the output file,only need when you set --action=2")
+
+    (options, args) = parser.parse_args()
+    if len(sys.argv) < 2 or len(args) < 2:
+        parser.print_help()
+        sys.exit(2)
+    main(options, args)

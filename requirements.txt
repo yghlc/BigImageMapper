@@ -1,0 +1,7 @@
+sklearn
+tf_slim
+shapely
+rasterio
+imgaug==0.2.6
+GPUtil
+geopandas
