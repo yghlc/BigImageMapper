@@ -39,7 +39,8 @@ Any enhancement or new functions are also welcome!
 ## updates
 January 2021:
     Clean or re-organize the scripts; re-define the input parameter files, separate them into main ini, network defined ini, 
-    and regions defined ini, making it easy to different regions or networks for training and inference;
+    and regions defined ini, making it easy to different regions or networks for training and inference; 
+    split data into training (%90) and validation (10%) for checking the overfitting issue. 
     output mIOU during training and allow early stopping.
 
 March 2019:
