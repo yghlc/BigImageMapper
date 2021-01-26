@@ -13,10 +13,20 @@ modified: 21 January, 2021
 
 import os, sys
 import time
+from optparse import OptionParser
 
 import GPUtil
 import datetime
 from multiprocessing import Process
+
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+import parameters
+
+import basic_src.io_function as io_function
+import basic_src.basic as basic
+
+from workflow.deeplab_train import get_trained_iteration
 
 def is_file_exist_in_folder(folder):
     # only check the first ten files
@@ -46,10 +56,11 @@ def predict_one_image_deeplab(deeplab_inf_script, para_file,network_ini, save_di
     # os.system(command_string )      # this work
 
     WORK_DIR = os.getcwd()
-    iteration_num = parameters.get_digit_parameters_None_if_absence(network_ini, 'export_iteration_num', 'int')
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
     EXP_FOLDER = expr_name
     EXPORT_DIR = os.path.join(WORK_DIR, EXP_FOLDER, 'export')
+    TRAIN_LOGDIR = os.path.join(WORK_DIR, EXP_FOLDER, 'train')
+    iteration_num = get_trained_iteration(TRAIN_LOGDIR)
     EXPORT_PATH = os.path.join(EXPORT_DIR, 'frozen_inference_graph_%s.pb' % iteration_num)
     frozen_graph_path = EXPORT_PATH
 
@@ -83,23 +94,16 @@ def b_all_task_finish(all_tasks):
             return False
     return True
 
-
-if __name__ == '__main__':
+def main(options, args):
 
     print("%s : export the frozen inference graph" % os.path.basename(sys.argv[0]))
     machine_name = os.uname()[1]
     start_time = datetime.datetime.now()
 
-    para_file = sys.argv[1]
+    para_file = args[0]
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-
-    import basic_src.io_function as io_function
-    import basic_src.basic as basic
 
     basic.setlogfile('parallel_predict_Log.txt')
 
@@ -212,4 +216,20 @@ if __name__ == '__main__':
     basic.outputlogMessage(out_str)
     with open ("time_cost.txt",'a') as t_obj:
         t_obj.writelines(out_str+'\n')
+
+
+
+if __name__ == '__main__':
+
+    usage = "usage: %prog [options] para_file"
+    parser = OptionParser(usage=usage, version="1.0 2021-01-21")
+    parser.description = 'Introduction: export trained model '
+
+    (options, args) = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
+    main(options, args)
+
 

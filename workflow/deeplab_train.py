@@ -319,6 +319,9 @@ if __name__ == '__main__':
     parser.description = 'Introduction: training and evaluating of Deeplab '
 
     (options, args) = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     main(options, args)
 
