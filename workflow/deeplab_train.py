@@ -13,6 +13,8 @@ from optparse import OptionParser
 import math
 import re
 
+import numpy as np
+
 code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
 sys.path.insert(0, code_dir)
 import parameters
@@ -96,7 +98,7 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
     if res != 0:
         sys.exit(res)
 
-def get_miou_step_list_class_all(train_log_dir,class_num):
+def get_miou_list_class_all(train_log_dir,class_num):
 
     from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
@@ -208,6 +210,8 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     evl_split = os.path.splitext(parameters.get_string_parameters(para_file,'validation_sample_list_txt'))[0]
     max_eva_number = 1
 
+    b_early_stopping = parameters.get_bool_parameters(para_file,'b_early_stopping')
+
     # validation interval (epoch)
     validation_interval = parameters.get_digit_parameters_None_if_absence(para_file,'validation_interval','int')
     train_count, val_count = get_train_val_sample_count(WORK_DIR, para_file)
@@ -246,6 +250,16 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
             evaluation_deeplab(evl_script, dataset, evl_split, num_of_classes, model_variant,
                                atrous_rates1, atrous_rates2, atrous_rates3, output_stride, TRAIN_LOGDIR, EVAL_LOGDIR,
                                dataset_dir, max_eva_number)
+
+            # check if need to early stopping
+            if b_early_stopping:
+                # get miou
+                miou_dict = get_miou_list_class_all(EVAL_LOGDIR,num_of_classes)
+                if len(miou_dict['overall']) >= 5:
+                    # if the last five miou did not improve, then stop training
+                    if np.all(np.diff(miou_dict['overall'][-5:]) < 0.0001):
+                        basic.outputlogMessage('early stopping: stop training because overall miou did not improved in the last five evaluation')
+                        break
 
 
 # def init_for_test_function():

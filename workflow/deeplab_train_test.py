@@ -37,7 +37,7 @@ class TestdeeplabTrainclass():
 
     def test_get_miou_spep_list(self):
         train_log_dir = os.path.join(work_dir, 'exp1', 'eval')
-        dict = deeplab_train.get_miou_step_list_class_all(train_log_dir,2)
+        dict = deeplab_train.get_miou_list_class_all(train_log_dir,2)
         print(dict)
 
 
