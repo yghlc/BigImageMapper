@@ -109,6 +109,7 @@ def main(options, args):
 
     # loop each inference regions
     sub_tasks = []
+    region_eva_reports = {}
     for area_idx, area_ini in enumerate(multi_inf_regions):
         area_name = parameters.get_string_parameters_None_if_absence(area_ini, 'area_name')
         area_remark = parameters.get_string_parameters_None_if_absence(area_ini, 'area_remark')
@@ -152,6 +153,8 @@ def main(options, args):
         out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
         evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
 
+        region_eva_reports[shp_pre] = out_report
+
 
         ##### copy and backup files ######
         # copy files to result_backup
@@ -185,6 +188,11 @@ def main(options, args):
     io_function.copy_file_to_dst(para_file, bak_para_ini)
     io_function.copy_file_to_dst(network_setting_ini, bak_network_ini)
 
+    # output the evaluation report to screen
+    for key in region_eva_reports.keys():
+        report = region_eva_reports[key]
+        print('evaluation report for %s:'%key)
+        os.system('head -n 7 %s'%report)
 
 
 if __name__ == '__main__':
