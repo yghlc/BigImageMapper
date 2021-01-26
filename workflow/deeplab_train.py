@@ -135,6 +135,8 @@ def get_miou_list_class_all(train_log_dir,class_num):
     miou_dic['overall'] = miou_class_list
     io_function.save_dict_to_txt_json('miou.txt', miou_dic)
 
+    return miou_dic
+
 
 def get_trained_iteration(TRAIN_LOGDIR):
     checkpoint = os.path.join(TRAIN_LOGDIR,'checkpoint')
