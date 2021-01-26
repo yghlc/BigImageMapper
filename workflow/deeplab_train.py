@@ -96,6 +96,44 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
     if res != 0:
         sys.exit(res)
 
+def get_miou_step_list_class_all(train_log_dir,class_num):
+
+    from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+
+    # Loading too much data is slow...
+    # tf_size_guidance on how much data the EventAccumulator should
+    #  |          store in memory. The DEFAULT_SIZE_GUIDANCE tries not to store too much
+    #  |          so as to avoid OOMing the client. The size_guidance should be a map
+    #  |          from a `tagType` string to an integer representing the number of
+    #  |          items to keep per tag for items of that `tagType`. If the size is 0,
+    #  |          all events are stored.
+    tf_size_guidance = {
+        'compressedHistograms': 10,
+        'images': 0,
+        'scalars': 0,       # set a 0, to load all scalars
+        'histograms': 1
+    }
+
+    event_acc = EventAccumulator(train_log_dir, tf_size_guidance)
+    event_acc.Reload()
+
+    # Show all tags in the log file
+    # tag_dict = event_acc.Tags()
+    # io_function.save_dict_to_txt_json('event_acc.txt',tag_dict)
+
+    miou_dic = {}
+    for class_id in range(class_num):
+        name  = 'class_%d'%class_id
+        miou_class_event = event_acc.Scalars('eval/miou_1.0_'+name)
+        miou_class_list = [item[2] for item in miou_class_event ]  # item[0] is wall_time, item[1] is step, item [2] is the value
+        miou_dic[name] = miou_class_list
+
+    miou_class_overall = event_acc.Scalars('eval/miou_1.0_overall')
+    miou_class_list = [item[2] for item in miou_class_overall]
+    miou_dic['overall'] = miou_class_list
+    io_function.save_dict_to_txt_json('miou.txt', miou_dic)
+
+
 def get_trained_iteration(TRAIN_LOGDIR):
     checkpoint = os.path.join(TRAIN_LOGDIR,'checkpoint')
     if os.path.isfile(checkpoint):
