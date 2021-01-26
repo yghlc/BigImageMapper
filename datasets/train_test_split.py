@@ -50,11 +50,11 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage, version="1.0 2018-11-17")
     parser.description = 'Introduction: split images to subset of train and test '
 
-    parser.add_option('-t','--train_per',
+    parser.add_option('-p','--train_per',
                       action='store',dest='train_per',type='float',default=0.8,
                       help="percentage of training data, a float value from 0 to 1")
 
-    parser.add_option('-s','--train_list_txt',
+    parser.add_option('-t','--train_list_txt',
                       action='store',dest='train_list_txt',default ='train_list.txt',
                       help="the txt file name for saving training samples")
 

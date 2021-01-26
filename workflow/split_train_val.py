@@ -29,8 +29,8 @@ if __name__ == '__main__':
     train_sample_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
     val_sample_txt = parameters.get_string_parameters(para_file, 'validation_sample_list_txt')
 
-    command_string = script + ' -t ' + str(training_data_per) + \
-                     ' -s ' + train_sample_txt  + \
+    command_string = script + ' -p ' + str(training_data_per) + \
+                     ' -t ' + train_sample_txt  + \
                      ' -v ' + val_sample_txt  + \
                      ' --shuffle ' + 'list/trainval.txt'
     os.system(command_string)
