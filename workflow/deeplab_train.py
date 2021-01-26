@@ -186,10 +186,10 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     os.chdir(WORK_DIR)
 
     dataset_dir = os.path.join(WORK_DIR, 'tfrecord')
-    batch_size = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'batch_size','int')
+    batch_size = parameters.get_digit_parameters(network_setting_ini,'batch_size','int')
     # maximum iteration number
-    iteration_num = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'iteration_num','int')
-    base_learning_rate = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'base_learning_rate','float')
+    iteration_num = parameters.get_digit_parameters(network_setting_ini,'iteration_num','int')
+    base_learning_rate = parameters.get_digit_parameters(network_setting_ini,'base_learning_rate','float')
 
     output_stride = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'output_stride','int')
     atrous_rates1 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'atrous_rates1','int')
