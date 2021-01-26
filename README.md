@@ -5,12 +5,16 @@ This repo contains codes for  mapping thermokarst landforms including thermo-ero
 ## Citation
 If codes here are useful for your project, please consider citing our papers:
 
+The scripts for producing our results in paper [Huang et at. 2020](https://www.sciencedirect.com/science/article/pii/S003442571930553X). 
+Please check out the [RSE2020paper] (https://github.com/yghlc/Landuse_DL/tree/RES2020paper) Branch.
+
 ```
-@article{huang2019using,
+@article{huang2020using,
   title={Using Deep Learning to Map Retrogressive Thaw Slumps in the Beiluhe Region (Tibetan Plateau) from CubeSat Images},
   author={Huang, Lingcao and Luo, Jing and Lin, Zhanju and Niu, Fujun and Liu, Lin},
   journal={Remote Sensing of Environment},
   volume = {237},
+  pages={111534},
   year = {2020},
   publisher={ELSEVIER},
   doi = {https://doi.org/10.1016/j.rse.2019.111534}
