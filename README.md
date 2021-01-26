@@ -2,7 +2,7 @@
 Land use classification or landform delineation from remote sensing images using Deep Learning. 
 This repo contains codes for  mapping thermokarst landforms including thermo-erosion gullies and retrogressive thaw slumps.
 
-We are actively cleaning, re-organizing, and documenting our codes. Please check out the [Release](https://github.com/yghlc/Landuse_DL/tree/release) Branch.
+We are actively cleaning, re-organizing, and documenting our codes. Please check out the [Master](https://github.com/yghlc/Landuse_DL/tree/master) Branch.
 
 ## Citation
 If codes here are useful for your project, please cite our papers:
