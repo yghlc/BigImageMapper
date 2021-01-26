@@ -3,7 +3,7 @@ Land use classification or landform delineation from remote sensing images using
 This repo contains codes for  mapping thermokarst landforms including thermo-erosion gullies and retrogressive thaw slumps.
 
 ## Citation
-If codes here are useful for your project, please cite our papers:
+If codes here are useful for your project, please consider citing our papers:
 
 ```
 @article{huang2019using,
@@ -40,6 +40,7 @@ Any enhancement or new functions are also welcome!
 January 2021:
     Clean or re-organize the scripts; re-define the input parameter files, separate them into main ini, network defined ini, 
     and regions defined ini, making it easy to different regions or networks for training and inference;
+    output mIOU during training and allow early stopping.
 
 March 2019:
     Many scripts for producing figures of manuscript: Using Deep Learning to Map Retrogressive Thaw Slumps in the Beiluhe Region (Tibetan Plateau) from CubeSat Images, Remote sensing of Environment.
