@@ -15,7 +15,7 @@ import re
 
 import numpy as np
 
-code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
 

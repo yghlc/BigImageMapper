@@ -9,6 +9,15 @@ add time: 22 January, 2021
 """
 import os, sys
 import time
+from optparse import OptionParser
+
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+import parameters
+import basic_src.io_function as io_function
+
+sys.path.insert(0, os.path.join(code_dir, 'datasets'))
+from merge_shapefiles import merge_shape_files
 
 def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
@@ -66,28 +75,19 @@ def evaluation_polygons(script, in_shp_path, para_file, data_para_file,out_repor
         sys.exit(res)
     return in_shp_path
 
+def main(options, args):
 
-if __name__ == '__main__':
     print("%s : Post-processing" % os.path.basename(sys.argv[0]))
 
-    para_file = sys.argv[1]
+    para_file = args[0]
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
     # the test string in 'exe.sh'
-    if len(sys.argv) > 2:
-        test_note = sys.argv[2]
+    if len(args) > 1:
+        test_note = args[1]
     else:
         test_note = ''
-
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-    import basic_src.io_function as io_function
-
-    sys.path.insert(0, os.path.join(code_dir,'datasets'))
-    from merge_shapefiles import merge_shape_files
-
 
     WORK_DIR = os.getcwd()
 
@@ -185,6 +185,20 @@ if __name__ == '__main__':
     io_function.copy_file_to_dst(para_file, bak_para_ini)
     io_function.copy_file_to_dst(network_setting_ini, bak_network_ini)
 
+
+
+if __name__ == '__main__':
+
+    usage = "usage: %prog [options] para_file test_note"
+    parser = OptionParser(usage=usage, version="1.0 2021-01-22")
+    parser.description = 'Introduction: Post-processing  '
+
+    (options, args) = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
+    main(options, args)
 
 
 

@@ -10,7 +10,14 @@ modified: 19 January, 2021
 """
 
 import os,sys
+from optparse import OptionParser
 
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+import parameters
+import datasets.split_image as split_image
+
+import basic_src.io_function as io_function
 
 def split_to_patches(image_path, out_dir, patch_width, patch_height, overlay_x, overlay_y, out_format, file_pre_name=None):
     patch_width = int(patch_width)
@@ -23,21 +30,15 @@ def split_to_patches(image_path, out_dir, patch_width, patch_height, overlay_x, 
 
     split_image.split_image(image_path, out_dir, patch_width, patch_height, overlay_x, overlay_y, out_format, pre_name=file_pre_name)
 
-if __name__ == '__main__':
+
+def main(options, args):
 
     print("%s : split sub-images and sub-labels"% os.path.basename(sys.argv[0]))
 
-    para_file=sys.argv[1]
+    para_file=args[0]
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s'%(para_file, os.getcwd()))
 
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-    import datasets.split_image as split_image
-
-
-    import basic_src.io_function as io_function
 
     if os.path.isdir('split_images'):
         io_function.delete_file_or_dir('split_images')
@@ -86,6 +87,22 @@ if __name__ == '__main__':
                 w_obj.writelines(os.path.splitext(os.path.basename(file_name))[0] + '\n')
 
         io_function.copy_file_to_dst(trainval,val,overwrite=True)
+
+
+if __name__ == '__main__':
+
+    usage = "usage: %prog [options] para_file"
+    parser = OptionParser(usage=usage, version="1.0 2021-01-21")
+    parser.description = 'Introduction: split sub-images '
+
+    (options, args) = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
+    main(options, args)
+
+
 
 
 
