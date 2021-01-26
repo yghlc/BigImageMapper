@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Filename: deeplab_train 
 """
-introduction: run the training of deeplab
+introduction: run the training and evaluation of deeplab
 
 authors: Huang Lingcao
 email:huanglingcao@gmail.com
@@ -9,8 +9,16 @@ add time: 19 January, 2021
 """
 
 import os, sys
+from optparse import OptionParser
 import math
 import re
+
+code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+sys.path.insert(0, code_dir)
+import parameters
+
+import basic_src.io_function as io_function
+import basic_src.basic as basic
 
 def get_train_val_sample_count(work_dir, para_file):
 
@@ -101,7 +109,7 @@ def get_trained_iteration(TRAIN_LOGDIR):
     else:
         return 0
 
-def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_setting_ini):
+def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_setting_ini,gpu_num):
 
     # prepare training folder
     EXP_FOLDER = expr_name
@@ -202,35 +210,23 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                                dataset_dir, max_eva_number)
 
 
-def init_for_test_function():
-    code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
-    sys.path.insert(0, code_dir)
-    import parameters
-    global parameters   # use global to make parameters be visiable in this file.
-    import basic_src.io_function as io_function
-    global io_function
-    import basic_src.basic as basic
-    global basic
+# def init_for_test_function():
+#     code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
+#     sys.path.insert(0, code_dir)
+#     import parameters
+#     global parameters   # use global to make parameters be visiable in this file.
+#     import basic_src.io_function as io_function
+#     global io_function
+#     import basic_src.basic as basic
+#     global basic
+#
+#     global work_dir
+#     work_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL/working_dir')
 
-    global work_dir
-    work_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL/working_dir')
 
-def test_get_train_val_sample_count():
-    # we may use pytest to run this funciton,
-    # run "py -s deeplab_train.py" can call this function for test, "-s " will output print info for debug.
 
-    init_for_test_function()
+def main(options, args):
 
-    os.chdir(work_dir)
-    para_file = 'main_para.ini'
-    print(get_train_val_sample_count(work_dir, para_file))
-
-def test_get_trained_iteration():
-    train_log_dir = os.path.join(work_dir, 'exp1','train')
-    iter = get_trained_iteration(train_log_dir)
-    print('iteration number in the folder',iter)
-
-if __name__ == '__main__':
     print("%s : train deeplab" % os.path.basename(sys.argv[0]))
 
     para_file = sys.argv[1]
@@ -238,18 +234,10 @@ if __name__ == '__main__':
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-
-    import basic_src.io_function as io_function
-    import basic_src.basic as basic
-
-
-    tf_research_dir = parameters.get_directory_None_if_absence(para_file,'tf_research_dir')
+    tf_research_dir = parameters.get_directory_None_if_absence(para_file, 'tf_research_dir')
     print(tf_research_dir)
     if tf_research_dir is None:
-        raise ValueError('tf_research_dir is not in %s'%para_file)
+        raise ValueError('tf_research_dir is not in %s' % para_file)
     if os.path.isdir(tf_research_dir) is False:
         raise ValueError('%s does not exist' % tf_research_dir)
     # sys.path.insert(0, tf_research_dir)
@@ -257,18 +245,32 @@ if __name__ == '__main__':
     # print(sys.path)
     # need to change PYTHONPATH, otherwise, deeplab cannot be found
     if os.getenv('PYTHONPATH'):
-        os.environ['PYTHONPATH'] = os.getenv('PYTHONPATH') + ':' + tf_research_dir + ':' +os.path.join(tf_research_dir,'slim')
+        os.environ['PYTHONPATH'] = os.getenv('PYTHONPATH') + ':' + tf_research_dir + ':' + os.path.join(tf_research_dir,
+                                                                                                        'slim')
     else:
-        os.environ['PYTHONPATH'] = tf_research_dir + ':' +os.path.join(tf_research_dir,'slim')
+        os.environ['PYTHONPATH'] = tf_research_dir + ':' + os.path.join(tf_research_dir, 'slim')
     # os.system('echo $PYTHONPATH ')
 
-    deeplab_dir = os.path.join(tf_research_dir,'deeplab')
+    deeplab_dir = os.path.join(tf_research_dir, 'deeplab')
     WORK_DIR = os.getcwd()
 
-    expr_name = parameters.get_string_parameters(para_file,'expr_name')
-    network_setting_ini = parameters.get_string_parameters(para_file,'network_setting_ini')
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    network_setting_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
 
-    train_evaluation_deeplab(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini)
+    train_evaluation_deeplab(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num)
+
+
+if __name__ == '__main__':
+
+    usage = "usage: %prog [options] para_file gpu_num"
+    parser = OptionParser(usage=usage, version="1.0 2021-01-19")
+    parser.description = 'Introduction: training and evaluating of Deeplab '
+
+    (options, args) = parser.parse_args()
+
+    main(options, args)
+
+
 
 
 
