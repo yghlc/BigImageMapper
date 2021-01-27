@@ -18,7 +18,7 @@ import parameters
 from workflow.deeplab_train import get_trained_iteration
 
 def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classes,atrous_rates1,atrous_rates2,atrous_rates3,output_stride,
-                 multi_scale):
+                 crop_size_height, crop_size_width,multi_scale):
     command_string = 'python ' \
                      + export_script \
                      + ' --logtostderr' \
@@ -31,8 +31,8 @@ def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classe
                      + ' --atrous_rates=' + str(atrous_rates3) \
                      + ' --output_stride=' + str(output_stride) \
                      + ' --decoder_output_stride=4 ' \
-                     + ' --crop_size=513' \
-                     + ' --crop_size=513'
+                     + ' --crop_size='+crop_size_height \
+                     + ' --crop_size='+crop_size_width
 
     if multi_scale == 1:
         command_string += ' --inference_scales=' + str(0.5) \
@@ -90,6 +90,10 @@ def main(options, args):
     assert num_classes_noBG != None
     num_of_classes = num_classes_noBG + 1
 
+    image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
+    if len(image_crop_size) != 2 and image_crop_size[0].isdigit() and image_crop_size[1].isdigit():
+        raise ValueError('image_crop_size should be height,width')
+
     iteration_num = get_trained_iteration(TRAIN_LOGDIR)
 
     multi_scale = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'export_multi_scale', 'int')
@@ -99,7 +103,7 @@ def main(options, args):
 
     EXPORT_PATH = os.path.join(EXPORT_DIR, 'frozen_inference_graph_%s.pb' % iteration_num)
     export_graph(export_script, CKPT_PATH, EXPORT_PATH, model_variant, num_of_classes,
-                 atrous_rates1, atrous_rates2, atrous_rates3, output_stride, multi_scale)
+                 atrous_rates1, atrous_rates2, atrous_rates3, output_stride,image_crop_size[0], image_crop_size[1], multi_scale)
 
 
 if __name__ == '__main__':

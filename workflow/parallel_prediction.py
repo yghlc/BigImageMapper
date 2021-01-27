@@ -43,7 +43,7 @@ def is_file_exist_in_folder(folder):
     #     return False
 
 
-def predict_one_image_deeplab(deeplab_inf_script, para_file,network_ini, save_dir,inf_list_file,gpuid=None):
+def predict_one_image_deeplab(deeplab_inf_script, para_file,network_ini, save_dir,inf_list_file,gpuid=None, trained_model=None):
 
     # use a specific GPU for prediction, only inference one image
     time0 = time.time()
@@ -55,14 +55,17 @@ def predict_one_image_deeplab(deeplab_inf_script, para_file,network_ini, save_di
     # # os.system(command_string + "&")  # don't know when it finished
     # os.system(command_string )      # this work
 
-    WORK_DIR = os.getcwd()
-    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
-    EXP_FOLDER = expr_name
-    EXPORT_DIR = os.path.join(WORK_DIR, EXP_FOLDER, 'export')
-    TRAIN_LOGDIR = os.path.join(WORK_DIR, EXP_FOLDER, 'train')
-    iteration_num = get_trained_iteration(TRAIN_LOGDIR)
-    EXPORT_PATH = os.path.join(EXPORT_DIR, 'frozen_inference_graph_%s.pb' % iteration_num)
-    frozen_graph_path = EXPORT_PATH
+    if trained_model is None:
+        WORK_DIR = os.getcwd()
+        expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+        EXP_FOLDER = expr_name
+        EXPORT_DIR = os.path.join(WORK_DIR, EXP_FOLDER, 'export')
+        TRAIN_LOGDIR = os.path.join(WORK_DIR, EXP_FOLDER, 'train')
+        iteration_num = get_trained_iteration(TRAIN_LOGDIR)
+        EXPORT_PATH = os.path.join(EXPORT_DIR, 'frozen_inference_graph_%s.pb' % iteration_num)
+        frozen_graph_path = EXPORT_PATH
+    else:
+        frozen_graph_path = trained_model
 
     inf_batch_size = parameters.get_digit_parameters_None_if_absence(network_ini,'inf_batch_size','int')
     if inf_batch_size is None:
@@ -109,6 +112,8 @@ def main(options, args):
 
     deeplab_inf_script = os.path.join(code_dir,'deeplabBased','deeplab_inference.py')
     network_setting_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+
+    trained_model = options.trained_model
 
     outdir = parameters.get_directory(para_file,'inf_output_dir')
 
@@ -176,7 +181,7 @@ def main(options, args):
                 inf_obj.writelines(inf_img_list[idx] + '\n')
 
             sub_process = Process(target=predict_one_image_deeplab,
-                                  args=(deeplab_inf_script, para_file,network_setting_ini,img_save_dir,inf_list_file,gpuid))
+                                  args=(deeplab_inf_script, para_file,network_setting_ini,img_save_dir,inf_list_file,gpuid,trained_model))
             sub_process.start()
             sub_tasks.append(sub_process)
 
@@ -224,6 +229,10 @@ if __name__ == '__main__':
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2021-01-21")
     parser.description = 'Introduction: export trained model '
+
+    parser.add_option("-m", "--trained_model",
+                      action="store", dest="trained_model",
+                      help="the trained model for prediction")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:

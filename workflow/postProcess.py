@@ -9,6 +9,15 @@ add time: 22 January, 2021
 """
 import os, sys
 import time
+from optparse import OptionParser
+
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+import parameters
+import basic_src.io_function as io_function
+
+sys.path.insert(0, os.path.join(code_dir, 'datasets'))
+from merge_shapefiles import merge_shape_files
 
 def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
@@ -66,28 +75,19 @@ def evaluation_polygons(script, in_shp_path, para_file, data_para_file,out_repor
         sys.exit(res)
     return in_shp_path
 
+def main(options, args):
 
-if __name__ == '__main__':
     print("%s : Post-processing" % os.path.basename(sys.argv[0]))
 
-    para_file = sys.argv[1]
+    para_file = args[0]
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
     # the test string in 'exe.sh'
-    if len(sys.argv) > 2:
-        test_note = sys.argv[2]
+    if len(args) > 1:
+        test_note = args[1]
     else:
         test_note = ''
-
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-    import basic_src.io_function as io_function
-
-    sys.path.insert(0, os.path.join(code_dir,'datasets'))
-    from merge_shapefiles import merge_shape_files
-
 
     WORK_DIR = os.getcwd()
 
@@ -109,6 +109,7 @@ if __name__ == '__main__':
 
     # loop each inference regions
     sub_tasks = []
+    region_eva_reports = {}
     for area_idx, area_ini in enumerate(multi_inf_regions):
         area_name = parameters.get_string_parameters_None_if_absence(area_ini, 'area_name')
         area_remark = parameters.get_string_parameters_None_if_absence(area_ini, 'area_remark')
@@ -152,6 +153,8 @@ if __name__ == '__main__':
         out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
         evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
 
+        region_eva_reports[shp_pre] = out_report
+
 
         ##### copy and backup files ######
         # copy files to result_backup
@@ -185,6 +188,25 @@ if __name__ == '__main__':
     io_function.copy_file_to_dst(para_file, bak_para_ini)
     io_function.copy_file_to_dst(network_setting_ini, bak_network_ini)
 
+    # output the evaluation report to screen
+    for key in region_eva_reports.keys():
+        report = region_eva_reports[key]
+        print('evaluation report for %s:'%key)
+        os.system('head -n 7 %s'%report)
+
+
+if __name__ == '__main__':
+
+    usage = "usage: %prog [options] para_file test_note"
+    parser = OptionParser(usage=usage, version="1.0 2021-01-22")
+    parser.description = 'Introduction: Post-processing  '
+
+    (options, args) = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
+    main(options, args)
 
 
 

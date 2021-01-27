@@ -10,8 +10,15 @@ modified on 19 January, 2021
 """
 
 import os,sys
+from optparse import OptionParser
 
-def get_subImage_subLabel_one_shp(all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp, input_image_dir, file_pattern = None):
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+import parameters
+
+import basic_src.io_function as io_function
+
+def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp, input_image_dir, file_pattern = None):
     if file_pattern is None:
         file_pattern = '*.tif'
 
@@ -25,23 +32,15 @@ def get_subImage_subLabel_one_shp(all_train_shp, buffersize, dstnodata, rectangl
     # os.system(command_string + "&")  # don't know when it finished
     os.system(command_string )      # this work
 
-if __name__ == '__main__':
-
+def main(options, args):
     print("%s : extract sub-images and sub-labels for a given shape file (training polygons)" %
           os.path.basename(sys.argv[0]))
 
-    para_file = sys.argv[1]
+    para_file = args[0]
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-
-    import basic_src.io_function as io_function
-
-    eo_dir = code_dir
-    get_subImage_script = os.path.join(eo_dir, 'datasets', 'get_subImages.py')
+    get_subImage_script = os.path.join(code_dir, 'datasets', 'get_subImages.py')
 
     # get name of training areas
     multi_training_regions = parameters.get_string_list_parameters_None_if_absence(para_file, 'training_regions')
@@ -73,7 +72,7 @@ if __name__ == '__main__':
 
         # get subImage and subLabel for one training polygons
         print('extract training data from image folder (%s) and polgyons (%s)' % (input_image_dir, train_shp))
-        get_subImage_subLabel_one_shp(all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
+        get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
                                       input_image_dir, file_pattern=input_image_or_pattern)
 
 
@@ -83,3 +82,18 @@ if __name__ == '__main__':
     if len(sub_image_list) != len(sub_label_list):
         raise ValueError('the count of subImage (%d) and subLabel (%d) is different'
                          %(len(sub_image_list),len(sub_label_list)))
+
+
+if __name__ == '__main__':
+
+    usage = "usage: %prog [options] para_file "
+    parser = OptionParser(usage=usage, version="1.0 2021-01-19")
+    parser.description = 'Introduction: textract sub-images and sub-labels '
+
+    (options, args) = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
+    main(options, args)
+
