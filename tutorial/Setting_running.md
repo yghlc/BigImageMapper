@@ -22,21 +22,22 @@ Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https:
     pip install tf_slim
     pip install numpy==1.16.4       # use a relative old version to avoid warning.
     pip install gast==0.2.2         # use a relative old version to avoid warning.
+    pip install pillow
+    pip install opencv-python==3.4.6.27 (choose a earlier verion to avoid error)
+    pip install conda
+    conda install gdal=2.3
+    pip install rasterio
     
     which python  # output the path of python then set tf1x_python in network parameter (e.g., deeplabv3plus_xception65.ini):
     tf1x_python  = ~/programs/anaconda3/envs/tf1.14/bin/python 
 
-Install other python packages (under tf.14 or default python). <!-- The installation will run inside 
+Install other python packages under tf.14 (suggested) or default python. <!-- The installation will run inside 
 the container, so we need to submit a job for running singularity. -->
     
-    conda install gdal=2.3
-    pip install rasterio
     pip install pyshp==1.2.12
     pip install rasterstats
-    pip install pillow
     pip install imgaug==0.2.6
     pip install geopandas
-    pip install opencv-python==3.4.6.27 (choose a earlier verion to avoid error)
     pip install GPUtil
 
 
