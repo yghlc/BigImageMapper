@@ -17,9 +17,12 @@ sys.path.insert(0, code_dir)
 import parameters
 from workflow.deeplab_train import get_trained_iteration
 
+# the python with tensorflow 1.x installed
+tf1x_python = 'python'
+
 def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classes,atrous_rates1,atrous_rates2,atrous_rates3,output_stride,
                  crop_size_height, crop_size_width,multi_scale):
-    command_string = 'python ' \
+    command_string = tf1x_python + ' ' \
                      + export_script \
                      + ' --logtostderr' \
                      + ' --checkpoint_path='+ CKPT_PATH \
@@ -58,8 +61,8 @@ def main(options, args):
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
-
-    tf_research_dir = parameters.get_directory_None_if_absence(para_file, 'tf_research_dir')
+    network_setting_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+    tf_research_dir = parameters.get_directory_None_if_absence(network_setting_ini, 'tf_research_dir')
     print(tf_research_dir)
     if tf_research_dir is None:
         raise ValueError('tf_research_dir is not in %s' % para_file)
@@ -71,11 +74,14 @@ def main(options, args):
     else:
         os.environ['PYTHONPATH'] = tf_research_dir + ':' + os.path.join(tf_research_dir, 'slim')
 
+    global tf1x_python
+    tf1x_python = parameters.get_file_path_parameters(network_setting_ini,'tf1x_python')
+
     deeplab_dir = os.path.join(tf_research_dir, 'deeplab')
     WORK_DIR = os.getcwd()
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
-    network_setting_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+
     EXP_FOLDER = expr_name
     TRAIN_LOGDIR = os.path.join(WORK_DIR, EXP_FOLDER, 'train')
     EXPORT_DIR = os.path.join(WORK_DIR, EXP_FOLDER, 'export')
