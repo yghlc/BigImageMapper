@@ -1,15 +1,48 @@
 # Setting and running this repo
 
 
-This file introduces how to set the environment for this repo on the Ubuntu 18 or 20 GPU machine.
+This file introduces how to set the environment for running this repo.
 It also provides a reference for setting and running on your own workstations.
 
 
-#### Step 1: install dependencies
-We install all the dependencies under the home folder. 
+#### Step 1: install packages and dependencies
+
+Install python using miniconda 
+
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    sh Miniconda3-latest-Linux-x86_64.sh -p $HOME/programs/miniconda3 -b
+
+Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https://github.com/tensorflow/models/tree/master/research/deeplab)
+    
+    conda create -n tf1.14 python=3.7   # need python3.7 or 3.6 (python 3.8 cannot found 1.x version)
+    source (or conda) activate tf1.14  # after this step, it will show "tf1.14" at the begin of the line
+    # check where is pip by "which pip", making sure it is under the environment of tf1.14
+    pip install tensorflow-gpu==1.14   # for GPU version  or 
+    #pip install tensorflow==1.14       # for CPU version
+    pip install tf_slim
+    pip install numpy==1.16.4       # use a relative old version to avoid warning.
+    pip install gast==0.2.2         # use a relative old version to avoid warning.
+    
+    which python  # output the path of python then set it in network.ini.  
+
+Install other python packages (under tf.14 or default python). <!-- The installation will run inside 
+the container, so we need to submit a job for running singularity. -->
+    
+    conda install gdal=2.3
+    pip install rasterio
+    pip install pyshp==1.2.12
+    pip install rasterstats
+    pip install pillow
+    pip install imgaug==0.2.6
+    pip install geopandas
+    pip install opencv-python==3.4.6.27 (choose a earlier verion to avoid error)
+    pip install GPUtil
+
+
+If we run the GPU version of tensorflow 1.14, we need to install CUDA and cuDNN (on Ubuntu). 
 
 Install CUDA 10.0 and cuDNN 7.4, these are required by tensorflow 1.14. \
-Ubuntu 18 or 20 already has CUDA 10.0 or 10.2 installed, so we cannot tensorflow 1.6 which requires CUDA 9.0.
+Ubuntu 18 or 20 already may have CUDA 10.0 or 10.2 installed.
 They should be downloaded via NVIDIA website, but for this tutorial, you can download them
 from my Dropbox. 
     
@@ -32,54 +65,11 @@ Also, set the PATH and LD_LIBRARY_PATH in .bashrc, for example:
     
     noted: replace the "HOME" as your home folder, e.g., /home/hlc
 
-
-DeepLabv3+ provides some [pre-trained model](https://github.com/tensorflow/models/blob/master/research/deeplab/g3doc/model_zoo.md), 
-in this tutorial, we use one of them and download it to *Data*
-
-    mkdir -p ./Data/deeplab/v3+/pre-trained_model
-    wget https://www.dropbox.com/s/0h7g5cjyvxywkt1/deeplabv3_xception_2018_01_04.tar.gz?dl=0 --output-document=./Data/deeplab/v3+/pre-trained_model/deeplabv3_xception_2018_01_04.tar.gz
-
-Download a script which may be used in some of the codes, and make it executable.
-
-    mkdir -p ./bin
-    wget https://www.dropbox.com/s/6sdwu3tx9jwzfsm/cp_shapefile?dl=0 --output-document=./bin/cp_shapefile
-    chmod a+x ./bin/cp_shapefile
-
-Also also set env as below in the .bashrc:
-    
-     export PATH=$HOME/bin:$PATH
-
-Lastly, 
-
-    source .bashrc
-
 Clone codes from GitHub:
 
-    git clone https://github.com/yghlc/DeeplabforRS.git ./codes/PycharmProjects/DeeplabforRS
     git clone https://github.com/yghlc/Landuse_DL ./codes/PycharmProjects/Landuse_DL
     git clone https://github.com/yghlc/models.git ./codes/PycharmProjects/tensorflow/yghlc_tf_model
 
-
-Install python using miniconda 
-
-    wget https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh
-    sh Miniconda2-latest-Linux-x86_64.sh -p $HOME/programs/miniconda2 -b
-
-    
-Install tensorflow 1.14 (a relative old version) and other python packages. <!-- The installation will run inside 
-the container, so we need to submit a job for running singularity. -->
-    
-    ${HOME}/programs/miniconda2/bin/pip install tensorflow-gpu==1.14    # need python3.7 or 3.6 (python 3.8 cannot found 1.x version)
-    ${HOME}/programs/miniconda2/bin/pip install tf_slim     # need this to run "deeplab/model_test.py"
-    ${HOME}/programs/miniconda2/bin/conda install gdal=2.3
-    ${HOME}/programs/miniconda2/bin/pip install rasterio
-    ${HOME}/programs/miniconda2/bin/pip install pyshp==1.2.12
-    ${HOME}/programs/miniconda2/bin/pip install rasterstats
-    ${HOME}/programs/miniconda2/bin/pip install pillow
-    ${HOME}/programs/miniconda2/bin/pip install imgaug==0.2.6
-    ${HOME}/programs/miniconda2/bin/pip install geopandas
-    ${HOME}/programs/miniconda2/bin/pip install opencv-python==3.4.6.27 (choose a earlier verion to avoid error)
-    ${HOME}/programs/miniconda2/bin/pip install GPUtil
 
 
 ## Run training, prediction, and post-processing
@@ -87,28 +77,25 @@ After the environment for running Landuse_DL is ready, you can start training yo
 Suppose your working folder is *test_deeplabV3+_1*, in this folder, a list of files should be presented:
     
     exe.sh
-    para.ini
-    inf_image_list.txt 
-    multi_training_files.txt
-    multi_validate_shapefile.txt
+    main_para.ini
+    study_area_1.ini
+    deeplabv3plus_xception65.ini
 
 *exe.sh* is a script for running the whole process, including preparing training images, 
 training, prediction, and post-processing. You may want to comment out some of the lines in this file 
-if you just want to run a few steps of them. This file can be copied from *Landuse_DL/thawslumpScripts/exe_qtp.sh*.
+if you just want to run a few steps of them. This file can be copied from *Landuse_DL/working_dir/exe.sh*.
 In this file, you may also need to modify some input files, such as change *para_qtp.ini* to *para.ini*, 
 comment out lines related to *PATH* and *CUDA_VISIBLE_DEVICES*. <!--, and the value of *gpu_num*. -->
 
 
-*para.ini* is the file where you define input files and parameters. Please edit it accordingly. 
-An example of *para.ini* is available at *Landuse_DL/thawslumpScripts/para_qtp.ini*.
+*main_para.ini* is the file where you define main parameters. Please edit it accordingly. 
+An example of *main_para.ini* is available at *Landuse_DL/working_dir/main_para.ini*.
 
-*inf_image_list.txt* stores the image file names for prediction as follows,
+*study_area_1.ini* is a file to define a study region, including training polygons, images, 
+and elevation files (if available). Please edit it accordingly. We can have multiple region-defined files. 
 
-    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000000000_8bit_Albers.tif
-    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000026880_8bit_Albers.tif
-    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000053760_8bit_Albers.tif
-    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000080640_8bit_Albers.tif
-    qtb_sentinel2_2018_JJA_mosaic-0000000000-0000107520_8bit_Albers.tif
+*deeplabv3plus_xception65.ini* is the file to define the deep learning network and some training parameters. 
+Please edit it accordingly.
 
 
 
