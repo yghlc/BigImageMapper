@@ -15,7 +15,7 @@ Install python using miniconda
 Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https://github.com/tensorflow/models/tree/master/research/deeplab)
     
     conda create -n tf1.14 python=3.7   # need python3.7 or 3.6 (python 3.8 cannot found 1.x version)
-    source (or conda) activate tf1.14  # after this step, it will show "tf1.14" at the begin of the line
+    conda (or source) activate tf1.14  # after this step, it will show "tf1.14" at the begin of the line
     # check where is pip by "which pip", making sure it is under the environment of tf1.14
     pip install tensorflow-gpu==1.14   # for GPU version  or 
     #pip install tensorflow==1.14       # for CPU version
@@ -23,7 +23,8 @@ Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https:
     pip install numpy==1.16.4       # use a relative old version to avoid warning.
     pip install gast==0.2.2         # use a relative old version to avoid warning.
     
-    which python  # output the path of python then set it in network.ini.  
+    which python  # output the path of python then set tf1x_python in network parameter (e.g., deeplabv3plus_xception65.ini):
+    tf1x_python  = ~/programs/anaconda3/envs/tf1.14/bin/python 
 
 Install other python packages (under tf.14 or default python). <!-- The installation will run inside 
 the container, so we need to submit a job for running singularity. -->
@@ -69,7 +70,10 @@ Clone codes from GitHub:
 
     git clone https://github.com/yghlc/Landuse_DL ./codes/PycharmProjects/Landuse_DL
     git clone https://github.com/yghlc/models.git ./codes/PycharmProjects/tensorflow/yghlc_tf_model
-
+    
+    # then set the tensorflow research in the network parameter (e.g.,, deeplabv3plus_xception65.ini):
+    tf_research_dir = ~/codes/PycharmProjects/tensorflow/yghlc_tf_model/research
+    
 
 
 ## Run training, prediction, and post-processing
