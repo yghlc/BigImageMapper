@@ -103,6 +103,10 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
 
 def get_miou_list_class_all(train_log_dir,class_num):
 
+    # add the tensorboard in the tf1x version
+    tf1x_dir = os.path.join(os.path.dirname(os.path.dirname(tf1x_python)),'lib','python3.7','site-packages')
+    sys.path.insert(0, tf1x_dir)
+
     from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
     # Loading too much data is slow...
