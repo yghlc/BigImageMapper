@@ -110,6 +110,11 @@ def get_file_path_parameters_None_if_absence(parafile,name):
         return None
     return os.path.expanduser(value)
 
+def get_file_path_parameters(parafile,name):
+    value = get_file_path_parameters_None_if_absence(parafile, name)
+    if value is None:
+        raise ValueError('%s not set in %s'%(name,parafile))
+    return os.path.expanduser(value)
 
 def get_bool_parameters_None_if_absence(parafile,name):
     if parafile =='':

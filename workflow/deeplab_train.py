@@ -22,6 +22,9 @@ import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
+# the python with tensorflow 1.x installed
+tf1x_python = 'python'
+
 def get_train_val_sample_count(work_dir, para_file):
 
     train_sample_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
@@ -39,7 +42,7 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
                   atrous_rates1,atrous_rates2,atrous_rates3,output_stride,crop_size_str,batch_size,iteration_num):
 
     # for more information, run: "python deeplab/train.py --help" or "python deeplab/train.py --helpfull"
-    command_string = 'python ' \
+    command_string = tf1x_python + ' ' \
         + train_script \
         + ' --logtostderr' \
         + ' --dataset='+dataset \
@@ -76,7 +79,7 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
     #     (default: '300')
     #     (an integer)
 
-    command_string = 'python ' \
+    command_string = tf1x_python + ' ' \
                      + evl_script \
                      + ' --logtostderr' \
                      + ' --dataset='+dataset \
@@ -99,6 +102,10 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
         sys.exit(res)
 
 def get_miou_list_class_all(train_log_dir,class_num):
+
+    # add the tensorboard in the tf1x version
+    tf1x_dir = os.path.join(os.path.dirname(os.path.dirname(tf1x_python)),'lib','python3.7','site-packages')
+    sys.path.insert(0, tf1x_dir)
 
     from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
@@ -293,7 +300,8 @@ def main(options, args):
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
-    tf_research_dir = parameters.get_directory_None_if_absence(para_file, 'tf_research_dir')
+    network_setting_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+    tf_research_dir = parameters.get_directory_None_if_absence(network_setting_ini, 'tf_research_dir')
     print(tf_research_dir)
     if tf_research_dir is None:
         raise ValueError('tf_research_dir is not in %s' % para_file)
@@ -310,11 +318,14 @@ def main(options, args):
         os.environ['PYTHONPATH'] = tf_research_dir + ':' + os.path.join(tf_research_dir, 'slim')
     # os.system('echo $PYTHONPATH ')
 
+    global tf1x_python
+    tf1x_python = parameters.get_file_path_parameters(network_setting_ini,'tf1x_python')
+
     deeplab_dir = os.path.join(tf_research_dir, 'deeplab')
     WORK_DIR = os.getcwd()
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
-    network_setting_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+
 
     train_evaluation_deeplab(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num)
 

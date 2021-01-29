@@ -28,6 +28,9 @@ import basic_src.basic as basic
 
 from workflow.deeplab_train import get_trained_iteration
 
+# the python with tensorflow 1.x installed
+tf1x_python = 'python'
+
 def is_file_exist_in_folder(folder):
     # only check the first ten files
     # update on July 21, 2020. For some case, the first 10 may not exist (ignore if they are black)
@@ -71,7 +74,7 @@ def predict_one_image_deeplab(deeplab_inf_script, para_file,network_ini, save_di
     if inf_batch_size is None:
         raise ValueError('inf_batch_size not set in %s'%network_ini)
 
-    command_string = 'python '  +  deeplab_inf_script \
+    command_string = tf1x_python + ' '  +  deeplab_inf_script \
                 + ' --inf_para_file='+para_file \
                 + ' --inf_list_file='+inf_list_file \
                 + ' --inf_batch_size='+str(inf_batch_size) \
@@ -112,6 +115,9 @@ def main(options, args):
 
     deeplab_inf_script = os.path.join(code_dir,'deeplabBased','deeplab_inference.py')
     network_setting_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+
+    global tf1x_python
+    tf1x_python = parameters.get_file_path_parameters(network_setting_ini,'tf1x_python')
 
     trained_model = options.trained_model
 
