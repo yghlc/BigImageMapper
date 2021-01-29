@@ -21,8 +21,6 @@
 import os
 import sys
 
-from matplotlib import gridspec
-from matplotlib import pyplot as plt
 import numpy as np
 from PIL import Image
 
