@@ -41,7 +41,7 @@ SECONDS=0
 #${eo_dir}/workflow/split_train_val.py ${para_file}
 
 ## convert to TFrecord
-#python ${eo_dir}/workflow/build_TFrecord_tf1x.py ${para_file}
+${eo_dir}/workflow/build_TFrecord_tf1x.py ${para_file}
 
 #exit
 duration=$SECONDS
@@ -60,7 +60,7 @@ SECONDS=0
 #export model
 ${eo_dir}/workflow/export_graph.py ${para_file}
 
-exit
+#exit
 ################################################
 ## inference
 rm -r multi_inf_results || true
