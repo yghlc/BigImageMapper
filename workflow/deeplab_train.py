@@ -209,6 +209,9 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     train_split = os.path.splitext(parameters.get_string_parameters(para_file,'training_sample_list_txt'))[0]
     model_variant = parameters.get_string_parameters(network_setting_ini, 'model_variant')
     checkpoint = parameters.get_string_parameters(network_setting_ini, 'tf_initial_checkpoint')
+    init_checkpoint_files = io_function.get_file_list_by_pattern(INIT_FOLDER, checkpoint + '*')
+    if len(init_checkpoint_files) < 1:
+        raise IOError('No initial checkpoint in %s with pattern: %s'%(INIT_FOLDER,checkpoint))
     init_checkpoint = os.path.join(INIT_FOLDER,checkpoint)
     dataset = parameters.get_string_parameters(para_file,'dataset_name')
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
