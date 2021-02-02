@@ -70,6 +70,9 @@ def predict_one_image_deeplab(deeplab_inf_script, para_file,network_ini, save_di
     else:
         frozen_graph_path = trained_model
 
+    if os.path.isfile(frozen_graph_path) is False:
+        raise IOError('cannot find trained model: %s'%frozen_graph_path)
+
     inf_batch_size = parameters.get_digit_parameters_None_if_absence(network_ini,'inf_batch_size','int')
     if inf_batch_size is None:
         raise ValueError('inf_batch_size not set in %s'%network_ini)
