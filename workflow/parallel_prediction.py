@@ -102,7 +102,7 @@ def b_all_task_finish(all_tasks):
 
 def main(options, args):
 
-    print("%s : export the frozen inference graph" % os.path.basename(sys.argv[0]))
+    print("%s : prediction using the trained model (run parallel if use multiple GPUs) " % os.path.basename(sys.argv[0]))
     machine_name = os.uname()[1]
     start_time = datetime.datetime.now()
 
