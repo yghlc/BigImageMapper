@@ -86,10 +86,10 @@ def main(options, args):
     TRAIN_LOGDIR = os.path.join(WORK_DIR, EXP_FOLDER, 'train')
     EXPORT_DIR = os.path.join(WORK_DIR, EXP_FOLDER, 'export')
 
-    output_stride = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'output_stride', 'int')
-    atrous_rates1 = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'atrous_rates1', 'int')
-    atrous_rates2 = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'atrous_rates2', 'int')
-    atrous_rates3 = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'atrous_rates3', 'int')
+    inf_output_stride = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'inf_output_stride', 'int')
+    inf_atrous_rates1 = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'inf_atrous_rates1', 'int')
+    inf_atrous_rates2 = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'inf_atrous_rates2', 'int')
+    inf_atrous_rates3 = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'inf_atrous_rates3', 'int')
 
     model_variant = parameters.get_string_parameters(network_setting_ini, 'model_variant')
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
@@ -109,7 +109,7 @@ def main(options, args):
 
     EXPORT_PATH = os.path.join(EXPORT_DIR, 'frozen_inference_graph_%s.pb' % iteration_num)
     export_graph(export_script, CKPT_PATH, EXPORT_PATH, model_variant, num_of_classes,
-                 atrous_rates1, atrous_rates2, atrous_rates3, output_stride,image_crop_size[0], image_crop_size[1], multi_scale)
+                 inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,image_crop_size[0], image_crop_size[1], multi_scale)
 
 
 if __name__ == '__main__':
