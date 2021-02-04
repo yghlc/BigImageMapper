@@ -200,10 +200,15 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     iteration_num = parameters.get_digit_parameters(network_setting_ini,'iteration_num','int')
     base_learning_rate = parameters.get_digit_parameters(network_setting_ini,'base_learning_rate','float')
 
-    output_stride = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'output_stride','int')
-    atrous_rates1 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'atrous_rates1','int')
-    atrous_rates2 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'atrous_rates2','int')
-    atrous_rates3 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'atrous_rates3','int')
+    train_output_stride = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'train_output_stride','int')
+    train_atrous_rates1 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'train_atrous_rates1','int')
+    train_atrous_rates2 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'train_atrous_rates2','int')
+    train_atrous_rates3 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'train_atrous_rates3','int')
+
+    inf_output_stride = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'inf_output_stride','int')
+    inf_atrous_rates1 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'inf_atrous_rates1','int')
+    inf_atrous_rates2 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'inf_atrous_rates2','int')
+    inf_atrous_rates3 = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'inf_atrous_rates3','int')
 
     train_script = os.path.join(deeplab_dir, 'train.py')
     train_split = os.path.splitext(parameters.get_string_parameters(para_file,'training_sample_list_txt'))[0]
@@ -243,11 +248,11 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         # run training
         train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                       dataset_dir, gpu_num,
-                      atrous_rates1, atrous_rates2, atrous_rates3, output_stride,crop_size_str, batch_size,iteration_num)
+                      train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num)
 
         # run evaluation
         evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant,
-                           atrous_rates1,atrous_rates2,atrous_rates3,output_stride,TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir,crop_size_str, max_eva_number)
+                           inf_atrous_rates1,inf_atrous_rates2,inf_atrous_rates3,inf_output_stride,TRAIN_LOGDIR, EVAL_LOGDIR, dataset_dir,crop_size_str, max_eva_number)
     else:
         basic.outputlogMessage('training to the maximum iteration of %d, and evaluating very %d epoch(es)' % (iteration_num,validation_interval))
         for epoch in range(1, total_epoches + validation_interval, validation_interval):
@@ -261,11 +266,11 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
             train_deeplab(train_script, dataset, train_split, num_of_classes, base_learning_rate, model_variant,
                           init_checkpoint, TRAIN_LOGDIR,
                           dataset_dir, gpu_num,
-                          atrous_rates1, atrous_rates2, atrous_rates3, output_stride,crop_size_str, batch_size, to_iter_num)
+                          train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size, to_iter_num)
 
             # run evaluation
             evaluation_deeplab(evl_script, dataset, evl_split, num_of_classes, model_variant,
-                               atrous_rates1, atrous_rates2, atrous_rates3, output_stride, TRAIN_LOGDIR, EVAL_LOGDIR,
+                               inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride, TRAIN_LOGDIR, EVAL_LOGDIR,
                                dataset_dir,crop_size_str, max_eva_number)
 
             # check if need to early stopping
