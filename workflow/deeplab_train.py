@@ -313,10 +313,10 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                                inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride, TRAIN_LOGDIR, EVAL_LOGDIR,
                                dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride)
 
+            # get miou
+            miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
             # check if need to early stopping
             if b_early_stopping:
-                # get miou
-                miou_dict = get_miou_list_class_all(EVAL_LOGDIR,num_of_classes)
                 if len(miou_dict['overall']) >= 5:
                     # if the last five miou did not improve, then stop training
                     if np.all(np.diff(miou_dict['overall'][-5:]) < 0.0001):
