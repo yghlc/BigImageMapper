@@ -28,7 +28,8 @@ pre_trained_tar_21_classes = ['xception_65_coco_pretrained_2018_10_02.tar.gz',
                               'deeplabv3_pascal_trainval_2018_01_04.tar.gz',
                               'deeplabv3_mnv2_dm05_pascal_trainval_2018_10_01.tar.gz',
                               'deeplabv3_mnv2_dm05_pascal_trainaug_2018_10_01.tar.gz',
-                              'deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz']
+                              'deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz',
+                              'deeplabv3_mnv2_pascal_trainval_2018_01_29.tar.gz']
 
 # the python with tensorflow 1.x installed
 tf1x_python = 'python'
