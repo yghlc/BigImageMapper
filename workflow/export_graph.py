@@ -23,7 +23,7 @@ from deeplab_train import pre_trained_tar_21_classes
 tf1x_python = 'python'
 
 def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classes,atrous_rates1,atrous_rates2,atrous_rates3,output_stride,
-                 crop_size_height, crop_size_width,multi_scale):
+                 crop_size_height, crop_size_width,multi_scale,depth_multiplier):
     command_string = tf1x_python + ' ' \
                      + export_script \
                      + ' --logtostderr' \
@@ -50,6 +50,9 @@ def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classe
         command_string += ' --inference_scales=' + str(1.0)
     else:
         raise ValueError(' Wrong input of the multi_scale parameter, only 0 or 1')
+
+    if depth_multiplier is not None:
+        command_string += ' --depth_multiplier=' + str(depth_multiplier)
 
     res = os.system(command_string)
     if res != 0:
@@ -93,6 +96,9 @@ def main(options, args):
     inf_atrous_rates2 = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'inf_atrous_rates2', 'int')
     inf_atrous_rates3 = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'inf_atrous_rates3', 'int')
 
+    # depth_multiplier default is 1.0.
+    depth_multiplier = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'depth_multiplier', 'float')
+
     model_variant = parameters.get_string_parameters(network_setting_ini, 'model_variant')
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
@@ -115,7 +121,8 @@ def main(options, args):
 
     EXPORT_PATH = os.path.join(EXPORT_DIR, 'frozen_inference_graph_%s.pb' % iteration_num)
     export_graph(export_script, CKPT_PATH, EXPORT_PATH, model_variant, num_of_classes,
-                 inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,image_crop_size[0], image_crop_size[1], multi_scale)
+                 inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,image_crop_size[0], image_crop_size[1],
+                 multi_scale,depth_multiplier)
 
 
 if __name__ == '__main__':
