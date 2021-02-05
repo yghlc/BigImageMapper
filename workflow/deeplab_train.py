@@ -48,7 +48,8 @@ def get_train_val_sample_count(work_dir, para_file):
     return len(train_lines), len(val_lines)
 
 def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
-                  atrous_rates1,atrous_rates2,atrous_rates3,output_stride,crop_size_str,batch_size,iteration_num,depth_multiplier):
+                  atrous_rates1,atrous_rates2,atrous_rates3,output_stride,crop_size_str,batch_size,iteration_num,depth_multiplier,
+                  decoder_output_stride):
 
     # for more information, run: "python deeplab/train.py --help" or "python deeplab/train.py --helpfull"
     command_string = tf1x_python + ' ' \
@@ -59,8 +60,6 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         + ' --train_split=%s '%train_split \
         + ' --base_learning_rate='+ str(base_learning_rate) \
         + ' --model_variant='+model_variant \
-        + ' --output_stride='+ str(output_stride) \
-        + ' --decoder_output_stride=4 ' \
         + ' --train_crop_size='+crop_size_str \
         + ' --train_batch_size='+str(batch_size) \
         + ' --training_number_of_steps=' + str(iteration_num)\
@@ -70,6 +69,10 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         + ' --dataset_dir='+dataset_dir \
         + ' --num_clones=' + str(gpu_num)
 
+    if output_stride is not None:
+        command_string += ' --output_stride='+ str(output_stride)
+    if decoder_output_stride is not None:
+        command_string += ' --decoder_output_stride='+str(decoder_output_stride)
     if atrous_rates1 is not None:
         command_string += ' --atrous_rates=' + str(atrous_rates1)
     if atrous_rates2 is not None:
@@ -88,7 +91,7 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
 
 def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_variant,
                        atrous_rates1,atrous_rates2,atrous_rates3,output_stride,train_logdir, evl_logdir,dataset_dir,
-                       crop_size_str,max_eva_number,depth_multiplier):
+                       crop_size_str,max_eva_number,depth_multiplier,decoder_output_stride):
 
     # for information, run "python deeplab/eval.py  --helpfull"
 
@@ -103,14 +106,16 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
                      + ' --num_classes='+str(num_of_classes) \
                      + ' --eval_split=%s ' % evl_split \
                      + ' --model_variant=' + model_variant \
-                     + ' --output_stride=' + str(output_stride) \
-                     + ' --decoder_output_stride=4 ' \
                      + ' --eval_crop_size='+crop_size_str \
                      + ' --checkpoint_dir=' + train_logdir \
                      + ' --eval_logdir=' + evl_logdir \
                      + ' --dataset_dir=' + dataset_dir \
                      + ' --max_number_of_evaluations=' + str(max_eva_number)
 
+    if output_stride is not None:
+        command_string += ' --output_stride='+ str(output_stride)
+    if decoder_output_stride is not None:
+        command_string += ' --decoder_output_stride='+str(decoder_output_stride)
     if atrous_rates1 is not None:
         command_string += ' --atrous_rates=' + str(atrous_rates1)
     if atrous_rates2 is not None:
@@ -237,6 +242,8 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     # depth_multiplier default is 1.0.
     depth_multiplier = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'depth_multiplier', 'float')
 
+    decoder_output_stride = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'decoder_output_stride', 'int')
+
     train_script = os.path.join(deeplab_dir, 'train.py')
     train_split = os.path.splitext(parameters.get_string_parameters(para_file,'training_sample_list_txt'))[0]
     model_variant = parameters.get_string_parameters(network_setting_ini, 'model_variant')
@@ -279,12 +286,12 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                       dataset_dir, gpu_num,
                       train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num,
-                      depth_multiplier)
+                      depth_multiplier,decoder_output_stride)
 
         # run evaluation
         evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant,
                            inf_atrous_rates1,inf_atrous_rates2,inf_atrous_rates3,inf_output_stride,TRAIN_LOGDIR, EVAL_LOGDIR,
-                           dataset_dir,crop_size_str, max_eva_number,depth_multiplier)
+                           dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride)
     else:
         basic.outputlogMessage('training to the maximum iteration of %d, and evaluating very %d epoch(es)' % (iteration_num,validation_interval))
         for epoch in range(1, total_epoches + validation_interval, validation_interval):
@@ -299,12 +306,12 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                           init_checkpoint, TRAIN_LOGDIR,
                           dataset_dir, gpu_num,
                           train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str,
-                          batch_size, to_iter_num,depth_multiplier)
+                          batch_size, to_iter_num,depth_multiplier,decoder_output_stride)
 
             # run evaluation
             evaluation_deeplab(evl_script, dataset, evl_split, num_of_classes, model_variant,
                                inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride, TRAIN_LOGDIR, EVAL_LOGDIR,
-                               dataset_dir,crop_size_str, max_eva_number,depth_multiplier)
+                               dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride)
 
             # check if need to early stopping
             if b_early_stopping:
