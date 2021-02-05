@@ -17,6 +17,8 @@ sys.path.insert(0, code_dir)
 import parameters
 from workflow.deeplab_train import get_trained_iteration
 
+from deeplab_train import pre_trained_tar_21_classes
+
 # the python with tensorflow 1.x installed
 tf1x_python = 'python'
 
@@ -94,6 +96,10 @@ def main(options, args):
     model_variant = parameters.get_string_parameters(network_setting_ini, 'model_variant')
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
+    pre_trained_tar = parameters.get_string_parameters(network_setting_ini, 'TF_INIT_CKPT')
+    if pre_trained_tar in pre_trained_tar_21_classes:
+        print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)
+        num_classes_noBG = 20
     num_of_classes = num_classes_noBG + 1
 
     image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')

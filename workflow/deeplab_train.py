@@ -22,6 +22,11 @@ import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
+# pre-trained model with 21 classes
+pre_trained_tar_21_classes = ['xception_65_coco_pretrained_2018_10_02.tar.gz',
+                              'deeplabv3_pascal_train_aug_2018_01_04.tar.gz',
+                              'deeplabv3_pascal_trainval_2018_01_04.tar.gz']
+
 # the python with tensorflow 1.x installed
 tf1x_python = 'python'
 
@@ -221,6 +226,9 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     dataset = parameters.get_string_parameters(para_file,'dataset_name')
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
+    if pre_trained_tar in pre_trained_tar_21_classes:
+        print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)
+        num_classes_noBG = 20
     num_of_classes = num_classes_noBG + 1
 
     image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
