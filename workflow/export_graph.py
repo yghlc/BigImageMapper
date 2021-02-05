@@ -31,13 +31,18 @@ def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classe
                      + ' --export_path='+ EXPORT_PATH \
                      + ' --model_variant=' + model_variant \
                      + ' --num_classes=' + str(num_of_classes) \
-                     + ' --atrous_rates=' + str(atrous_rates1) \
-                     + ' --atrous_rates=' + str(atrous_rates2) \
                      + ' --atrous_rates=' + str(atrous_rates3) \
                      + ' --output_stride=' + str(output_stride) \
                      + ' --decoder_output_stride=4 ' \
                      + ' --crop_size='+crop_size_height \
                      + ' --crop_size='+crop_size_width
+
+    if atrous_rates1 is not None:
+        command_string += ' --atrous_rates=' + str(atrous_rates1)
+    if atrous_rates2 is not None:
+        command_string += ' --atrous_rates=' + str(atrous_rates2)
+    if atrous_rates3 is not None:
+        command_string += ' --atrous_rates=' + str(atrous_rates3)
 
     if multi_scale == 1:
         command_string += ' --inference_scales=' + str(0.5) \

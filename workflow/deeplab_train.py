@@ -55,9 +55,6 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         + ' --train_split=%s '%train_split \
         + ' --base_learning_rate='+ str(base_learning_rate) \
         + ' --model_variant='+model_variant \
-        + ' --atrous_rates='+str(atrous_rates1) \
-        + ' --atrous_rates='+str(atrous_rates2) \
-        + ' --atrous_rates='+str(atrous_rates3) \
         + ' --output_stride='+ str(output_stride) \
         + ' --decoder_output_stride=4 ' \
         + ' --train_crop_size='+crop_size_str \
@@ -68,6 +65,13 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         + ' --train_logdir='+train_logdir \
         + ' --dataset_dir='+dataset_dir \
         + ' --num_clones=' + str(gpu_num)
+
+    if atrous_rates1 is not None:
+        command_string += ' --atrous_rates=' + str(atrous_rates1)
+    if atrous_rates2 is not None:
+        command_string += ' --atrous_rates=' + str(atrous_rates2)
+    if atrous_rates3 is not None:
+        command_string += ' --atrous_rates=' + str(atrous_rates3)
 
     if depth_multiplier is not None:
         command_string += ' --depth_multiplier=' + str(depth_multiplier)
@@ -95,9 +99,6 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
                      + ' --num_classes='+str(num_of_classes) \
                      + ' --eval_split=%s ' % evl_split \
                      + ' --model_variant=' + model_variant \
-                     + ' --atrous_rates=' + str(atrous_rates1) \
-                     + ' --atrous_rates=' + str(atrous_rates2) \
-                     + ' --atrous_rates=' + str(atrous_rates3) \
                      + ' --output_stride=' + str(output_stride) \
                      + ' --decoder_output_stride=4 ' \
                      + ' --eval_crop_size='+crop_size_str \
@@ -105,6 +106,13 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
                      + ' --eval_logdir=' + evl_logdir \
                      + ' --dataset_dir=' + dataset_dir \
                      + ' --max_number_of_evaluations=' + str(max_eva_number)
+
+    if atrous_rates1 is not None:
+        command_string += ' --atrous_rates=' + str(atrous_rates1)
+    if atrous_rates2 is not None:
+        command_string += ' --atrous_rates=' + str(atrous_rates2)
+    if atrous_rates3 is not None:
+        command_string += ' --atrous_rates=' + str(atrous_rates3)
 
     if depth_multiplier is not None:
         command_string += ' --depth_multiplier=' + str(depth_multiplier)
