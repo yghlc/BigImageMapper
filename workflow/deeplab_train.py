@@ -94,7 +94,7 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         command_string += ' --aspp_with_concat_projection=0 '
         command_string += ' --aspp_with_squeeze_and_excitation=1 '
         command_string += ' --decoder_use_sum_merge=1 '
-        command_string += ' --decoder_filters=19 '
+        command_string += ' --decoder_filters=19 '  # this is the same as number of class
         command_string += ' --decoder_output_is_logits=1 '
         command_string += ' --image_se_uses_qsigmoid=1 '
 
@@ -150,7 +150,7 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
         command_string += ' --aspp_with_concat_projection=0 '
         command_string += ' --aspp_with_squeeze_and_excitation=1 '
         command_string += ' --decoder_use_sum_merge=1 '
-        command_string += ' --decoder_filters=19 '
+        command_string += ' --decoder_filters=19 '  # this is the same as number of class
         command_string += ' --decoder_output_is_logits=1 '
         command_string += ' --image_se_uses_qsigmoid=1 '
 
