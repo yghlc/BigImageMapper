@@ -52,7 +52,7 @@ def get_train_val_sample_count(work_dir, para_file):
 
 def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
                   atrous_rates1,atrous_rates2,atrous_rates3,output_stride,crop_size_str,batch_size,iteration_num,depth_multiplier,
-                  decoder_output_stride):
+                  decoder_output_stride,aspp_convs_filters):
 
     # for more information, run: "python deeplab/train.py --help" or "python deeplab/train.py --helpfull"
     command_string = tf1x_python + ' ' \
@@ -86,12 +86,14 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
     if depth_multiplier is not None:
         command_string += ' --depth_multiplier=' + str(depth_multiplier)
 
+    if aspp_convs_filters is not None:
+        command_string += ' --aspp_convs_filters='+str(aspp_convs_filters)
+
     if 'mobilenet_v3' in model_variant:
         # ' --image_pooling_crop_size = 769, 769 '
         command_string += ' --image_pooling_crop_size='+crop_size_str
         command_string += ' --image_pooling_stride=4,5 '
         command_string += ' --add_image_level_feature=1 '
-        command_string += ' --aspp_convs_filters=128 '
         command_string += ' --aspp_with_concat_projection=0 '
         command_string += ' --aspp_with_squeeze_and_excitation=1 '
         command_string += ' --decoder_use_sum_merge=1 '
@@ -107,7 +109,7 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
 
 def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_variant,
                        atrous_rates1,atrous_rates2,atrous_rates3,output_stride,train_logdir, evl_logdir,dataset_dir,
-                       crop_size_str,max_eva_number,depth_multiplier,decoder_output_stride):
+                       crop_size_str,max_eva_number,depth_multiplier,decoder_output_stride,aspp_convs_filters):
 
     # for information, run "python deeplab/eval.py  --helpfull"
 
@@ -142,12 +144,14 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
     if depth_multiplier is not None:
         command_string += ' --depth_multiplier=' + str(depth_multiplier)
 
+    if aspp_convs_filters is not None:
+        command_string += ' --aspp_convs_filters='+str(aspp_convs_filters)
+
     if 'mobilenet_v3' in model_variant:
         # ' --image_pooling_crop_size = 769, 769 '
         command_string += ' --image_pooling_crop_size='+crop_size_str
         command_string += ' --image_pooling_stride=4,5 '
         command_string += ' --add_image_level_feature=1 '
-        command_string += ' --aspp_convs_filters=128 '
         command_string += ' --aspp_with_concat_projection=0 '
         command_string += ' --aspp_with_squeeze_and_excitation=1 '
         command_string += ' --decoder_use_sum_merge=1 '
@@ -272,6 +276,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     depth_multiplier = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'depth_multiplier', 'float')
 
     decoder_output_stride = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'decoder_output_stride', 'int')
+    aspp_convs_filters = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'aspp_convs_filters','int')
 
     train_script = os.path.join(deeplab_dir, 'train.py')
     train_split = os.path.splitext(parameters.get_string_parameters(para_file,'training_sample_list_txt'))[0]
@@ -318,12 +323,12 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                       dataset_dir, gpu_num,
                       train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num,
-                      depth_multiplier,decoder_output_stride)
+                      depth_multiplier,decoder_output_stride,aspp_convs_filters)
 
         # run evaluation
         evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant,
                            inf_atrous_rates1,inf_atrous_rates2,inf_atrous_rates3,inf_output_stride,TRAIN_LOGDIR, EVAL_LOGDIR,
-                           dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride)
+                           dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride,aspp_convs_filters)
     else:
         basic.outputlogMessage('training to the maximum iteration of %d, and evaluating very %d epoch(es)' % (iteration_num,validation_interval))
         for epoch in range(1, total_epoches + validation_interval, validation_interval):
@@ -338,12 +343,12 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                           init_checkpoint, TRAIN_LOGDIR,
                           dataset_dir, gpu_num,
                           train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str,
-                          batch_size, to_iter_num,depth_multiplier,decoder_output_stride)
+                          batch_size, to_iter_num,depth_multiplier,decoder_output_stride,aspp_convs_filters)
 
             # run evaluation
             evaluation_deeplab(evl_script, dataset, evl_split, num_of_classes, model_variant,
                                inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride, TRAIN_LOGDIR, EVAL_LOGDIR,
-                               dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride)
+                               dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride,aspp_convs_filters)
 
             # get miou
             miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)

@@ -24,7 +24,7 @@ from deeplab_train import pre_trained_tar_19_classes
 tf1x_python = 'python'
 
 def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classes,atrous_rates1,atrous_rates2,atrous_rates3,output_stride,
-                 crop_size_height, crop_size_width,multi_scale,depth_multiplier,decoder_output_stride):
+                 crop_size_height, crop_size_width,multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters):
     command_string = tf1x_python + ' ' \
                      + export_script \
                      + ' --logtostderr' \
@@ -62,12 +62,14 @@ def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classe
     if depth_multiplier is not None:
         command_string += ' --depth_multiplier=' + str(depth_multiplier)
 
+    if aspp_convs_filters is not None:
+        command_string += ' --aspp_convs_filters='+str(aspp_convs_filters)
+
     if 'mobilenet_v3' in model_variant:
         # ' --image_pooling_crop_size = 769, 769 '
         # command_string += ' --image_pooling_crop_size='+crop_size_str
         command_string += ' --image_pooling_stride=4,5 '
         command_string += ' --add_image_level_feature=1 '
-        command_string += ' --aspp_convs_filters=128 '
         command_string += ' --aspp_with_concat_projection=0 '
         command_string += ' --aspp_with_squeeze_and_excitation=1 '
         command_string += ' --decoder_use_sum_merge=1 '
@@ -121,6 +123,7 @@ def main(options, args):
     depth_multiplier = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'depth_multiplier', 'float')
 
     decoder_output_stride = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'decoder_output_stride', 'int')
+    aspp_convs_filters = parameters.get_digit_parameters_None_if_absence(network_setting_ini,'aspp_convs_filters', 'int')
 
     model_variant = parameters.get_string_parameters(network_setting_ini, 'model_variant')
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
@@ -148,7 +151,7 @@ def main(options, args):
     EXPORT_PATH = os.path.join(EXPORT_DIR, 'frozen_inference_graph_%s.pb' % iteration_num)
     export_graph(export_script, CKPT_PATH, EXPORT_PATH, model_variant, num_of_classes,
                  inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,image_crop_size[0], image_crop_size[1],
-                 multi_scale,depth_multiplier,decoder_output_stride)
+                 multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters)
 
 
 if __name__ == '__main__':
