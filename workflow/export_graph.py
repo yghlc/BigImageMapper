@@ -73,7 +73,7 @@ def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classe
         command_string += ' --aspp_with_concat_projection=0 '
         command_string += ' --aspp_with_squeeze_and_excitation=1 '
         command_string += ' --decoder_use_sum_merge=1 '
-        command_string += ' --decoder_filters=19 '  # this is the same as number of class
+        command_string += ' --decoder_filters='+str(num_of_classes)  # 19 this is the same as number of class
         command_string += ' --decoder_output_is_logits=1 '
         command_string += ' --image_se_uses_qsigmoid=1 '
 
