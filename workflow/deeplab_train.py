@@ -31,6 +31,8 @@ pre_trained_tar_21_classes = ['xception_65_coco_pretrained_2018_10_02.tar.gz',
                               'deeplabv3_mnv2_pascal_train_aug_2018_01_29.tar.gz',
                               'deeplabv3_mnv2_pascal_trainval_2018_01_29.tar.gz']
 
+pre_trained_tar_19_classes = ['deeplab_mnv3_large_cityscapes_trainfine_2019_11_15.tar.gz']
+
 # the python with tensorflow 1.x installed
 tf1x_python = 'python'
 
@@ -284,6 +286,9 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     if pre_trained_tar in pre_trained_tar_21_classes:
         print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)
         num_classes_noBG = 20
+    if pre_trained_tar in pre_trained_tar_19_classes:
+        print('warning, pretrained model %s is trained with 19 classes, set num_of_classes to 19'%pre_trained_tar)
+        num_classes_noBG = 18
     num_of_classes = num_classes_noBG + 1
 
     image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
