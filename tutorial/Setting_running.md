@@ -19,7 +19,7 @@ Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https:
     # check where is pip by "which pip", making sure it is under the environment of tf1.14
     pip install tensorflow-gpu==1.14   # for GPU version  or 
     #pip install tensorflow==1.14       # for CPU version
-    pip install tf_slim
+    pip install tf_slim==1.0.0       # 1.0.0 is required by mobilenet_v3
     pip install numpy==1.16.4       # use a relative old version to avoid warning.
     pip install gast==0.2.2         # use a relative old version to avoid warning.
     pip install pillow
