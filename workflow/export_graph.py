@@ -61,6 +61,19 @@ def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classe
     if depth_multiplier is not None:
         command_string += ' --depth_multiplier=' + str(depth_multiplier)
 
+    if 'mobilenet_v3' in model_variant:
+        # ' --image_pooling_crop_size = 769, 769 '
+        # command_string += ' --image_pooling_crop_size='+crop_size_str
+        command_string += ' --image_pooling_stride = 4, 5 '
+        command_string += ' --add_image_level_feature = 1 '
+        command_string += ' --aspp_convs_filters = 128 '
+        command_string += ' --aspp_with_concat_projection = 0 '
+        command_string += ' --aspp_with_squeeze_and_excitation = 1 '
+        command_string += ' --decoder_use_sum_merge = 1 '
+        command_string += ' --decoder_filters = 19 '
+        command_string += ' --decoder_output_is_logits = 1 '
+        command_string += ' --image_se_uses_qsigmoid = 1 '
+
     res = os.system(command_string)
     if res != 0:
         sys.exit(1)
