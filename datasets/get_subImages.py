@@ -214,7 +214,8 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
             out_meta.update({"driver": "GTiff",
                              "height": out_image.shape[1],
                              "width": out_image.shape[2],
-                             "transform": out_transform})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+                             "transform": out_transform,
+                             "nodata":dstnodata})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
             with rasterio.open(save_path, "w", **out_meta) as dest:
                 dest.write(out_image)
         pass
@@ -238,7 +239,8 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
                 out_meta.update({"driver": "GTiff",
                                  "height": out_image.shape[1],
                                  "width": out_image.shape[2],
-                                 "transform": out_transform})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+                                 "transform": out_transform,
+                                 "nodata":dstnodata})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
                 with rasterio.open(tmp_saved, "w", **out_meta) as dest:
                     dest.write(out_image)
                 tmp_saved_files.append(tmp_saved)
