@@ -159,6 +159,14 @@ def get_digit_parameters(parafile,name,datatype):
 def get_string_list_parameters_None_if_absence(parafile,name):
     str_value = get_string_parameters(parafile, name)
     attributes_list = []
+
+    # if the list is in a txt file
+    if str_value.endswith('.txt') and len(str_value.split(',')) == 1:
+        with open(str_value, 'r') as f_obj:
+            lines = f_obj.readlines()
+            lines = [item.strip() for item in lines]
+            return lines
+
     attributes_init = str_value.split(',')
     if len(attributes_init) < 1:
         return None

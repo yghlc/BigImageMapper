@@ -26,12 +26,12 @@ eo_dir=~/codes/PycharmProjects/Landuse_DL
 ################################################
 SECONDS=0
 # remove previous data or results if necessary
-#${eo_dir}/workflow/remove_previous_data.py ${para_file}
+${eo_dir}/workflow/remove_previous_data.py ${para_file}
 
 #extract sub_images based on the training polgyons
-#${eo_dir}/workflow/get_sub_images_multi_regions.py ${para_file}
+${eo_dir}/workflow/get_sub_images_multi_regions.py ${para_file}
 
-
+exit
 ################################################
 ## preparing training images.
 # there is another script ("build_RS_data.py"), but seem have not finished.
@@ -41,7 +41,7 @@ SECONDS=0
 #${eo_dir}/workflow/split_train_val.py ${para_file}
 
 ## convert to TFrecord
-${eo_dir}/workflow/build_TFrecord_tf1x.py ${para_file}
+#${eo_dir}/workflow/build_TFrecord_tf1x.py ${para_file}
 
 #exit
 duration=$SECONDS
@@ -51,7 +51,7 @@ SECONDS=0
 ## training
 
 #${eo_dir}/workflow/deeplab_train.py ${para_file} ${gpu_num}
-
+#exit
 duration=$SECONDS
 echo "$(date): time cost of training: ${duration} seconds">>"time_cost.txt"
 SECONDS=0
@@ -60,7 +60,7 @@ SECONDS=0
 #export model
 ${eo_dir}/workflow/export_graph.py ${para_file}
 
-#exit
+exit
 ################################################
 ## inference
 rm -r multi_inf_results || true
