@@ -31,6 +31,7 @@ def create_new_region_defined_parafile(template_para_file, img_dir, area_remark=
     :param area_remark:
     :return:
     '''
+    io_function.is_file_exist(template_para_file)
 
     dir_base = os.path.basename(img_dir)
     date_strs = re.findall('\d{8}',dir_base)
@@ -61,7 +62,7 @@ def create_new_region_defined_parafile(template_para_file, img_dir, area_remark=
 
     print("modified and saved new parameter file: %s "%new_para_file)
 
-    return True
+    return new_para_file
 
 def main(options, args):
     in_folder = args[0]
@@ -75,10 +76,15 @@ def main(options, args):
     img_dir_list = [ os.path.dirname(item) for item in image_paths ]
     img_dir_list = set(img_dir_list)
 
+    region_ini_files_list = []
     for img_dir in img_dir_list:
         # copy template file
-        create_new_region_defined_parafile(template_ini,img_dir,options.area_remark)
+        out_ini = create_new_region_defined_parafile(template_ini,img_dir,options.area_remark)
+        region_ini_files_list.append(out_ini)
 
+    with open('region_ini_files.txt','a') as f_obj:
+        for ini in region_ini_files_list:
+            f_obj.writelines(ini + '\n')
 
     pass
 

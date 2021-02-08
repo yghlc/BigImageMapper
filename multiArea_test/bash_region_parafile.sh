@@ -19,10 +19,12 @@ function new_ini(){
     ${py} ${dir} ${template_ini} -r ${remark}
 }
 
+rm region_ini_files.txt || true
+
 region=Willow_River
+ref_ini=~/codes/PycharmProjects/Landuse_DL/ini_files/area_Willow_River.ini
 dir=~/Data/Arctic/canada_arctic/rsImages/daily_mosaic/WR_daily_mosaic_8bit_nirGB
 remark=nirGB_2020
-ref_ini=~/codes/PycharmProjects/Landuse_DL/ini_files/area_Willow_River.ini
 new_ini ${dir} ${ref_ini} ${remark}
 
 dir=~/Data/Arctic/canada_arctic/rsImages/daily_mosaic/WR_daily_mosaic_8bit_rgb
@@ -30,14 +32,26 @@ remark=rgb_2020
 new_ini ${dir} ${ref_ini} ${remark}
 
 
-#region=Banks_east
-#ext_shp=
-#meta  ${ext_shp} ${region}
-#
-#
-#region=Ellesmere_Island
-#ext_shp=
-#meta  ${ext_shp} ${region}
+region=Banks_east
+ref_ini=~/codes/PycharmProjects/Landuse_DL/ini_files/area_Banks_east.ini
+dir=~/Data/Arctic/canada_arctic/rsImages/daily_mosaic/Banks_east_daily_mosaic_8bit_nirGB
+remark=nirGB_2020
+new_ini ${dir} ${ref_ini} ${remark}
+
+dir=~/Data/Arctic/canada_arctic/rsImages/daily_mosaic/Banks_east_daily_mosaic_8bit_rgb
+remark=rgb_2020
+new_ini ${dir} ${ref_ini} ${remark}
+
+
+region=Ellesmere_Island
+ref_ini=~/codes/PycharmProjects/Landuse_DL/ini_files/area_Ellesmere_Island.ini
+dir=~/Data/Arctic/canada_arctic/rsImages/daily_mosaic/Ellesmere_Island_daily_mosaic_8bit_nirGB
+remark=nirGB_2020
+new_ini ${dir} ${ref_ini} ${remark}
+
+dir=~/Data/Arctic/canada_arctic/rsImages/daily_mosaic/Ellesmere_Island_daily_mosaic_8bit_rgb
+remark=rgb_2020
+new_ini ${dir} ${ref_ini} ${remark}
 
 
 
