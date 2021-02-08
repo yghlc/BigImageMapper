@@ -17,6 +17,7 @@ sys.path.insert(0, code_dir)
 import parameters
 
 import basic_src.io_function as io_function
+import datasets.raster_io as raster_io
 
 def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp, input_image_dir, file_pattern = None):
     if file_pattern is None:
@@ -30,7 +31,9 @@ def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize,
 
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
-    os.system(command_string )      # this work
+    res = os.system(command_string )      # this work
+    if res != 0:
+        sys.exit(res)
 
 def main(options, args):
     print("%s : extract sub-images and sub-labels for a given shape file (training polygons)" %
@@ -75,6 +78,29 @@ def main(options, args):
         get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
                                       input_image_dir, file_pattern=input_image_or_pattern)
 
+
+    # check black sub-images or most part of the sub-images is black (nodata)
+    new_sub_image_label_list = []
+    delete_sub_image_label_list = []
+    subImage_dir_delete = subImage_dir + '_delete'
+    subLabel_dir_delete = subLabel_dir + '_delete'
+    io_function.mkdir(subImage_dir_delete)
+    io_function.mkdir(subLabel_dir_delete)
+    with open('sub_images_labels_list.txt','r') as f_obj:
+        lines = f_obj.readlines()
+        for line in lines:
+            image_path, label_path = line.strip().split(':')
+            valid_per = raster_io.get_valid_pixel_percentage(image_path)
+            if valid_per > 80:
+                new_sub_image_label_list.append(line)
+            else:
+                delete_sub_image_label_list.append(line)
+                io_function.movefiletodir(image_path,subImage_dir_delete)
+                io_function.movefiletodir(label_path,subLabel_dir_delete)
+    if len(delete_sub_image_label_list) > 0:
+        with open('sub_images_labels_list.txt', 'w') as f_obj:
+            for line in new_sub_image_label_list:
+                f_obj.writelines(line)
 
     # check weather they have the same subImage and subLabel
     sub_image_list = io_function.get_file_list_by_pattern(subImage_dir,'*.tif')

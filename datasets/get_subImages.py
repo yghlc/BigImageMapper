@@ -33,6 +33,8 @@ import geopandas as gpd
 import math
 import numpy as np
 
+import raster_io
+
 def get_image_tile_bound_boxes(image_tile_list):
     '''
     get extent of all the images
@@ -100,6 +102,19 @@ def check_projection_rasters(image_path_list):
         if proj4_tmp != proj4:
             raise ValueError('error, %s have different projection with the first raster'%image_path_list[idx])
     return True
+
+def check_3band_8bit(image_path_list):
+    '''
+    check the raster is 3-band and 8-bit
+    :param image_path_list: a list containing all the images
+    :return:
+    '''
+    for img_path in image_path_list:
+        _, _, band_count, dtype = raster_io.get_height_width_bandnum_dtype(img_path)
+        print(band_count, dtype)
+        if band_count!=3 or dtype!='uint8':
+            raise ValueError('Currenty, only support images with 3-band and uint8 type, input %s is %d bands and %s'
+                             %(img_path,band_count,dtype))
 
 def meters_to_degress_onEarth(distance):
     return (distance/6371000.0)*180.0/math.pi
@@ -451,7 +466,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
     img_tile_boxes = get_image_tile_bound_boxes(image_tile_list)
 
-    pre_name_for_label = os.path.splitext(os.path.basename(t_polygons_shp))[0]
+    pre_name_for_label = pre_name+'_'+os.path.splitext(os.path.basename(t_polygons_shp))[0]
 
     list_txt_obj = open('sub_images_labels_list.txt','a')
     # go through each polygon
@@ -530,6 +545,8 @@ def main(options, args):
         raise IOError('error, failed to get image tiles in folder %s'%image_folder)
 
     check_projection_rasters(image_tile_list)   # it will raise errors if found problems
+
+    check_3band_8bit(image_tile_list)   # it will raise errors if found problems
 
     #need to check: the shape file and raster should have the same projection.
     if get_projection_proj4(t_polygons_shp) != get_projection_proj4(image_tile_list[0]):

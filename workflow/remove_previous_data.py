@@ -36,7 +36,14 @@ if __name__ == '__main__':
         io_function.delete_file_or_dir(subLabel_dir)
         print('remove %s' % subLabel_dir)
 
-
+    subImage_dir_delete = subImage_dir + '_delete'
+    subLabel_dir_delete = subLabel_dir + '_delete'
+    if os.path.isdir(subImage_dir_delete):
+        io_function.delete_file_or_dir(subImage_dir_delete)
+        print('remove %s' % subImage_dir_delete)
+    if os.path.isdir(subLabel_dir_delete):
+        io_function.delete_file_or_dir(subLabel_dir_delete)
+        print('remove %s '% subLabel_dir_delete)
 
 
 
