@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     usage = "usage: %prog [options] para_file "
     parser = OptionParser(usage=usage, version="1.0 2021-01-19")
-    parser.description = 'Introduction: textract sub-images and sub-labels '
+    parser.description = 'Introduction: extract sub-images and sub-labels '
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
