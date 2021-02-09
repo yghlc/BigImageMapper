@@ -128,7 +128,7 @@ def main(options, args):
         f_obj.writelines('data type : %s \n'%dtype)
         f_obj.writelines('maximum width and height: %d, %d \n'% (max(width_list), max(height_list)) )
         f_obj.writelines('minimum width and height: %d, %d \n'% (min(width_list), min(height_list)) )
-        f_obj.writelines('mean width and height: %.2f, %.2f \n'% (sum(width_list)/img_count, sum(height_list)/img_count))
+        f_obj.writelines('mean width and height: %.2f, %.2f \n\n'% (sum(width_list)/img_count, sum(height_list)/img_count))
 
 
 if __name__ == '__main__':

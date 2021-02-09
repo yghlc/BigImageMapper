@@ -24,7 +24,7 @@ def get_image_with_height_list(sample_txt, img_ext, info_type='training'):
     with open(sample_txt, 'r') as f_obj:
         lines = f_obj.readlines()
         for line in lines:
-            image_path = line.strip() + img_ext
+            image_path = os.path.join('split_images', line.strip() + img_ext)
             height, width, band_count, dtype = raster_io.get_height_width_bandnum_dtype(image_path)
             image_path_list.append(image_path)
             height_list.append(height)
@@ -39,7 +39,7 @@ def get_image_with_height_list(sample_txt, img_ext, info_type='training'):
         f_obj.writelines('data type : %s \n'%dtype)
         f_obj.writelines('maximum width and height: %d, %d \n'% (max(width_list), max(height_list)) )
         f_obj.writelines('minimum width and height: %d, %d \n'% (min(width_list), min(height_list)) )
-        f_obj.writelines('mean width and height: %.2f, %.2f \n'% (sum(width_list)/img_count, sum(height_list)/img_count))
+        f_obj.writelines('mean width and height: %.2f, %.2f \n\n'% (sum(width_list)/img_count, sum(height_list)/img_count))
 
     return True
 
