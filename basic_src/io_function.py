@@ -160,7 +160,7 @@ def os_list_folder_files(top_dir):
 
 
     if len(list_files) < 1:
-        basic.outputlogMessage('There is no file in %s',top_dir)
+        basic.outputlogMessage('There is no file in %s'%top_dir)
         return False
     return list_files
 
