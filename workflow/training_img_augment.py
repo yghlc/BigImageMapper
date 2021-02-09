@@ -44,7 +44,9 @@ if __name__ == '__main__':
     command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_labels' + ' -e ' + img_ext + \
                      ' -o ' + 'split_labels' + ' -l ' + img_list_aug_txt + ' ' + 'list/trainval.txt' + ' --is_ground_truth '
 
-    os.system(command_string)
+    res = os.system(command_string)
+    if res!=0:
+        sys.exit(res)
 
     if os.path.isfile(img_list_aug_txt):
         os.system(' cp %s list/trainval.txt'%img_list_aug_txt)

@@ -109,6 +109,27 @@ def main(options, args):
         raise ValueError('the count of subImage (%d) and subLabel (%d) is different'
                          %(len(sub_image_list),len(sub_label_list)))
 
+    # save brief information of sub-images
+    height_list = []
+    width_list = []
+    band_count = 0
+    dtype = 'unknown'
+    for line in new_sub_image_label_list:
+        image_path, label_path = line.strip().split(':')
+        height, width, band_count, dtype = raster_io.get_height_width_bandnum_dtype(image_path)
+        height_list.append(height)
+        width_list.append(width)
+    # save info to file, if it exists, it will be overwritten
+    img_count = len(new_sub_image_label_list)
+    with open('sub_images_patches_info.txt','w') as f_obj:
+        f_obj.writelines('information of sub-images: \n')
+        f_obj.writelines('number of sub-images : %d \n' % img_count)
+        f_obj.writelines('band count : %d \n'%band_count)
+        f_obj.writelines('data type : %s \n'%dtype)
+        f_obj.writelines('maximum width and height: %d, %d \n'% (max(width_list), max(height_list)) )
+        f_obj.writelines('minimum width and height: %d, %d \n'% (min(width_list), min(height_list)) )
+        f_obj.writelines('mean width and height: %.2f, %.2f \n'% (sum(width_list)/img_count, sum(height_list)/img_count))
+
 
 if __name__ == '__main__':
 
