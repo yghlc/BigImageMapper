@@ -53,9 +53,9 @@ if __name__ == '__main__':
         print('list/images_including_aug.txt does not exist because no data augmentation strings')
 
 
-    # output the number of image patches
-    os.system('echo "count of class 0 ":$(ls split_images/*class_0*${img_ext} |wc -l) >> time_cost.txt')
-    os.system('echo "count of class 1 ":$(ls split_images/*class_1*${img_ext} |wc -l) >> time_cost.txt')
+    # output the number of image patches (ls may failed if there are a lot of files, so remove these two lines)
+    # os.system('echo "count of class 0 ":$(ls split_images/*class_0*${img_ext} |wc -l) >> time_cost.txt')
+    # os.system('echo "count of class 1 ":$(ls split_images/*class_1*${img_ext} |wc -l) >> time_cost.txt')
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of training images augmentation: %.2f seconds">>time_cost.txt'%duration)
