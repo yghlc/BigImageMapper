@@ -26,18 +26,23 @@ class TestdeeplabTrainclass():
     #     self.para_file = None
 
 
-    def test_get_train_val_sample_count(self):
-
-        print(deeplab_train.get_train_val_sample_count(work_dir, para_file))
-
-    def test_get_trained_iteration(self):
-        train_log_dir = os.path.join(work_dir, 'exp1', 'train')
-        iter = deeplab_train.get_trained_iteration(train_log_dir)
-        print('iteration number in the folder', iter)
+    # def test_get_train_val_sample_count(self):
+    #
+    #     print(deeplab_train.get_train_val_sample_count(work_dir, para_file))
+    #
+    # def test_get_trained_iteration(self):
+    #     train_log_dir = os.path.join(work_dir, 'exp1', 'train')
+    #     iter = deeplab_train.get_trained_iteration(train_log_dir)
+    #     print('iteration number in the folder', iter)
 
     def test_get_miou_spep_list(self):
         train_log_dir = os.path.join(work_dir, 'exp1', 'eval')
         dict = deeplab_train.get_miou_list_class_all(train_log_dir,2)
+        print(dict)
+
+    def test_get_loss_list(self):
+        train_log_dir = os.path.join(work_dir, 'exp1', 'train')
+        dict = deeplab_train.get_loss_learning_rate_list(train_log_dir)
         print(dict)
 
 

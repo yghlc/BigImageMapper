@@ -167,7 +167,54 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
     if res != 0:
         sys.exit(res)
 
-def get_miou_list_class_all(train_log_dir,class_num):
+def get_loss_learning_rate_list(log_dir):
+
+    # add the tensorboard in the tf1x version
+    tf1x_dir = os.path.join(os.path.dirname(os.path.dirname(tf1x_python)),'lib','python3.7','site-packages')
+    sys.path.insert(0, tf1x_dir)
+
+    from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+    tf_size_guidance = {
+        'compressedHistograms': 10,
+        'images': 0,
+        'scalars': 0,       # set a 0, to load all scalars
+        'histograms': 1
+    }
+
+    event_acc = EventAccumulator(log_dir, tf_size_guidance)
+    event_acc.Reload()
+
+    #Show all tags in the log file
+    # tag_dict = event_acc.Tags()
+    # io_function.save_dict_to_txt_json('event_acc.txt',tag_dict)
+
+    # "scalars": [
+    #     "clone_0/Losses/clone_0//clone_loss",
+    #     "total_loss_1",
+    #     "learning_rate",
+    #     "losses/clone_0/semantic_merged_logits/mul_1",
+    #     "clone_0/Losses/regularization_loss",
+    #     "global_step/sec"         : how much time it takes for each step
+    # ],
+
+
+    loss_learnrate_dic = {}
+    total_loss_1_event =  event_acc.Scalars('total_loss_1')
+    total_loss_list = [item[2] for item in total_loss_1_event ]     #  item[0] is wall_time, item[1] is step, item [2] is the value
+    loss_learnrate_dic['total_loss'] = total_loss_list
+    step_list = [item[1] for item in total_loss_1_event]
+    wall_time_list = [item[0] for item in total_loss_1_event]    # we can use datetime.fromtimestamp() to convert datetime
+
+    learning_rate_event = event_acc.Scalars('learning_rate')
+    learning_rate_list = [item[2] for item in learning_rate_event ]
+    loss_learnrate_dic['learning_rate'] = learning_rate_list
+
+    loss_learnrate_dic['step'] = step_list
+    loss_learnrate_dic['wall_time'] = wall_time_list
+
+    io_function.save_dict_to_txt_json(os.path.join(log_dir,'loss_learning_rate.txt') , loss_learnrate_dic)
+
+def get_miou_list_class_all(log_dir,class_num):
 
     # add the tensorboard in the tf1x version
     tf1x_dir = os.path.join(os.path.dirname(os.path.dirname(tf1x_python)),'lib','python3.7','site-packages')
@@ -189,7 +236,7 @@ def get_miou_list_class_all(train_log_dir,class_num):
         'histograms': 1
     }
 
-    event_acc = EventAccumulator(train_log_dir, tf_size_guidance)
+    event_acc = EventAccumulator(log_dir, tf_size_guidance)
     event_acc.Reload()
 
     # Show all tags in the log file
@@ -201,12 +248,19 @@ def get_miou_list_class_all(train_log_dir,class_num):
         name  = 'class_%d'%class_id
         miou_class_event = event_acc.Scalars('eval/miou_1.0_'+name)
         miou_class_list = [item[2] for item in miou_class_event ]  # item[0] is wall_time, item[1] is step, item [2] is the value
+        # step_list = [item[1] for item in miou_class_event]
+        # print(step_list)
         miou_dic[name] = miou_class_list
 
     miou_class_overall = event_acc.Scalars('eval/miou_1.0_overall')
     miou_class_list = [item[2] for item in miou_class_overall]
+    step_list = [item[1] for item in miou_class_overall]
+    wall_time_list = [item[0] for item in miou_class_overall]
+    # print(step_list)
     miou_dic['overall'] = miou_class_list
-    io_function.save_dict_to_txt_json('miou.txt', miou_dic)
+    miou_dic['step'] = step_list
+    miou_dic['wall_time'] = wall_time_list                   # we can use datetime.fromtimestamp() to convert datetime
+    io_function.save_dict_to_txt_json(os.path.join(log_dir,'miou.txt') , miou_dic)
 
     return miou_dic
 
