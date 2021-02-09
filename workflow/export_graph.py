@@ -32,7 +32,6 @@ def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classe
                      + ' --export_path='+ EXPORT_PATH \
                      + ' --model_variant=' + model_variant \
                      + ' --num_classes=' + str(num_of_classes) \
-                     + ' --atrous_rates=' + str(atrous_rates3) \
                      + ' --crop_size='+crop_size_height \
                      + ' --crop_size='+crop_size_width
 
