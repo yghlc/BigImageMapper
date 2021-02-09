@@ -41,18 +41,18 @@ def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj
         count_y = count_y + 1
 
     # output split information
-    f_obj = open('split_image_info.txt','w')
-    f_obj.writelines('### This file is created by split_image.py. mosaic_patches.py need it. Do not edit it\n')
-    f_obj.writelines('image_width:%d\n' % image_width)
-    f_obj.writelines('image_height:%d\n' % image_height)
-    f_obj.writelines('expected patch_w:%d\n' % patch_w)
-    f_obj.writelines('expected patch_h:%d\n'%patch_h)
-    f_obj.writelines('adj_overlay_x:%d\n' % adj_overlay_x)
-    f_obj.writelines('adj_overlay_y:%d\n' % adj_overlay_y)
+    # f_obj = open('split_image_info.txt','w')
+    # f_obj.writelines('### This file is created by split_image.py. mosaic_patches.py need it. Do not edit it\n')
+    # f_obj.writelines('image_width:%d\n' % image_width)
+    # f_obj.writelines('image_height:%d\n' % image_height)
+    # f_obj.writelines('expected patch_w:%d\n' % patch_w)
+    # f_obj.writelines('expected patch_h:%d\n'%patch_h)
+    # f_obj.writelines('adj_overlay_x:%d\n' % adj_overlay_x)
+    # f_obj.writelines('adj_overlay_y:%d\n' % adj_overlay_y)
 
     patch_boundary = []
     for i in range(0,count_x):
-        f_obj.write('column %d:'%i)
+        # f_obj.write('column %d:'%i)
         for j in range(0,count_y):
             w = patch_w
             h = patch_h
@@ -61,7 +61,7 @@ def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj
             if j == count_y - 1:
                 h = leftH
 
-            f_obj.write('%d ' % (i*count_y + j))
+            # f_obj.write('%d ' % (i*count_y + j))
 
             # extend the patch
             xoff = max(i*patch_w - adj_overlay_x,0)  # i*patch_w
@@ -72,9 +72,9 @@ def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj
             new_patch = (xoff,yoff ,xsize, ysize)
             patch_boundary.append(new_patch)
 
-        f_obj.write('\n')
+        # f_obj.write('\n')
 
-    f_obj.close()
+    # f_obj.close()
     return patch_boundary
 
 
@@ -117,9 +117,9 @@ def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_o
     index = 0
     if pre_name is None:
         pre_name = os.path.splitext(os.path.basename(input))[0]
-    f_obj = open('split_image_info.txt', 'a+')
-    f_obj.writelines("pre FileName:"+pre_name+'_p_\n')
-    f_obj.close()
+    # f_obj = open('split_image_info.txt', 'a+')
+    # f_obj.writelines("pre FileName:"+pre_name+'_p_\n')
+    # f_obj.close()
 
     for patch in patch_boundary:
         # print information
