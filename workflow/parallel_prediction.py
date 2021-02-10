@@ -132,7 +132,7 @@ def main(options, args):
     # get name of inference areas
     multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')
 
-    max_parallel_inf_task = parameters.get_digit_parameters(para_file,'max_parallel_inf_task','int')
+    # max_parallel_inf_task = parameters.get_digit_parameters(para_file,'max_parallel_inf_task','int')
 
     b_use_multiGPUs = parameters.get_bool_parameters(para_file,'b_use_multiGPUs')
 

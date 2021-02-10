@@ -20,12 +20,14 @@ import basic_src.io_function as io_function
 import datasets.raster_io as raster_io
 import time
 
-def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp, input_image_dir, file_pattern = None):
+def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
+                                  input_image_dir, file_pattern = None, process_num=1):
     if file_pattern is None:
         file_pattern = '*.tif'
 
     command_string = get_subImage_script + ' -f ' + all_train_shp + ' -b ' + str(buffersize) + ' -e ' + file_pattern + \
-                    ' -o ' + os.getcwd() + ' -n ' + str(dstnodata) + ' ' + rectangle_ext + ' ' + train_shp + ' '+ input_image_dir
+                    ' -o ' + os.getcwd() + ' -n ' + str(dstnodata)  + ' -p ' + str(process_num) \
+                     + ' ' + rectangle_ext + ' ' + train_shp + ' '+ input_image_dir
 
     # ${eo_dir}/sentinelScripts/get_subImages.py -f ${all_train_shp} -b ${buffersize} -e .tif \
     #             -o ${PWD} -n ${dstnodata} -r ${train_shp} ${input_image_dir}
@@ -57,6 +59,7 @@ def main(options, args):
     dstnodata = parameters.get_string_parameters(para_file, 'dst_nodata')
     buffersize = parameters.get_string_parameters(para_file, 'buffer_size')
     rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
+    process_num = parameters.get_digit_parameters(para_file,'process_num', 'int')
 
     if os.path.isfile('sub_images_labels_list.txt'):
         io_function.delete_file_or_dir('sub_images_labels_list.txt')
@@ -78,7 +81,7 @@ def main(options, args):
         # get subImage and subLabel for one training polygons
         print('extract training data from image folder (%s) and polgyons (%s)' % (input_image_dir, train_shp))
         get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
-                                      input_image_dir, file_pattern=input_image_or_pattern)
+                                      input_image_dir, file_pattern=input_image_or_pattern, process_num=process_num)
 
 
     # check black sub-images or most part of the sub-images is black (nodata)

@@ -35,6 +35,9 @@ import numpy as np
 
 import raster_io
 
+import multiprocessing
+from multiprocessing import Pool
+
 def get_image_tile_bound_boxes(image_tile_list):
     '''
     get extent of all the images
@@ -430,7 +433,41 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
     # return image_array, label_array
     return 1, 1
 
-def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata, brectangle = True, b_label=True):
+
+def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
+                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all):
+    # output message
+    basic.outputlogMessage('obtaining %dth sub-image and the corresponding label raster' % idx)
+
+    ## get an image and the corresponding label raster (has errors)
+    ## image_array, label_array = get_one_sub_image_label(idx,c_polygon, class_labels[idx], polygons_all, class_labels_all, bufferSize, img_tile_boxes,image_tile_list)
+
+    sub_image_label_str = None
+    # get buffer area
+    expansion_polygon = c_polygon.buffer(bufferSize)
+
+    # get one sub-image based on the buffer areas
+    subimg_shortName = os.path.join('subImages', pre_name + '_%d_class_%d.tif' % (idx, c_class_int))
+    subimg_saved_path = os.path.join(saved_dir, subimg_shortName)
+    if get_sub_image(idx, expansion_polygon, image_tile_list, img_tile_boxes, subimg_saved_path, dstnodata,
+                     brectangle) is False:
+        basic.outputlogMessage('Warning, skip the %dth polygon' % idx)
+        return None
+
+    # based on the sub-image, create the corresponding vectors
+    sublabel_shortName = os.path.join('subLabels', pre_name_for_label + '_%d_class_%d.tif' % (idx, c_class_int))
+    sublabel_saved_path = os.path.join(saved_dir, sublabel_shortName)
+    if b_label:
+        if get_sub_label(idx, subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize,
+                         brectangle, sublabel_saved_path) is False:
+            basic.outputlogMessage('Warning, get the label raster for %dth polygon failed' % idx)
+            return None
+
+    sub_image_label_str = subimg_shortName + ":" + sublabel_shortName + '\n'
+    return sub_image_label_str
+
+
+def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata, brectangle = True, b_label=True,proc_num=1):
     '''
     get sub images (and labels ) from training polygons
     :param t_polygons_shp: training polygon
@@ -469,35 +506,47 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
     pre_name_for_label = pre_name+'_'+os.path.splitext(os.path.basename(t_polygons_shp))[0]
 
     list_txt_obj = open('sub_images_labels_list.txt','a')
-    # go through each polygon
-    for idx, (c_polygon, c_class_int)  in enumerate(zip(center_polygons,class_labels)):
+    # # go through each polygon
+    # for idx, (c_polygon, c_class_int)  in enumerate(zip(center_polygons,class_labels)):
+    #
+    #     # output message
+    #     basic.outputlogMessage('obtaining %dth sub-image and the corresponding label raster'%idx)
+    #
+    #     ## get an image and the corresponding label raster (has errors)
+    #     ## image_array, label_array = get_one_sub_image_label(idx,c_polygon, class_labels[idx], polygons_all, class_labels_all, bufferSize, img_tile_boxes,image_tile_list)
+    #
+    #     # get buffer area
+    #     expansion_polygon = c_polygon.buffer(bufferSize)
+    #
+    #     # get one sub-image based on the buffer areas
+    #     subimg_shortName = os.path.join('subImages' , pre_name+'_%d_class_%d.tif'%(idx,c_class_int))
+    #     subimg_saved_path = os.path.join(saved_dir, subimg_shortName)
+    #     if get_sub_image(idx,expansion_polygon,image_tile_list,img_tile_boxes, subimg_saved_path, dstnodata, brectangle) is False:
+    #         basic.outputlogMessage('Warning, skip the %dth polygon'%idx)
+    #         continue
+    #
+    #     # based on the sub-image, create the corresponding vectors
+    #     sublabel_shortName = os.path.join('subLabels', pre_name_for_label + '_%d_class_%d.tif' % (idx, c_class_int))
+    #     sublabel_saved_path = os.path.join(saved_dir, sublabel_shortName)
+    #     if b_label:
+    #         if get_sub_label(idx,subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize, brectangle, sublabel_saved_path) is False:
+    #             basic.outputlogMessage('Warning, get the label raster for %dth polygon failed' % idx)
+    #             continue
+    #
+    #     list_txt_obj.writelines(subimg_shortName + ":"+sublabel_shortName+'\n')
+    #     pass
 
-        # output message
-        basic.outputlogMessage('obtaining %dth sub-image and the corresponding label raster'%idx)
 
-        ## get an image and the corresponding label raster (has errors)
-        ## image_array, label_array = get_one_sub_image_label(idx,c_polygon, class_labels[idx], polygons_all, class_labels_all, bufferSize, img_tile_boxes,image_tile_list)
+    parameters_list = [
+        (idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
+                        img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all)
+        for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons, class_labels))]
+    theadPool = Pool(proc_num)  # multi processes
+    results = theadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
+    for res in results:
+        if res is not None:
+            list_txt_obj.writelines(res)
 
-        # get buffer area
-        expansion_polygon = c_polygon.buffer(bufferSize)
-
-        # get one sub-image based on the buffer areas
-        subimg_shortName = os.path.join('subImages' , pre_name+'_%d_class_%d.tif'%(idx,c_class_int))
-        subimg_saved_path = os.path.join(saved_dir, subimg_shortName)
-        if get_sub_image(idx,expansion_polygon,image_tile_list,img_tile_boxes, subimg_saved_path, dstnodata, brectangle) is False:
-            basic.outputlogMessage('Warning, skip the %dth polygon'%idx)
-            continue
-
-        # based on the sub-image, create the corresponding vectors
-        sublabel_shortName = os.path.join('subLabels', pre_name_for_label + '_%d_class_%d.tif' % (idx, c_class_int))
-        sublabel_saved_path = os.path.join(saved_dir, sublabel_shortName)
-        if b_label:
-            if get_sub_label(idx,subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize, brectangle, sublabel_saved_path) is False:
-                basic.outputlogMessage('Warning, get the label raster for %dth polygon failed' % idx)
-                continue
-
-        list_txt_obj.writelines(subimg_shortName + ":"+sublabel_shortName+'\n')
-        pass
 
     list_txt_obj.close()
     test = 1
@@ -525,6 +574,7 @@ def main(options, args):
     image_folder = args[1]   # folder for store image tile (many split block of a big image)
 
     b_label_image = options.no_label_image
+    process_num = options.process_num
 
     # check training polygons
     assert io_function.is_file_exist(t_polygons_shp)
@@ -574,7 +624,8 @@ def main(options, args):
     else:
         pre_name = os.path.splitext(os.path.basename(image_tile_list[0]))[0]
     get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list,
-                              saved_dir, pre_name, dstnodata, brectangle=options.rectangle, b_label=b_label_image)
+                              saved_dir, pre_name, dstnodata, brectangle=options.rectangle, b_label=b_label_image,
+                              proc_num=process_num)
 
     # move sub images and sub labels to different folders.
 
@@ -607,6 +658,9 @@ if __name__ == "__main__":
     parser.add_option("-l", "--no_label_image",
                       action="store_false", dest="no_label_image",default=True,
                       help="Default will create label images, add this option will not create label images")
+    parser.add_option("-p", "--process_num", type=int,
+                      action="store", dest="process_num", default=4,
+                      help="the process number for parallel computing")
 
 
     (options, args) = parser.parse_args()
