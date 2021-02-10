@@ -63,9 +63,9 @@ rm -r multi_inf_results || true
 ${eo_dir}/workflow/parallel_prediction.py ${para_file}
 
 
-## post processing and copy results
-test_name=1
-${eo_dir}/workflow/postProcess.py ${para_file}  ${test_name}
+## post processing and copy results, inf_post_note indicate notes for inference and post-processing
+inf_post_note=1
+${eo_dir}/workflow/postProcess.py ${para_file}  ${inf_post_note}
 
 
 
