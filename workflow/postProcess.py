@@ -184,11 +184,11 @@ def main(options, args):
     if len(test_note) > 0:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id,'para',test_note]) + '.ini' )
         bak_network_ini = os.path.join(backup_dir, '_'.join([test_id,'network',test_note]) + '.ini' )
-        bak_time_cost = os.path.join(backup_dir, '_'.join([test_id,'time_cost',test_note]) + '.ini' )
+        bak_time_cost = os.path.join(backup_dir, '_'.join([test_id,'time_cost',test_note]) + '.txt' )
     else:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id, 'para']) + '.ini')
         bak_network_ini = os.path.join(backup_dir, '_'.join([test_id, 'network']) + '.ini')
-        bak_time_cost = os.path.join(backup_dir, '_'.join([test_id, 'time_cost']) + '.ini')
+        bak_time_cost = os.path.join(backup_dir, '_'.join([test_id, 'time_cost']) + '.txt')
     io_function.copy_file_to_dst(para_file, bak_para_ini)
     io_function.copy_file_to_dst(network_setting_ini, bak_network_ini)
     io_function.copy_file_to_dst('time_cost.txt', bak_time_cost)
