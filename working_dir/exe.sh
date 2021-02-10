@@ -26,6 +26,7 @@ eo_dir=~/codes/PycharmProjects/Landuse_DL
 ################################################
 SECONDS=0
 # remove previous data or results if necessary
+#rm time_cost.txt || true
 ${eo_dir}/workflow/remove_previous_data.py ${para_file}
 
 #extract sub_images based on the training polgyons
