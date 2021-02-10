@@ -247,9 +247,10 @@ def main(options, args):
     if os.path.isfile(img_list_txt) is False:
         raise IOError("File %s not exist" % img_list_txt)
 
-    f_obj = open(img_list_txt)
+    with open(img_list_txt, 'r') as f_obj:
+        files_list = f_obj.readlines()
+    file_count = len(files_list)
     index = 1
-    files_list = f_obj.readlines()
     for line in files_list:
 
         # ignore_classes
@@ -260,7 +261,7 @@ def main(options, args):
 
         file_path  = line.strip()
         file_path = os.path.join(img_dir,file_path+extension)
-        print ("Augmentation of image (%d / %d)"%(index,len(files_list)))
+        print ("Augmentation of image (%d / %d)"%(index,file_count))
         if image_augment(file_path,out_dir,is_groud_true,augment=augmentation) is False:
             print ('Error, Failed in image augmentation')
             return False
