@@ -410,6 +410,8 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
 
             # get miou
             miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
+            # save loss value to disk
+            get_loss_learning_rate_list(TRAIN_LOGDIR)
             # check if need to early stopping
             if b_early_stopping:
                 if len(miou_dict['overall']) >= 5:
