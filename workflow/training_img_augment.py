@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     img_ext = parameters.get_string_parameters_None_if_absence(para_file,'split_image_format')
     print("image format: %s"% img_ext)
-
+    proc_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
     SECONDS=time.time()
 
@@ -35,13 +35,15 @@ if __name__ == '__main__':
     #augment training images
     print("image augmentation on image patches")
     img_list_aug_txt = 'list/images_including_aug.txt'
-    command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_images' + ' -e ' + img_ext + \
+    command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_images' + ' -e ' + img_ext + ' -n ' + str(proc_num) + \
                      ' -o ' + 'split_images' + ' -l ' + img_list_aug_txt + ' ' + 'list/trainval.txt'
-    os.system(command_string)
+    res = os.system(command_string)
+    if res!=0:
+        sys.exit(res)
 
 
     #augment training lables
-    command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_labels' + ' -e ' + img_ext + \
+    command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_labels' + ' -e ' + img_ext + ' -n ' + str(proc_num) + \
                      ' -o ' + 'split_labels' + ' -l ' + img_list_aug_txt + ' ' + 'list/trainval.txt' + ' --is_ground_truth '
 
     res = os.system(command_string)

@@ -22,6 +22,9 @@ import numpy as np
 # will be update in the main function
 num_classes = 0
 
+import multiprocessing
+from multiprocessing import Pool
+
 def remove_unexpected_ids(img_data, img_name):
     '''
     remove unexpected ids after augmentation, it will modify the numpy array
@@ -209,6 +212,19 @@ def image_augment(img_path,save_dir,is_groud_true,augment = None):
 
     return True
 
+def augment_one_line(index, line, ignore_classes,file_count,img_dir,extension,out_dir,is_groud_true,augmentation):
+    # ignore_classes
+    if ignore_classes is not None and len(ignore_classes)>0:
+        found_class = [ line.find(ignore_class) >= 0 for ignore_class in ignore_classes ]
+        if True in found_class:
+            return False
+
+    file_path  = line.strip()
+    file_path = os.path.join(img_dir,file_path+extension)
+    print ("Augmentation of image (%d / %d)"%(index,file_count))
+    if image_augment(file_path,out_dir,is_groud_true,augment=augmentation) is False:
+        raise ('Error, Failed in image augmentation')
+    return True
 
 
 def main(options, args):
@@ -228,6 +244,7 @@ def main(options, args):
     extension = options.extension
 
     is_groud_true = options.ground_truth
+    proc_num = options.process_num
 
     # print(options.para_file)
     augmentation = parameters.get_string_list_parameters_None_if_absence(options.para_file,'data_augmentation')
@@ -251,25 +268,30 @@ def main(options, args):
         files_list = f_obj.readlines()
     file_count = len(files_list)
     index = 1
-    for line in files_list:
+    # for line in files_list:
+    #
+    #     # ignore_classes
+    #     if ignore_classes is not None and len(ignore_classes)>0:
+    #         found_class = [ line.find(ignore_class) >= 0 for ignore_class in ignore_classes ]
+    #         if True in found_class:
+    #             continue
+    #
+    #     file_path  = line.strip()
+    #     file_path = os.path.join(img_dir,file_path+extension)
+    #     print ("Augmentation of image (%d / %d)"%(index,file_count))
+    #     if image_augment(file_path,out_dir,is_groud_true,augment=augmentation) is False:
+    #         print ('Error, Failed in image augmentation')
+    #         return False
+    #     index += 1
 
-        # ignore_classes
-        if ignore_classes is not None and len(ignore_classes)>0:
-            found_class = [ line.find(ignore_class) >= 0 for ignore_class in ignore_classes ]
-            if True in found_class:
-                continue
+    parameters_list = [(index+1, line, ignore_classes,file_count,img_dir,extension,out_dir,is_groud_true,augmentation)
+                       for index, line in enumerate(files_list)]
+    theadPool = Pool(proc_num)  # multi processes
+    results = theadPool.starmap(augment_one_line, parameters_list)  # need python3
+    augmented = [1 for item in results if item is True ]
+    # print(sum(augmented))
 
-        file_path  = line.strip()
-        file_path = os.path.join(img_dir,file_path+extension)
-        print ("Augmentation of image (%d / %d)"%(index,file_count))
-        if image_augment(file_path,out_dir,is_groud_true,augment=augmentation) is False:
-            print ('Error, Failed in image augmentation')
-            return False
-        index += 1
-
-    f_obj.close()
-
-    if index< len(files_list):
+    if sum(augmented)< file_count:
         basic.outputlogMessage('Some of the images belong to %s are ignored'%','.join(ignore_classes))
 
 
@@ -311,6 +333,9 @@ if __name__ == "__main__":
     parser.add_option("-l", "--save_list",default='images_including_aug.txt',
                       action="store", dest="save_list",
                       help="the text file for saving the images after data augmentation")
+    parser.add_option("-n", "--process_num", type=int,
+                      action="store", dest="process_num", default=4,
+                      help="the process number for parallel computing")
 
 
     (options, args) = parser.parse_args()
