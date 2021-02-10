@@ -388,6 +388,8 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant,
                            inf_atrous_rates1,inf_atrous_rates2,inf_atrous_rates3,inf_output_stride,TRAIN_LOGDIR, EVAL_LOGDIR,
                            dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride,aspp_convs_filters)
+        miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
+        get_loss_learning_rate_list(TRAIN_LOGDIR)
     else:
         basic.outputlogMessage('training to the maximum iteration of %d, and evaluating very %d epoch(es)' % (iteration_num,validation_interval))
         for epoch in range(1, total_epoches + validation_interval, validation_interval):
@@ -420,6 +422,19 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                     if np.all(np.diff(miou_dict['overall'][-5:]) < 0.0001):
                         basic.outputlogMessage('early stopping: stop training because overall miou did not improved in the last five evaluation')
                         break
+
+    # backup miou and training_loss & learning rate
+    test_id = os.path.basename(WORK_DIR) + '_' + expr_name
+    backup_dir = os.path.join(WORK_DIR, 'result_backup')
+    if os.path.isdir(backup_dir) is False:
+        io_function.mkdir(backup_dir)
+    iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
+    new_iou_name = os.path.join(backup_dir, test_id+ '_'+os.path.basename(iou_path))
+    io_function.copy_file_to_dst(iou_path, new_iou_name, overwrite=True)
+
+    loss_path = os.path.join(TRAIN_LOGDIR, 'loss_learning_rate.txt')
+    loss_new_name = os.path.join(backup_dir,test_id+ '_'+os.path.basename(loss_path))
+    io_function.copy_file_to_dst(loss_path, loss_new_name, overwrite=True)
 
 
 # def init_for_test_function():
