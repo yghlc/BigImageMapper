@@ -18,6 +18,7 @@ import parameters
 
 import basic_src.io_function as io_function
 import datasets.raster_io as raster_io
+import time
 
 def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp, input_image_dir, file_pattern = None):
     if file_pattern is None:
@@ -44,6 +45,7 @@ def main(options, args):
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
     get_subImage_script = os.path.join(code_dir, 'datasets', 'get_subImages.py')
+    SECONDS = time.time()
 
     # get name of training areas
     multi_training_regions = parameters.get_string_list_parameters_None_if_absence(para_file, 'training_regions')
@@ -130,6 +132,9 @@ def main(options, args):
         f_obj.writelines('minimum width and height: %d, %d \n'% (min(width_list), min(height_list)) )
         f_obj.writelines('mean width and height: %.2f, %.2f \n\n'% (sum(width_list)/img_count, sum(height_list)/img_count))
 
+
+    duration= time.time() - SECONDS
+    os.system('echo "$(date): time cost of getting sub images and labels: %.2f seconds">>time_cost.txt'%duration)
 
 if __name__ == '__main__':
 

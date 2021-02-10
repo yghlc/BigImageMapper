@@ -91,6 +91,8 @@ def main(options, args):
 
     WORK_DIR = os.getcwd()
 
+    SECONDS = time.time()
+
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
     network_setting_ini = parameters.get_string_parameters(para_file,'network_setting_ini')
 
@@ -194,6 +196,9 @@ def main(options, args):
         print('evaluation report for %s:'%key)
         os.system('head -n 7 %s'%report)
 
+
+    duration= time.time() - SECONDS
+    os.system('echo "$(date): time cost of post-procesing: %.2f seconds">>time_cost.txt'%duration)
 
 if __name__ == '__main__':
 

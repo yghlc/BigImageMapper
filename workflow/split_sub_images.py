@@ -11,6 +11,7 @@ modified: 19 January, 2021
 
 import os,sys
 from optparse import OptionParser
+import time
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
@@ -41,7 +42,7 @@ def main(options, args):
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s'%(para_file, os.getcwd()))
 
-
+    SECONDS = time.time()
     if os.path.isdir('split_images'):
         io_function.delete_file_or_dir('split_images')
     if os.path.isdir('split_labels'):
@@ -92,6 +93,9 @@ def main(options, args):
 
         split_train_val.get_image_with_height_list(trainval, split_image_format, info_type='(no data augmentation)')
 
+
+    duration= time.time() - SECONDS
+    os.system('echo "$(date): time cost of splitting sub images and labels: %.2f seconds">>time_cost.txt'%duration)
 
 if __name__ == '__main__':
 

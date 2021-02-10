@@ -60,4 +60,4 @@ if __name__ == '__main__':
     # os.system('echo "count of class 1 ":$(ls split_images/*class_1*${img_ext} |wc -l) >> time_cost.txt')
 
     duration= time.time() - SECONDS
-    os.system('echo "$(date): time cost of training images augmentation: %.2f seconds">>time_cost.txt'%duration)
+    os.system('echo "$(date): time cost of data augmentation: %.2f seconds">>time_cost.txt'%duration)

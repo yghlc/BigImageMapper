@@ -31,36 +31,32 @@ ${eo_dir}/workflow/remove_previous_data.py ${para_file}
 #extract sub_images based on the training polgyons
 ${eo_dir}/workflow/get_sub_images_multi_regions.py ${para_file}
 
-exit
+
 ################################################
 ## preparing training images.
 # there is another script ("build_RS_data.py"), but seem have not finished.
 
-#${eo_dir}/workflow/split_sub_images.py ${para_file}
-#${eo_dir}/workflow/training_img_augment.py ${para_file}
-#${eo_dir}/workflow/split_train_val.py ${para_file}
+${eo_dir}/workflow/split_sub_images.py ${para_file}
+${eo_dir}/workflow/training_img_augment.py ${para_file}
+${eo_dir}/workflow/split_train_val.py ${para_file}
 
 ## convert to TFrecord
-#${eo_dir}/workflow/build_TFrecord_tf1x.py ${para_file}
+${eo_dir}/workflow/build_TFrecord_tf1x.py ${para_file}
 
-#exit
+
 duration=$SECONDS
-echo "$(date): time cost of preparing training: ${duration} seconds">>"time_cost.txt"
-SECONDS=0
+echo "$(date): time cost of preparing training data: ${duration} seconds">>"time_cost.txt"
+
 ################################################
 ## training
 
-#${eo_dir}/workflow/deeplab_train.py ${para_file} ${gpu_num}
-#exit
-duration=$SECONDS
-echo "$(date): time cost of training: ${duration} seconds">>"time_cost.txt"
-SECONDS=0
+${eo_dir}/workflow/deeplab_train.py ${para_file} ${gpu_num}
+
 ################################################
 
 #export model
 ${eo_dir}/workflow/export_graph.py ${para_file}
 
-exit
 ################################################
 ## inference
 rm -r multi_inf_results || true

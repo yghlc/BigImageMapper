@@ -12,6 +12,7 @@ import os, sys
 from optparse import OptionParser
 import math
 import re
+import time
 
 import numpy as np
 
@@ -439,6 +440,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
 def main(options, args):
 
     print("%s : train deeplab" % os.path.basename(sys.argv[0]))
+    SECONDS = time.time()
 
     para_file = sys.argv[1]
     gpu_num = int(sys.argv[2])
@@ -474,6 +476,8 @@ def main(options, args):
 
     train_evaluation_deeplab(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num)
 
+    duration= time.time() - SECONDS
+    os.system('echo "$(date): time cost of training: %.2f seconds">>time_cost.txt'%duration)
 
 if __name__ == '__main__':
 
