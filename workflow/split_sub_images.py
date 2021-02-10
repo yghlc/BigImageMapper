@@ -19,6 +19,8 @@ import datasets.split_image as split_image
 
 import basic_src.io_function as io_function
 
+import workflow.split_train_val as split_train_val
+
 def split_to_patches(image_path, out_dir, patch_width, patch_height, overlay_x, overlay_y, out_format, file_pre_name=None):
     patch_width = int(patch_width)
     patch_height = int(patch_height)
@@ -87,6 +89,8 @@ def main(options, args):
                 w_obj.writelines(os.path.splitext(os.path.basename(file_name))[0] + '\n')
 
         io_function.copy_file_to_dst(trainval,val,overwrite=True)
+
+        split_train_val.get_image_with_height_list(trainval, split_image_format, info_type='(no data augmentation)')
 
 
 if __name__ == '__main__':
