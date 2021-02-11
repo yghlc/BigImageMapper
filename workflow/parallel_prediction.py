@@ -164,7 +164,17 @@ def main(options, args):
                 # get available GPUs  # https://github.com/anderskm/gputil
                 deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
                                                 maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
-                basic.outputlogMessage('on ' + machine_name + ', available GPUs:'+str(deviceIDs))
+                # only use the one in CUDA_VISIBLE_DEVICES
+                if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
+                    CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
+                    if len(CUDA_VISIBLE_DEVICES) > 0:
+                        deviceIDs = [ item for item in deviceIDs if item in CUDA_VISIBLE_DEVICES]
+                        basic.outputlogMessage('on ' + machine_name + ', available GPUs:'+str(deviceIDs) +
+                                               ', among visible ones:'+str(CUDA_VISIBLE_DEVICES))
+                    else:
+                        basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
+                else:
+                    basic.outputlogMessage('on ' + machine_name + ', available GPUs:'+str(deviceIDs))
                 if len(deviceIDs) < 1:
                     time.sleep(60)  # wait one minute, then check the available GPUs again
                     continue
