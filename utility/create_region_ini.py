@@ -51,14 +51,17 @@ def create_new_region_defined_parafile(template_para_file, img_dir, area_remark=
     if area_remark is not None:
         modify_parameter(new_para_file,'area_remark',area_remark)
     modify_parameter(new_para_file, 'input_image_dir', img_dir)
+    modify_parameter(new_para_file, 'inf_image_dir', img_dir)
 
     tif_list = io_function.get_file_list_by_ext('.tif',img_dir, bsub_folder=False)
     if len(tif_list) < 1:
         raise ValueError('No tif in %s'%img_dir)
     if len(tif_list) == 1:
         modify_parameter(new_para_file, 'input_image_or_pattern', os.path.basename(tif_list[0]))
+        modify_parameter(new_para_file, 'inf_image_or_pattern', os.path.basename(tif_list[0]))
     else:
         modify_parameter(new_para_file, 'input_image_or_pattern', '*.tif')
+        modify_parameter(new_para_file, 'inf_image_or_pattern', '*.tif')
 
     print("modified and saved new parameter file: %s "%new_para_file)
 
