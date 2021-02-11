@@ -157,6 +157,9 @@ def main(options, args):
         io_function.mkdir(area_save_dir)
 
         # parallel inference images for this area
+        CUDA_VISIBLE_DEVICES = []
+        if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
+            CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
         idx = 0
         while idx < img_count:
 
@@ -165,16 +168,13 @@ def main(options, args):
                 deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
                                                 maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
                 # only use the one in CUDA_VISIBLE_DEVICES
-                if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
-                    CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
-                    if len(CUDA_VISIBLE_DEVICES) > 0:
-                        deviceIDs = [ item for item in deviceIDs if item in CUDA_VISIBLE_DEVICES]
-                        basic.outputlogMessage('on ' + machine_name + ', available GPUs:'+str(deviceIDs) +
-                                               ', among visible ones:'+str(CUDA_VISIBLE_DEVICES))
-                    else:
-                        basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
+                if len(CUDA_VISIBLE_DEVICES) > 0:
+                    deviceIDs = [ item for item in deviceIDs if item in CUDA_VISIBLE_DEVICES]
+                    basic.outputlogMessage('on ' + machine_name + ', available GPUs:'+str(deviceIDs) +
+                                           ', among visible ones:'+str(CUDA_VISIBLE_DEVICES))
                 else:
-                    basic.outputlogMessage('on ' + machine_name + ', available GPUs:'+str(deviceIDs))
+                    basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
+
                 if len(deviceIDs) < 1:
                     time.sleep(60)  # wait one minute, then check the available GPUs again
                     continue
