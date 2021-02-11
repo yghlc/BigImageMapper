@@ -26,7 +26,7 @@ def call_build_TFrecord(build_script, para_file):
                      + para_file
     res = os.system(command_string)
     if res != 0:
-        sys.exit(res)
+        sys.exit(1)
 
 def main(options, args):
 

@@ -39,7 +39,7 @@ if __name__ == '__main__':
                      ' -o ' + 'split_images' + ' -l ' + img_list_aug_txt + ' ' + 'list/trainval.txt'
     res = os.system(command_string)
     if res!=0:
-        sys.exit(res)
+        sys.exit(1)
 
 
     #augment training lables
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     res = os.system(command_string)
     if res!=0:
-        sys.exit(res)
+        sys.exit(1)
 
     if os.path.isfile(img_list_aug_txt):
         os.system(' cp %s list/trainval.txt'%img_list_aug_txt)

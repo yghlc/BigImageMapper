@@ -108,7 +108,7 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
 
     res = os.system(command_string)
     if res != 0:
-        sys.exit(res)
+        sys.exit(1) # sometime the res is 256 and bash cannot recognize that, then continue run.
 
 
 
@@ -166,7 +166,7 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
 
     res = os.system(command_string)
     if res != 0:
-        sys.exit(res)
+        sys.exit(1)
 
 def get_loss_learning_rate_list(log_dir):
 
@@ -305,7 +305,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         pre_trained_url = parameters.get_string_parameters_None_if_absence(network_setting_ini, 'pre_trained_model_url')
         res  = os.system('wget %s '%pre_trained_url)
         if res != 0:
-            sys.exit(res)
+            sys.exit(1)
         io_function.movefiletodir(pre_trained_tar,pre_trained_dir)
 
     # unpack pre-trained model to INIT_FOLDER

@@ -71,7 +71,7 @@ if __name__ == '__main__':
                      ' --shuffle ' + all_img_list
     res = os.system(command_string)
     if res!=0:
-        sys.exit(res)
+        sys.exit(1)
 
     # save brief information of image patches
     img_ext = parameters.get_string_parameters_None_if_absence(para_file, 'split_image_format')

@@ -34,7 +34,7 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         command_string = 'gdal_merge.py  -init 0 -n 0 -a_nodata 0 -o ' + merged_tif + ' I0_*.tif'
         res  = os.system(command_string)
         if res != 0:
-            sys.exit(res)
+            sys.exit(1)
 
     # to shapefile
     out_shp = 'I%d'%img_idx + '_' + out_name + '.shp'
@@ -44,7 +44,7 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         command_string = 'gdal_polygonize.py -8 %s -b 1 -f "ESRI Shapefile" %s'%(merged_tif,out_shp)
         res  = os.system(command_string)
         if res != 0:
-            sys.exit(res)
+            sys.exit(1)
 
     os.chdir(curr_dir)
     out_shp_path = os.path.join(img_save_dir,out_shp)
@@ -57,7 +57,7 @@ def add_polygon_attributes(script, in_shp_path, save_shp_path, para_file, data_p
     res = os.system(command_string)
     print(res)
     if res != 0:
-        sys.exit(res)
+        sys.exit(1)
 
 
 def remove_polygons(script, in_shp_path, save_shp_path, para_file):
@@ -65,14 +65,14 @@ def remove_polygons(script, in_shp_path, save_shp_path, para_file):
     command_string = script + ' -p %s -o %s %s' % (para_file, save_shp_path, in_shp_path)
     res = os.system(command_string)
     if res != 0:
-        sys.exit(res)
+        sys.exit(1)
 
 def evaluation_polygons(script, in_shp_path, para_file, data_para_file,out_report):
 
     command_string = script + ' -p %s -d %s -o %s %s' % (para_file, data_para_file, out_report, in_shp_path)
     res = os.system(command_string)
     if res != 0:
-        sys.exit(res)
+        sys.exit(1)
     return in_shp_path
 
 def main(options, args):

@@ -36,7 +36,7 @@ def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize,
     # os.system(command_string + "&")  # don't know when it finished
     res = os.system(command_string )      # this work
     if res != 0:
-        sys.exit(res)
+        sys.exit(1)
 
 def main(options, args):
     print("%s : extract sub-images and sub-labels for a given shape file (training polygons)" %
