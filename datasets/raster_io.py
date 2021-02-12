@@ -15,6 +15,8 @@ import numpy as np
 
 from rasterio.coords import BoundingBox
 
+import skimage.measure
+
 #Color interpretation https://rasterio.readthedocs.io/en/latest/topics/color.html
 from rasterio.enums import ColorInterp
 
@@ -97,6 +99,20 @@ def get_valid_pixel_percentage(image_path,total_pixel_num=None):
 
     valid_per = 100.0 * valid_pixel_count / total_pixel_num
     return valid_per
+
+def get_valid_percent_shannon_entropy(image_path,log_base=10):
+    oneband_data, nodata = read_raster_one_band_np(image_path, band=1)
+    if nodata is None:
+        raise ValueError('nodata is not set in %s, cannot tell valid pixel'%image_path)
+
+    valid_loc = np.where(oneband_data != nodata)
+    valid_pixel_count = valid_loc[0].size
+    total_count = oneband_data.size
+
+    valid_per = 100.0 * valid_pixel_count / total_count
+    entropy = skimage.measure.shannon_entropy(oneband_data, base=log_base)
+
+    return valid_per, entropy
 
 def is_two_bound_disjoint(box1, box2):
     # box1 and box2: bounding box: (left, bottom, right, top)
