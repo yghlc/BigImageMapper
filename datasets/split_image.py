@@ -92,11 +92,9 @@ def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_o
 
     """
     if os.path.isfile(input) is False:
-        print("Error: %s file not exist"%input)
-        return False
+        raise IOError("Error: %s file not exist"%input)
     if os.path.isdir(output_dir) is False:
-        print("Error: %s Folder not exist" % input)
-        return False
+        raise IOError("Error: %s Folder not exist" % input)
 
     Size_str = os.popen('gdalinfo '+input + ' |grep Size').readlines()
     temp = Size_str[0].split()
