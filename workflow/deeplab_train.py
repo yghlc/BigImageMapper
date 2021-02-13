@@ -393,7 +393,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         get_loss_learning_rate_list(TRAIN_LOGDIR)
     else:
         basic.outputlogMessage('training to the maximum iteration of %d, and evaluating very %d epoch(es)' % (iteration_num,validation_interval))
-        for epoch in range(1, total_epoches + validation_interval, validation_interval):
+        for epoch in range(validation_interval, total_epoches + validation_interval, validation_interval):
 
             to_iter_num = min(epoch*iter_per_epoch, iteration_num)
             if to_iter_num <= already_trained_iteration:
