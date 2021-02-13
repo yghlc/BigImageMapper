@@ -560,6 +560,11 @@ def save_dict_to_txt_json(file_name, save_dict):
     with open(file_name, "w") as f_obj:
         f_obj.write(json_data)
 
+def read_dict_from_txt_json(file_path):
+    with open(file_path) as f_obj:
+        data = json.load(f_obj)
+        return data
+
 def get_path_from_txt_list_index(txt_name,input=''):
     '''
     get the a line (path or file pattern) for a txt files, the index is in the file name
