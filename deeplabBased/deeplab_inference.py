@@ -22,7 +22,7 @@ import os
 import sys
 
 import numpy as np
-from PIL import Image
+# from PIL import Image
 
 import multiprocessing
 from multiprocessing import Pool
@@ -82,7 +82,7 @@ class DeepLabModel(object):
     
     INPUT_TENSOR_NAME = 'ImageTensor:0'
     OUTPUT_TENSOR_NAME = 'SemanticPredictions:0'
-    INPUT_SIZE = 513
+    # INPUT_SIZE = 513
 
     def __init__(self, frozen_graph_path):
         """Creates and loads pretrained deeplab model."""
@@ -102,25 +102,25 @@ class DeepLabModel(object):
 
         self.sess = tf.Session(graph=self.graph)
 
-    def run(self, image):
-        """Runs inference on a single image.
-
-        Args:
-            image: A PIL.Image object, raw input image.
-
-        Returns:
-            resized_image: RGB image resized from original input image.
-            seg_map: Segmentation map of `resized_image`.
-        """
-        width, height = image.size
-        resize_ratio = 1.0 * self.INPUT_SIZE / max(width, height)
-        target_size = (int(resize_ratio * width), int(resize_ratio * height))
-        resized_image = image.convert('RGB').resize(target_size, Image.ANTIALIAS)
-        batch_seg_map = self.sess.run(
-            self.OUTPUT_TENSOR_NAME,
-            feed_dict={self.INPUT_TENSOR_NAME: [np.asarray(resized_image)]})
-        seg_map = batch_seg_map[0]
-        return resized_image, seg_map
+    # def run(self, image):
+    #     """Runs inference on a single image.
+    #
+    #     Args:
+    #         image: A PIL.Image object, raw input image.
+    #
+    #     Returns:
+    #         resized_image: RGB image resized from original input image.
+    #         seg_map: Segmentation map of `resized_image`.
+    #     """
+    #     width, height = image.size
+    #     resize_ratio = 1.0 * self.INPUT_SIZE / max(width, height)
+    #     target_size = (int(resize_ratio * width), int(resize_ratio * height))
+    #     resized_image = image.convert('RGB').resize(target_size, Image.ANTIALIAS)
+    #     batch_seg_map = self.sess.run(
+    #         self.OUTPUT_TENSOR_NAME,
+    #         feed_dict={self.INPUT_TENSOR_NAME: [np.asarray(resized_image)]})
+    #     seg_map = batch_seg_map[0]
+    #     return resized_image, seg_map
 
     def run_rsImg_multi_patches(self, multi_images):
         """Runs inference on multiple patches of a remote sensing image.
@@ -169,6 +169,30 @@ class DeepLabModel(object):
         seg_map = batch_seg_map[0]
         return seg_map
 
+    def run_rsImg_patch_parallel(self,img_idx,idx,org_img_path,boundary):
+        # try parallel prediction of patches using multiprocessing  Feb 2021
+        # the same to inference_one_patch, it also has TypeError: can't pickle _thread.RLock objects
+
+        img_patch = build_RS_data.patchclass(org_img_path, boundary)
+        img_data = build_RS_data.read_patch(img_patch)
+        ## ignore image patch are all black or white
+        if np.std(img_data) < 0.0001:
+            print('Image:%d patch:%4d is black or white, ignore' % (img_idx, idx))
+            return True
+        print('inference at Image:%d patch:%4d, shape:(%d,%d,%d)' % (
+        img_idx, idx, img_data.shape[0], img_data.shape[1], img_data.shape[2]))
+
+        seg_map = self.run_rsImg_patch(img_data)
+
+        #  short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+        file_name = "I%d_%d" % (img_idx, idx)
+
+        save_path = os.path.join(FLAGS.inf_output_dir, file_name + '.tif')
+        if build_RS_data.save_patch_oneband_8bit(img_patch, seg_map.astype(np.uint8), save_path) is False:
+            return False
+
+        return True
+
 
 def inference_one_patch(img_idx,idx,org_img_path,boundary,model):
     """
@@ -185,6 +209,10 @@ def inference_one_patch(img_idx,idx,org_img_path,boundary,model):
     img_patch = build_RS_data.patchclass(org_img_path,boundary)
 
     img_data = build_RS_data.read_patch(img_patch)
+    ## ignore image patch are all black or white
+    if np.std(img_data) < 0.0001:
+        print('Image:%d patch:%4d is black or white, ignore' % (img_idx, idx))
+        return True
     print('inference at Image:%d patch:%4d, shape:(%d,%d,%d)'%(img_idx,idx,img_data.shape[0],img_data.shape[1],img_data.shape[2]))
 
     seg_map = model.run_rsImg_patch(img_data)
@@ -242,15 +270,15 @@ def inf_remoteSensing_image(model,image_path=None):
         patch_num = len(aImage_patches)
 
         # ## parallel inference patches
-        ## but it turns out not work due to the Pickle.PicklingError
+        # # but it turns out not work due to the Pickle.PicklingError
         # # use multiple thread
-        # num_cores = multiprocessing.cpu_count()
+        # num_cores = 4
         # print('number of thread %d' % num_cores)
         # # theadPool = mp.Pool(num_cores)  # multi threads, can not utilize all the CPUs? not sure hlc 2018-4-19
         # theadPool = Pool(num_cores)  # multi processes
         #
-        # parameters_list = [(img_idx,idx,img_patch.org_img,img_patch.boundary,model) for (idx,img_patch) in enumerate(aImage_patches)]
-        # results = theadPool.map(inference_one_patch, parameters_list)
+        # parameters_list = [(img_idx,idx,img_patch.org_img,img_patch.boundary) for (idx,img_patch) in enumerate(aImage_patches)]
+        # results = theadPool.map(model.run_rsImg_patch_parallel, parameters_list)
         # print('result_list',results )
 
         # inference patches batch by batch, but it turns out that the frozen graph only accept one patch each time
