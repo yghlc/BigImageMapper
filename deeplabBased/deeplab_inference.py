@@ -33,6 +33,11 @@ from multiprocessing import Pool
 
 import tensorflow as tf
 
+# allow gpu memory to grow
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+session = tf.Session(config=config)
+
 from distutils.version import LooseVersion
 
 # if tf.__version__ < '1.5.0':
