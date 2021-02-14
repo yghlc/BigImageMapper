@@ -126,25 +126,33 @@ def plot_loss_learnRate_step_time(loss_dict,save_path):
     plt.savefig(save_path, dpi=200)  # 300
     basic.outputlogMessage('save to %s' % save_path)
 
-
-def main(options, args):
-    txt_path = args[0]
-    if options.save_file_pre is None:
+def plot_miou_loss_main(txt_path, save_file_pre=None):
+    if os.path.isfile(txt_path) is False:
+        return False
+    if save_file_pre is None:
         file_name = os.path.splitext(os.path.basename(txt_path))[0]
     else:
-        file_name = options.save_file_pre
+        file_name = save_file_pre
 
+    save_dir = os.path.dirname(txt_path)
     dict_data = io_function.read_dict_from_txt_json(txt_path)
     # print(dict_data)
     # for key in dict_data.keys():
     #     print(key)
-    save_path = file_name + '.jpg'
+    save_path = os.path.join(save_dir, file_name + '.jpg')
     if 'miou' in file_name:
         plot_miou_step_time(dict_data, save_path)
     elif 'loss' in file_name:
         plot_loss_learnRate_step_time(dict_data, save_path)
     else:
         raise ValueError('Cannot recognize the file name of miou of loss: %s'%os.path.basename(txt_path))
+
+    return save_path
+
+def main(options, args):
+    txt_path = args[0]
+
+    plot_miou_loss_main(txt_path, options.save_file_pre)
 
 
 

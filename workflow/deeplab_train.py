@@ -22,6 +22,7 @@ import parameters
 
 import basic_src.io_function as io_function
 import basic_src.basic as basic
+import utility.plot_miou_loss_curve as plot_miou_loss_curve
 
 # pre-trained model with 21 classes
 pre_trained_tar_21_classes = ['xception_65_coco_pretrained_2018_10_02.tar.gz',
@@ -424,6 +425,10 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                         basic.outputlogMessage('early stopping: stop training because overall miou did not improved in the last five evaluation')
                         break
 
+    # plot mIOU, loss, and learnint rate curves
+    miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main('miou.txt')
+    loss_curve_path = plot_miou_loss_curve.plot_miou_loss_main('loss_learning_rate.txt')
+
     # backup miou and training_loss & learning rate
     test_id = os.path.basename(WORK_DIR) + '_' + expr_name
     backup_dir = os.path.join(WORK_DIR, 'result_backup')
@@ -432,10 +437,15 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
     new_iou_name = os.path.join(backup_dir, test_id+ '_'+os.path.basename(iou_path))
     io_function.copy_file_to_dst(iou_path, new_iou_name, overwrite=True)
+    miou_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(miou_curve_path))
+    io_function.copy_file_to_dst(miou_curve_path, miou_curve_bakname, overwrite=True)
+
 
     loss_path = os.path.join(TRAIN_LOGDIR, 'loss_learning_rate.txt')
     loss_new_name = os.path.join(backup_dir,test_id+ '_'+os.path.basename(loss_path))
     io_function.copy_file_to_dst(loss_path, loss_new_name, overwrite=True)
+    loss_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(loss_curve_path))
+    io_function.copy_file_to_dst(loss_curve_path, loss_curve_bakname, overwrite=True)
 
 
 # def init_for_test_function():
