@@ -222,6 +222,9 @@ def main(options, args):
                 else:
                     time.sleep(5)
 
+            if sub_process.exitcode is not None and sub_process.exitcode !=0:
+                sys.exit(1)
+
             # if 'chpc' in machine_name:
             #     time.sleep(60)  # wait 60 second on ITSC services
             # else:
