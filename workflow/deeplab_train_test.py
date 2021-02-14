@@ -103,6 +103,7 @@ class TestdeeplabTrainclass():
         num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
 
         num_of_classes = num_classes_noBG + 1
+        num_of_classes = 21 # for test
 
         image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
         if len(image_crop_size) != 2 and image_crop_size[0].isdigit() and image_crop_size[1].isdigit():
