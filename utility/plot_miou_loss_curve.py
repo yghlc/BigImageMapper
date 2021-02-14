@@ -72,7 +72,7 @@ def plot_miou_step_time(miou_dict, save_path):
     ax2.set_xlim([min_t, max_t])
     # print(labels)
     # ax2.set_xticklabels(labels)
-    ax2.set_xlabel("relative training time (hours)", fontsize=10)  # color="red",
+    ax2.set_xlabel("Relative training time (hours)", fontsize=10)  # color="red",
 
     # ax2.spines['bottom'].set_color('blue')
     # ax1.spines['top'].set_color('red')
@@ -83,7 +83,7 @@ def plot_miou_step_time(miou_dict, save_path):
 
     # ax1.legend(fontsize=10, loc="best")  # loc="upper left"
     ax1.legend(fontsize=10, loc="lower right")  # loc="upper left"
-    ax1.set_xlabel('training iteration')
+    ax1.set_xlabel('Training iteration')
     ax1.set_ylabel('mIOU')
 
     plt.tight_layout()  # adjust the layout, avoid cutoff some label to title
@@ -104,13 +104,13 @@ def plot_loss_learnRate_step_time(loss_dict,save_path):
     # plot loss
     loss_line = ax1.plot(loss_dict['step'], loss_dict['total_loss'], line_style[0], label="Total loss", linewidth=0.8)
     ax1.set_xlim([0, max(loss_dict['step'])])
-    ax1.set_xlabel('training iteration')
+    ax1.set_xlabel('Training iteration')
     ax1.set_ylabel('Total loss')
 
     ax2 = ax1.twiny()    #have another x-axis for time
     min_t, max_t = wall_time_to_relative_time(loss_dict['wall_time'])
     ax2.set_xlim([min_t, max_t])
-    ax2.set_xlabel("relative training time (hours)", fontsize=10)  # color="red",
+    ax2.set_xlabel("Relative training time (hours)", fontsize=10)  # color="red",
 
     # plot learning rate
     ax3 = ax1.twinx()
