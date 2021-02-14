@@ -35,7 +35,7 @@ def wall_time_to_relative_time(wall_time_list):
     # return ["%.2f" % item for item in relative_time]
     return min(relative_time), max(relative_time)
 
-def plot_miou_step_time(miou_dict, save_path):
+def plot_miou_step_time(miou_dict, save_path,train_count, val_count,batch_size):
 
     # class_0
     # class_1
@@ -83,7 +83,10 @@ def plot_miou_step_time(miou_dict, save_path):
 
     # ax1.legend(fontsize=10, loc="best")  # loc="upper left"
     ax1.legend(fontsize=10, loc="lower right")  # loc="upper left"
-    ax1.set_xlabel('Training iteration')
+    if train_count is not None and val_count is not None and batch_size is not None:
+        ax1.set_xlabel('Training iteration (Count of train & val: %d & %d, batch_size=%d)'%(train_count,val_count,batch_size))
+    else:
+        ax1.set_xlabel('Training iteration')
     ax1.set_ylabel('mIOU')
 
     plt.tight_layout()  # adjust the layout, avoid cutoff some label to title
@@ -92,7 +95,7 @@ def plot_miou_step_time(miou_dict, save_path):
     basic.outputlogMessage('save to %s'%save_path)
 
 
-def plot_loss_learnRate_step_time(loss_dict,save_path):
+def plot_loss_learnRate_step_time(loss_dict,save_path,train_count, val_count,batch_size):
 
     # ['total_loss', 'learning_rate', 'step', 'wall_time']
     # plot the histogram
@@ -104,7 +107,10 @@ def plot_loss_learnRate_step_time(loss_dict,save_path):
     # plot loss
     loss_line = ax1.plot(loss_dict['step'], loss_dict['total_loss'], line_style[0], label="Total loss", linewidth=0.8)
     ax1.set_xlim([0, max(loss_dict['step'])])
-    ax1.set_xlabel('Training iteration')
+    if train_count is not None and val_count is not None and batch_size is not None:
+        ax1.set_xlabel('Training iteration (Count of train & val: %d & %d, batch_size=%d)'%(train_count,val_count,batch_size))
+    else:
+        ax1.set_xlabel('Training iteration')
     ax1.set_ylabel('Total loss')
 
     ax2 = ax1.twiny()    #have another x-axis for time
@@ -126,7 +132,16 @@ def plot_loss_learnRate_step_time(loss_dict,save_path):
     plt.savefig(save_path, dpi=200)  # 300
     basic.outputlogMessage('save to %s' % save_path)
 
-def plot_miou_loss_main(txt_path, save_file_pre=None):
+def plot_miou_loss_main(txt_path, save_file_pre=None, train_count=None, val_count=None,batch_size=None):
+    '''
+    plot miou or loss curve
+    :param txt_path:
+    :param save_file_pre:
+    :param train_count: the number of training samples
+    :param val_count:  the number of validation samples
+    :param batch_size: t
+    :return:
+    '''
     if os.path.isfile(txt_path) is False:
         return False
     if save_file_pre is None:
@@ -141,9 +156,9 @@ def plot_miou_loss_main(txt_path, save_file_pre=None):
     #     print(key)
     save_path = os.path.join(save_dir, file_name + '.jpg')
     if 'miou' in file_name:
-        plot_miou_step_time(dict_data, save_path)
+        plot_miou_step_time(dict_data, save_path, train_count, val_count,batch_size)
     elif 'loss' in file_name:
-        plot_loss_learnRate_step_time(dict_data, save_path)
+        plot_loss_learnRate_step_time(dict_data, save_path,train_count, val_count,batch_size)
     else:
         raise ValueError('Cannot recognize the file name of miou of loss: %s'%os.path.basename(txt_path))
 
