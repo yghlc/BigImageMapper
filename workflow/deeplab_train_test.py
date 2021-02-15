@@ -4,6 +4,9 @@
 # import unittest
 
 import os, sys
+import time
+
+from multiprocessing import Process
 
 # the path of Landuse_DL
 # code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
@@ -35,10 +38,10 @@ class TestdeeplabTrainclass():
     #     iter = deeplab_train.get_trained_iteration(train_log_dir)
     #     print('iteration number in the folder', iter)
 
-    def test_get_miou_spep_list(self):
-        train_log_dir = os.path.join(work_dir, 'exp1', 'eval')
-        dict = deeplab_train.get_miou_list_class_all(train_log_dir,2)
-        print(dict)
+    # def test_get_miou_spep_list(self):
+    #     train_log_dir = os.path.join(work_dir, 'exp1', 'eval')
+    #     dict = deeplab_train.get_miou_list_class_all(train_log_dir,2)
+    #     print(dict)
     #
     # def test_get_loss_list(self):
     #     train_log_dir = os.path.join(work_dir, 'exp1', 'train')
@@ -119,6 +122,42 @@ class TestdeeplabTrainclass():
     #                        inf_atrous_rates1,inf_atrous_rates2,inf_atrous_rates3,inf_output_stride,TRAIN_LOGDIR, EVAL_LOGDIR,
     #                        dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride,aspp_convs_filters)
 
+    # this is easy to kill
+    def calculation(self):
+        a = 0
+        while a < 1000:
+            a += 1
+            print(a)
+            time.sleep(1)
+
+    # start a sub-process, cannot end by kill or terminate
+    # need to output the pid inside sub-prcocess, then red it and kill it.
+    def run_a_subprocess(self):
+        res = os.system('ping localhost')  # subprocess
+
+    def test_Process(self):
+        # eval_process = Process(target=self.calculation)
+        eval_process = Process(target=self.run_a_subprocess)
+        out_start = eval_process.start()
+        print('out_start',out_start)
+        print('pid',eval_process.pid)
+
+        os_pid = os.getpid()
+        print('os_pid', os_pid)
+        pid = os.getpid()
+        with open('train_py_pid.txt', 'w') as f_obj:
+            f_obj.writelines('%d' % pid)
+
+        with open('train_py_pid.txt', 'r') as f_obj:
+            lines = f_obj.readlines()
+            pid = int(lines[0].strip())
+            print('read_pid', pid)
+
+        time.sleep(5)
+        eval_process.kill()
+        # eval_process.terminate()
+        time.sleep(3)
+        print('is alive?',eval_process.is_alive())
 
 
 if __name__ == '__main__':

@@ -611,9 +611,21 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                 # if the last five miou did not improve, then stop training
                 if np.all(np.diff(miou_dict['overall'][-5:]) < 0.0001):
                     basic.outputlogMessage('early stopping: stop training because overall miou did not improved in the last five evaluation')
-                    basic.outputlogMessage('try to kill training processing with id: %d'%train_process.pid)
+
                     # train_process.kill()    # this one seems not working
-                    os.system('kill ' + str(train_process.pid)) # still not working.
+                    # subprocess pid different from ps output
+                    # https://stackoverflow.com/questions/4444141/subprocess-pid-different-from-ps-output
+                    # os.system('kill ' + str(train_process.pid)) # still not working.  train_process.pid is not the one output by ps -aux
+
+                    # train_process.terminate()   # Note that descendant processes of the process will not be terminated
+                    # train_process.join()        # Wait until child process terminates
+
+                    with open('train_py_pid.txt', 'r') as f_obj:
+                        lines = f_obj.readlines()
+                        train_pid = int(lines[0].strip())
+                        os.system('kill ' + str(train_pid))
+                        basic.outputlogMessage('kill training processing with id: %d' % train_pid)
+
                     break
         # if finished training
         if train_process.is_alive() is False:
