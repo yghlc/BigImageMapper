@@ -610,10 +610,10 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
             if 'overall' in miou_dict.keys() and  len(miou_dict['overall']) >= 5:
                 # if the last five miou did not improve, then stop training
                 if np.all(np.diff(miou_dict['overall'][-5:]) < 0.0001):
-                    basic.outputlogMessage(
-                        'early stopping: stop training because overall miou did not improved in the last five evaluation')
+                    basic.outputlogMessage('early stopping: stop training because overall miou did not improved in the last five evaluation')
+                    basic.outputlogMessage('try to kill training processing with id: %d'%train_process.pid)
                     # train_process.kill()    # this one seems not working
-                    os.system('kill ' + str(train_process.pid))
+                    os.system('kill ' + str(train_process.pid)) # still not working.
                     break
         # if finished training
         if train_process.is_alive() is False:
