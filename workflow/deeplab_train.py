@@ -578,25 +578,31 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                       train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num,
                       depth_multiplier,decoder_output_stride,aspp_convs_filters))
     train_process.start()
-    time.sleep(20)  # wait
+    time.sleep(30)  # wait
     if train_process.exitcode is not None and train_process.exitcode != 0:
         sys.exit(1)
 
     gpuid = ""  # set gpuid to empty string, making evaluation run on CPU
     evl_script = os.path.join(deeplab_dir, 'eval.py')
     evl_split = os.path.splitext(parameters.get_string_parameters(para_file,'validation_sample_list_txt'))[0]
-    max_eva_number = -1  # run as many evaluation as possible, --eval_interval_secs (default is 300 seconds)
+    # max_eva_number = -1  # run as many evaluation as possible, --eval_interval_secs (default is 300 seconds)
+    max_eva_number = 1  # only run once inside the while loop, use while loop to control multiple evaluation
     eval_process = Process(target=evaluation_deeplab,
                            args=(evl_script,dataset, evl_split, num_of_classes,model_variant,
                            inf_atrous_rates1,inf_atrous_rates2,inf_atrous_rates3,inf_output_stride,TRAIN_LOGDIR, EVAL_LOGDIR,
                            dataset_dir,crop_size_str, max_eva_number,depth_multiplier,decoder_output_stride,aspp_convs_filters,
                                  gpuid,eval_interval_secs))
-    eval_process.start()
-    time.sleep(10)  # wait
-    if eval_process.exitcode is not None and eval_process.exitcode != 0:
-        sys.exit(1)
+    # eval_process.start()
+    # time.sleep(10)  # wait
+    # if eval_process.exitcode is not None and eval_process.exitcode != 0:
+    #     sys.exit(1)
 
     while True:
+        # run evaluation and wait until it finished
+        eval_process.start()
+        while eval_process.is_alive():
+            time.sleep(30)
+
         # check if need early stopping
         if b_early_stopping:
             print(datetime.now(), 'check early stopping')
@@ -607,17 +613,15 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                     basic.outputlogMessage(
                         'early stopping: stop training because overall miou did not improved in the last five evaluation')
                     train_process.kill()
-                    eval_process.kill()
                     break
         # if finished training
         if train_process.is_alive() is False:
-            eval_process.kill()
             break
-        # if eval_process exit, then quit training as well
-        if eval_process.is_alive() is False and train_process.is_alive():
-            train_process.kill()
-            break
-        time.sleep(30)  # wait
+        # # if eval_process exit, then quit training as well
+        # if eval_process.is_alive() is False and train_process.is_alive():
+        #     train_process.kill()
+        #     break
+        time.sleep(eval_interval_secs)  # wait for next evaluation
 
     # save loss value to disk
     get_loss_learning_rate_list(TRAIN_LOGDIR)
