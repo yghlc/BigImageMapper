@@ -612,7 +612,8 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                 if np.all(np.diff(miou_dict['overall'][-5:]) < 0.0001):
                     basic.outputlogMessage(
                         'early stopping: stop training because overall miou did not improved in the last five evaluation')
-                    train_process.kill()
+                    # train_process.kill()    # this one seems not working
+                    os.system('kill ' + str(train_process.pid))
                     break
         # if finished training
         if train_process.is_alive() is False:
