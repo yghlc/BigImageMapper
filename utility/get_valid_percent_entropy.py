@@ -26,6 +26,7 @@ def histogram2logfile(value_list,bins,hist_tag=None):
         basic.outputlogMessage('the following is the histogram information of %s'%hist_tag)
     # output hist, min, max, average, accumulate percentage
     np_hist,bin_edges = np.histogram(value_list, bins=bins)
+    basic.outputlogMessage("bin_edges: " + str(bin_edges))
     basic.outputlogMessage("np_hist: " + str(np_hist))
     basic.outputlogMessage("min value: " + str(min(value_list)))
     basic.outputlogMessage("max value: " + str(max(value_list)))
@@ -42,14 +43,12 @@ def np_histogram_a_list(in_list,bin_count=255,axis_range=(0, 10)):
 
     return hist, bin_edges
 
-def main(options, args):
-    in_folder = args[0]
+def plot_valid_entropy(in_folder, save_file_pre):
 
-    save_file_pre = options.save_file_pre
     if save_file_pre is None:
         save_file_pre  = os.path.basename(in_folder)
 
-    basic.setlogfile(save_file_pre + 'hist_sta.txt')
+    basic.setlogfile(save_file_pre + 'hist_info.txt')
     image_paths = io_function.get_file_list_by_ext('.tif', in_folder, bsub_folder=True)
     if len(image_paths) < 1:
         raise IOError('no tif files in %s' % in_folder)
@@ -68,15 +67,21 @@ def main(options, args):
         for path, per, entropy in zip(image_paths, valid_per_list,entropy_list):
             f_obj.writelines(os.path.basename(path) + ' %.4f  %.6f \n'%(per, entropy))
 
-
-
     # plot the histogram
     fig = plt.figure(figsize=(6,4)) #
     ax1 = fig.add_subplot(111)
-    n, bins, patches = plt.hist(x=entropy_list, bins='auto', color='b', rwidth=0.85)
+    n, bins, patches = plt.hist(x=entropy_list, bins=50, color='b', rwidth=0.85)
     # print(n, bins, patches)
     plt.savefig(save_hist_path, dpi=200)  # 300
     histogram2logfile(entropy_list,bins,hist_tag=save_hist_path)
+
+    return save_hist_path
+
+def main(options, args):
+    in_folder = args[0]
+
+    save_file_pre = options.save_file_pre
+    plot_valid_entropy(in_folder, save_file_pre)
 
 
 
