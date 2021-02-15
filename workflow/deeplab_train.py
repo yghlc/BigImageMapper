@@ -248,27 +248,34 @@ def get_miou_list_class_all(log_dir,class_num):
     event_acc.Reload()
 
     # Show all tags in the log file
-    # tag_dict = event_acc.Tags()
+    tag_dict = event_acc.Tags()
     # io_function.save_dict_to_txt_json('event_acc.txt',tag_dict)
+
+    scalar_tags = tag_dict['scalars']
+    # print(scalar_tags)
 
     miou_dic = {}
     for class_id in range(class_num):
         name  = 'class_%d'%class_id
-        miou_class_event = event_acc.Scalars('eval/miou_1.0_'+name)
-        miou_class_list = [item[2] for item in miou_class_event ]  # item[0] is wall_time, item[1] is step, item [2] is the value
-        # step_list = [item[1] for item in miou_class_event]
-        # print(step_list)
-        miou_dic[name] = miou_class_list
+        tag = 'eval/miou_1.0'+name
+        if tag in scalar_tags:
+            miou_class_event = event_acc.Scalars(tag)
+            miou_class_list = [item[2] for item in miou_class_event ]  # item[0] is wall_time, item[1] is step, item [2] is the value
+            # step_list = [item[1] for item in miou_class_event]
+            # print(step_list)
+            miou_dic[name] = miou_class_list
 
-    miou_class_overall = event_acc.Scalars('eval/miou_1.0_overall')
-    miou_class_list = [item[2] for item in miou_class_overall]
-    step_list = [item[1] for item in miou_class_overall]
-    wall_time_list = [item[0] for item in miou_class_overall]
-    # print(step_list)
-    miou_dic['overall'] = miou_class_list
-    miou_dic['step'] = step_list
-    miou_dic['wall_time'] = wall_time_list                   # we can use datetime.fromtimestamp() to convert datetime
-    io_function.save_dict_to_txt_json(os.path.join(log_dir,'miou.txt') , miou_dic)
+    tag = 'eval/miou_1.0_overall'
+    if tag in scalar_tags:
+        miou_class_overall = event_acc.Scalars('eval/miou_1.0_overall')
+        miou_class_list = [item[2] for item in miou_class_overall]
+        step_list = [item[1] for item in miou_class_overall]
+        wall_time_list = [item[0] for item in miou_class_overall]
+        # print(step_list)
+        miou_dic['overall'] = miou_class_list
+        miou_dic['step'] = step_list
+        miou_dic['wall_time'] = wall_time_list                   # we can use datetime.fromtimestamp() to convert datetime
+        io_function.save_dict_to_txt_json(os.path.join(log_dir,'miou.txt') , miou_dic)
 
     return miou_dic
 
@@ -584,7 +591,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
         # check if need early stopping
         if b_early_stopping:
             miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
-            if len(miou_dict['overall']) >= 5:
+            if 'overall' in miou_dict.keys() and  len(miou_dict['overall']) >= 5:
                 # if the last five miou did not improve, then stop training
                 if np.all(np.diff(miou_dict['overall'][-5:]) < 0.0001):
                     basic.outputlogMessage(
