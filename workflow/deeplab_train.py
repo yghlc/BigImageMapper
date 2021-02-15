@@ -624,6 +624,8 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
     # get miou again
     miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
 
+    # eval_process did not exit as expected, kill it again.
+    os.system('kill ' + str(eval_process.pid))
 
     # plot mIOU, loss, and learnint rate curves
     iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
