@@ -57,10 +57,9 @@ def get_train_val_sample_count(work_dir, para_file):
 
 def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
                   atrous_rates1,atrous_rates2,atrous_rates3,output_stride,crop_size_str,batch_size,iteration_num,depth_multiplier,
-                  decoder_output_stride,aspp_convs_filters):
+                  decoder_output_stride,aspp_convs_filters,b_initialize_last_layer):
 
-    # + ' --initialize_last_layer=false ' to trained on custom dataset, other classes.
-    # + ' --initialize_last_layer=false '
+
     # for more information, run: "python deeplab/train.py --help" or "python deeplab/train.py --helpfull"
 
     command_string = tf1x_python + ' ' \
@@ -79,6 +78,10 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         + ' --train_logdir='+train_logdir \
         + ' --dataset_dir='+dataset_dir \
         + ' --num_clones=' + str(gpu_num)
+
+    # do not initialize the last layer, to trained on custom dataset, other classes.
+    if b_initialize_last_layer is False:
+        command_string += ' --initialize_last_layer=false '
 
     if output_stride is not None:
         command_string += ' --output_stride='+ str(output_stride)
@@ -388,6 +391,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     max_eva_number = 1
 
     b_early_stopping = parameters.get_bool_parameters(para_file,'b_early_stopping')
+    b_initialize_last_layer = parameters.get_bool_parameters(para_file, 'b_initialize_last_layer')
 
     # validation interval (epoch)
     validation_interval = parameters.get_digit_parameters_None_if_absence(para_file,'validation_interval','int')
@@ -404,7 +408,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                       dataset_dir, gpu_num,
                       train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num,
-                      depth_multiplier,decoder_output_stride,aspp_convs_filters)
+                      depth_multiplier,decoder_output_stride,aspp_convs_filters,b_initialize_last_layer)
 
         # run evaluation
         evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant,
@@ -426,7 +430,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                           init_checkpoint, TRAIN_LOGDIR,
                           dataset_dir, gpu_num,
                           train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str,
-                          batch_size, to_iter_num,depth_multiplier,decoder_output_stride,aspp_convs_filters)
+                          batch_size, to_iter_num,depth_multiplier,decoder_output_stride,aspp_convs_filters,b_initialize_last_layer)
 
             # run evaluation
             evaluation_deeplab(evl_script, dataset, evl_split, num_of_classes, model_variant,
@@ -555,6 +559,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
 
 
     b_early_stopping = parameters.get_bool_parameters(para_file,'b_early_stopping')
+    b_initialize_last_layer = parameters.get_bool_parameters(para_file,'b_initialize_last_layer')
 
     # validation interval (epoch), do
     # validation_interval = parameters.get_digit_parameters_None_if_absence(para_file,'validation_interval','int')
@@ -576,7 +581,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                           args=(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                       dataset_dir, gpu_num,
                       train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num,
-                      depth_multiplier,decoder_output_stride,aspp_convs_filters))
+                      depth_multiplier,decoder_output_stride,aspp_convs_filters,b_initialize_last_layer))
     train_process.start()
     time.sleep(60)  # wait
     if train_process.exitcode is not None and train_process.exitcode != 0:
