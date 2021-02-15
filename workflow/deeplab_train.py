@@ -13,7 +13,7 @@ from optparse import OptionParser
 import math
 import re
 import time
-
+from datetime import datetime
 import numpy as np
 from multiprocessing import Process
 
@@ -590,6 +590,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
     while True:
         # check if need early stopping
         if b_early_stopping:
+            print(datetime.now(), 'check early stopping')
             miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
             if 'overall' in miou_dict.keys() and  len(miou_dict['overall']) >= 5:
                 # if the last five miou did not improve, then stop training
