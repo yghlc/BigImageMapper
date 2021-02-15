@@ -678,7 +678,8 @@ def main(options, args):
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
 
 
-    train_evaluation_deeplab(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num)
+    # train_evaluation_deeplab(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num)
+    train_evaluation_deeplab_separate(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num)
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of training: %.2f seconds">>time_cost.txt'%duration)
