@@ -257,7 +257,7 @@ def get_miou_list_class_all(log_dir,class_num):
     miou_dic = {}
     for class_id in range(class_num):
         name  = 'class_%d'%class_id
-        tag = 'eval/miou_1.0'+name
+        tag = 'eval/miou_1.0_'+name
         if tag in scalar_tags:
             miou_class_event = event_acc.Scalars(tag)
             miou_class_list = [item[2] for item in miou_class_event ]  # item[0] is wall_time, item[1] is step, item [2] is the value
