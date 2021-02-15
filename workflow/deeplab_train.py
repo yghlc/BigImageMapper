@@ -446,22 +446,23 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                         break
 
     # plot mIOU, loss, and learnint rate curves
-    miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main('miou.txt',train_count=train_count, val_count=val_count,batch_size=batch_size)
-    loss_curve_path = plot_miou_loss_curve.plot_miou_loss_main('loss_learning_rate.txt',train_count=train_count, val_count=val_count,batch_size=batch_size)
+    iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
+    loss_path = os.path.join(TRAIN_LOGDIR, 'loss_learning_rate.txt')
+    miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
+    loss_curve_path = plot_miou_loss_curve.plot_miou_loss_main(loss_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
 
     # backup miou and training_loss & learning rate
     test_id = os.path.basename(WORK_DIR) + '_' + expr_name
     backup_dir = os.path.join(WORK_DIR, 'result_backup')
     if os.path.isdir(backup_dir) is False:
         io_function.mkdir(backup_dir)
-    iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
+
     new_iou_name = os.path.join(backup_dir, test_id+ '_'+os.path.basename(iou_path))
     io_function.copy_file_to_dst(iou_path, new_iou_name, overwrite=True)
     miou_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(miou_curve_path))
     io_function.copy_file_to_dst(miou_curve_path, miou_curve_bakname, overwrite=True)
 
 
-    loss_path = os.path.join(TRAIN_LOGDIR, 'loss_learning_rate.txt')
     loss_new_name = os.path.join(backup_dir,test_id+ '_'+os.path.basename(loss_path))
     io_function.copy_file_to_dst(loss_path, loss_new_name, overwrite=True)
     loss_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(loss_curve_path))
@@ -625,22 +626,22 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
 
 
     # plot mIOU, loss, and learnint rate curves
-    miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main('miou.txt',train_count=train_count, val_count=val_count,batch_size=batch_size)
-    loss_curve_path = plot_miou_loss_curve.plot_miou_loss_main('loss_learning_rate.txt',train_count=train_count, val_count=val_count,batch_size=batch_size)
+    iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
+    loss_path = os.path.join(TRAIN_LOGDIR, 'loss_learning_rate.txt')
+    miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
+    loss_curve_path = plot_miou_loss_curve.plot_miou_loss_main(loss_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
 
     # backup miou and training_loss & learning rate
     test_id = os.path.basename(WORK_DIR) + '_' + expr_name
     backup_dir = os.path.join(WORK_DIR, 'result_backup')
     if os.path.isdir(backup_dir) is False:
         io_function.mkdir(backup_dir)
-    iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
     new_iou_name = os.path.join(backup_dir, test_id+ '_'+os.path.basename(iou_path))
     io_function.copy_file_to_dst(iou_path, new_iou_name, overwrite=True)
     miou_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(miou_curve_path))
     io_function.copy_file_to_dst(miou_curve_path, miou_curve_bakname, overwrite=True)
 
 
-    loss_path = os.path.join(TRAIN_LOGDIR, 'loss_learning_rate.txt')
     loss_new_name = os.path.join(backup_dir,test_id+ '_'+os.path.basename(loss_path))
     io_function.copy_file_to_dst(loss_path, loss_new_name, overwrite=True)
     loss_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(loss_curve_path))
