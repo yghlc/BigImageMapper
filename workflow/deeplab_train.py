@@ -591,10 +591,14 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                         'early stopping: stop training because overall miou did not improved in the last five evaluation')
                     train_process.kill()
                     eval_process.kill()
-
+                    break
         # if finished training
         if train_process.is_alive() is False:
             eval_process.kill()
+            break
+        # if eval_process exit, then quit training as well
+        if eval_process.is_alive() is False and train_process.is_alive():
+            train_process.kill()
             break
         time.sleep(30)  # wait
 
