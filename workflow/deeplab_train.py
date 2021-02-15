@@ -189,6 +189,11 @@ def get_loss_learning_rate_list(log_dir):
         'histograms': 1
     }
 
+    events_files = io_function.get_file_list_by_pattern(log_dir,'events*')
+    if len(events_files) < 1:
+        print('warning, No events file in %s'%log_dir)
+        return None
+
     event_acc = EventAccumulator(log_dir, tf_size_guidance)
     event_acc.Reload()
 
@@ -243,7 +248,11 @@ def get_miou_list_class_all(log_dir,class_num):
         'scalars': 0,       # set a 0, to load all scalars
         'histograms': 1
     }
-
+    miou_dic = {}
+    events_files = io_function.get_file_list_by_pattern(log_dir,'events*')
+    if len(events_files) < 1:
+        print('warning, No events file in %s'%log_dir)
+        return miou_dic
     event_acc = EventAccumulator(log_dir, tf_size_guidance)
     event_acc.Reload()
 
@@ -254,7 +263,6 @@ def get_miou_list_class_all(log_dir,class_num):
     scalar_tags = tag_dict['scalars']
     # print(scalar_tags)
 
-    miou_dic = {}
     for class_id in range(class_num):
         name  = 'class_%d'%class_id
         tag = 'eval/miou_1.0_'+name
