@@ -578,7 +578,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                       train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num,
                       depth_multiplier,decoder_output_stride,aspp_convs_filters))
     train_process.start()
-    time.sleep(30)  # wait
+    time.sleep(60)  # wait
     if train_process.exitcode is not None and train_process.exitcode != 0:
         sys.exit(1)
 
@@ -601,7 +601,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
         # run evaluation and wait until it finished
         eval_process.start()
         while eval_process.is_alive():
-            time.sleep(30)
+            time.sleep(5)
 
         # check if need early stopping
         if b_early_stopping:
@@ -629,7 +629,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
     miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
 
     # eval_process did not exit as expected, kill it again.
-    os.system('kill ' + str(eval_process.pid))
+    # os.system('kill ' + str(eval_process.pid))
 
     # plot mIOU, loss, and learnint rate curves
     iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
