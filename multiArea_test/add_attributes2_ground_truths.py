@@ -21,9 +21,11 @@ import workflow.postProcess as postProcess
 add_attributes_script = os.path.join(code_dir, 'datasets', 'get_polygon_attributes.py')
 
 def main():
-
+    para_file = 'main_para.ini'
+    io_function.is_file_exist(para_file)
     area_ini_list =['area_Willow_River.ini', 'area_Banks_east_nirGB.ini', 'area_Ellesmere_Island_nirGB.ini']
     for area_ini in area_ini_list:
+        io_function.is_file_exist(area_ini)
         ground_truth_shp = parameters.get_file_path_parameters(area_ini, 'validation_shape')
 
         # save to current folder
@@ -32,7 +34,7 @@ def main():
         if os.path.isfile(save_info_shp):
             basic.outputlogMessage('%s already exist, skip %s'%(save_info_shp, area_ini))
             continue
-        postProcess.add_polygon_attributes(add_attributes_script,ground_truth_shp,save_info_shp,area_ini,area_ini)
+        postProcess.add_polygon_attributes(add_attributes_script,ground_truth_shp,save_info_shp,para_file,area_ini)
 
 
 if __name__ == '__main__':
