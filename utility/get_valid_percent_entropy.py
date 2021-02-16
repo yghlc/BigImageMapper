@@ -21,21 +21,7 @@ import basic_src.basic as basic
 import numpy as np
 import matplotlib.pyplot as plt
 
-def histogram2logfile(value_list,bins,hist_tag=None):
-    if hist_tag is not None:
-        basic.outputlogMessage('the following is the histogram information of %s'%hist_tag)
-    # output hist, min, max, average, accumulate percentage
-    np_hist,bin_edges = np.histogram(value_list, bins=bins)
-    basic.outputlogMessage("bin_edges: " + str(bin_edges))
-    basic.outputlogMessage("np_hist: " + str(np_hist))
-    basic.outputlogMessage("min value: " + str(min(value_list)))
-    basic.outputlogMessage("max value: " + str(max(value_list)))
-    basic.outputlogMessage("average value: " + str(sum(value_list)/float(len(value_list))))
-    if len(value_list) != np.sum(np_hist):
-        basic.outputlogMessage('warning: the count (%d) of input is not equal to the count (%d)'
-                               ' in histogram'%(len(value_list),int(np.sum(np_hist))))
-    acc_per = np.cumsum(np_hist)/np.sum(np_hist)
-    basic.outputlogMessage("accumulate percentage: " + str(acc_per))
+from datasets.data_figures import histogram2logfile
 
 def np_histogram_a_list(in_list,bin_count=255,axis_range=(0, 10)):
     np_array = np.array(in_list)
