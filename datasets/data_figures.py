@@ -181,7 +181,8 @@ def draw_one_value_hist(shp_file,field_name,output,logfile,bin_min,bin_max,bin_w
         values = [item/10000.0 for item in values]
 
     xlabelrotation = None
-    if 'area' in field_name or 'INperimete' in field_name or 'circularit' in field_name or 'aspectLine' in field_name:
+    if 'area' in field_name or 'INperimete' in field_name or 'circularit' in field_name or 'aspectLine' in field_name or \
+        'slo' in field_name or 'demD' in field_name:
         xlabelrotation = 90
 
     bins = np.arange(bin_min, bin_max, bin_width)
