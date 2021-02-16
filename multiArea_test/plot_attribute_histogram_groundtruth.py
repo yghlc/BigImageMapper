@@ -18,7 +18,11 @@ import basic_src.io_function as io_function
 def move_files(save_dir, out_fig, out_hist_info):
     if os.path.isdir(save_dir) is False:
         io_function.mkdir(save_dir)
-    io_function.movefiletodir(out_fig,save_dir,overwrite=True)
+    trim_fig = io_function.get_name_by_adding_tail(out_fig,'trim')
+    os.system('convert -trim %s %s'%(out_fig, trim_fig))
+    io_function.movefiletodir(trim_fig,save_dir,overwrite=True)
+    io_function.delete_file_or_dir(out_fig)
+    # io_function.movefiletodir(out_fig,save_dir,overwrite=True)
     io_function.movefiletodir(out_hist_info,save_dir,overwrite=True)
 
 def draw_area_size_histogram(shp, pre_name, tail,bin_min,bin_max,bin_width,ylim):
@@ -98,11 +102,11 @@ def main():
     ground_truth_shp = ['Willow_River_Thaw_Slumps_post.shp', 'Banks_Island_slumps_post.shp', 'HotWeatherCreek_slumps_post.shp']
     pre_names = ['WR', 'Banks', 'HotWC']
     for shp, pre_name in zip(ground_truth_shp,pre_names):
-        # draw_area_size_histogram(shp, pre_name, 'GT', 0,47,2,[0,180])   # bin_min,bin_max,bin_width,ylim (area in ha)
+        draw_area_size_histogram(shp, pre_name, 'GT', 0,47,2,[0,180])   # bin_min,bin_max,bin_width,ylim (area in ha)
 
-        # draw_dem_attributes_histogram(shp, pre_name, 'GT', -100,1000,100,[0,130])
+        draw_dem_attributes_histogram(shp, pre_name, 'GT', -100,1000,50,[0,90])
 
-        # draw_slope_attributes_histogram(shp, pre_name, 'GT', 0, 77, 3, [0,260])
+        draw_slope_attributes_histogram(shp, pre_name, 'GT', 0, 77, 3, [0,260])
 
         draw_dem_diff_attributes_histogram(shp, pre_name, 'GT', -40, 71, 5, [0,230])
 
