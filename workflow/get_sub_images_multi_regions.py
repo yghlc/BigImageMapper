@@ -16,6 +16,8 @@ code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
 
+import utility.get_valid_percent_entropy as get_valid_percent_entropy
+
 import basic_src.io_function as io_function
 import datasets.raster_io as raster_io
 import time
@@ -91,12 +93,14 @@ def main(options, args):
     subLabel_dir_delete = subLabel_dir + '_delete'
     io_function.mkdir(subImage_dir_delete)
     io_function.mkdir(subLabel_dir_delete)
+    get_valid_percent_entropy.plot_valid_entropy(subImage_dir)
     with open('sub_images_labels_list.txt','r') as f_obj:
         lines = f_obj.readlines()
         for line in lines:
             image_path, label_path = line.strip().split(':')
-            valid_per = raster_io.get_valid_pixel_percentage(image_path)
-            if valid_per > 80:
+            # valid_per = raster_io.get_valid_pixel_percentage(image_path)
+            valid_per, entropy = raster_io.get_valid_percent_shannon_entropy(image_path)
+            if valid_per > 80 or entropy > 0.2:
                 new_sub_image_label_list.append(line)
             else:
                 delete_sub_image_label_list.append(line)

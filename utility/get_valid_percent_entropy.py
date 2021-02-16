@@ -43,7 +43,7 @@ def np_histogram_a_list(in_list,bin_count=255,axis_range=(0, 10)):
 
     return hist, bin_edges
 
-def plot_valid_entropy(in_folder, save_file_pre):
+def plot_valid_entropy(in_folder, save_file_pre=None):
 
     if save_file_pre is None:
         save_file_pre  = os.path.basename(in_folder)
