@@ -370,15 +370,19 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     if len(init_checkpoint_files) < 1:
         raise IOError('No initial checkpoint in %s with pattern: %s'%(INIT_FOLDER,checkpoint))
     init_checkpoint = os.path.join(INIT_FOLDER,checkpoint)
+    b_early_stopping = parameters.get_bool_parameters(para_file,'b_early_stopping')
+    b_initialize_last_layer = parameters.get_bool_parameters(para_file, 'b_initialize_last_layer')
+
     dataset = parameters.get_string_parameters(para_file,'dataset_name')
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
-    if pre_trained_tar in pre_trained_tar_21_classes:
-        print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)
-        num_classes_noBG = 20
-    if pre_trained_tar in pre_trained_tar_19_classes:
-        print('warning, pretrained model %s is trained with 19 classes, set num_of_classes to 19'%pre_trained_tar)
-        num_classes_noBG = 18
+    if b_early_stopping is False:
+        if pre_trained_tar in pre_trained_tar_21_classes:
+            print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)
+            num_classes_noBG = 20
+        if pre_trained_tar in pre_trained_tar_19_classes:
+            print('warning, pretrained model %s is trained with 19 classes, set num_of_classes to 19'%pre_trained_tar)
+            num_classes_noBG = 18
     num_of_classes = num_classes_noBG + 1
 
     image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
@@ -390,8 +394,6 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     evl_split = os.path.splitext(parameters.get_string_parameters(para_file,'validation_sample_list_txt'))[0]
     max_eva_number = 1
 
-    b_early_stopping = parameters.get_bool_parameters(para_file,'b_early_stopping')
-    b_initialize_last_layer = parameters.get_bool_parameters(para_file, 'b_initialize_last_layer')
 
     # validation interval (epoch)
     validation_interval = parameters.get_digit_parameters_None_if_absence(para_file,'validation_interval','int')
@@ -541,15 +543,19 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
     if len(init_checkpoint_files) < 1:
         raise IOError('No initial checkpoint in %s with pattern: %s'%(INIT_FOLDER,checkpoint))
     init_checkpoint = os.path.join(INIT_FOLDER,checkpoint)
+    b_early_stopping = parameters.get_bool_parameters(para_file,'b_early_stopping')
+    b_initialize_last_layer = parameters.get_bool_parameters(para_file,'b_initialize_last_layer')
+
     dataset = parameters.get_string_parameters(para_file,'dataset_name')
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
-    if pre_trained_tar in pre_trained_tar_21_classes:
-        print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)
-        num_classes_noBG = 20
-    if pre_trained_tar in pre_trained_tar_19_classes:
-        print('warning, pretrained model %s is trained with 19 classes, set num_of_classes to 19'%pre_trained_tar)
-        num_classes_noBG = 18
+    if b_early_stopping is False:
+        if pre_trained_tar in pre_trained_tar_21_classes:
+            print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)
+            num_classes_noBG = 20
+        if pre_trained_tar in pre_trained_tar_19_classes:
+            print('warning, pretrained model %s is trained with 19 classes, set num_of_classes to 19'%pre_trained_tar)
+            num_classes_noBG = 18
     num_of_classes = num_classes_noBG + 1
 
     image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
@@ -557,9 +563,6 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
         raise ValueError('image_crop_size should be height,width')
     crop_size_str = ','.join(image_crop_size)
 
-
-    b_early_stopping = parameters.get_bool_parameters(para_file,'b_early_stopping')
-    b_initialize_last_layer = parameters.get_bool_parameters(para_file,'b_initialize_last_layer')
 
     # validation interval (epoch), do
     # validation_interval = parameters.get_digit_parameters_None_if_absence(para_file,'validation_interval','int')
