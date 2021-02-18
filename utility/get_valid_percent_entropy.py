@@ -19,6 +19,10 @@ import basic_src.io_function as io_function
 import basic_src.basic as basic
 
 import numpy as np
+import matplotlib
+# must be before importing matplotlib.pyplot or pylab!
+if os.name == 'posix' and "DISPLAY" not in os.environ:
+    matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from datasets.data_figures import histogram2logfile

@@ -20,6 +20,9 @@ import basic_src.basic as basic
 import numpy as np
 
 import matplotlib
+# must be before importing matplotlib.pyplot or pylab!
+if os.name == 'posix' and "DISPLAY" not in os.environ:
+    matplotlib.use('Agg')
 from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 
