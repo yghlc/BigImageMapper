@@ -9,6 +9,14 @@ add time: 28 October, 2016
 """
 
 from optparse import OptionParser
+
+import shapely
+from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon
+from shapely.geometry import Point
+from shapely.geometry import LineString
+from shapely.ops import cascaded_union
+
 import basic_src.basic as basic
 import basic_src.io_function as io_function
 import basic_src.map_projection as map_projection
@@ -29,12 +37,6 @@ import random
 
 #rasterstats
 from rasterstats import zonal_stats
-import shapely
-from shapely.geometry import Polygon
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Point
-from shapely.geometry import LineString
-from shapely.ops import cascaded_union
 
 # minimum_rotated_rectangle need shapely >= 1.6
 if shapely.__version__ < '1.6.0':
