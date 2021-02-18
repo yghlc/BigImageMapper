@@ -18,6 +18,7 @@ import basic_src.io_function as io_function
 
 sys.path.insert(0, os.path.join(code_dir, 'datasets'))
 from merge_shapefiles import merge_shape_files
+import utility.eva_report_to_tables as eva_report_to_tables
 
 def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
@@ -155,8 +156,6 @@ def main(options, args):
         out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
         evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
 
-        region_eva_reports[shp_pre] = out_report
-
 
         ##### copy and backup files ######
         # copy files to result_backup
@@ -178,8 +177,10 @@ def main(options, args):
 
         io_function.copy_shape_file(merged_shp,bak_merged_shp)
         io_function.copy_shape_file(shp_post, bak_post_shp)
-        io_function.copy_file_to_dst(out_report, bak_eva_report)
-        io_function.copy_file_to_dst(area_ini, bak_area_ini)
+        io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
+        io_function.copy_file_to_dst(area_ini, bak_area_ini, overwrite=True)
+
+        region_eva_reports[shp_pre] = bak_eva_report
 
     if len(test_note) > 0:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id,'para',test_note]) + '.ini' )
@@ -199,6 +200,12 @@ def main(options, args):
         print('evaluation report for %s:'%key)
         os.system('head -n 7 %s'%report)
 
+    # output evaluation report to table
+    if len(test_note) > 0:
+        out_table = os.path.join(backup_dir, '_'.join([test_id,'accuracy_table',test_note]) + '.xlsx' )
+    else:
+        out_table = os.path.join(backup_dir, '_'.join([test_id, 'accuracy_table']) + '.xlsx')
+    eva_report_to_tables.eva_reports_to_table(region_eva_reports, out_table)
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of post-procesing: %.2f seconds">>time_cost.txt'%duration)

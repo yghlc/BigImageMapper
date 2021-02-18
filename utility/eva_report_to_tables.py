@@ -34,9 +34,8 @@ def read_eva_report(file_path, count_iou_version=False):
 
         return get_tp_fp_fn_etc(lines[:6])
 
-def main(options, args):
+def eva_reports_to_table(eva_reports, output_file):
 
-    eva_reports = [item for item in args]
     eva_reports.sort()
 
     eva_report_rmTimeiou = [item for item in eva_reports if 'rmTimeiou' in item ]
@@ -48,8 +47,6 @@ def main(options, args):
     print('Input %d reports:'%len(eva_reports))
     for report in eva_reports:
         print(report)
-
-    output_file = options.output
 
     file_path_list = []
     file_name_list = []
@@ -109,6 +106,13 @@ def main(options, args):
         acc_talbe_sheet.set_column('G:I',None,format)
         acc_iou_talbe_sheet = writer.sheets['accuracy table IOU version']
         acc_iou_talbe_sheet.set_column('G:I', None, format)
+
+
+def main(options, args):
+
+    eva_reports = [item for item in args]
+    output_file = options.output
+    eva_reports_to_table(eva_reports, output_file)
 
     pass
 
