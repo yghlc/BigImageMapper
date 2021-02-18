@@ -14,6 +14,7 @@ code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 
 import datasets.raster_io as raster_io
+import re
 
 def get_image_with_height_list(sample_txt, img_ext, info_type='training'):
     height_list = []
@@ -40,6 +41,31 @@ def get_image_with_height_list(sample_txt, img_ext, info_type='training'):
         f_obj.writelines('maximum width and height: %d, %d \n'% (max(width_list), max(height_list)) )
         f_obj.writelines('minimum width and height: %d, %d \n'% (min(width_list), min(height_list)) )
         f_obj.writelines('mean width and height: %.2f, %.2f \n\n'% (sum(width_list)/img_count, sum(height_list)/img_count))
+
+    return True
+
+def get_sample_cout_of_each_class(sample_txt, info_type='training'):
+
+    sample_count = {}
+    with open(sample_txt, 'r') as f_obj:
+        lines = f_obj.readlines()
+        for line in lines:
+            c_labels = re.findall(r'class_\d+',line)
+            if len(c_labels) != 1:
+                raise ValueError('class label (e.g,. class_1) is not correctly set in %s of file %s'%(line,sample_txt))
+            c_label = c_labels[0]
+            if c_label in sample_count.keys():
+                sample_count[c_label] += 1
+            else:
+                sample_count[c_label] = 1
+
+    # save info to file, if it exists, add information to the file
+    with open('sub_images_patches_info.txt','a') as f_obj:
+        f_obj.writelines('Sample count of each class in %s set: \n'%info_type)
+        for key in sample_count.keys():
+            f_obj.writelines('Sample count of %s : %d \n' % (key, sample_count[key]))
+        f_obj.writelines('\n')
+
 
     return True
 
@@ -79,3 +105,8 @@ if __name__ == '__main__':
     get_image_with_height_list(os.path.join(dir,train_sample_txt), img_ext, info_type='training')
 
     get_image_with_height_list(os.path.join(dir,val_sample_txt), img_ext, info_type='validation')
+
+    # save the count of each classes in training and validation
+    get_sample_cout_of_each_class(os.path.join(dir,train_sample_txt), info_type='training')
+
+    get_sample_cout_of_each_class(os.path.join(dir,val_sample_txt), info_type='validation')
