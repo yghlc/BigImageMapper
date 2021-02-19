@@ -205,7 +205,8 @@ def main(options, args):
         out_table = os.path.join(backup_dir, '_'.join([test_id,'accuracy_table',test_note]) + '.xlsx' )
     else:
         out_table = os.path.join(backup_dir, '_'.join([test_id, 'accuracy_table']) + '.xlsx')
-    eva_report_to_tables.eva_reports_to_table(region_eva_reports, out_table)
+    eva_reports = [ region_eva_reports[key] for key in region_eva_reports]
+    eva_report_to_tables.eva_reports_to_table(eva_reports, out_table)
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of post-procesing: %.2f seconds">>time_cost.txt'%duration)
