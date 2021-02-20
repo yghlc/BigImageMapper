@@ -5,5 +5,5 @@ rasterio
 imgaug==0.2.6
 GPUtil
 geopandas
-xlsxwriter
+openpyxl
 xlsxwriter
