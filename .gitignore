@@ -13,6 +13,8 @@ planetlabs_notebooks
 
 # Pycharm folder
 .idea
+# vscode folder
+.vscode
 
 processLog.txt*
 split_image_info.txt*
