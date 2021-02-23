@@ -121,7 +121,9 @@ def training_function(config,checkpoint_dir=None):
 
 analysis = tune.run(
     training_function,
-    resources_per_trial={"gpu": 2}, # use two GPUs
+    resources_per_trial={"cpu": 12,"gpu": 2}, # use two GPUs, 12 CPUs on tesia
+    local_dir="./ray_results", 
+    name="test_on_tesia",
     # fail_fast=True,     # Stopping after the first failure
     log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
     config={
