@@ -20,10 +20,12 @@ from utility.eva_report_to_tables import read_accuracy_multi_reports
 
 from ray import tune
 
-backbones = ['deeplabv3plus_xception65.ini','deeplabv3plus_xception41.ini','deeplabv3plus_xception71.ini',
-            'deeplabv3plus_resnet_v1_50_beta.ini','deeplabv3plus_resnet_v1_101_beta.ini',
-            'deeplabv3plus_mobilenetv2_coco_voc_trainval.ini','deeplabv3plus_mobilenetv3_large_cityscapes_trainfine.ini',
-            'deeplabv3plus_mobilenetv3_small_cityscapes_trainfine.ini','deeplabv3plus_EdgeTPU-DeepLab.ini']
+# backbones = ['deeplabv3plus_xception65.ini','deeplabv3plus_xception41.ini','deeplabv3plus_xception71.ini',
+#             'deeplabv3plus_resnet_v1_50_beta.ini','deeplabv3plus_resnet_v1_101_beta.ini',
+#             'deeplabv3plus_mobilenetv2_coco_voc_trainval.ini','deeplabv3plus_mobilenetv3_large_cityscapes_trainfine.ini',
+#             'deeplabv3plus_mobilenetv3_small_cityscapes_trainfine.ini','deeplabv3plus_EdgeTPU-DeepLab.ini']
+
+backbones = ['deeplabv3plus_xception65.ini']
 
 area_ini_list = ['area_Willow_River.ini','area_Banks_east_nirGB.ini','area_Ellesmere_Island_nirGB.ini']
 
@@ -59,6 +61,8 @@ def objective_total_F1(lr, iter_num,batch_size,backbone):
     para_file = 'main_para_3Area.ini'
     # create a training folder
     work_dir = 'hyper'+'-lr%.5f'%lr + '-iter%d'%iter_num + '-batch%d'%batch_size + '-%s'%os.path.splitext(backbone)[0]
+    if os.path.isdir(work_dir) is False:
+        io_function.mkdir(work_dir)
     copy_ini_files(ini_dir,work_dir,para_file,area_ini_list,backbone)
 
     # change para_file
@@ -88,11 +92,11 @@ def training_function(config,checkpoint_dir=None):
 
 analysis = tune.run(
     training_function,
-    resources_per_trial={"GPU": 2}, # use two GPUs
+    resources_per_trial={"gpu": 2}, # use two GPUs
     config={
-        "lr": tune.grid_search([0.0001, 0.007, 0.014, 0.028,0.056]), #0.007, 0.0001,
-        "iter_num": tune.grid_search([30000, 60000,90000]),
-        "batch_size": tune.grid_search([8, 16, 32, 64, 128]),
+        "lr": tune.grid_search([0.0001,0.007]),   # , 0.014, 0.028,0.056 
+        "iter_num": tune.grid_search([30000]), # , 60000,90000
+        "batch_size": tune.grid_search([8]), # 16, 32, 64, 128
         "backbone": tune.grid_search(backbones)
     })
 
