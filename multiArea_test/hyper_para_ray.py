@@ -13,6 +13,9 @@ add time: 22 February, 2021
 import os,sys
 code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
 
+curr_dir_before_ray=os.getcwd()
+print('\n\ncurrent folder before ray tune: ',curr_dir_before_ray,'\n\n')
+
 # for the user defined moduel in code_dir, need to be imported in functions
 # sys.path.insert(0, code_dir)
 # import parameters
@@ -73,6 +76,11 @@ def objective_total_F1(lr, iter_num,batch_size,backbone):
     import workflow.whole_procedure as whole_procedure
 
     para_file = 'main_para_3Area.ini'
+    # ray tune will change current folder to its logdir, change it back
+    os.chdir(curr_dir_before_ray)
+    print('\n\n\n current folder',os.getcwd(),'\n\n\n')
+
+
     # create a training folder
     work_dir = 'hyper'+'-lr%.5f'%lr + '-iter%d'%iter_num + '-batch%d'%batch_size + '-%s'%os.path.splitext(backbone)[0]
     if os.path.isdir(work_dir) is False:
@@ -80,10 +88,10 @@ def objective_total_F1(lr, iter_num,batch_size,backbone):
     copy_ini_files(ini_dir,work_dir,para_file,area_ini_list,backbone)
 
     # change para_file
-    modify_parameter(para_file,'network_setting_ini',backbone)
-    modify_parameter(backbone,'base_learning_rate',lr)
-    modify_parameter(backbone,'batch_size',batch_size)
-    modify_parameter(backbone,'iteration_num',iter_num)
+    modify_parameter(os.path.join(work_dir, para_file),'network_setting_ini',backbone)
+    modify_parameter(os.path.join(work_dir, backbone),'base_learning_rate',lr)
+    modify_parameter(os.path.join(work_dir, backbone),'batch_size',batch_size)
+    modify_parameter(os.path.join(work_dir, backbone),'iteration_num',iter_num)
 
     # run training
     whole_procedure.run_whole_procedure(para_file,working_dir=work_dir)
@@ -108,7 +116,7 @@ analysis = tune.run(
     training_function,
     resources_per_trial={"gpu": 2}, # use two GPUs
     config={
-        "lr": tune.grid_search([0.0001,0.007]),   # , 0.014, 0.028,0.056 
+        "lr": tune.grid_search([0.0001]),   # ,0.007, 0.014, 0.028,0.056 
         "iter_num": tune.grid_search([30000]), # , 60000,90000
         "batch_size": tune.grid_search([8]), # 16, 32, 64, 128
         "backbone": tune.grid_search(backbones)
