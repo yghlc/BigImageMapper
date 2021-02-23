@@ -12,11 +12,13 @@ add time: 22 February, 2021
 
 import os,sys
 code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
-sys.path.insert(0, code_dir)
-import parameters
-import basic_src.io_function as io_function
-import workflow.whole_procedure as whole_procedure
-from utility.eva_report_to_tables import read_accuracy_multi_reports
+
+# for the user defined moduel in code_dir, need to be imported in functions
+# sys.path.insert(0, code_dir)
+# import parameters
+# import basic_src.io_function as io_function
+# import workflow.whole_procedure as whole_procedure
+# from utility.eva_report_to_tables import read_accuracy_multi_reports
 
 from ray import tune
 
@@ -34,15 +36,22 @@ ini_dir='ini_files'
 
 def copy_ini_files(ini_dir, work_dir, para_file, area_ini_list,backbone):
 
+    import basic_src.io_function as io_function
     ini_list = [para_file, backbone]
     ini_list.extend(area_ini_list)
     for ini in ini_list:
         io_function.copy_file_to_dst(os.path.join(ini_dir, ini ), os.path.join(work_dir,ini))
 
 def modify_parameter(para_file, para_name, new_value):
+
+    import parameters
     parameters.write_Parameters_file(para_file,para_name,new_value)
 
 def get_total_F1score(working_dir):
+
+    import basic_src.io_function as io_function
+    from utility.eva_report_to_tables import read_accuracy_multi_reports
+
     reports = io_function.get_file_list_by_pattern(working_dir,'result_backup/*/*eva_report*.txt')
     acc_table, acc_table_IOU_version = read_accuracy_multi_reports(reports)
     total_tp = sum(acc_table['TP'])
@@ -58,6 +67,11 @@ def get_total_F1score(working_dir):
     return F1score
 
 def objective_total_F1(lr, iter_num,batch_size,backbone):
+
+    sys.path.insert(0, code_dir)
+    import basic_src.io_function as io_function
+    import workflow.whole_procedure as whole_procedure
+
     para_file = 'main_para_3Area.ini'
     # create a training folder
     work_dir = 'hyper'+'-lr%.5f'%lr + '-iter%d'%iter_num + '-batch%d'%batch_size + '-%s'%os.path.splitext(backbone)[0]
