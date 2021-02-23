@@ -123,7 +123,7 @@ analysis = tune.run(
     training_function,
     resources_per_trial={"gpu": 2}, # use two GPUs
     config={
-        "lr": tune.grid_search([0.0001]),   # ,0.007, 0.014, 0.028,0.056 
+        "lr": tune.grid_search([0.0001,0.007, 0.014]),   # ,0.007, 0.014, 0.028,0.056 
         "iter_num": tune.grid_search([30000]), # , 60000,90000
         "batch_size": tune.grid_search([8]), # 16, 32, 64, 128
         "backbone": tune.grid_search(backbones)
