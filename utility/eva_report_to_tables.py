@@ -34,16 +34,7 @@ def read_eva_report(file_path, count_iou_version=False):
 
         return get_tp_fp_fn_etc(lines[:6])
 
-def eva_reports_to_table(eva_reports, output_file):
-
-    eva_reports.sort()
-
-    eva_report_rmTimeiou = [item for item in eva_reports if 'rmTimeiou' in item ]
-    eva_report_NO_rmTimeiou = [item for item in eva_reports if 'rmTimeiou' not in item ]
-
-    eva_report_NO_rmTimeiou.extend(eva_report_rmTimeiou)
-    eva_reports = eva_report_NO_rmTimeiou
-
+def read_accuracy_multi_reports(eva_reports):
     print('Input %d reports:'%len(eva_reports))
     for report in eva_reports:
         print(report)
@@ -91,6 +82,19 @@ def eva_reports_to_table(eva_reports, output_file):
     acc_table_IOU_version = {'file_path':file_path_list, 'file_name':file_name_list,'TP':TP_iou_version_list,'FP':FP_iou_version_list,
                              'FN':FN_iou_version_list,'precision':precision_iou_version_list,
                              'recall':recall_iou_version_list,'F1score':F1_score_iou_version_list}
+    return acc_table, acc_table_IOU_version
+
+def eva_reports_to_table(eva_reports, output_file):
+
+    eva_reports.sort()
+
+    eva_report_rmTimeiou = [item for item in eva_reports if 'rmTimeiou' in item ]
+    eva_report_NO_rmTimeiou = [item for item in eva_reports if 'rmTimeiou' not in item ]
+
+    eva_report_NO_rmTimeiou.extend(eva_report_rmTimeiou)
+    eva_reports = eva_report_NO_rmTimeiou
+
+    acc_table, acc_table_IOU_version = read_accuracy_multi_reports(eva_reports)
 
 
     acc_table_pd = pd.DataFrame(acc_table)
