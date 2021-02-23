@@ -135,10 +135,14 @@ def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1):
     if gpus is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([str(item) for item in gpus])
         gpu_num = len(gpus)
-    else
-        if 'CUDA_VISIBLE_DEVICES' in os.environ.keys() and len(os.environ['CUDA_VISIBLE_DEVICES'])>0:
-            gpus_str = [ item.strip() for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
-            gpu_num = len(gpus_str)
+    elif 'CUDA_VISIBLE_DEVICES' in os.environ.keys() and len(os.environ['CUDA_VISIBLE_DEVICES'])>0:
+        gpus_str = [ item.strip() for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
+        gpu_num = len(gpus_str)
+    else:
+        print('gpu number is set to 1')
+        gpu_num = 1
+
+
 
     SECONDS = time.time()
 
