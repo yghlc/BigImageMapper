@@ -33,27 +33,49 @@ def remove_previous_data_or_results(para_file):
 
 
 def extract_sub_images_using_training_polygons(para_file):
+    trainImg_dir = parameters.get_string_parameters(para_file, 'input_train_dir')
+    labelImg_dir = parameters.get_string_parameters(para_file, 'input_label_dir')
+    if os.path.isdir(trainImg_dir)  and os.path.isdir(labelImg_dir):
+        basic.outputlogMessage('warning, sub-image and sub-label folder exists, skip extracting sub-images')
+        return
     # extract sub_images based on the training polgyons
     command_string = os.path.join(eo_dir, 'workflow', 'get_sub_images_multi_regions.py') + ' ' + para_file
     basic.os_system_exit_code(command_string)
 
 
 def split_sub_images(para_file):
+    if os.path.isdir('split_images') and os.path.isdir('split_labels'):
+        basic.outputlogMessage('warning, split_image sand split_labels folder exists, skip splitting sub-images')
+        return
     command_string = os.path.join(eo_dir, 'workflow', 'split_sub_images.py') + ' ' + para_file
     basic.os_system_exit_code(command_string)
 
 
 def training_img_augment(para_file):
+    if os.path.isfile(os.path.join('list', 'images_including_aug.txt')):
+        basic.outputlogMessage('warning, list/images_including_aug.txt exists, skip data augmentation')
+        return
     command_string = os.path.join(eo_dir, 'workflow', 'training_img_augment.py') + ' ' + para_file
     basic.os_system_exit_code(command_string)
 
 
 def split_train_val(para_file):
+
+    train_sample_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
+    val_sample_txt = parameters.get_string_parameters(para_file, 'validation_sample_list_txt')
+    train_list_txt = os.path.join('list', train_sample_txt)
+    val_list_txt = os.path.join('list', val_sample_txt)
+    if os.path.isfile(train_list_txt) and os.path.isfile(val_list_txt):
+        basic.outputlogMessage('warning, split sample list exists, skip split_train_val')
+        return
     command_string = os.path.join(eo_dir, 'workflow', 'split_train_val.py') + ' ' + para_file
     basic.os_system_exit_code(command_string)
 
 
 def build_TFrecord_tf1x(para_file):
+    if os.path.isdir('tfrecord'):
+        basic.outputlogMessage('warning, tfrecord exists, skip build_TFrecord_tf1x')
+        return
     command_string = os.path.join(eo_dir, 'workflow', 'build_TFrecord_tf1x.py') + ' ' + para_file
     basic.os_system_exit_code(command_string)
 
@@ -73,24 +95,29 @@ def training(para_file, gpu_num):
     #                                     maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
     #     gpu_num = len(deviceIDs)
 
+    # the script can check the trained iteration and decide to train or not
     command_string = os.path.join(eo_dir, 'workflow', 'deeplab_train.py') + ' ' + para_file + ' ' + str(gpu_num)
     basic.os_system_exit_code(command_string)
 
 
 def export_model(para_file):
+    # the script can check the trained model and decide to export or not
     command_string = os.path.join(eo_dir, 'workflow', 'export_graph.py') + ' ' + para_file
     basic.os_system_exit_code(command_string)
 
 
 def inference(para_file):
     outdir = parameters.get_directory(para_file, 'inf_output_dir')
-    if os.path.isdir(outdir):
-        io_function.delete_file_or_dir(outdir)
+    # don't remove it automatically
+    # if os.path.isdir(outdir):
+    #     io_function.delete_file_or_dir(outdir)
+    # the script will check whether each image has been predicted
     command_string = os.path.join(eo_dir, 'workflow', 'parallel_prediction.py') + ' ' + para_file
     basic.os_system_exit_code(command_string)
 
 
 def post_processing_backup(para_file, inf_post_note=None):
+    # the script will check whether each image has been post-processed
     command_string = os.path.join(eo_dir, 'workflow', 'postProcess.py') + ' ' + para_file
     if inf_post_note is not None:
         command_string += ' ' + str(inf_post_note)
@@ -113,7 +140,7 @@ def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1):
 
     SECONDS = time.time()
 
-    remove_previous_data_or_results(para_file)
+    # remove_previous_data_or_results(para_file)    # don't automatic remove data
     extract_sub_images_using_training_polygons(para_file)
 
     # ## preparing training images.
@@ -150,11 +177,14 @@ def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1):
 
 
 def main(options, args):
-    pass
+    para_file = args[0]
+    gpu_num = options.gpu_num
+
+    run_whole_procedure(para_file,gpu_num=gpu_num)
 
 
 if __name__ == '__main__':
-    usage = "usage: %prog [options] "
+    usage = "usage: %prog [options] main_para.ini"
     parser = OptionParser(usage=usage, version="1.0 2021-02-22")
     parser.description = 'Introduction: run the whole procedure: training, inference, and post-processing '
 
@@ -163,8 +193,8 @@ if __name__ == '__main__':
                       help="the number of GPUs for training")
 
     (options, args) = parser.parse_args()
-    # if len(sys.argv) < 2:
-    #     parser.print_help()
-    #     sys.exit(2)
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     main(options, args)

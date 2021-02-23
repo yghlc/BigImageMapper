@@ -48,6 +48,10 @@ def is_file_exist_in_folder(folder):
 
 def predict_one_image_deeplab(deeplab_inf_script, para_file,network_ini, save_dir,inf_list_file,gpuid=None, trained_model=None):
 
+    done_indicator = '%s_done'%inf_list_file
+    if os.path.isfile(done_indicator):
+        basic.outputlogMessage('warning, %s exist, skip prediction'%done_indicator)
+        return
     # use a specific GPU for prediction, only inference one image
     time0 = time.time()
     if gpuid is not None:

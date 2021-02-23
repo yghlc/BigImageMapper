@@ -15,6 +15,7 @@ from optparse import OptionParser
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
+import basic_src.basic as basic
 from workflow.deeplab_train import get_trained_iteration
 
 from deeplab_train import pre_trained_tar_21_classes
@@ -150,6 +151,9 @@ def main(options, args):
     CKPT_PATH = os.path.join(TRAIN_LOGDIR, 'model.ckpt-%s' % iteration_num)
 
     EXPORT_PATH = os.path.join(EXPORT_DIR, 'frozen_inference_graph_%s.pb' % iteration_num)
+    if os.path.isfile(EXPORT_PATH):
+        basic.outputlogMessage('%s exists, skipping exporting models'%EXPORT_PATH)
+        return
     export_graph(export_script, CKPT_PATH, EXPORT_PATH, model_variant, num_of_classes,
                  inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,image_crop_size[0], image_crop_size[1],
                  multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters)

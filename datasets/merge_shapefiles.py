@@ -22,6 +22,9 @@ import vector_gpd
 
 def merge_shape_files(file_list, save_path):
 
+    if os.path.isfile(save_path):
+        print('%s already exists'%save_path)
+        return
     if len(file_list) < 1:
         raise IOError("no input shapefiles")
 
