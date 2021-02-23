@@ -122,6 +122,8 @@ def training_function(config,checkpoint_dir=None):
 analysis = tune.run(
     training_function,
     resources_per_trial={"gpu": 2}, # use two GPUs
+    # fail_fast=True,     # Stopping after the first failure
+    log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
     config={
         "lr": tune.grid_search([0.0001,0.007, 0.014]),   # ,0.007, 0.014, 0.028,0.056 
         "iter_num": tune.grid_search([30000]), # , 60000,90000
