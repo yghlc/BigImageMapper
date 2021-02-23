@@ -96,6 +96,13 @@ def objective_total_F1(lr, iter_num,batch_size,backbone):
     # run training
     whole_procedure.run_whole_procedure(para_file,working_dir=work_dir)
 
+    # remove files to save storage
+    os.system('rm -rf %s/exp*'%work_dir)
+    os.system('rm -rf %s/multi_inf_results'%work_dir)
+    os.system('rm -rf %s/split*'%work_dir)
+    os.system('rm -rf %s/sub*'%work_dir)
+    os.system('rm -rf %s/tfrecord*'%work_dir)
+
     # calculate the F1 score across all regions (total F1)
     totalF1 = get_total_F1score(work_dir)
     return totalF1
