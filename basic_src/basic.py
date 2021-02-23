@@ -118,6 +118,15 @@ def exec_command_args_list(args_list):
     outputlogMessage('return codes: '+ str(returncode))
     return returncode
 
+def os_system_exit_code(command_str):
+    '''
+    run a common string, check the exit code
+    :param command_str:
+    :return:
+    '''
+    res = os.system(command_str)
+    if res != 0:
+        sys.exit(1)
 
 def exec_command_string(command_str):
     """
