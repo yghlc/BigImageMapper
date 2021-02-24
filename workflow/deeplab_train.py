@@ -654,11 +654,10 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
     # eval_process did not exit as expected, kill it again.
     # os.system('kill ' + str(eval_process.pid))
 
-    # plot mIOU, loss, and learnint rate curves
+
+    # get iou and backup
     iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
     loss_path = os.path.join(TRAIN_LOGDIR, 'loss_learning_rate.txt')
-    miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
-    loss_curve_path = plot_miou_loss_curve.plot_miou_loss_main(loss_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
 
     # backup miou and training_loss & learning rate
     test_id = os.path.basename(WORK_DIR) + '_' + expr_name
@@ -667,14 +666,18 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
         io_function.mkdir(backup_dir)
     new_iou_name = os.path.join(backup_dir, test_id+ '_'+os.path.basename(iou_path))
     io_function.copy_file_to_dst(iou_path, new_iou_name, overwrite=True)
-    miou_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(miou_curve_path))
-    io_function.copy_file_to_dst(miou_curve_path, miou_curve_bakname, overwrite=True)
-
 
     loss_new_name = os.path.join(backup_dir,test_id+ '_'+os.path.basename(loss_path))
     io_function.copy_file_to_dst(loss_path, loss_new_name, overwrite=True)
+
+    # plot mIOU, loss, and learnint rate curves, and backup
+    miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
+    loss_curve_path = plot_miou_loss_curve.plot_miou_loss_main(loss_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
+    miou_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(miou_curve_path))
+    io_function.copy_file_to_dst(miou_curve_path, miou_curve_bakname, overwrite=True)
     loss_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(loss_curve_path))
     io_function.copy_file_to_dst(loss_curve_path, loss_curve_bakname, overwrite=True)
+
 
 # def init_for_test_function():
 #     code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
