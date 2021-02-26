@@ -78,6 +78,9 @@ def get_valid_pixel_count(image_path):
 
     valid_loc = np.where(oneband_data != nodata)
     valid_pixel_count = valid_loc[0].size
+    if oneband_data.dtype == 'float32':
+        nan_loc = np.where(np.isnan(oneband_data))
+        valid_pixel_count -=  nan_loc[0].size
 
     # return valid count and total count
     return valid_pixel_count, oneband_data.size
@@ -152,12 +155,22 @@ def read_oneband_image_to_1dArray(image_path,nodata=None, ignore_small=None):
 
         return data_1d
 
-def read_raster_all_bands_np(raster_path):
+def boundary_to_window(boundary):
+    # boundary: (xoff,yoff ,xsize, ysize)
+    # window structure; expecting ((row_start, row_stop), (col_start, col_stop))
+    window = ((boundary[1],boundary[1]+boundary[3])  ,  (boundary[0],boundary[0]+boundary[2]))
+    return window
+
+def read_raster_all_bands_np(raster_path, boundary=None):
+    # boundary: (xoff,yoff ,xsize, ysize)
 
     with rasterio.open(raster_path) as src:
         indexes = src.indexes
-
-        data = src.read(indexes)   # output (1, 8249, 13524), (band_count, height, width)
+        
+        if boundary is not None:
+            data = src.read(indexes, window=boundary_to_window(boundary))
+        else:
+            data = src.read(indexes)   # output (band_count, height, width)
 
         # print(data.shape)
         # print(src.nodata)
@@ -166,16 +179,15 @@ def read_raster_all_bands_np(raster_path):
 
         return data, src.nodata
 
-def read_raster_one_band_np(raster_path,band=1):
+def read_raster_one_band_np(raster_path,band=1,boundary=None):
+    # boundary: (xoff,yoff ,xsize, ysize)
     with rasterio.open(raster_path) as src:
-        indexes = src.indexes
-        # if len(indexes) != 1:
-        #     raise IOError('error, only support one band')
 
-        # data = src.read(indexes)   # output (1, 8249, 13524)
-        data = src.read(band)       # output (8249, 13524)
-        # print(data.shape)
-        # print(src.nodata)
+        if boundary is not None:
+            data = src.read(band, window=boundary_to_window(boundary))
+        else:
+            data = src.read(band)       # output (height, width)
+
         if src.nodata is not None and src.dtypes[0] == 'float32':
             data[ data == src.nodata ] = np.nan
         return data, src.nodata
