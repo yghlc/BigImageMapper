@@ -108,7 +108,7 @@ def main():
 
         draw_slope_attributes_histogram(shp, pre_name, 'GT', 0, 77, 3, [0,260])
 
-        draw_dem_diff_attributes_histogram(shp, pre_name, 'GT', -40, 71, 5, [0,230])
+        draw_dem_diff_attributes_histogram(shp, pre_name, 'GT', -30, 21, 2, [0,160])
 
 
     pass
