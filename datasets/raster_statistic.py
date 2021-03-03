@@ -110,7 +110,7 @@ def zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats,
     return array_stats(out_image, stats, nodata,range=range)
 
 def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1, stats = None, prefix='',
-                             range=None,all_touched=True, process_num=1):
+                             range=None,buffer=None, all_touched=True, process_num=1):
     '''
     zonal statistic based on vectors, along multiple rasters (image tiles)
     Args:
@@ -120,6 +120,7 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1
         band: band
         stats: like [mean, std, max, min]
         range: interested values [min, max], None means infinity
+        buffer: expand polygon with buffer (meter) before the statistic
         all_touched:
         process_num: process number for calculation
 
@@ -154,6 +155,8 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1
         basic.outputlogMessage('No polygons in %s'%in_shp)
         return False
     # polygons_json = [mapping(item) for item in polygons]  # no need when use new verion of rasterio
+    if buffer is not None:
+        polygons = [ poly.buffer(buffer) for poly in polygons]
 
     # process polygons one by one polygons and the corresponding image tiles (parallel and save memory)
     stats_res_list = []

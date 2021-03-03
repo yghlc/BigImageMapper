@@ -122,9 +122,15 @@ def calculate_polygon_topography(polygons_shp,dem_files,slope_files,aspect_files
     # elevation difference
     if dem_diffs is not None:
         stats_list = ['min', 'max', 'mean', 'median', 'std','area']
-        range = [None, -1]
+        # only count the pixel within this range when do statistics
+        dem_diff_range_str = parameters.get_string_list_parameters('', 'dem_difference_range')
+        range = [ None if item.upper() == 'NONE' else float(item) for item in dem_diff_range_str ]
+
+        # expand the polygon when doing dem difference statistics
+        buffer_size_dem_diff = parameters.get_digit_parameters('', 'buffer_size_dem_diff','float')
+
         if zonal_stats_multiRasters(polygons_shp,dem_diffs,stats=stats_list,prefix='demD',band=1,all_touched=all_touched, process_num=process_num,
-                                    range=range) is False:
+                                    range=range, buffer=buffer_size_dem_diff) is False:
             return False
     else:
         basic.outputlogMessage('warning, dem difference file not exist, ignore adding dem diff information')
