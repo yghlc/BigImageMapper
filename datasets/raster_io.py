@@ -14,9 +14,10 @@ import rasterio
 import numpy as np
 
 from rasterio.coords import BoundingBox
+from rasterio.mask import mask
 
 import skimage.measure
-
+import time
 #Color interpretation https://rasterio.readthedocs.io/en/latest/topics/color.html
 from rasterio.enums import ColorInterp
 
@@ -29,6 +30,16 @@ def get_width_heigth_bandnum(opened_src):
 
 # def get_xres_yres(opened_src):
 #     return opened_src.height,  opened_src.width,  opened_src.count
+
+def get_driver_format(file_path):
+    with rasterio.open(file_path) as src:
+        return src.driver
+
+def get_projection(file_path):
+    # https://rasterio.readthedocs.io/en/latest/api/rasterio.crs.html
+    # convert the different type, to epsg, proj4, and wkt
+    with rasterio.open(file_path) as src:
+        return src.crs
 
 def get_xres_yres_file(file_path):
     with rasterio.open(file_path) as src:
@@ -72,35 +83,74 @@ def get_valid_pixel_count(image_path):
 
     """
 
-    oneband_data, nodata = read_raster_one_band_np(image_path, band=1)
-    if nodata is None:
-        raise ValueError('nodata is not set in %s, cannot tell valid pixel'%image_path)
+    t0 = time.time()
+    band = 1
+    # count the pixel block by block,  quicker than read the entire image
+    # https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html?highlight=block_shapes#blocks
+    valid_pixel_count = 0
+    total_count = 0
+    with rasterio.open(image_path) as src:
+        assert len(set(src.block_shapes)) == 1   # check have identically blocked bands
+        # for i, shape in enumerate(src.block_shapes,start=1):    # output shape
+        #     print((i, shape))
+        nodata = src.nodata
+        # print(nodata)
+        if nodata is None:
+            raise ValueError('nodata is not set in %s, cannot tell valid pixel' % image_path)
+        for ji, window in src.block_windows(band):     # 1 mean for band one
+            # print((ji, window))
+            band_block_data = src.read(band, window=window) # it seems that src convert nodata to nan automatically
+            # print(band_block_data.shape)
+            # print(band_block_data)
+            valid_loc = np.where(band_block_data != nodata)
+            # if band_block_data.dtype == 'float32':
+            # always check nan
+            nan_loc = np.where(np.isnan(band_block_data))
+            valid_pixel_count -=  nan_loc[0].size
 
-    valid_loc = np.where(oneband_data != nodata)
-    valid_pixel_count = valid_loc[0].size
-    if oneband_data.dtype == 'float32':
-        nan_loc = np.where(np.isnan(oneband_data))
-        valid_pixel_count -=  nan_loc[0].size
+            valid_pixel_count += valid_loc[0].size
+            total_count += band_block_data.size
+            # break
+    # total_count = src.width*src.height
+    # print('valid_pixel_count, total_count, time cost',valid_pixel_count, total_count,time.time() - t0)
+    return valid_pixel_count, total_count
 
-    # return valid count and total count
-    return valid_pixel_count, oneband_data.size
+    # # read the entire image, then calculate
+    # oneband_data, nodata = read_raster_one_band_np(image_path, band=1)
+    # if nodata is None:
+    #     raise ValueError('nodata is not set in %s, cannot tell valid pixel'%image_path)
+    #
+    # valid_loc = np.where(oneband_data != nodata)
+    # valid_pixel_count = valid_loc[0].size
+    # if oneband_data.dtype == 'float32':
+    #     nan_loc = np.where(np.isnan(oneband_data))
+    #     valid_pixel_count -=  nan_loc[0].size
+    #
+    # # return valid count and total count
+    # print('valid_pixel_count, total_count, time cost', valid_pixel_count, oneband_data.size, time.time() - t0)
+    # return valid_pixel_count, oneband_data.size
 
-def get_valid_pixel_percentage(image_path,total_pixel_num=None):
+def get_valid_pixel_percentage(image_path,total_pixel_num=None, progress=None):
     """
     get the percentage of valid pixels (exclude no_data pixel)
     assume that the nodata value already be set
     Args:
         image_path: path
         total_pixel_num: total pixel count, for example, the image only cover a portion of the area
+        progress: to show the progress when parallel call this function
 
     Returns: the percentage (%)
 
     """
+    if progress is not None:
+        print(progress)
     valid_pixel_count, total_count = get_valid_pixel_count(image_path)
     if total_pixel_num is None:
         total_pixel_num =total_count
 
     valid_per = 100.0 * valid_pixel_count / total_pixel_num
+    if progress is not None:
+        print(progress, 'Done')
     return valid_per
 
 def get_valid_percent_shannon_entropy(image_path,log_base=10):
@@ -116,6 +166,52 @@ def get_valid_percent_shannon_entropy(image_path,log_base=10):
     entropy = skimage.measure.shannon_entropy(oneband_data, base=log_base)
 
     return valid_per, entropy
+
+def get_max_min_histogram_percent_oneband(data, bin_count, min_percent=0.01, max_percent=0.99, nodata=None,
+                                          hist_range=None):
+    '''
+    get the max and min when cut of % top and bottom pixel values
+    :param data: one band image data, 2d array.
+    :param bin_count: bin_count of calculating the histogram
+    :param min_percent: percent
+    :param max_percent: percent
+    :param nodata:
+    :param hist_range: [min, max] for calculating the histogram
+    :return: min, max value, histogram (hist, bin_edges)
+    '''
+    if data.ndim != 2:
+        raise ValueError('Only accept 2d array')
+    data_1d = data.flatten()
+    if nodata is not None:
+        data_1d = data_1d[data_1d != nodata] # remove nodata values
+
+    data_1d = data_1d[~np.isnan(data_1d)]   # remove nan value
+    hist, bin_edges = np.histogram(data_1d, bins=bin_count, density=False, range=hist_range)
+
+    # get the min and max based on percent cut.
+    if min_percent >= max_percent:
+        raise ValueError('min_percent >= max_percent')
+    found_min = 0
+    found_max = 0
+
+    count = hist.size
+    sum = np.sum(hist)
+    accumulate_sum = 0
+    for ii in range(count):
+        accumulate_sum += hist[ii]
+        if accumulate_sum/sum >= min_percent:
+            found_min = bin_edges[ii]
+            break
+
+    accumulate_sum = 0
+    for ii in range(count-1,0,-1):
+        # print(ii)
+        accumulate_sum += hist[ii]
+        if accumulate_sum / sum >= (1 - max_percent):
+            found_max = bin_edges[ii]
+            break
+
+    return found_min, found_max, hist, bin_edges
 
 def is_two_bound_disjoint(box1, box2):
     # box1 and box2: bounding box: (left, bottom, right, top)
@@ -161,6 +257,45 @@ def boundary_to_window(boundary):
     window = ((boundary[1],boundary[1]+boundary[3])  ,  (boundary[0],boundary[0]+boundary[2]))
     return window
 
+def read_raster_in_polygons_mask(raster_path, polygons, nodata=None, all_touched=True, crop=True,
+                                 bands = None, save_path=None):
+    # using mask to get pixels in polygons
+    # see more information of the parameter in the function: mask
+
+    if isinstance(polygons, list) is False:
+        polygon_list = [polygons]
+    else:
+        polygon_list = polygons
+
+    with rasterio.open(raster_path) as src:
+        # crop image and saved to disk
+        out_image, out_transform = mask(src, polygon_list, nodata=nodata, all_touched=all_touched, crop=crop,
+                                        indexes=bands)
+
+        # print(out_image.shape)
+        if out_image.ndim == 2:
+            height, width = out_image.shape
+            band_count = 1
+        else:
+            band_count, height, width = out_image.shape
+        if nodata is None:  # if it None, copy from the src file
+            nodata = src.nodata
+        if save_path is not None:
+            # save it to disk
+            out_meta = src.meta.copy()
+            out_meta.update({"driver": "GTiff",
+                             "height": height,
+                             "width": width,
+                             "count": band_count,
+                             "transform": out_transform,
+                             "nodata": nodata})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+            if out_image.ndim == 2:
+                out_image = out_image.reshape((1, height, width))
+            with rasterio.open(save_path, "w", **out_meta) as dest:
+                dest.write(out_image)
+
+        return out_image, out_transform, nodata
+
 def read_raster_all_bands_np(raster_path, boundary=None):
     # boundary: (xoff,yoff ,xsize, ysize)
 
@@ -174,8 +309,8 @@ def read_raster_all_bands_np(raster_path, boundary=None):
 
         # print(data.shape)
         # print(src.nodata)
-        if src.nodata is not None and src.dtypes[0] == 'float32':
-            data[ data == src.nodata ] = np.nan
+        # if src.nodata is not None and src.dtypes[0] == 'float32':
+        #     data[ data == src.nodata ] = np.nan
 
         return data, src.nodata
 
@@ -188,8 +323,8 @@ def read_raster_one_band_np(raster_path,band=1,boundary=None):
         else:
             data = src.read(band)       # output (height, width)
 
-        if src.nodata is not None and src.dtypes[0] == 'float32':
-            data[ data == src.nodata ] = np.nan
+        # if src.nodata is not None and src.dtypes[0] == 'float32':
+        #     data[ data == src.nodata ] = np.nan
         return data, src.nodata
 
 def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='GTiff', nodata=None,
@@ -257,6 +392,38 @@ def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='G
 
     return True
 
+def image_numpy_allBands_to_8bit_hist(img_np_allbands, min_max_values=None, per_min=0.01, per_max=0.99, src_nodata=None, dst_nodata=None):
+
+    band_count, height, width = img_np_allbands.shape
+    if min_max_values is not None:
+        # if we input multiple scales, it should has the same size the band count
+        if len(min_max_values) > 1 and len(min_max_values) != band_count:
+            raise ValueError('The number of min_max_value is not the same with band account')
+        # if only input one scale, then duplicate for multiple band account.
+        if len(min_max_values) == 1 and len(min_max_values) != band_count:
+            min_max_value = min_max_values * band_count
+
+    # get min, max
+    bin_count = 500
+    new_img_np = np.zeros_like(img_np_allbands, dtype=np.uint8)
+    for band, img_oneband in enumerate(img_np_allbands):
+        found_min, found_max, hist, bin_edges = get_max_min_histogram_percent_oneband(img_oneband, bin_count,
+                                                                                                min_percent=per_min,
+                                                                                                max_percent=per_max,
+                                                                                                nodata=src_nodata)
+        print('min and max value from histogram (percent cut):', found_min, found_max)
+        if min_max_values is not None:
+            if found_min < min_max_values[band][0]:
+                found_min = min_max_values[band][0]
+                print('reset the min value to %s' % found_min)
+            if found_max > min_max_values[band][1]:
+                found_max = min_max_values[band][1]
+                print('reset the max value to %s' % found_max)
+        new_img_np[band,:] = image_numpy_to_8bit(img_oneband, found_max, found_min, src_nodata=src_nodata, dst_nodata=dst_nodata)
+
+    return new_img_np
+
+
 def image_numpy_allBands_to_8bit(img_np_allbands, scales, src_nodata=None, dst_nodata=None):
     '''
     linear scretch and save to 8 bit.
@@ -321,10 +488,14 @@ def image_numpy_to_8bit(img_np, max_value, min_value, src_nodata=None, dst_nodat
     Returns: new numpy array
 
     '''
-    print('Convert to 8bit, old max, min: %.4f, %.4f'%(max_value, min_value))
+    print('Convert to 8bit, original max, min: %.4f, %.4f'%(max_value, min_value))
     nan_loc = np.where(np.isnan(img_np))
     if nan_loc[0].size > 0:
         img_np = np.nan_to_num(img_np)
+
+    nodata_loc = None
+    if src_nodata is not None:
+        nodata_loc = np.where(img_np==src_nodata)
 
     img_np[img_np > max_value] = max_value
     img_np[img_np < min_value] = min_value
@@ -347,6 +518,12 @@ def image_numpy_to_8bit(img_np, max_value, min_value, src_nodata=None, dst_nodat
             new_img_np[nan_loc] = dst_nodata
         else:
             new_img_np[nan_loc] = n_min
+    # replace nodata
+    if nodata_loc is not None and nodata_loc[0].size >0:
+        if dst_nodata is not None:
+            new_img_np[nodata_loc] = dst_nodata
+        else:
+            new_img_np[nodata_loc] = src_nodata
 
     return new_img_np
 

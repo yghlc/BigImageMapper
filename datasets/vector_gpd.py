@@ -154,7 +154,7 @@ def reproject_shapefile(shp_path, prj_str,save_path):
 
     return shapefile.to_file(save_path, driver = 'ESRI Shapefile')
 
-def read_polygons_gpd(polygon_shp):
+def read_polygons_gpd(polygon_shp, b_fix_invalid_polygon = True):
     '''
     read polyogns using geopandas
     :param polygon_shp: polygon in projection of EPSG:4326
@@ -174,9 +174,35 @@ def read_polygons_gpd(polygon_shp):
     #     raise ValueError('error, polygons %s (index start from 1) in %s are invalid, please fix them first '%(str(invalid_polygon_idx),polygon_shp))
 
     # fix invalid polygons
-    polygons = fix_invalid_polygons(polygons)
+    if b_fix_invalid_polygon:
+        polygons = fix_invalid_polygons(polygons)
 
     return polygons
+
+def add_attributes_to_shp(shp_path, add_attributes):
+    '''
+    add attbibutes to a shapefile
+    :param shp_path: the path of shapefile
+    :param add_attributes: attributes (dict)
+    :return: True if successful, False otherwise
+    '''
+
+    shapefile = gpd.read_file(shp_path)
+    # print(shapefile.loc[0])   # output the first row
+
+    # get attributes_names
+    org_attribute_names = [ key for key in  shapefile.loc[0].keys()]
+    # print(org_attribute_names)
+    for key in add_attributes.keys():
+        if key in org_attribute_names:
+            basic.outputlogMessage('warning, field name: %s already in table '
+                                       'this will replace the original value'%(key))
+        shapefile[key] = add_attributes[key]
+
+    # print(shapefile)
+    # save the original file
+    return shapefile.to_file(shp_path, driver='ESRI Shapefile')
+
 
 def read_attribute_values_list(polygon_shp, field_name):
     '''
@@ -193,6 +219,41 @@ def read_attribute_values_list(polygon_shp, field_name):
     else:
         basic.outputlogMessage('Warning: %s not in the shape file, will return None'%field_name)
         return None
+
+def read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygon = True):
+    '''
+    read polygons and attribute value (list)
+    :param polygon_shp:
+    :param field_nameS: a string file name or a list of field_name
+    :return: Polygons and attributes
+    '''
+    shapefile = gpd.read_file(polygon_shp)
+    polygons = shapefile.geometry.values
+    # fix invalid polygons
+    if b_fix_invalid_polygon:
+        polygons = fix_invalid_polygons(polygons)
+
+    # read attributes
+    if isinstance(field_nameS,str): # only one field name
+        if field_nameS in shapefile.keys():
+            attribute_values = shapefile[field_nameS]
+            return polygons, attribute_values.tolist()
+        else:
+            basic.outputlogMessage('Warning: %s not in the shape file, get None' % field_nameS)
+            return polygons, None
+    elif isinstance(field_nameS,list):  # a list of field name
+        attribute_2d = []
+        for field_name in field_nameS:
+            if field_name in shapefile.keys():
+                attribute_values = shapefile[field_name]
+                attribute_2d.append(attribute_values.tolist())
+            else:
+                basic.outputlogMessage('Warning: %s not in the shape file, get None' % field_nameS)
+                attribute_2d.append(None)
+        return polygons, attribute_2d
+    else:
+        raise ValueError('unknown type of %s'%str(field_nameS))
+
 
 def remove_polygon_equal(shapefile,field_name, expect_value, b_equal, output):
     '''
@@ -653,6 +714,51 @@ def get_poly_index_within_extent(polygon_list, extent_poly):
             idx_list.append(idx)
 
     return idx_list
+
+def convert_image_bound_to_shapely_polygon(img_bound_box):
+    # convert bounding box  to shapely polygon
+    # img_bound_box: bounding box: (left, bottom, right, top) read from rasterio
+    letftop1 = (img_bound_box[0],img_bound_box[3])
+    righttop1 = (img_bound_box[2],img_bound_box[3])
+    rightbottom1 = (img_bound_box[2],img_bound_box[1])
+    leftbottom1 = (img_bound_box[0],img_bound_box[1])
+    polygon = Polygon([letftop1, righttop1,rightbottom1,leftbottom1])
+    return polygon
+
+def get_overlap_area_two_boxes(box1, box2, buffer=None):
+    '''
+    get overlap areas of two box
+    :param box1: bounding box: (left, bottom, right, top)
+    :param box2: bounding box: (left, bottom, right, top)
+    :return: area
+    '''
+    # print(box1,box1[0],box1[1],box1[2],box1[3])
+    letftop1 = (box1[0],box1[3])
+    righttop1 = (box1[2],box1[3])
+    rightbottom1 = (box1[2],box1[1])
+    leftbottom1 = (box1[0],box1[1])
+    polygon1 = Polygon([letftop1, righttop1,rightbottom1,leftbottom1])
+    # print(polygon1)
+
+    letftop2 = (box2[0],box2[3])
+    righttop2 = (box2[2],box2[3])
+    rightbottom2 = (box2[2],box2[1])
+    leftbottom2 = (box2[0],box2[1])
+    polygon2 = Polygon([letftop2, righttop2,rightbottom2,leftbottom2])
+
+    if buffer is not None:
+        polygon1 = polygon1.buffer(buffer)
+        polygon2 = polygon2.buffer(buffer)
+
+    inter = polygon1.intersection(polygon2)
+    # inter = polygon2.intersection(polygon1)
+    if inter.is_empty:
+        return 0
+    if inter.geom_type == 'Polygon':
+        return inter.area
+    else:
+        raise ValueError('need more support of the type: %s'% str(inter.geom_type))
+
 
 def main(options, args):
 
