@@ -106,7 +106,7 @@ def calculate_polygon_topography(polygons_shp,dem_files,slope_files,aspect_files
     # #slope
     if slope_files is not None:
         stats_list = ['min', 'max','mean', 'median', 'std']
-        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='slo',band=1,all_touched=all_touched, process_num=process_num) is False:
+        if zonal_stats_multiRasters(polygons_shp,slope_files,stats=stats_list,prefix='slo',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
         basic.outputlogMessage("warning, slope file not exist, skip the calculation of slope information")
@@ -114,7 +114,7 @@ def calculate_polygon_topography(polygons_shp,dem_files,slope_files,aspect_files
     # #aspect
     if aspect_files is not None:
         stats_list = ['min', 'max','mean', 'std']
-        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='asp',band=1,all_touched=all_touched, process_num=process_num) is False:
+        if zonal_stats_multiRasters(polygons_shp,aspect_files,stats=stats_list,prefix='asp',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
         basic.outputlogMessage('warning, aspect file not exist, ignore adding aspect information')
@@ -123,7 +123,7 @@ def calculate_polygon_topography(polygons_shp,dem_files,slope_files,aspect_files
     if dem_diffs is not None:
         stats_list = ['min', 'max', 'mean', 'median', 'std','area']
         range = [None, -1]
-        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='demD',band=1,all_touched=all_touched, process_num=process_num,
+        if zonal_stats_multiRasters(polygons_shp,dem_diffs,stats=stats_list,prefix='demD',band=1,all_touched=all_touched, process_num=process_num,
                                     range=range) is False:
             return False
     else:
@@ -325,7 +325,7 @@ def main(options, args):
 
     # add topography of each polygons
     dem_files, slope_files, aspect_files, dem_diff_files = get_topographic_files(data_para_file)
-    if calculate_polygon_topography(output,dem_files,slope_files,aspect_file=aspect_files,dem_diff=dem_diff_files) is False:
+    if calculate_polygon_topography(output,dem_files,slope_files,aspect_files=aspect_files,dem_diffs=dem_diff_files) is False:
         basic.outputlogMessage('Warning: calculate information of topography failed')
         # return False   #  don't return
 

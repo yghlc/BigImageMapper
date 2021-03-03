@@ -39,6 +39,15 @@ def array_stats(in_array, stats, nodata,range=None):
 
     # https://numpy.org/doc/stable/reference/routines.statistics.html
     out_value_dict = {}
+    if data_1d.size == 0:
+        for item in stats:
+            if item == 'count':
+                out_value_dict[item] = data_1d.size
+                continue
+            out_value_dict[item] = None
+
+        return out_value_dict
+
     for item in stats:
         if item == 'mean':
             value = np.mean(data_1d)
@@ -51,7 +60,7 @@ def array_stats(in_array, stats, nodata,range=None):
         elif item == 'count':
             value = data_1d.size
         elif item =='std':
-            value = data_1d.std(data_1d)
+            value = np.std(data_1d)
         else:
             raise ValueError('unsupported stats: %s'%item)
         out_value_dict[item] = value
@@ -121,8 +130,11 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1
     if stats is None:
         basic.outputlogMessage('warning, No input stats, set to ["mean"])')
         stats = ['mean']
-    if 'area' in stats and 'count' not in stats:
-        stats.append('count')
+    stats_backup = stats.copy()
+    if 'area' in stats:
+        stats.remove('area')
+        if 'count' not in stats:
+            stats.append('count')
 
     if isinstance(raster_file_or_files,str):
         io_function.is_file_exist(raster_file_or_files)
@@ -144,16 +156,16 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1
     # polygons_json = [mapping(item) for item in polygons]  # no need when use new verion of rasterio
 
     # process polygons one by one polygons and the corresponding image tiles (parallel and save memory)
-    # stats_res_list = []
-    # for idx, polygon in enumerate(polygons):
-    #     out_stats = zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=nodata, range=range,
-    #                             band=band, all_touched=all_touched)
-    #     stats_res_list.append(out_stats)
+    stats_res_list = []
+    for idx, polygon in enumerate(polygons):
+        out_stats = zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=nodata, range=range,
+                                band=band, all_touched=all_touched)
+        stats_res_list.append(out_stats)
 
-    threadpool = Pool(process_num)
-    para_list = [ (idx, polygon, image_tiles, img_tile_polygons, stats, nodata, range,band, all_touched)
-                  for idx, polygon in enumerate(polygons)]
-    stats_res_list = threadpool.starmap(zonal_stats_one_polygon,para_list)
+    # threadpool = Pool(process_num)
+    # para_list = [ (idx, polygon, image_tiles, img_tile_polygons, stats, nodata, range,band, all_touched)
+    #               for idx, polygon in enumerate(polygons)]
+    # stats_res_list = threadpool.starmap(zonal_stats_one_polygon,para_list)
 
 
 
@@ -166,11 +178,12 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1
         for key in stats_result.keys():
             add_attributes[prefix + '_' + key].append(stats_result[key])
 
-    if 'area' in stats:
+    if 'area' in stats_backup:
        dx, dy = raster_io.get_xres_yres_file(image_tiles[0])
        add_attributes[prefix + '_' + 'area'] = [ count*dx*dy for count in add_attributes[prefix + '_' + 'count'] ]
-    if 'count' not in stats:
-        del add_attributes[prefix + '_' + 'count']
+
+       if 'count' not in stats_backup:
+            del add_attributes[prefix + '_' + 'count']
 
     vector_gpd.add_attributes_to_shp(in_shp,add_attributes)
 
