@@ -45,14 +45,14 @@ def cal_add_area_length_of_polygon(input_shp):
     """
     return vector_features.cal_area_length_of_polygon(input_shp )
 
-def calculate_polygon_topography(polygons_shp,dem_file,slope_file,aspect_file=None, dem_diff=None):
+def calculate_polygon_topography(polygons_shp,dem_files,slope_files,aspect_files=None, dem_diffs=None):
     """
     calculate the topography information such elevation and slope of each polygon
     Args:
         polygons_shp: input shapfe file
-        dem_file: DEM raster file, should have the same projection of shapefile
-        slope_file: slope raster file (can be drived from dem file by using QGIS or ArcGIS)
-        aspect_file: aspect raster file (can be drived from dem file by using QGIS or ArcGIS)
+        dem_files: DEM raster file or tiles, should have the same projection of shapefile
+        slope_files: slope raster file or tiles  (can be drived from dem file by using QGIS or ArcGIS)
+        aspect_files: aspect raster file or tiles (can be drived from dem file by using QGIS or ArcGIS)
 
     Returns: True if successful, False Otherwise
     """
@@ -91,38 +91,40 @@ def calculate_polygon_topography(polygons_shp,dem_file,slope_file,aspect_file=No
     #     defaults to `False`
     #   Since the dem usually is coarser, so we set all_touched = True
     all_touched = True
+    process_num = 4
 
     # #DEM
-    dem_file = io_function.get_file_path_new_home_folder(dem_file)
-    if dem_file is not None and os.path.isfile(dem_file):
+    if dem_files is not None:
         stats_list = ['min', 'max','mean','median','std']            #['min', 'max', 'mean', 'count','median','std']
-        if operation_obj.add_fields_from_raster(polygons_shp, dem_file, "dem", band=1,stats_list=stats_list,all_touched=all_touched) is False:
+        # if operation_obj.add_fields_from_raster(polygons_shp, dem_file, "dem", band=1,stats_list=stats_list,all_touched=all_touched) is False:
+        #     return False
+        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='dem',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
         basic.outputlogMessage("warning, DEM file not exist, skip the calculation of DEM information")
 
     # #slope
-    slope_file = io_function.get_file_path_new_home_folder(slope_file)
-    if slope_file is not None and os.path.isfile(slope_file):
+    if slope_files is not None:
         stats_list = ['min', 'max','mean', 'median', 'std']
-        if operation_obj.add_fields_from_raster(polygons_shp, slope_file, "slo", band=1,stats_list=stats_list,all_touched=all_touched) is False:
+        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='slo',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
         basic.outputlogMessage("warning, slope file not exist, skip the calculation of slope information")
 
     # #aspect
-    aspect_file = io_function.get_file_path_new_home_folder(aspect_file)
-    if aspect_file is not None and os.path.isfile(aspect_file):
+    if aspect_files is not None:
         stats_list = ['min', 'max','mean', 'std']
-        if operation_obj.add_fields_from_raster(polygons_shp, aspect_file, "asp", band=1,stats_list=stats_list,all_touched=all_touched) is False:
+        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='asp',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
         basic.outputlogMessage('warning, aspect file not exist, ignore adding aspect information')
 
     # elevation difference
-    if dem_diff is not None and os.path.isfile(dem_diff):
-        stats_list = ['min', 'max', 'mean', 'median', 'std']
-        if operation_obj.add_fields_from_raster(polygons_shp, dem_diff, "demD", band=1,stats_list=stats_list,all_touched=all_touched) is False:
+    if dem_diffs is not None:
+        stats_list = ['min', 'max', 'mean', 'median', 'std','area']
+        range = [None, -1]
+        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='demD',band=1,all_touched=all_touched, process_num=process_num,
+                                    range=range) is False:
             return False
     else:
         basic.outputlogMessage('warning, dem difference file not exist, ignore adding dem diff information')
@@ -264,17 +266,18 @@ def get_file_path_parameter(parafile, data_dir, data_name_or_pattern):
     if len(file_list) == 1:
         return file_list[0]
     else:
-        raise ValueError('multiple files in %s, need improvements of the codes'%data_dir)
+        # return multiple files
+        return file_list
 
 
 def get_topographic_files(data_para_file):
 
-    dem_file = get_file_path_parameter(data_para_file,'dem_file_dir', 'dem_file_or_pattern')
-    slope_file = get_file_path_parameter(data_para_file,'slope_file_dir', 'slope_file_or_pattern')
-    aspect_file = get_file_path_parameter(data_para_file, 'aspect_file_dir', 'aspect_file_or_pattern')
-    dem_diff_file = get_file_path_parameter(data_para_file, 'dem_diff_file_dir', 'dem_diff_file_or_pattern')
+    dem_files = get_file_path_parameter(data_para_file,'dem_file_dir', 'dem_file_or_pattern')
+    slope_files = get_file_path_parameter(data_para_file,'slope_file_dir', 'slope_file_or_pattern')
+    aspect_files = get_file_path_parameter(data_para_file, 'aspect_file_dir', 'aspect_file_or_pattern')
+    dem_diff_files = get_file_path_parameter(data_para_file, 'dem_diff_file_dir', 'dem_diff_file_or_pattern')
 
-    return dem_file, slope_file, aspect_file,dem_diff_file
+    return dem_files, slope_files, aspect_files,dem_diff_files
 
 def main(options, args):
     input = args[0]
@@ -321,8 +324,8 @@ def main(options, args):
 
 
     # add topography of each polygons
-    dem_file, slope_file, aspect_file, dem_diff_file = get_topographic_files(data_para_file)
-    if calculate_polygon_topography(output,dem_file,slope_file,aspect_file=aspect_file,dem_diff=dem_diff_file) is False:
+    dem_files, slope_files, aspect_files, dem_diff_files = get_topographic_files(data_para_file)
+    if calculate_polygon_topography(output,dem_files,slope_files,aspect_file=aspect_files,dem_diff=dem_diff_files) is False:
         basic.outputlogMessage('Warning: calculate information of topography failed')
         # return False   #  don't return
 
@@ -355,6 +358,7 @@ if __name__=='__main__':
     import vector_gpd
     from vector_features import shape_opeation
     import parameters
+    from raster_statistic import zonal_stats_multiRasters
 
 
     usage = "usage: %prog [options] input_path output_file"
