@@ -121,6 +121,8 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1
     if stats is None:
         basic.outputlogMessage('warning, No input stats, set to ["mean"])')
         stats = ['mean']
+    if 'area' in stats and 'count' not in stats:
+        stats.append('count')
 
     if isinstance(raster_file_or_files,str):
         io_function.is_file_exist(raster_file_or_files)
@@ -163,6 +165,12 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1
     for stats_result in stats_res_list:
         for key in stats_result.keys():
             add_attributes[prefix + '_' + key].append(stats_result[key])
+
+    if 'area' in stats:
+       dx, dy = raster_io.get_xres_yres_file(image_tiles[0])
+       add_attributes[prefix + '_' + 'area'] = [ count*dx*dy for count in add_attributes[prefix + '_' + 'count'] ]
+    if 'count' not in stats:
+        del add_attributes[prefix + '_' + 'count']
 
     vector_gpd.add_attributes_to_shp(in_shp,add_attributes)
 
