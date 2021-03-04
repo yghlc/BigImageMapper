@@ -13,9 +13,7 @@ add time: 4 March, 2021
 import os,sys
 code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
 
-sys.path.insert(0, code_dir)
-import basic_src.io_function as io_function
-import workflow.whole_procedure as whole_procedure
+
 
 from ray import tune
 
@@ -23,6 +21,10 @@ from hyper_para_ray import modify_parameter
 from hyper_para_ray import get_total_F1score
 
 def copy_original_mapped_polygons(curr_dir_before_ray,work_dir):
+    # when ray start a process, we need to add code_dir again and import user-defined modules
+    sys.path.insert(0, code_dir)
+    import basic_src.io_function as io_function
+
     shp_list = io_function.get_file_list_by_ext('.shp',curr_dir_before_ray,bsub_folder=True)
     shp_list = [ item for item in shp_list if 'post' not in item]   # remove 'post' ones
     save_dir = os.path.join(work_dir,'multi_inf_results')
@@ -35,6 +37,10 @@ def copy_original_mapped_polygons(curr_dir_before_ray,work_dir):
 
 def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buffer_size, IOU_threshold):
 
+    # when ray start a process, we need to add code_dir again and import user-defined modules
+    sys.path.insert(0, code_dir)
+    import basic_src.io_function as io_function
+    import workflow.whole_procedure as whole_procedure
 
     para_file = 'main_para_postProc_tune.ini'
     # ray tune will change current folder to its logdir, change it back
@@ -51,7 +57,7 @@ def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buf
     inf_post_note = str(minimum_area)+'_'+str(min_slope) +'_' + str(dem_diff_uplimit) +'_' + str(dem_diff_buffer_size) +'_' + str(IOU_threshold)
 
     # copy copy_ini_files
-    io_function.copy_file_to_dst('main_para.ini', para_file,overwrite=True)
+    io_function.copy_file_to_dst(os.path.join(curr_dir_before_ray,'main_para.ini'), para_file,overwrite=True)
 
     # change para_file
     modify_parameter(para_file,'minimum_area',minimum_area)
@@ -97,7 +103,7 @@ if __name__ == '__main__':
         postProcess_function,
         ## set CPU to 24, almost all CPU, to make sure each time only one process is run, because in the post-processing,
         ## many files are shared.
-        resources_per_trial={"cpu": 1},
+        resources_per_trial={"cpu": 24},
         local_dir="./ray_results",
         name="tune_parameters_for_postPorcessing",
         # fail_fast=True,     # Stopping after the first failure
