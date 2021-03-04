@@ -13,16 +13,6 @@ add time: 4 March, 2021
 import os,sys
 code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
 
-curr_dir_before_ray=os.getcwd()
-print('\n\ncurrent folder before ray tune: ',curr_dir_before_ray,'\n\n')
-
-# for the user defined moduel in code_dir, need to be imported in functions
-# sys.path.insert(0, code_dir)
-# import parameters
-# import basic_src.io_function as io_function
-# import workflow.whole_procedure as whole_procedure
-# from utility.eva_report_to_tables import read_accuracy_multi_reports
-
 from ray import tune
 
 from hyper_para_ray import modify_parameter
@@ -74,29 +64,41 @@ def postProcess_function(config,checkpoint_dir=None):
     # Feed the score back back to Tune.
     tune.report(total_F1=total_F1_score)
 
-# tune.choice([1])  # randomly chose one value
 
-analysis = tune.run(
-    postProcess_function,
-    ## set CPU to 24, almost all CPU, to make sure each time only one process is run, because in the post-processing,
-    ## many files are shared.
-    resources_per_trial={"cpu": 24},
-    local_dir="./ray_results", 
-    name="tune_parameters_for_postPorcessing",
-    # fail_fast=True,     # Stopping after the first failure
-    log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
-    config={
-        "minimum_area": tune.grid_search([0, 90, 900, 2700]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
-        "min_slope": tune.grid_search([0, 1,2]),
-        "dem_diff_uplimit": tune.grid_search([-2, -1.5, -1, -0.5, 0]),
-        "dem_diff_buffer_size": tune.grid_search([0, 20, 50, 100, 150, 200]),
-        "IOU_threshold": tune.grid_search([0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
-    })
+if __name__ == '__main__':
+
+    curr_dir_before_ray = os.getcwd()
+    print('\n\ncurrent folder before ray tune: ', curr_dir_before_ray, '\n\n')
+
+    # for the user defined moduel in code_dir, need to be imported in functions
+    # sys.path.insert(0, code_dir)
+    # import parameters
+    # import basic_src.io_function as io_function
+    # import workflow.whole_procedure as whole_procedure
+    # from utility.eva_report_to_tables import read_accuracy_multi_reports
+
+    # tune.choice([1])  # randomly chose one value
+    analysis = tune.run(
+        postProcess_function,
+        ## set CPU to 24, almost all CPU, to make sure each time only one process is run, because in the post-processing,
+        ## many files are shared.
+        resources_per_trial={"cpu": 24},
+        local_dir="./ray_results",
+        name="tune_parameters_for_postPorcessing",
+        # fail_fast=True,     # Stopping after the first failure
+        log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
+        config={
+            "minimum_area": tune.grid_search([0, 90, 900, 2700]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
+            "min_slope": tune.grid_search([0, 1,2]),
+            "dem_diff_uplimit": tune.grid_search([-2, -1.5, -1, -0.5, 0]),
+            "dem_diff_buffer_size": tune.grid_search([0, 20, 50, 100, 150, 200]),
+            "IOU_threshold": tune.grid_search([0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
+        })
 
 
 
-print("Best config: ", analysis.get_best_config(
-    metric="total_F1", mode="max"))
+    print("Best config: ", analysis.get_best_config(
+        metric="total_F1", mode="max"))
 
-# Get a dataframe for analyzing trial results.
-df = analysis.results_df
+    # Get a dataframe for analyzing trial results.
+    df = analysis.results_df

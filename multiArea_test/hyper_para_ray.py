@@ -13,15 +13,6 @@ add time: 22 February, 2021
 import os,sys
 code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
 
-curr_dir_before_ray=os.getcwd()
-print('\n\ncurrent folder before ray tune: ',curr_dir_before_ray,'\n\n')
-
-# for the user defined moduel in code_dir, need to be imported in functions
-# sys.path.insert(0, code_dir)
-# import parameters
-# import basic_src.io_function as io_function
-# import workflow.whole_procedure as whole_procedure
-# from utility.eva_report_to_tables import read_accuracy_multi_reports
 
 from ray import tune
 
@@ -118,23 +109,35 @@ def training_function(config,checkpoint_dir=None):
     tune.report(total_F1=total_F1_score)
 
 # tune.choice([1])  # randomly chose one value
+if __name__ == '__main__':
+    
+    curr_dir_before_ray = os.getcwd()
+    print('\n\ncurrent folder before ray tune: ', curr_dir_before_ray, '\n\n')
 
-analysis = tune.run(
-    training_function,
-    resources_per_trial={"cpu": 14,"gpu": 2}, # use two GPUs, 12 CPUs on tesia
-    local_dir="./ray_results", 
-    name="test_on_tesia",
-    # fail_fast=True,     # Stopping after the first failure
-    log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
-    config={
-        "lr": tune.grid_search([0.0001,0.007, 0.014]),   # ,0.007, 0.014, 0.028,0.056 
-        "iter_num": tune.grid_search([30000]), # , 60000,90000
-        "batch_size": tune.grid_search([8]), # 16, 32, 64, 128
-        "backbone": tune.grid_search(backbones)
-    })
+    # for the user defined moduel in code_dir, need to be imported in functions
+    # sys.path.insert(0, code_dir)
+    # import parameters
+    # import basic_src.io_function as io_function
+    # import workflow.whole_procedure as whole_procedure
+    # from utility.eva_report_to_tables import read_accuracy_multi_reports
 
-print("Best config: ", analysis.get_best_config(
-    metric="total_F1", mode="max"))
 
-# Get a dataframe for analyzing trial results.
-df = analysis.results_df
+    analysis = tune.run(
+        training_function,
+        resources_per_trial={"cpu": 14,"gpu": 2}, # use two GPUs, 12 CPUs on tesia
+        local_dir="./ray_results",
+        name="test_on_tesia",
+        # fail_fast=True,     # Stopping after the first failure
+        log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
+        config={
+            "lr": tune.grid_search([0.0001,0.007, 0.014]),   # ,0.007, 0.014, 0.028,0.056
+            "iter_num": tune.grid_search([30000]), # , 60000,90000
+            "batch_size": tune.grid_search([8]), # 16, 32, 64, 128
+            "backbone": tune.grid_search(backbones)
+        })
+
+    print("Best config: ", analysis.get_best_config(
+        metric="total_F1", mode="max"))
+
+    # Get a dataframe for analyzing trial results.
+    df = analysis.results_df
