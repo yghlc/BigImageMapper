@@ -97,7 +97,7 @@ if __name__ == '__main__':
         postProcess_function,
         ## set CPU to 24, almost all CPU, to make sure each time only one process is run, because in the post-processing,
         ## many files are shared.
-        resources_per_trial={"cpu": 24},
+        resources_per_trial={"cpu": 1},
         local_dir="./ray_results",
         name="tune_parameters_for_postPorcessing",
         # fail_fast=True,     # Stopping after the first failure
