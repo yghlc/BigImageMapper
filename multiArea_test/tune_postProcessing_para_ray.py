@@ -13,23 +13,38 @@ add time: 4 March, 2021
 import os,sys
 code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
 
+sys.path.insert(0, code_dir)
+import basic_src.io_function as io_function
+import workflow.whole_procedure as whole_procedure
+
 from ray import tune
 
 from hyper_para_ray import modify_parameter
 from hyper_para_ray import get_total_F1score
 
+def copy_original_mapped_polygons(curr_dir_before_ray,work_dir):
+    shp_list = io_function.get_file_list_by_ext('.shp',curr_dir_before_ray,bsub_folder=True)
+    shp_list = [ item for item in shp_list if 'post' not in item]   # remove 'post' ones
+    save_dir = os.path.join(work_dir,'multi_inf_results')
+    for shp in shp_list:
+        area_dir = os.path.join(save_dir, os.path.basename(os.path.dirname(shp)))
+        if os.path.isdir(area_dir) is False:
+            io_function.mkdir(area_dir)
+        dst_path = os.path.join(area_dir, os.path.basename(shp))
+        io_function.copy_shape_file(shp, dst_path)
 
 def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buffer_size, IOU_threshold):
 
-    sys.path.insert(0, code_dir)
-    import basic_src.io_function as io_function
-    import workflow.whole_procedure as whole_procedure
 
     para_file = 'main_para_postProc_tune.ini'
     # ray tune will change current folder to its logdir, change it back
-    os.chdir(curr_dir_before_ray)
+    # os.chdir(curr_dir_before_ray)
     print('\n\n\n current folder',os.getcwd(),'\n\n\n')
-    work_dir = curr_dir_before_ray
+
+    # allow ray to change current folder to its logdir, then we can run parallel
+    work_dir = os.getcwd()
+    copy_original_mapped_polygons(curr_dir_before_ray,work_dir)
+    # work_dir = curr_dir_before_ray
 
 
     # create a training folder
@@ -47,7 +62,7 @@ def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buf
 
     # run training
     # whole_procedure.run_whole_procedure(para_file,working_dir=work_dir)
-    whole_procedure.post_processing_backup(para_file,inf_post_note=inf_post_note)
+    whole_procedure.post_processing_backup(para_file,inf_post_note=inf_post_note,b_skip_getshp=True)
 
     # calculate the F1 score across all regions (total F1)
     totalF1 = get_total_F1score(work_dir)
