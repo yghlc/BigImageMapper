@@ -36,7 +36,7 @@ def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buf
     inf_post_note = str(minimum_area)+'_'+str(min_slope) +'_' + str(dem_diff_uplimit) +'_' + str(dem_diff_buffer_size) +'_' + str(IOU_threshold)
 
     # copy copy_ini_files
-    io_function.copy_file_to_dst('main_para.ini', para_file)
+    io_function.copy_file_to_dst('main_para.ini', para_file,overwrite=True)
 
     # change para_file
     modify_parameter(para_file,'minimum_area',minimum_area)
