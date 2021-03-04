@@ -62,15 +62,9 @@ def copy_shape_file(input, output):
 
     return io_function.copy_shape_file(input, output)
 
-def main(options, args):
-    polygons_shp = args[0]
-    polygons_shp_backup = args[0]
+def remove_polygons_main(polygons_shp, output, para_file):
 
-    output = options.output
-    if output is None:
-        output = io_function.get_name_by_adding_tail(polygons_shp,'removed')
-    para_file = options.para_file
-
+    polygons_shp_backup = polygons_shp
     assert io_function.is_file_exist(polygons_shp)
 
     # remove polygons based on area
@@ -138,6 +132,17 @@ def main(options, args):
     copy_shape_file(polygons_shp,output)
 
     pass
+
+def main(options, args):
+    polygons_shp = args[0]
+
+    output = options.output
+    if output is None:
+        output = io_function.get_name_by_adding_tail(polygons_shp,'removed')
+    para_file = options.para_file
+
+    remove_polygons_main(polygons_shp, output, para_file)
+
 
 
 

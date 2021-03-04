@@ -97,22 +97,28 @@ def evaluation_result(para_file, result_shp,val_shp,evaluation_txt=None):
 
     pass
 
-def main(options, args):
-    input = args[0]
+def evaluation_polygons(input, para_file, data_para_file,out_report):
 
-    data_para_file = options.data_para
-    if data_para_file is None:
-        data_para_file = options.para_file
-
-    out_report = options.out_report
     # evaluation result
     val_path = parameters.get_file_path_parameters_None_if_absence(data_para_file,'validation_shape')
 
     if val_path is not None and os.path.isfile(val_path):
         basic.outputlogMessage('Start evaluation, input: %s, validation file: %s'%(input, val_path))
-        evaluation_result(options.para_file, input, val_path, evaluation_txt=out_report)
+        evaluation_result(para_file, input, val_path, evaluation_txt=out_report)
     else:
         basic.outputlogMessage("warning, validation polygon (%s) not exist, skip evaluation"%val_path)
+
+def main(options, args):
+    input = args[0]
+    para_file = options.para_file
+    data_para_file = options.data_para
+    if data_para_file is None:
+        data_para_file = options.para_file
+    out_report = options.out_report
+
+    evaluation_polygons(input, para_file, data_para_file,out_report)
+
+
 
 
 

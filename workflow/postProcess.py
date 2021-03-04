@@ -20,6 +20,10 @@ sys.path.insert(0, os.path.join(code_dir, 'datasets'))
 from merge_shapefiles import merge_shape_files
 import utility.eva_report_to_tables as eva_report_to_tables
 
+from datasets.get_polygon_attributes import add_polygon_attributes
+from datasets.remove_mappedPolygons import remove_polygons_main
+from datasets.evaluation_result import evaluation_polygons
+
 def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
     img_save_dir = os.path.join(area_save_dir, 'I%d' % img_idx)
@@ -51,30 +55,30 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     out_shp_path = os.path.join(img_save_dir,out_shp)
     return out_shp_path
 
-def add_polygon_attributes(script, in_shp_path, save_shp_path, para_file, data_para_file):
+# def add_polygon_attributes(script, in_shp_path, save_shp_path, para_file, data_para_file):
+#
+#     command_string = script +' -p %s -d %s %s %s' % (para_file,data_para_file, in_shp_path, save_shp_path)
+#     # print(command_string)
+#     res = os.system(command_string)
+#     print(res)
+#     if res != 0:
+#         sys.exit(1)
 
-    command_string = script +' -p %s -d %s %s %s' % (para_file,data_para_file, in_shp_path, save_shp_path)
-    # print(command_string)
-    res = os.system(command_string)
-    print(res)
-    if res != 0:
-        sys.exit(1)
 
+# def remove_polygons(script, in_shp_path, save_shp_path, para_file):
+#
+#     command_string = script + ' -p %s -o %s %s' % (para_file, save_shp_path, in_shp_path)
+#     res = os.system(command_string)
+#     if res != 0:
+#         sys.exit(1)
 
-def remove_polygons(script, in_shp_path, save_shp_path, para_file):
-
-    command_string = script + ' -p %s -o %s %s' % (para_file, save_shp_path, in_shp_path)
-    res = os.system(command_string)
-    if res != 0:
-        sys.exit(1)
-
-def evaluation_polygons(script, in_shp_path, para_file, data_para_file,out_report):
-
-    command_string = script + ' -p %s -d %s -o %s %s' % (para_file, data_para_file, out_report, in_shp_path)
-    res = os.system(command_string)
-    if res != 0:
-        sys.exit(1)
-    return in_shp_path
+# def evaluation_polygons(script, in_shp_path, para_file, data_para_file,out_report):
+#
+#     command_string = script + ' -p %s -d %s -o %s %s' % (para_file, data_para_file, out_report, in_shp_path)
+#     res = os.system(command_string)
+#     if res != 0:
+#         sys.exit(1)
+#     return in_shp_path
 
 def postProcess(para_file,inf_post_note, b_skip_getshp=False):
 
@@ -136,20 +140,23 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False):
             merge_shape_files(result_shp_list,merged_shp)
 
         # add attributes to shapefile
-        add_attributes_script = os.path.join(code_dir,'datasets', 'get_polygon_attributes.py')
+        # add_attributes_script = os.path.join(code_dir,'datasets', 'get_polygon_attributes.py')
         shp_attributes = os.path.join(WORK_DIR,area_save_dir, shp_pre+'_post_NOrm.shp')
-
-        add_polygon_attributes(add_attributes_script,merged_shp, shp_attributes, para_file, area_ini )
+        # add_polygon_attributes(add_attributes_script,merged_shp, shp_attributes, para_file, area_ini )
+        add_polygon_attributes(merged_shp, shp_attributes, para_file, area_ini)
 
         # remove polygons
-        rm_polygon_script = os.path.join(code_dir,'datasets', 'remove_mappedPolygons.py')
+        # rm_polygon_script = os.path.join(code_dir,'datasets', 'remove_mappedPolygons.py')
         shp_post = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_post.shp')
-        remove_polygons(rm_polygon_script,shp_attributes, shp_post, para_file)
+        # remove_polygons(rm_polygon_script,shp_attributes, shp_post, para_file)
+        remove_polygons_main(shp_attributes, shp_post, para_file)
 
         # evaluate the mapping results
         eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
         out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
-        evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
+        # evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
+        evaluation_polygons(shp_post,para_file,area_ini,out_report)
+
 
 
         ##### copy and backup files ######
