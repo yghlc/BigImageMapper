@@ -76,19 +76,13 @@ def evaluation_polygons(script, in_shp_path, para_file, data_para_file,out_repor
         sys.exit(1)
     return in_shp_path
 
-def main(options, args):
+def postProcess(para_file,inf_post_note, b_skip_getshp=False):
 
-    print("%s : Post-processing" % os.path.basename(sys.argv[0]))
-
-    para_file = args[0]
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
     # the test string in 'exe.sh'
-    if len(args) > 1:
-        test_note = args[1]
-    else:
-        test_note = ''
+    test_note = inf_post_note
 
     WORK_DIR = os.getcwd()
 
@@ -128,17 +122,18 @@ def main(options, args):
         if img_count < 1:
             raise ValueError('No image for inference, please check inf_image_dir and inf_image_or_pattern in %s'%area_ini)
 
-        # post image one by one
-        result_shp_list = []
-        for img_idx, img_path in enumerate(inf_img_list):
-            out_shp = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
-            result_shp_list.append(os.path.join(WORK_DIR,out_shp))
-
-
-        # merge shapefiles
         shp_pre = os.path.basename(area_save_dir) + '_' + test_id
-        merged_shp =  os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
-        merge_shape_files(result_shp_list,merged_shp)
+        merged_shp = os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
+        if b_skip_getshp:
+            pass
+        else:
+            # post image one by one
+            result_shp_list = []
+            for img_idx, img_path in enumerate(inf_img_list):
+                out_shp = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
+                result_shp_list.append(os.path.join(WORK_DIR,out_shp))
+            # merge shapefiles
+            merge_shape_files(result_shp_list,merged_shp)
 
         # add attributes to shapefile
         add_attributes_script = os.path.join(code_dir,'datasets', 'get_polygon_attributes.py')
@@ -210,6 +205,21 @@ def main(options, args):
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of post-procesing: %.2f seconds">>time_cost.txt'%duration)
+
+
+def main(options, args):
+
+    # print("%s : Post-processing" % os.path.basename(sys.argv[0]))
+
+    para_file = args[0]
+    # the test string in 'exe.sh'
+    if len(args) > 1:
+        test_note = args[1]
+    else:
+        test_note = ''
+
+    postProcess(para_file,test_note)
+
 
 if __name__ == '__main__':
 
