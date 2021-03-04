@@ -8,6 +8,18 @@ email:huanglingcao@gmail.com
 add time: 13 December, 2019
 """
 
+import os, sys
+from optparse import OptionParser
+
+code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+sys.path.insert(0, code_dir)
+
+import basic_src.basic as basic
+import basic_src.io_function as io_function
+import parameters
+
+import vector_features
+from vector_features import shape_opeation
 
 def evaluation_result(para_file, result_shp,val_shp,evaluation_txt=None):
     """
@@ -123,20 +135,6 @@ def main(options, args):
 
 
 if __name__=='__main__':
-
-    import os, sys
-    from optparse import OptionParser
-
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-
-    import basic_src.basic as basic
-    import basic_src.io_function as io_function
-    import parameters
-
-    import vector_features
-    from vector_features import shape_opeation
-
 
     usage = "usage: %prog [options] input_path "
     parser = OptionParser(usage=usage, version="1.0 2017-7-24")

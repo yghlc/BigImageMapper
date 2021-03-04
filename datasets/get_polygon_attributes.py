@@ -11,6 +11,24 @@ add time: 27 March, 2017
 modified: 23 January, 2021
 """
 
+import os, sys
+from optparse import OptionParser
+
+code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+sys.path.insert(0, code_dir)
+import parameters
+import basic_src.basic as basic
+import basic_src.io_function as io_function
+
+import math
+
+# import  parameters
+import vector_features
+import vector_gpd
+from vector_features import shape_opeation
+import parameters
+from raster_statistic import zonal_stats_multiRasters
+
 
 def remove_nonclass_polygon(input_shp,output_shp, field_name='svmclass'):
     """
@@ -344,23 +362,6 @@ def main(options, args):
 
 if __name__=='__main__':
 
-    import os, sys
-    from optparse import OptionParser
-
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-    import basic_src.basic as basic
-    import basic_src.io_function as io_function
-
-    import math
-
-    # import  parameters
-    import vector_features
-    import vector_gpd
-    from vector_features import shape_opeation
-    import parameters
-    from raster_statistic import zonal_stats_multiRasters
 
 
     usage = "usage: %prog [options] input_path output_file"

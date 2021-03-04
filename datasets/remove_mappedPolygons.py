@@ -11,10 +11,8 @@ add time: 11 October, 2019
 import os,sys
 from optparse import OptionParser
 
-HOME = os.path.expanduser('~')
-# path of DeeplabforRS
-codes_dir2 = HOME + '/codes/PycharmProjects/DeeplabforRS'
-sys.path.insert(0, codes_dir2)
+code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+sys.path.insert(0, code_dir)
 
 import parameters
 
