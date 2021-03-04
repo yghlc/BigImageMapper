@@ -45,7 +45,7 @@ def cal_add_area_length_of_polygon(input_shp):
     """
     return vector_features.cal_area_length_of_polygon(input_shp )
 
-def calculate_polygon_topography(polygons_shp,dem_files,slope_files,aspect_files=None, dem_diffs=None):
+def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,aspect_files=None, dem_diffs=None):
     """
     calculate the topography information such elevation and slope of each polygon
     Args:
@@ -63,7 +63,7 @@ def calculate_polygon_topography(polygons_shp,dem_files,slope_files,aspect_files
     ## calculate the topography information from the buffer area
 
     # the para file was set in parameters.set_saved_parafile_path(options.para_file)
-    b_use_buffer_area = parameters.get_bool_parameters('','b_topo_use_buffer_area')
+    b_use_buffer_area = parameters.get_bool_parameters(para_file,'b_topo_use_buffer_area')
 
     if b_use_buffer_area is True:
 
@@ -123,11 +123,11 @@ def calculate_polygon_topography(polygons_shp,dem_files,slope_files,aspect_files
     if dem_diffs is not None:
         stats_list = ['min', 'max', 'mean', 'median', 'std','area']
         # only count the pixel within this range when do statistics
-        dem_diff_range_str = parameters.get_string_list_parameters('', 'dem_difference_range')
+        dem_diff_range_str = parameters.get_string_list_parameters(para_file, 'dem_difference_range')
         range = [ None if item.upper() == 'NONE' else float(item) for item in dem_diff_range_str ]
 
         # expand the polygon when doing dem difference statistics
-        buffer_size_dem_diff = parameters.get_digit_parameters('', 'buffer_size_dem_diff','float')
+        buffer_size_dem_diff = parameters.get_digit_parameters(para_file, 'buffer_size_dem_diff','float')
 
         if zonal_stats_multiRasters(polygons_shp,dem_diffs,stats=stats_list,prefix='demD',band=1,all_touched=all_touched, process_num=process_num,
                                     range=range, buffer=buffer_size_dem_diff) is False:
@@ -285,25 +285,17 @@ def get_topographic_files(data_para_file):
 
     return dem_files, slope_files, aspect_files,dem_diff_files
 
-def main(options, args):
-    input = args[0]
-    output = args[1]
+def add_polygon_attributes(input, output, para_file, data_para_file):
 
     if io_function.is_file_exist(input) is False:
         return False
 
-    data_para_file = options.data_para
-    if data_para_file is None:
-        data_para_file = options.para_file
-
     # copy output
     if io_function.copy_shape_file(input, output) is False:
         raise IOError('copy shape file %s failed'%input)
-    else:
-        pass
 
     # remove narrow parts of mapped polygons
-    polygon_narrow_part_thr = parameters.get_digit_parameters_None_if_absence('', 'mapped_polygon_narrow_threshold', 'float')
+    polygon_narrow_part_thr = parameters.get_digit_parameters_None_if_absence(para_file, 'mapped_polygon_narrow_threshold', 'float')
     #  if it is not None, then it will try to remove narrow parts of polygons
     if polygon_narrow_part_thr is not None and polygon_narrow_part_thr > 0:
         # use the buffer operation to remove narrow parts of polygons
@@ -321,7 +313,7 @@ def main(options, args):
         return False
 
     # calculate the polygon information
-    b_calculate_shape_info = parameters.get_bool_parameters_None_if_absence('','b_calculate_shape_info')
+    b_calculate_shape_info = parameters.get_bool_parameters_None_if_absence(para_file,'b_calculate_shape_info')
     if b_calculate_shape_info:
         # remove "_shapeInfo.shp" to make it calculate shape information again
         os.system('rm *_shapeInfo.shp')
@@ -331,19 +323,23 @@ def main(options, args):
 
     # add topography of each polygons
     dem_files, slope_files, aspect_files, dem_diff_files = get_topographic_files(data_para_file)
-    if calculate_polygon_topography(output,dem_files,slope_files,aspect_files=aspect_files,dem_diffs=dem_diff_files) is False:
+    if calculate_polygon_topography(output,para_file,dem_files,slope_files,aspect_files=aspect_files,dem_diffs=dem_diff_files) is False:
         basic.outputlogMessage('Warning: calculate information of topography failed')
         # return False   #  don't return
 
 
-    # # evaluation result
-    # val_path = parameters.get_validation_shape()
-    # if os.path.isfile(val_path):
-    #     evaluation_result(output,val_path)
-    # else:
-    #     basic.outputlogMessage("warning, validation polygon not exist, skip evaluation")
+    return True
 
-    pass
+
+def main(options, args):
+    input = args[0]
+    output = args[1]
+
+    data_para_file = options.data_para
+    if data_para_file is None:
+        data_para_file = options.para_file
+
+    add_polygon_attributes(input, output, options.para_file, data_para_file)
 
 
 if __name__=='__main__':
