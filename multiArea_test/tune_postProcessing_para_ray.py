@@ -13,16 +13,29 @@ add time: 4 March, 2021
 import os,sys
 code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
 
-
-
 from ray import tune
 
 from hyper_para_ray import modify_parameter
 from hyper_para_ray import get_total_F1score
 
+area_ini_list = ['area_Willow_River.ini','area_Banks_east_nirGB.ini','area_Ellesmere_Island_nirGB.ini']
+def trial_name_string(trial):
+    """
+    Args:
+        trial (Trial): A generated trial object.
+
+    Returns:
+        trial_name (str): String representation of Trial.
+    """
+    print('\n\n trial_name_string:\n',trial,'\n\n')
+    return str(trial)
+
+def trial_dir_string(trial):
+    print('\n\n trial_dir_string:\n',trial,'\n\n')
+    return str(trial)   # should able to have more control on the dirname
+
 def copy_original_mapped_polygons(curr_dir_before_ray,work_dir):
     # when ray start a process, we need to add code_dir again and import user-defined modules
-    sys.path.insert(0, code_dir)
     import basic_src.io_function as io_function
     org_dir = os.path.join(curr_dir_before_ray,'multi_inf_results')
     save_dir = os.path.join(work_dir,'multi_inf_results')
@@ -36,14 +49,22 @@ def copy_original_mapped_polygons(curr_dir_before_ray,work_dir):
         dst_path = os.path.join(area_dir, os.path.basename(shp))
         io_function.copy_shape_file(shp, dst_path)
 
+def copy_ini_files(curr_dir_before_ray,work_dir):
+    import basic_src.io_function as io_function
+    area_ini_list.append('main_para.ini')
+    for ini in area_ini_list:
+        io_function.copy_file_to_dst(os.path.join(curr_dir_before_ray,ini), ini ,overwrite=True)
+
+
 def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buffer_size, IOU_threshold):
 
     # when ray start a process, we need to add code_dir again and import user-defined modules
     sys.path.insert(0, code_dir)
+    sys.path.insert(0, os.path.join(code_dir, 'workflow'))  # require in ray when import other modules in workflow folder
     import basic_src.io_function as io_function
     import workflow.whole_procedure as whole_procedure
 
-    para_file = 'main_para_postProc_tune.ini'
+    para_file = 'main_para.ini'
     # ray tune will change current folder to its logdir, change it back
     # os.chdir(curr_dir_before_ray)
     print('\n\n\n current folder',os.getcwd(),'\n\n\n')
@@ -58,7 +79,8 @@ def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buf
     inf_post_note = str(minimum_area)+'_'+str(min_slope) +'_' + str(dem_diff_uplimit) +'_' + str(dem_diff_buffer_size) +'_' + str(IOU_threshold)
 
     # copy copy_ini_files
-    io_function.copy_file_to_dst(os.path.join(curr_dir_before_ray,'main_para.ini'), para_file,overwrite=True)
+    copy_ini_files(curr_dir_before_ray,work_dir)
+    
 
     # change para_file
     modify_parameter(para_file,'minimum_area',minimum_area)
@@ -106,9 +128,11 @@ if __name__ == '__main__':
         ## many files are shared.
         resources_per_trial={"cpu": 24},
         local_dir="./ray_results",
-        name="tune_parameters_for_postPorcessing",
+        name="postPorcessing",
         # fail_fast=True,     # Stopping after the first failure
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
+        trial_name_creator=tune.function(trial_name_string),
+        trial_dirname_creator=tune.function(trial_dir_string),
         # config={
         #     "minimum_area": tune.grid_search([0, 90, 900, 2700]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
         #     "min_slope": tune.grid_search([0, 1,2]),
