@@ -19,6 +19,7 @@ from hyper_para_ray import modify_parameter
 from hyper_para_ray import get_total_F1score
 
 area_ini_list = ['area_Willow_River.ini','area_Banks_east_nirGB.ini','area_Ellesmere_Island_nirGB.ini']
+backbones = ['deeplabv3plus_xception65.ini']
 def trial_name_string(trial):
     """
     Args:
@@ -52,6 +53,7 @@ def copy_original_mapped_polygons(curr_dir_before_ray,work_dir):
 def copy_ini_files(curr_dir_before_ray,work_dir):
     import basic_src.io_function as io_function
     area_ini_list.append('main_para.ini')
+    area_ini_list.extend(backbones)
     for ini in area_ini_list:
         io_function.copy_file_to_dst(os.path.join(curr_dir_before_ray,ini), ini ,overwrite=True)
 
@@ -127,27 +129,27 @@ if __name__ == '__main__':
         postProcess_function,
         ## set CPU to 24, almost all CPU, to make sure each time only one process is run, because in the post-processing,
         ## many files are shared.
-        resources_per_trial={"cpu": 24},
+        resources_per_trial={"cpu": 1},
         local_dir="./ray_results",
         name="postPorcessing",
         # fail_fast=True,     # Stopping after the first failure
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
         trial_name_creator=tune.function(trial_name_string),
         trial_dirname_creator=tune.function(trial_dir_string),
-        # config={
-        #     "minimum_area": tune.grid_search([0, 90, 900, 2700]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
-        #     "min_slope": tune.grid_search([0, 1,2]),
-        #     "dem_diff_uplimit": tune.grid_search([-2, -1.5, -1, -0.5, 0]),
-        #     "dem_diff_buffer_size": tune.grid_search([0, 20, 50, 100, 150, 200]),
-        #     "IOU_threshold": tune.grid_search([0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
-        # }
-            config={
-            "minimum_area": tune.grid_search([900]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
-            "min_slope": tune.grid_search([0]),
-            "dem_diff_uplimit": tune.grid_search([-0.5]),
-            "dem_diff_buffer_size": tune.grid_search([50]),
-            "IOU_threshold": tune.grid_search([0.5])
+        config={
+            "minimum_area": tune.grid_search([0, 90, 900, 2700]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
+            "min_slope": tune.grid_search([0, 1,2]),
+            "dem_diff_uplimit": tune.grid_search([-2, -1.5, -1, -0.5, 0]),
+            "dem_diff_buffer_size": tune.grid_search([0, 20, 50, 100, 150, 200]),
+            "IOU_threshold": tune.grid_search([0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
         }
+        #     config={
+        #     "minimum_area": tune.grid_search([900]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
+        #     "min_slope": tune.grid_search([0]),
+        #     "dem_diff_uplimit": tune.grid_search([-0.5]),
+        #     "dem_diff_buffer_size": tune.grid_search([50]),
+        #     "IOU_threshold": tune.grid_search([0.5])
+        # }
         
         )
 
