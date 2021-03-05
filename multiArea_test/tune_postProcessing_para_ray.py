@@ -24,10 +24,11 @@ def copy_original_mapped_polygons(curr_dir_before_ray,work_dir):
     # when ray start a process, we need to add code_dir again and import user-defined modules
     sys.path.insert(0, code_dir)
     import basic_src.io_function as io_function
-
-    shp_list = io_function.get_file_list_by_ext('.shp',curr_dir_before_ray,bsub_folder=True)
-    shp_list = [ item for item in shp_list if 'post' not in item]   # remove 'post' ones
+    org_dir = os.path.join(curr_dir_before_ray,'multi_inf_results')
     save_dir = os.path.join(work_dir,'multi_inf_results')
+
+    shp_list = io_function.get_file_list_by_pattern(org_dir,'*/*.shp')
+    shp_list = [ item for item in shp_list if 'post' not in os.path.basename(item)]   # remove 'post' ones
     for shp in shp_list:
         area_dir = os.path.join(save_dir, os.path.basename(os.path.dirname(shp)))
         if os.path.isdir(area_dir) is False:
@@ -108,13 +109,22 @@ if __name__ == '__main__':
         name="tune_parameters_for_postPorcessing",
         # fail_fast=True,     # Stopping after the first failure
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
-        config={
-            "minimum_area": tune.grid_search([0, 90, 900, 2700]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
-            "min_slope": tune.grid_search([0, 1,2]),
-            "dem_diff_uplimit": tune.grid_search([-2, -1.5, -1, -0.5, 0]),
-            "dem_diff_buffer_size": tune.grid_search([0, 20, 50, 100, 150, 200]),
-            "IOU_threshold": tune.grid_search([0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
-        })
+        # config={
+        #     "minimum_area": tune.grid_search([0, 90, 900, 2700]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
+        #     "min_slope": tune.grid_search([0, 1,2]),
+        #     "dem_diff_uplimit": tune.grid_search([-2, -1.5, -1, -0.5, 0]),
+        #     "dem_diff_buffer_size": tune.grid_search([0, 20, 50, 100, 150, 200]),
+        #     "IOU_threshold": tune.grid_search([0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
+        # }
+            config={
+            "minimum_area": tune.grid_search([900]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
+            "min_slope": tune.grid_search([0]),
+            "dem_diff_uplimit": tune.grid_search([-0.5]),
+            "dem_diff_buffer_size": tune.grid_search([50]),
+            "IOU_threshold": tune.grid_search([0.5])
+        }
+        
+        )
 
 
 
