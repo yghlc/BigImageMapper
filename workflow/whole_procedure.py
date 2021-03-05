@@ -114,14 +114,14 @@ def inference(para_file):
     basic.os_system_exit_code(command_string)
 
 
-def post_processing_backup(para_file, inf_post_note=None, b_skip_getshp=False):
+def post_processing_backup(para_file, inf_post_note=None, b_skip_getshp=False, test_id=None):
     # the script will check whether each image has been post-processed
     # command_string = os.path.join(eo_dir, 'workflow', 'postProcess.py') + ' ' + para_file
     # if inf_post_note is not None:
     #     command_string += ' ' + str(inf_post_note)
     # basic.os_system_exit_code(command_string)
     import postProcess
-    postProcess.postProcess(para_file,inf_post_note, b_skip_getshp=b_skip_getshp)
+    postProcess.postProcess(para_file,inf_post_note, b_skip_getshp=b_skip_getshp,test_id=test_id)
 
 def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1):
     '''

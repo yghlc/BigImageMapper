@@ -80,7 +80,7 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 #         sys.exit(1)
 #     return in_shp_path
 
-def postProcess(para_file,inf_post_note, b_skip_getshp=False):
+def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
 
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
@@ -97,7 +97,8 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False):
 
 
     inf_dir = parameters.get_directory(para_file, 'inf_output_dir')
-    test_id = os.path.basename(WORK_DIR) + '_' + expr_name
+    if test_id is None:
+        test_id = os.path.basename(WORK_DIR) + '_' + expr_name
 
     # get name of inference areas
     multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')

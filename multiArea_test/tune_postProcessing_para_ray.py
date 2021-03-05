@@ -91,7 +91,8 @@ def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buf
 
     # run training
     # whole_procedure.run_whole_procedure(para_file,working_dir=work_dir)
-    whole_procedure.post_processing_backup(para_file,inf_post_note=inf_post_note,b_skip_getshp=True)
+    test_id = 'multiArea_deeplabV3+_5_exp6'
+    whole_procedure.post_processing_backup(para_file,inf_post_note=inf_post_note,b_skip_getshp=True,test_id=test_id)
 
     # calculate the F1 score across all regions (total F1)
     totalF1 = get_total_F1score(work_dir)
