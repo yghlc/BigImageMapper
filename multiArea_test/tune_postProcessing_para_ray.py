@@ -96,6 +96,8 @@ def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buf
     test_id = 'multiArea_deeplabV3+_5_exp6'
     whole_procedure.post_processing_backup(para_file,inf_post_note=inf_post_note,b_skip_getshp=True,test_id=test_id)
 
+    io_function.delete_file_or_dir('multi_inf_results') # remove a folder to save storage
+
     # calculate the F1 score across all regions (total F1)
     totalF1 = get_total_F1score(work_dir)
     return totalF1
