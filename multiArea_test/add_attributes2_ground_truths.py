@@ -11,6 +11,7 @@ add time: 16 February, 2021
 import os, sys
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
+sys.path.insert(0, os.path.join(code_dir,'datasets'))           # for some modules in this folders
 import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
