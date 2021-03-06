@@ -14,6 +14,8 @@ import os,sys
 code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
 
 from ray import tune
+import pandas as pd
+from datetime import datetime
 
 from hyper_para_ray import modify_parameter
 from hyper_para_ray import get_total_F1score
@@ -162,3 +164,13 @@ if __name__ == '__main__':
 
     # Get a dataframe for analyzing trial results.
     df = analysis.results_df
+    output_file = 'post_processing_ray_tune_%s.xlsx'%(datetime.now().strftime("%Y%m%d_%H%M%S"))
+    with pd.ExcelWriter(output_file) as writer:
+        df.to_excel(writer)         # , sheet_name='accuracy table'
+        # set format
+        # workbook = writer.book
+        # format = workbook.add_format({'num_format': '#0.000'})
+        # acc_talbe_sheet = writer.sheets['accuracy table']
+        # acc_talbe_sheet.set_column('G:I',None,format)
+        print('write trial results to %s' % output_file)
+
