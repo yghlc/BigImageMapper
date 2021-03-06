@@ -15,10 +15,9 @@ import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
-import workflow.postProcess as postProcess
+# import workflow.postProcess as postProcess
+from datasets.get_polygon_attributes import add_polygon_attributes
 
-# add attributes to shapefile
-add_attributes_script = os.path.join(code_dir, 'datasets', 'get_polygon_attributes.py')
 
 def main():
     para_file = 'main_para.ini'
@@ -34,7 +33,7 @@ def main():
         if os.path.isfile(save_info_shp):
             basic.outputlogMessage('%s already exist, skip %s'%(save_info_shp, area_ini))
             continue
-        postProcess.add_polygon_attributes(add_attributes_script,ground_truth_shp,save_info_shp,para_file,area_ini)
+        add_polygon_attributes(ground_truth_shp,save_info_shp,para_file,area_ini)
 
 
 if __name__ == '__main__':
