@@ -116,6 +116,18 @@ def remove_polygons_main(polygons_shp, output, para_file):
     else:
         basic.outputlogMessage('warning, minimum_elevation is absent in the para file, skip removing polygons based on minimum elevation')
 
+    # remove polygons based elevation reduction
+    minimum_dem_reduction_area_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_dem_reduction_area','float')
+    b_smaller = True
+    if minimum_dem_reduction_area_thr is not None:
+        rm_demD_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmdemD')
+        if remove_polygons(polygons_shp, 'demD_area', minimum_dem_reduction_area_thr, b_smaller, rm_demD_save_shp) is False:
+            basic.outputlogMessage("error, removing polygons based on demD_area failed")
+        else:
+            polygons_shp = rm_demD_save_shp
+    else:
+        basic.outputlogMessage('warning, minimum_dem_reduction_area is absent in the para file, skip removing polygons based on minimum_dem_reduction_area')
+
     # remove polygons not in the extent
     outline_shp = parameters.get_string_parameters_None_if_absence(para_file,'target_outline_shp')
     if outline_shp is not None:
