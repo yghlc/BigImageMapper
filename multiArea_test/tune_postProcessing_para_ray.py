@@ -60,7 +60,7 @@ def copy_ini_files(curr_dir_before_ray,work_dir):
         io_function.copy_file_to_dst(os.path.join(curr_dir_before_ray,ini), ini ,overwrite=True)
 
 
-def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buffer_size, IOU_threshold):
+def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buffer_size, min_demD_area,IOU_threshold):
 
     # when ray start a process, we need to add code_dir again and import user-defined modules
     sys.path.insert(0, code_dir)
@@ -91,6 +91,7 @@ def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buf
     modify_parameter(para_file,'minimum_slope',min_slope)
     modify_parameter(para_file,'dem_difference_range', 'None,' +str(dem_diff_uplimit))
     modify_parameter(para_file,'buffer_size_dem_diff',dem_diff_buffer_size)
+    modify_parameter(para_file,'minimum_dem_reduction_area',min_demD_area)
     modify_parameter(para_file,'IOU_threshold',IOU_threshold)
 
     # run training
@@ -107,10 +108,10 @@ def postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buf
 
 def postProcess_function(config,checkpoint_dir=None):
     # Hyperparameters
-    minimum_area, min_slope, dem_diff_uplimit, dem_diff_buffer_size, IOU_threshold = \
-        config["minimum_area"], config["min_slope"], config["dem_diff_uplimit"], config["dem_diff_buffer_size"], config["IOU_threshold"]
+    minimum_area, min_slope, dem_diff_uplimit, dem_diff_buffer_size, min_demD_area,  IOU_threshold = \
+        config["minimum_area"], config["min_slope"], config["dem_diff_uplimit"], config["dem_diff_buffer_size"], config["minimum_dem_reduction_area"], config["IOU_threshold"]
 
-    total_F1_score = postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buffer_size, IOU_threshold)
+    total_F1_score = postProcess_total_F1(minimum_area, min_slope, dem_diff_uplimit, dem_diff_buffer_size, min_demD_area,IOU_threshold)
 
     # Feed the score back back to Tune.
     tune.report(total_F1=total_F1_score)
@@ -145,7 +146,8 @@ if __name__ == '__main__':
             "min_slope": tune.grid_search([0, 1,2]),
             "dem_diff_uplimit": tune.grid_search([-2, -1.5, -1, -0.5, 0]),
             "dem_diff_buffer_size": tune.grid_search([0, 20, 50, 100, 150, 200]),
-            "IOU_threshold": tune.grid_search([0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
+            "minimum_dem_reduction_area": tune.grid_search([0, 90, 900, 2700]),
+            "IOU_threshold": tune.grid_search([0.5])   # 0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7
         }
         #     config={
         #     "minimum_area": tune.grid_search([900]),    # 0 pixel, 10 pixel,100 pixel, 300 pixel
