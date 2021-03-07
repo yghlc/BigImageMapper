@@ -447,7 +447,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
             if b_early_stopping:
                 if len(miou_dict['overall']) >= 5:
                     # if the last five miou did not improve, then stop training
-                    if np.all(np.diff(miou_dict['overall'][-5:]) < 0.0001):
+                    if np.all(np.diff(miou_dict['overall'][-5:]) < 0.005): # 0.0001 (%0.01)  # 0.5 %
                         basic.outputlogMessage('early stopping: stop training because overall miou did not improved in the last five evaluation')
                         break
 
