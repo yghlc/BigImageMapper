@@ -80,7 +80,25 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 #         sys.exit(1)
 #     return in_shp_path
 
+def group_same_area_time_observations(arae_ini_files):
+    # group the observation with the same area name and time.
+    same_area_time_obs_ini = {}
+    for area_ini in arae_ini_files:
+        area_name = parameters.get_string_parameters(area_ini, 'area_name')
+        area_time = parameters.get_string_parameters(area_ini, 'area_time')
+
+        area_time_key = area_name + '-' + area_time     # use '-' instead of '_' ('_ has been used in many place')
+        if area_time_key not in same_area_time_obs_ini.keys():
+            same_area_time_obs_ini[area_time_key] = []
+        same_area_time_obs_ini[area_time_key].append(area_ini)
+
+    return same_area_time_obs_ini
+
+def process_occurence_for_multi_observation(multi_observation_dict,min_ocurr):
+    pass
+
 def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
+    # test_id is the related to training
 
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
@@ -111,12 +129,15 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
 
     # loop each inference regions
     sub_tasks = []
+    multi_observations = {}     # if two or more area_ini has the same area name and time, then consider then as multiple observation
     region_eva_reports = {}
     for area_idx, area_ini in enumerate(multi_inf_regions):
-        area_name = parameters.get_string_parameters_None_if_absence(area_ini, 'area_name')
-        area_remark = parameters.get_string_parameters_None_if_absence(area_ini, 'area_remark')
+        area_name = parameters.get_string_parameters(area_ini, 'area_name')
+        area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
+        area_time = parameters.get_string_parameters(area_ini,'area_time')
+        area_remark_time = area_remark + '_' + area_time
 
-        area_save_dir = os.path.join(inf_dir, area_name + '_' + area_remark)
+        area_save_dir = os.path.join(inf_dir, area_name + '_' + area_remark_time)
 
         # get image list
         inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
@@ -153,7 +174,7 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
         remove_polygons_main(shp_attributes, shp_post, para_file)
 
         # evaluate the mapping results
-        eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
+        # eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
         out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
         # evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
         evaluation_polygons(shp_post,para_file,area_ini,out_report)
@@ -163,9 +184,9 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
         ##### copy and backup files ######
         # copy files to result_backup
         if len(test_note) > 0:
-            backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark + '_' + test_id + '_' + test_note)
+            backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark_time + '_' + test_id + '_' + test_note)
         else:
-            backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark + '_' + test_id )
+            backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark_time + '_' + test_id )
         io_function.mkdir(backup_dir_area)
         if len(test_note) > 0:
             bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,test_note]) + '.shp')
@@ -184,6 +205,11 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
         io_function.copy_file_to_dst(area_ini, bak_area_ini, overwrite=True)
 
         region_eva_reports[shp_pre] = bak_eva_report
+
+    # handle about multiple observation of a single area.
+    min_ocurr = parameters.get_digit_parameters_None_if_absence(para_file,'threshold_occurrence_multi_observation','int')
+    if min_ocurr is not None:
+        process_occurence_for_multi_observation(multi_observations, min_ocurr)
 
     if len(test_note) > 0:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id,'para',test_note]) + '.ini' )

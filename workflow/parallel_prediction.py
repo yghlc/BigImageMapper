@@ -144,8 +144,9 @@ def main(options, args):
     sub_tasks = []
     for area_idx, area_ini in enumerate(multi_inf_regions):
 
-        area_name = parameters.get_string_parameters_None_if_absence(area_ini,'area_name')
-        area_remark = parameters.get_string_parameters_None_if_absence(area_ini,'area_remark')
+        area_name = parameters.get_string_parameters(area_ini,'area_name')
+        area_remark = parameters.get_string_parameters(area_ini,'area_remark')
+        area_time = parameters.get_string_parameters(area_ini,'area_time')
 
         inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
 
@@ -157,7 +158,7 @@ def main(options, args):
         if img_count < 1:
             raise ValueError('No image for inference, please check inf_image_dir and inf_image_or_pattern in %s'%area_ini)
 
-        area_save_dir = os.path.join(outdir, area_name + '_' + area_remark)
+        area_save_dir = os.path.join(outdir, area_name + '_' + area_remark + '_' + area_time)
         io_function.mkdir(area_save_dir)
 
         # parallel inference images for this area
