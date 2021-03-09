@@ -14,6 +14,7 @@ from optparse import OptionParser
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
+import basic_src.map_projection as map_projection
 import basic_src.io_function as io_function
 
 sys.path.insert(0, os.path.join(code_dir, 'datasets'))
@@ -23,6 +24,11 @@ import utility.eva_report_to_tables as eva_report_to_tables
 from datasets.get_polygon_attributes import add_polygon_attributes
 from datasets.remove_mappedPolygons import remove_polygons_main
 from datasets.evaluation_result import evaluation_polygons
+
+# need for calculating the occurrence.
+cd_dir = os.path.expanduser('~/codes/PycharmProjects/ChangeDet_DL/thawSlumpChangeDet')
+sys.path.insert(0, cd_dir)
+import polygons_change_analyze
 
 def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
@@ -94,8 +100,25 @@ def group_same_area_time_observations(arae_ini_files):
 
     return same_area_time_obs_ini
 
-def process_occurence_for_multi_observation(multi_observation_dict,min_ocurr):
-    pass
+def get_observation_save_dir_shp_pre(inf_dir, area_name, area_time, area_remark,train_id):
+    area_remark_time = area_remark + '_' + area_time
+    area_save_dir = os.path.join(inf_dir, area_name + '_' + area_remark_time)
+    shp_pre = os.path.basename(area_save_dir) + '_' + train_id
+    return area_save_dir, shp_pre, area_remark_time
+
+
+def get_occurence_for_multi_observation(shp_list):
+    if len(shp_list) < 1:
+        return False
+
+    # check projection of the shape file, should be the same
+    new_shp_proj4 = map_projection.get_raster_or_vector_srs_info_proj4(shp_list[0])
+    for idx in range(len(shp_list)-1):
+        shp_proj4 = map_projection.get_raster_or_vector_srs_info_proj4(shp_list[ idx+1 ])
+        if shp_proj4 != new_shp_proj4:
+            raise ValueError('error, projection insistence between %s and %s'%(new_shp_proj4, shp_proj4))
+
+    polygons_change_analyze.cal_multi_temporal_iou_and_occurrence(shp_list, '')
 
 def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
     # test_id is the related to training
@@ -129,87 +152,95 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
 
     # loop each inference regions
     sub_tasks = []
-    multi_observations = {}     # if two or more area_ini has the same area name and time, then consider then as multiple observation
+    same_area_time_inis =  group_same_area_time_observations(multi_inf_regions)
     region_eva_reports = {}
-    for area_idx, area_ini in enumerate(multi_inf_regions):
-        area_name = parameters.get_string_parameters(area_ini, 'area_name')
-        area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
-        area_time = parameters.get_string_parameters(area_ini,'area_time')
-        area_remark_time = area_remark + '_' + area_time
+    for key in same_area_time_inis.keys():
+        multi_observations = same_area_time_inis[key]
+        area_name = parameters.get_string_parameters(multi_observations[0], 'area_name')  # they have the same name and time
+        area_time = parameters.get_string_parameters(multi_observations[0], 'area_time')
+        merged_shp_list = []
+        for area_idx, area_ini in enumerate(multi_observations):
+            area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
+            area_save_dir, shp_pre,_ = get_observation_save_dir_shp_pre(inf_dir,area_name,area_time,area_remark,test_id)
 
-        area_save_dir = os.path.join(inf_dir, area_name + '_' + area_remark_time)
+            # get image list
+            inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
+            # it is ok consider a file name as pattern and pass it the following functions to get file list
+            inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
+            inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir,inf_image_or_pattern)
+            img_count = len(inf_img_list)
+            if img_count < 1:
+                raise ValueError('No image for inference, please check inf_image_dir and inf_image_or_pattern in %s'%area_ini)
 
-        # get image list
-        inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
-        # it is ok consider a file name as pattern and pass it the following functions to get file list
-        inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
-        inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir,inf_image_or_pattern)
-        img_count = len(inf_img_list)
-        if img_count < 1:
-            raise ValueError('No image for inference, please check inf_image_dir and inf_image_or_pattern in %s'%area_ini)
+            merged_shp = os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
+            if b_skip_getshp:
+                pass
+            else:
+                # post image one by one
+                result_shp_list = []
+                for img_idx, img_path in enumerate(inf_img_list):
+                    out_shp = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
+                    result_shp_list.append(os.path.join(WORK_DIR,out_shp))
+                # merge shapefiles
+                merge_shape_files(result_shp_list,merged_shp)
 
-        shp_pre = os.path.basename(area_save_dir) + '_' + test_id
-        merged_shp = os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
-        if b_skip_getshp:
-            pass
-        else:
-            # post image one by one
-            result_shp_list = []
-            for img_idx, img_path in enumerate(inf_img_list):
-                out_shp = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
-                result_shp_list.append(os.path.join(WORK_DIR,out_shp))
-            # merge shapefiles
-            merge_shape_files(result_shp_list,merged_shp)
+            merged_shp_list.append(merged_shp)
 
-        # add attributes to shapefile
-        # add_attributes_script = os.path.join(code_dir,'datasets', 'get_polygon_attributes.py')
-        shp_attributes = os.path.join(WORK_DIR,area_save_dir, shp_pre+'_post_NOrm.shp')
-        # add_polygon_attributes(add_attributes_script,merged_shp, shp_attributes, para_file, area_ini )
-        add_polygon_attributes(merged_shp, shp_attributes, para_file, area_ini)
+        if b_skip_getshp is False:
+            # add occurrence to each polygons
+            get_occurence_for_multi_observation(merged_shp_list)
 
-        # remove polygons
-        # rm_polygon_script = os.path.join(code_dir,'datasets', 'remove_mappedPolygons.py')
-        shp_post = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_post.shp')
-        # remove_polygons(rm_polygon_script,shp_attributes, shp_post, para_file)
-        remove_polygons_main(shp_attributes, shp_post, para_file)
+        for area_idx, area_ini in enumerate(multi_observations):
+            area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
+            area_save_dir, shp_pre, area_remark_time  = get_observation_save_dir_shp_pre(inf_dir, area_name, area_time, area_remark,test_id)
 
-        # evaluate the mapping results
-        # eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
-        out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
-        # evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
-        evaluation_polygons(shp_post,para_file,area_ini,out_report)
+            merged_shp = os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
 
+            # add attributes to shapefile
+            # add_attributes_script = os.path.join(code_dir,'datasets', 'get_polygon_attributes.py')
+            shp_attributes = os.path.join(WORK_DIR,area_save_dir, shp_pre+'_post_NOrm.shp')
+            # add_polygon_attributes(add_attributes_script,merged_shp, shp_attributes, para_file, area_ini )
+            add_polygon_attributes(merged_shp, shp_attributes, para_file, area_ini)
+
+            # remove polygons
+            # rm_polygon_script = os.path.join(code_dir,'datasets', 'remove_mappedPolygons.py')
+            shp_post = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_post.shp')
+            # remove_polygons(rm_polygon_script,shp_attributes, shp_post, para_file)
+            remove_polygons_main(shp_attributes, shp_post, para_file)
+
+            # evaluate the mapping results
+            # eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
+            out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
+            # evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
+            evaluation_polygons(shp_post,para_file,area_ini,out_report)
 
 
-        ##### copy and backup files ######
-        # copy files to result_backup
-        if len(test_note) > 0:
-            backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark_time + '_' + test_id + '_' + test_note)
-        else:
-            backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark_time + '_' + test_id )
-        io_function.mkdir(backup_dir_area)
-        if len(test_note) > 0:
-            bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,test_note]) + '.shp')
-            bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,'post',test_note]) + '.shp')
-            bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre,'eva_report',test_note]) + '.txt')
-            bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre,'region',test_note]) + '.ini')
-        else:
-            bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre]) + '.shp')
-            bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre, 'post']) + '.shp')
-            bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre, 'eva_report']) + '.txt')
-            bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre, 'region']) + '.ini')
+            ##### copy and backup files ######
+            # copy files to result_backup
+            if len(test_note) > 0:
+                backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark_time + '_' + test_id + '_' + test_note)
+            else:
+                backup_dir_area = os.path.join(backup_dir, area_name + '_' + area_remark_time + '_' + test_id )
+            io_function.mkdir(backup_dir_area)
+            if len(test_note) > 0:
+                bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,test_note]) + '.shp')
+                bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,'post',test_note]) + '.shp')
+                bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre,'eva_report',test_note]) + '.txt')
+                bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre,'region',test_note]) + '.ini')
+            else:
+                bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre]) + '.shp')
+                bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre, 'post']) + '.shp')
+                bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre, 'eva_report']) + '.txt')
+                bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre, 'region']) + '.ini')
 
-        io_function.copy_shape_file(merged_shp,bak_merged_shp)
-        io_function.copy_shape_file(shp_post, bak_post_shp)
-        io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
-        io_function.copy_file_to_dst(area_ini, bak_area_ini, overwrite=True)
+            io_function.copy_shape_file(merged_shp,bak_merged_shp)
+            io_function.copy_shape_file(shp_post, bak_post_shp)
+            io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
+            io_function.copy_file_to_dst(area_ini, bak_area_ini, overwrite=True)
 
-        region_eva_reports[shp_pre] = bak_eva_report
+            region_eva_reports[shp_pre] = bak_eva_report
 
-    # handle about multiple observation of a single area.
-    min_ocurr = parameters.get_digit_parameters_None_if_absence(para_file,'threshold_occurrence_multi_observation','int')
-    if min_ocurr is not None:
-        process_occurence_for_multi_observation(multi_observations, min_ocurr)
+
 
     if len(test_note) > 0:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id,'para',test_note]) + '.ini' )

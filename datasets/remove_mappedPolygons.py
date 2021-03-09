@@ -128,6 +128,20 @@ def remove_polygons_main(polygons_shp, output, para_file):
     else:
         basic.outputlogMessage('warning, minimum_dem_reduction_area is absent in the para file, skip removing polygons based on minimum_dem_reduction_area')
 
+
+    # remove polygons based on occurrence
+    min_ocurr = parameters.get_digit_parameters_None_if_absence(para_file,'threshold_occurrence_multi_observation','int')
+    b_smaller = True
+    if min_ocurr is not None:
+        rm_occur_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup,'RmOccur')
+        if remove_polygons(polygons_shp, 'time_occur', min_ocurr, b_smaller, rm_occur_save_shp) is False:
+            basic.outputlogMessage("error, removing polygons based on time_occur failed")
+        else:
+            polygons_shp = rm_occur_save_shp
+    else:
+        basic.outputlogMessage('warning, threshold_occurrence_multi_observation is absent in the para file, '
+                               'skip removing polygons based on it')
+
     # remove polygons not in the extent
     outline_shp = parameters.get_string_parameters_None_if_absence(para_file,'target_outline_shp')
     if outline_shp is not None:
