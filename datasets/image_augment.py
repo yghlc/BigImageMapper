@@ -155,6 +155,83 @@ def blurer(image_np, save_dir, input_filename,is_groud_true,sigma=[1,2]):
 
     return True
 
+def brightness(image_np, save_dir, input_filename,is_groud_true, out_count=1):
+    """
+    Change the brightness of images: MultiplyAndAddToBrightness
+    :param image_np: 'images' should be either a 4D numpy array of shape (N, height, width, channels)
+    :param save_dir: the directory for saving images
+    :param input_filename: File base name (e.g basename.tif)
+    :param is_groud_true: if ground truth, just copy the image
+    :return:
+    """
+    file_basename = os.path.basename(input_filename)
+    basename = os.path.splitext(file_basename)[0]
+    ext = os.path.splitext(file_basename)[1]
+
+    for idx in range(out_count):
+        save_path = os.path.join(save_dir, basename + '_bright' + str(idx) + ext)
+        if is_groud_true is True:
+            # just copy the groud true
+            images_b = image_np
+        else:
+            brightness = iaa.MultiplyAndAddToBrightness(mul=(0.5, 1.5), add=(-30, 30))  # a random value between the range
+            images_b = brightness.augment_image(image_np)
+        io.imsave(save_path, images_b)
+
+    return True
+
+def contrast(image_np, save_dir, input_filename,is_groud_true, out_count=1):
+    """
+    Change the constrast of images: GammaContrast
+    :param image_np: 'images' should be either a 4D numpy array of shape (N, height, width, channels)
+    :param save_dir:
+    :param input_filename: File base name (e.g basename.tif)
+    :param is_groud_true: if ground truth, just copy the image
+    :param :
+    :return:
+    """
+    file_basename = os.path.basename(input_filename)
+    basename = os.path.splitext(file_basename)[0]
+    ext = os.path.splitext(file_basename)[1]
+
+    for idx in range(out_count):
+        save_path = os.path.join(save_dir, basename + '_contrast' + str(idx) + ext)
+        if is_groud_true is True:
+            # just copy the groud true
+            images_con = image_np
+        else:
+            contrast = iaa.GammaContrast((0.5, 1.5))  # a random gamma value between the range, a large gamma make image darker
+            images_con = contrast.augment_image(image_np)
+        io.imsave(save_path, images_con)
+
+    return True
+
+def noise(image_np, save_dir, input_filename,is_groud_true, out_count=1):
+    """
+    Change the constrast of images: AdditiveGaussianNoise
+    :param image_np: 'images' should be either a 4D numpy array of shape (N, height, width, channels)
+    :param save_dir:
+    :param input_filename: File base name (e.g basename.tif)
+    :param is_groud_true: if ground truth, just copy the image
+    :param :
+    :return:
+    """
+    file_basename = os.path.basename(input_filename)
+    basename = os.path.splitext(file_basename)[0]
+    ext = os.path.splitext(file_basename)[1]
+
+    for idx in range(out_count):
+        save_path = os.path.join(save_dir, basename + '_noise' + str(idx) + ext)
+        if is_groud_true is True:
+            # just copy the groud true
+            images_noise = image_np
+        else:
+            noise = iaa.AdditiveGaussianNoise(scale=(0, 0.2*255))  # a random gamma value between the range
+            images_noise = noise.augment_image(image_np)
+        io.imsave(save_path, images_noise)
+
+    return True
+
 def Crop(image_np, save_dir, input_filename,is_groud_true,px = [10,30] ):
     """
     Crop the original images
@@ -208,6 +285,15 @@ def image_augment(img_path,save_dir,is_groud_true,augment = None):
             return False
     if 'scale' in augment:
         if scale(img_test, save_dir, basename,is_groud_true, scale=[0.75,1.25]) is False:
+            return False
+    if 'bright' in augment:
+        if brightness(img_test, save_dir, basename,is_groud_true,out_count=2) is False:
+            return False
+    if 'contrast' in augment:
+        if contrast(img_test, save_dir, basename,is_groud_true,out_count=2) is False:
+            return False
+    if 'noise' in augment:
+        if noise(img_test, save_dir, basename,is_groud_true,out_count=2) is False:
             return False
 
     return True

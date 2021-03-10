@@ -2,7 +2,7 @@ sklearn
 tf_slim
 shapely
 rasterio
-imgaug==0.2.6
+imgaug==0.4.0
 GPUtil
 geopandas
 openpyxl
