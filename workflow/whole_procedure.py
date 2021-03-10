@@ -123,7 +123,7 @@ def post_processing_backup(para_file, inf_post_note=None, b_skip_getshp=False, t
     import postProcess
     postProcess.postProcess(para_file,inf_post_note, b_skip_getshp=b_skip_getshp,test_id=test_id)
 
-def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1):
+def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1, b_train_only=False):
     '''
     run the whole procedure of training, prediction, and post-processing
     :param working_dir: working folder, defulat is current folder
@@ -167,11 +167,12 @@ def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1):
     ## export model
     export_model(para_file)
 
-    ## inference
-    inference(para_file)
+    if b_train_only is False:
+        ## inference
+        inference(para_file)
 
-    # post processing and copy results, inf_post_note indicate notes for inference and post-processing
-    post_processing_backup(para_file)
+        # post processing and copy results, inf_post_note indicate notes for inference and post-processing
+        post_processing_backup(para_file)
 
     #################################################
     ### conduct polygon-based change detection based on the multi-temporal mapping results
