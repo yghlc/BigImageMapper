@@ -24,7 +24,7 @@ import pandas as pd
 
 backbones = ['deeplabv3plus_xception65.ini']
 
-area_ini_list = ['area_Willow_River.ini', 'area_Banks_east.ini', 'area_Willow_River.ini',
+area_ini_list = ['area_Willow_River.ini', 'area_Banks_east.ini', 'area_Ellesmere_Island.ini',
                  'area_Willow_River_nirGB.ini','area_Banks_east_nirGB.ini','area_Ellesmere_Island_nirGB.ini']
 
 
@@ -141,16 +141,29 @@ def main():
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
         trial_name_creator=tune.function(trial_name_string),
         trial_dirname_creator=tune.function(trial_dir_string),
+        # config={
+        #     "lr": tune.grid_search([0.007, 0.014, 0.28]),   # ,0.007, 0.014, 0.028,0.056
+        #     "iter_num": tune.grid_search([30000, 60000, 90000]), # , 60000,90000
+        #     "batch_size": tune.grid_search([8,16,32]), # 16, 32, 64, 128
+        #     "backbone": tune.grid_search(backbones),
+        #     "buffer_size": tune.grid_search([300, 600]),
+        #     "training_data_per": tune.grid_search([0.9, 0.8]),
+        #     "data_augmentation": tune.grid_search(['scale, bright, contrast, noise']),
+        #     'data_aug_ignore_classes':tune.grid_search(['class_0',''])
+        # }
         config={
-            "lr": tune.grid_search([0.007, 0.014, 0.28]),   # ,0.007, 0.014, 0.028,0.056
-            "iter_num": tune.grid_search([30000, 60000, 90000]), # , 60000,90000
-            "batch_size": tune.grid_search([8,16,32]), # 16, 32, 64, 128
+            "lr": tune.grid_search([0.014]),   # ,0.007, 0.014, 0.028,0.056
+            "iter_num": tune.grid_search([30000]), # , 60000,90000
+            "batch_size": tune.grid_search([8]), # 16, 32, 64, 128
             "backbone": tune.grid_search(backbones),
-            "buffer_size": tune.grid_search([300, 600]),
-            "training_data_per": tune.grid_search([0.9, 0.8]),
+            "buffer_size": tune.grid_search([300]),
+            "training_data_per": tune.grid_search([0.9]),
             "data_augmentation": tune.grid_search(['scale, bright, contrast, noise']),
             'data_aug_ignore_classes':tune.grid_search(['class_0',''])
-        })
+        }
+        
+        
+        )
 
     print("Best config: ", analysis.get_best_config(
         metric="overall_miou", mode="max"))
