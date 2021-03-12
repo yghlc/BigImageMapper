@@ -62,7 +62,7 @@ def get_sample_cout_of_each_class(sample_txt, info_type='training'):
     # save info to file, if it exists, add information to the file
     with open('sub_images_patches_info.txt','a') as f_obj:
         f_obj.writelines('Sample count of each class in %s set: \n'%info_type)
-        for key in sample_count.keys():
+        for key in sorted(sample_count.keys()):
             f_obj.writelines('Sample count of %s : %d \n' % (key, sample_count[key]))
         f_obj.writelines('\n')
 
