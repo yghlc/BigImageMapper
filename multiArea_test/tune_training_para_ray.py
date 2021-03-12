@@ -134,7 +134,7 @@ def main():
 
     analysis = tune.run(
         training_function,
-        resources_per_trial={"cpu": 14,"gpu": 2}, # use two GPUs, 12 CPUs on tesia
+        resources_per_trial={"gpu": 2}, # use two GPUs, 12 CPUs on tesia  # "cpu": 14, don't limit cpu, eval.py will not use all
         local_dir="./ray_results",
         name="tune_traning_para_tesia",
         # fail_fast=True,     # Stopping after the first failure
