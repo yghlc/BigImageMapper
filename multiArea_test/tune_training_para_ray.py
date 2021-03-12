@@ -45,9 +45,10 @@ def trial_name_string(trial):
     print('\n\n trial_name_string:\n',trial,'\n\n')
     return str(trial)
 
-def trial_dir_string(trial):
-    print('\n\n trial_dir_string:\n',trial,'\n\n')
-    return str(trial)   # should able to have more control on the dirname
+def trial_dir_string(trial_id):
+    # print('\n\n trial_dir_string:\n',trial,'\n\n')
+    # return str(trial)   # should able to have more control on the dirname
+    return 'multiArea_deeplabv3P' + str(trial_id)[-6:]  # should not write as [-6:-1], use the last 5 digits + '_'.
 
 def get_overall_miou(miou_path):
     import basic_src.io_function as io_function
@@ -95,7 +96,7 @@ def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training
 
     # remove files to save storage
     os.system('rm -rf %s/exp*/init_models'%work_dir)
-    os.system('rm -rf %s/exp*/eval'%work_dir)
+    os.system('rm -rf %s/exp*/eval/events.out.tfevents*'%work_dir) # don't remove miou.txt
     os.system('rm -rf %s/exp*/train'%work_dir)
     os.system('rm -rf %s/exp*/vis'%work_dir)        # don't remove the export folder (for prediction)
 
@@ -141,7 +142,7 @@ def main():
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
         trial_name_creator=tune.function(trial_name_string),
         trial_dirname_creator=tune.function(trial_dir_string),
-        resume=True,
+        # resume=True,
         config={
             "lr": tune.grid_search([0.007, 0.014, 0.28]),   # ,0.007, 0.014, 0.028,0.056
             "iter_num": tune.grid_search([30000, 60000, 90000]), # , 60000,90000
