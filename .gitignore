@@ -15,6 +15,7 @@ planetlabs_notebooks
 .idea
 # vscode folder
 .vscode
+workspace.code-workspace
 
 processLog.txt*
 split_image_info.txt*
