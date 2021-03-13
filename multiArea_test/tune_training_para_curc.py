@@ -80,12 +80,21 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
         break
 
     para_file = 'main_para_exp9.ini'
+    job_name = 'tune%d'%idx
     work_dir = working_dir_string(idx, root=root_dir)
     if os.path.isdir(work_dir) is False:
         io_function.mkdir(work_dir)
     else:
-        print('The folder: %s already exist, skip submitting a new job'%work_dir)
-        return work_dir, os.path.join(work_dir, para_file)
+        o_miou = get_overall_miou_after_training(work_dir,para_file)
+        # if result exists
+        if o_miou is not False:
+            print('The folder: %s and the results already exist, skip submitting a new job'%work_dir)
+            return work_dir, os.path.join(work_dir, para_file)
+        submit_job_names = slurm_utility.get_submited_job_names('lihu9680')
+        if job_name in submit_job_names:
+            print('The folder: %s already exist and the job has been submitted, skip submitting a new job'%work_dir)
+            return work_dir, os.path.join(work_dir, para_file)
+
     os.chdir(work_dir)
 
     # create a training folder
@@ -106,7 +115,7 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
     # whole_procedure.run_whole_procedure(para_file, b_train_only=True)
     # copy job.sh exe.sh and other, run submit jobs
     copy_curc_job_files(jobsh_dir,work_dir)
-    slurm_utility.modify_slurm_job_sh('job_tf_GPU.sh', 'job-name', 'tune%d'%idx)
+    slurm_utility.modify_slurm_job_sh('job_tf_GPU.sh', 'job-name', job_name)
 
     # submit the job
     res = os.system( 'sbatch job_tf_GPU.sh' )
@@ -118,10 +127,7 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
 
     return work_dir, os.path.join(work_dir,para_file)
 
-def get_overall_miou_after_training(work_dir,para_file):
-
-    exp_name = parameters.get_string_parameters(para_file, 'expr_name')
-
+def remove_files(work_dir):
     # remove files to save storage
     os.system('rm -rf %s/exp*/init_models'%work_dir)
     os.system('rm -rf %s/exp*/eval/events.out.tfevents*'%work_dir) # don't remove miou.txt
@@ -132,8 +138,15 @@ def get_overall_miou_after_training(work_dir,para_file):
     os.system('rm -rf %s/split*'%work_dir)
     os.system('rm -rf %s/sub*'%work_dir)
     os.system('rm -rf %s/tfrecord*'%work_dir)
+    
+
+def get_overall_miou_after_training(work_dir,para_file):
+
+    exp_name = parameters.get_string_parameters(para_file, 'expr_name')
 
     iou_path = os.path.join(work_dir,exp_name,'eval','miou.txt')
+    if os.path.isfile(iou_path) is False:
+        return False
     overall_miou = get_overall_miou(iou_path)
 
     return overall_miou
@@ -174,6 +187,8 @@ def main():
     }
 
     para_com_list = get_para_list_from_grid_serach(para_config)
+    total_count = len(para_com_list)
+    print('total count of parameter settings: %d'%total_count)
     work_dir_list = []
     para_file_list = []
     for idx, config in enumerate(para_com_list):
@@ -186,6 +201,7 @@ def main():
     for work_dir, para_file in zip(work_dir_list, para_file_list):
         overall_miou = get_overall_miou_after_training(work_dir, para_file)
         over_miou_list.append(overall_miou)
+        remove_files(work_dir)
 
         print('overall miou',os.path.basename(work_dir), overall_miou)
 
