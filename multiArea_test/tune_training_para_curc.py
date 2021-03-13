@@ -211,7 +211,7 @@ def main():
     for work_dir, para_file in zip(work_dir_list, para_file_list):
         overall_miou = get_overall_miou_after_training(work_dir, para_file)
         over_miou_list.append(overall_miou)
-        remove_files(work_dir)
+        # remove_files(work_dir)
 
         print('overall miou',os.path.basename(work_dir), overall_miou)
 
