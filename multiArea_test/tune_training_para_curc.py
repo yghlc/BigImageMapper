@@ -17,6 +17,10 @@ from datetime import datetime
 # import pandas as pd
 import time
 
+sys.path.insert(0, code_dir)
+import parameters
+# import workflow.whole_procedure as whole_procedure
+
 sys.path.insert(0, os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS'))
 import slurm_utility
 import basic_src.io_function as io_function
@@ -65,12 +69,7 @@ def copy_curc_job_files(sh_dir, work_dir):
     for sh in sh_list:
         io_function.copy_file_to_dst(os.path.join(sh_dir, sh), os.path.join(work_dir, sh)) #, overwrite=True
 
-def objective_overall_miou(idx, lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes):
-
-    sys.path.insert(0, code_dir)
-    import basic_src.io_function as io_function
-    import parameters
-    import workflow.whole_procedure as whole_procedure
+def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes):
 
 
     para_file = 'main_para_exp9.ini'
@@ -81,8 +80,6 @@ def objective_overall_miou(idx, lr, iter_num,batch_size,backbone,buffer_size,tra
 
     # create a training folder
     copy_ini_files(ini_dir,work_dir,para_file,area_ini_list,backbone)
-
-    exp_name = parameters.get_string_parameters(para_file,'expr_name')
 
     # change para_file
     modify_parameter(os.path.join(work_dir, para_file),'network_setting_ini',backbone)
@@ -114,6 +111,15 @@ def objective_overall_miou(idx, lr, iter_num,batch_size,backbone,buffer_size,tra
     if res != 0:
         sys.exit()
 
+
+    os.chdir(curr_dir_before_start)
+
+    return work_dir, os.path.join(work_dir,para_file)
+
+def get_overall_miou_after_training(work_dir,para_file):
+
+    exp_name = parameters.get_string_parameters(para_file, 'expr_name')
+
     # remove files to save storage
     os.system('rm -rf %s/exp*/init_models'%work_dir)
     os.system('rm -rf %s/exp*/eval/events.out.tfevents*'%work_dir) # don't remove miou.txt
@@ -128,10 +134,7 @@ def objective_overall_miou(idx, lr, iter_num,batch_size,backbone,buffer_size,tra
     iou_path = os.path.join(work_dir,exp_name,'eval','miou.txt')
     overall_miou = get_overall_miou(iou_path)
 
-    os.chdir(curr_dir_before_start)
-
     return overall_miou
-
 
 def training_function(idx, config, checkpoint_dir=None):
     # Hyperparameters
@@ -139,9 +142,8 @@ def training_function(idx, config, checkpoint_dir=None):
         config["lr"], config["iter_num"],config["batch_size"],config["backbone"],config['buffer_size'],\
         config['training_data_per'],config['data_augmentation'],config['data_aug_ignore_classes']
 
-    overall_miou = objective_overall_miou(idx,lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes)
-
-    return overall_miou
+    return submit_training_job(idx, lr, iter_num, batch_size, backbone, buffer_size, training_data_per,
+                               data_augmentation, data_aug_ignore_classes)
 
 def get_para_list_from_grid_serach(para_config):
 
@@ -170,8 +172,21 @@ def main():
     }
 
     para_com_list = get_para_list_from_grid_serach(para_config)
+    work_dir_list = []
+    para_file_list = []
     for idx, config in enumerate(para_com_list):
-        training_function(idx, config)
+        work_dir, para_file = training_function(idx, config)
+        work_dir_list.append(work_dir)
+        para_file_list.append(para_file)
+
+    # read miou and remove some files
+    over_miou_list = []
+    for work_dir, para_file in zip(work_dir_list, para_file_list):
+        overall_miou = get_overall_miou_after_training(work_dir, para_file)
+        over_miou_list.append(overall_miou)
+
+        print('overall miou',os.path.basename(work_dir), overall_miou)
+
 
     # # Get a dataframe for analyzing trial results.
     # df = analysis.results_df
