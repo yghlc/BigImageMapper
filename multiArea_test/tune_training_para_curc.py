@@ -120,7 +120,7 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
     # submit the job
     res = os.system( 'sbatch job_tf_GPU.sh' )
     if res != 0:
-        sys.exit()
+        sys.exit(1)
 
 
     os.chdir(curr_dir_before_start)
