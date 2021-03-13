@@ -37,6 +37,7 @@ backbones = ['deeplabv3plus_xception65.ini']
 area_ini_list = ['area_Willow_River.ini', 'area_Banks_east.ini', 'area_Ellesmere_Island.ini',
                  'area_Willow_River_nirGB.ini','area_Banks_east_nirGB.ini','area_Ellesmere_Island_nirGB.ini']
 
+curc_username = 'lihu9680'
 
 # template para (contain para_files)
 ini_dir=os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/ini_files')
@@ -72,7 +73,7 @@ def copy_curc_job_files(sh_dir, work_dir):
 def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes):
 
     while True:
-        job_count = slurm_utility.get_submit_job_count('lihu9680')
+        job_count = slurm_utility.get_submit_job_count(curc_username)
         if job_count >= 5:
             print(datetime.now(),'You have submitted 5 or more jobs, wait ')
             time.sleep(60) #
@@ -92,7 +93,7 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
         if o_miou is not False:
             print('The folder: %s and the results already exist, skip submitting a new job'%work_dir)
             return work_dir, os.path.join(work_dir, para_file)
-        submit_job_names = slurm_utility.get_submited_job_names('lihu9680')
+        submit_job_names = slurm_utility.get_submited_job_names(curc_username)
         if job_name in submit_job_names:
             print('The folder: %s already exist and the job has been submitted, skip submitting a new job'%work_dir)
             return work_dir, os.path.join(work_dir, para_file)
@@ -196,6 +197,14 @@ def main():
         work_dir, para_file = training_function(idx, config)
         work_dir_list.append(work_dir)
         para_file_list.append(para_file)
+
+    while True:
+        submit_job_count = slurm_utility.get_submit_job_count(curc_username)
+        if submit_job_count > 0:
+            print('Waiting jobs to be finished, submitted job count: %d'%submit_job_count)
+            time.sleep(60)
+        else:
+            break
 
     # read miou and remove some files
     over_miou_list = []
