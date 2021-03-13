@@ -75,7 +75,7 @@ def objective_overall_miou(idx, lr, iter_num,batch_size,backbone,buffer_size,tra
 
     para_file = 'main_para_exp9.ini'
     work_dir = working_dir_string(idx, root=root_dir)
-    if os.path.isdir(work_dir):
+    if os.path.isdir(work_dir) is False:
         io_function.mkdir(work_dir)
     os.chdir(work_dir)
 
