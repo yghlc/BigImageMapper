@@ -44,9 +44,9 @@ from hyper_para_ray import modify_parameter
 
 def working_dir_string(trial_id, root=None):
     if root is not None:
-        return os.path.join('multiArea_deeplabv3P' + str(trial_id).zfill(trial_id))
+        return os.path.join(root, 'multiArea_deeplabv3P_' + str(trial_id).zfill(5))
     else:
-        return 'multiArea_deeplabv3P' + str(trial_id).zfill(trial_id)
+        return 'multiArea_deeplabv3P' + str(trial_id).zfill(5)
 
 def get_overall_miou(miou_path):
     # exp8/eval/miou.txt
