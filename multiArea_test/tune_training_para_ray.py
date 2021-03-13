@@ -97,7 +97,7 @@ def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training
     # remove files to save storage
     os.system('rm -rf %s/exp*/init_models'%work_dir)
     os.system('rm -rf %s/exp*/eval/events.out.tfevents*'%work_dir) # don't remove miou.txt
-    os.system('rm -rf %s/exp*/train'%work_dir)
+    # os.system('rm -rf %s/exp*/train'%work_dir)            # don't remove train folder
     os.system('rm -rf %s/exp*/vis'%work_dir)        # don't remove the export folder (for prediction)
 
     os.system('rm -rf %s/multi_inf_results'%work_dir)
