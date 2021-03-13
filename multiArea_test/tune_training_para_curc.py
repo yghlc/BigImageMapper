@@ -201,7 +201,7 @@ def main():
     while True:
         submit_job_count = slurm_utility.get_submit_job_count(curc_username)
         if submit_job_count > 0:
-            print('Waiting jobs to be finished, submitted job count: %d'%submit_job_count)
+            print(datetime.now(),'Waiting jobs to be finished, submitted job count: %d'%submit_job_count)
             time.sleep(60)
         else:
             break
