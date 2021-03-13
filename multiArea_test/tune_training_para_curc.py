@@ -27,6 +27,8 @@ import basic_src.io_function as io_function
 
 from sklearn.model_selection import ParameterGrid
 
+machine_name = os.uname()[1]
+
 # backbones = ['deeplabv3plus_xception65.ini','deeplabv3plus_xception41.ini','deeplabv3plus_xception71.ini',
 #             'deeplabv3plus_resnet_v1_50_beta.ini','deeplabv3plus_resnet_v1_101_beta.ini',
 #             'deeplabv3plus_mobilenetv2_coco_voc_trainval.ini','deeplabv3plus_mobilenetv3_large_cityscapes_trainfine.ini',
@@ -75,7 +77,7 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
     while True:
         job_count = slurm_utility.get_submit_job_count(curc_username)
         if job_count >= 5:
-            print(datetime.now(),'You have submitted 5 or more jobs, wait ')
+            print(machine_name, datetime.now(),'You have submitted 5 or more jobs, wait ')
             time.sleep(60) #
             continue
         break
@@ -201,7 +203,7 @@ def main():
     while True:
         submit_job_count = slurm_utility.get_submit_job_count(curc_username)
         if submit_job_count > 0:
-            print(datetime.now(),'Waiting jobs to be finished, submitted job count: %d'%submit_job_count)
+            print(machine_name,datetime.now(),'Waiting jobs to be finished, submitted job count: %d'%submit_job_count)
             time.sleep(60)
         else:
             break
