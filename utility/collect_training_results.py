@@ -73,7 +73,7 @@ def main(options, args):
     if os.path.isdir(root_dir) is False:
         raise ValueError('%s not exists'%root_dir)
 
-    folder_pattern = 'multiArea_deeplabv3P_?????'
+    folder_pattern = options.folder_pattern
     folder_list = io_function.get_file_list_by_pattern(root_dir,folder_pattern)
     folder_list = [item for item in folder_list if os.path.isdir(item) ]
 
@@ -120,6 +120,10 @@ if __name__ == '__main__':
     parser.add_option("-o", "--output",
                       action="store", dest="output", #default="accuracy_table.xlsx",
                       help="the output file path")
+
+    parser.add_option("-f", "--folder_pattern",
+                      action="store", dest="folder_pattern",default='multiArea_deeplabv3P_?????',
+                      help="the pattern of training folder")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2 or len(args) < 2:
