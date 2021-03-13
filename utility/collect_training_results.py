@@ -11,6 +11,9 @@ add time: 13 March, 2021
 import os, sys
 from optparse import OptionParser
 
+code_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL')
+sys.path.insert(0, code_dir)
+
 import basic_src.io_function as io_function
 import parameters
 
@@ -25,10 +28,13 @@ para_ini_list = ['base_learning_rate', 'iteration_num', 'batch_size', 'network_s
 
 def get_miou_of_overall_and_class_1_step(work_dir,para_file,train_output):
 
-    exp_name = parameters.get_string_parameters(para_file, 'expr_name')
+    exp_name = parameters.get_string_parameters(os.path.join(work_dir,para_file), 'expr_name')
     miou_path = os.path.join(work_dir,exp_name,'eval','miou.txt')
     if os.path.isfile(miou_path) is False:
-        print("no miou.txt in %s"%work_dir)
+        print("warning, no miou.txt in %s"%work_dir)
+        train_output['class_1'].append(0)
+        train_output['overall'].append(0)
+        train_output['step'].append(0)
         return False
 
     iou_dict = io_function.read_dict_from_txt_json(miou_path)
@@ -42,17 +48,20 @@ def read_para_values(work_dir,para_file,train_output):
 
     para_path = os.path.join(work_dir,para_file)
 
-    lr = parameters.get_digit_parameters(para_path,'base_learning_rate','float')
-    train_output['base_learning_rate'].append(lr)
-
-    iter_num = parameters.get_digit_parameters(para_path,'iteration_num','int')
-    train_output['iteration_num'].append(iter_num)
-
-    batch_size = parameters.get_digit_parameters(para_path,'batch_size','int')
-    train_output['batch_size'].append(batch_size)
-
     backbone = parameters.get_string_parameters(para_path,'network_setting_ini')
     train_output['network_setting_ini'].append(backbone)
+
+    net_ini_path = os.path.join(work_dir,backbone)
+    lr = parameters.get_digit_parameters(net_ini_path,'base_learning_rate','float')
+    train_output['base_learning_rate'].append(lr)
+
+    iter_num = parameters.get_digit_parameters(net_ini_path,'iteration_num','int')
+    train_output['iteration_num'].append(iter_num)
+
+    batch_size = parameters.get_digit_parameters(net_ini_path,'batch_size','int')
+    train_output['batch_size'].append(batch_size)
+
+
 
     buffer_size = parameters.get_digit_parameters(para_path,'buffer_size','int')
     train_output['buffer_size'].append(buffer_size)
@@ -76,6 +85,7 @@ def main(options, args):
     folder_pattern = options.folder_pattern
     folder_list = io_function.get_file_list_by_pattern(root_dir,folder_pattern)
     folder_list = [item for item in folder_list if os.path.isdir(item) ]
+    folder_list.sort()
 
     para_file = options.para_file
     output_file = options.output
@@ -83,6 +93,7 @@ def main(options, args):
         output_file = os.path.basename(root_dir) + '.xlsx'
 
     train_output = {}
+    train_output['folder'] = []
     for para in para_ini_list:
         train_output[para] = []
 
@@ -91,6 +102,8 @@ def main(options, args):
     train_output['step'] = []
 
     for folder in folder_list:
+        print('read parameter and results for %s'%folder)
+        train_output['folder'].append(os.path.basename(folder))
         read_para_values(folder,para_file,train_output)
         get_miou_of_overall_and_class_1_step(folder, para_file, train_output)
 
@@ -126,7 +139,7 @@ if __name__ == '__main__':
                       help="the pattern of training folder")
 
     (options, args) = parser.parse_args()
-    if len(sys.argv) < 2 or len(args) < 2:
+    if len(sys.argv) < 2 or len(args) < 1:
         parser.print_help()
         sys.exit(2)
     main(options, args)
