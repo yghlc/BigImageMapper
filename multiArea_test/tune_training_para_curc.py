@@ -84,7 +84,9 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
     work_dir = working_dir_string(idx, root=root_dir)
     if os.path.isdir(work_dir) is False:
         io_function.mkdir(work_dir)
+        os.chdir(work_dir)
     else:
+        os.chdir(work_dir)
         o_miou = get_overall_miou_after_training(work_dir,para_file)
         # if result exists
         if o_miou is not False:
@@ -94,8 +96,6 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
         if job_name in submit_job_names:
             print('The folder: %s already exist and the job has been submitted, skip submitting a new job'%work_dir)
             return work_dir, os.path.join(work_dir, para_file)
-
-    os.chdir(work_dir)
 
     # create a training folder
     copy_ini_files(ini_dir,work_dir,para_file,area_ini_list,backbone)
