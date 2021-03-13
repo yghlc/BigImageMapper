@@ -71,6 +71,13 @@ def copy_curc_job_files(sh_dir, work_dir):
 
 def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes):
 
+    while True:
+        job_count = slurm_utility.get_submit_job_count('lihu9680')
+        if job_count >= 5:
+            print(datetime.now(),'You have sumitted five or more jobs, wait ')
+            time.sleep(60) #
+            continue
+        break
 
     para_file = 'main_para_exp9.ini'
     work_dir = working_dir_string(idx, root=root_dir)
@@ -100,14 +107,6 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
     # copy job.sh exe.sh and other, run submit jobs
     copy_curc_job_files(jobsh_dir,work_dir)
     slurm_utility.modify_slurm_job_sh('job_tf_GPU.sh', 'job-name', 'tune%d'%idx)
-
-    while True:
-        job_count = slurm_utility.get_submit_job_count('lihu9680')
-        if job_count >= 5:
-            print(datetime.now(),'You have sumitted five or more jobs, wait ')
-            time.sleep(60) #
-            continue
-        break
 
     # submit the job
     res = os.system( 'sbatch job_tf_GPU.sh' )
