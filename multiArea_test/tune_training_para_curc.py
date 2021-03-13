@@ -73,8 +73,8 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
 
     while True:
         job_count = slurm_utility.get_submit_job_count('lihu9680')
-        if job_count >= 10:
-            print(datetime.now(),'You have sumitted 10 or more jobs, wait ')
+        if job_count >= 5:
+            print(datetime.now(),'You have submitted 5 or more jobs, wait ')
             time.sleep(60) #
             continue
         break
