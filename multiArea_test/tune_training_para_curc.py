@@ -118,6 +118,7 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
     slurm_utility.modify_slurm_job_sh('job_tf_GPU.sh', 'job-name', job_name)
 
     # submit the job
+    # sometime, when submit a job, end with: singularity: command not found,and exist, wired, then try run submit a job in scomplie note
     res = os.system( 'sbatch job_tf_GPU.sh' )
     if res != 0:
         sys.exit(1)
