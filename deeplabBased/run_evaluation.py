@@ -16,12 +16,11 @@ code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
 
+import workflow.deeplab_train as deeplab_train
 from workflow.deeplab_train import evaluation_deeplab
 from workflow.deeplab_train import pre_trained_tar_21_classes
 from workflow.deeplab_train import pre_trained_tar_19_classes
 
-# the python with tensorflow 1.x installed
-tf1x_python = 'python'
 
 def run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num):
 
@@ -118,8 +117,8 @@ def main(options, args):
         os.environ['PYTHONPATH'] = tf_research_dir + ':' + os.path.join(tf_research_dir, 'slim')
     # os.system('echo $PYTHONPATH ')
 
-    global tf1x_python
     tf1x_python = parameters.get_file_path_parameters(network_setting_ini,'tf1x_python')
+    deeplab_train.tf1x_python = tf1x_python
 
     deeplab_dir = os.path.join(tf_research_dir, 'deeplab')
     WORK_DIR = os.getcwd()
@@ -129,6 +128,7 @@ def main(options, args):
     # prepare data for validation
     if b_new_validation_data:
         prepare_data_for_evaluation(para_file)
+
 
     run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num)
 
