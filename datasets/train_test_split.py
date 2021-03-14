@@ -13,17 +13,7 @@ from optparse import OptionParser
 
 from sklearn.model_selection import train_test_split
 
-def main(options, args):
-
-    input_file = args[0]
-    train_per = options.train_per
-    Do_shuffle = options.Do_shuffle
-
-    print('split images in %s to train and test, with'%input_file)
-    print('train percentage: %.4f and shuffle: %s'%(train_per,str(Do_shuffle)))
-
-    train_sample_txt = options.train_list_txt
-    val_sample_txt = options.val_list_txt
+def train_test_split_main(input_file,train_per,Do_shuffle,train_sample_txt,val_sample_txt):
 
     with open(input_file,'r') as f_obj:
         dir = os.path.dirname(input_file)
@@ -42,6 +32,21 @@ def main(options, args):
         with open(val_list_txt, 'w') as v_obj:
             v_obj.writelines(val_list)
             print('saved validation samples to %s' % val_list_txt)
+
+def main(options, args):
+
+    input_file = args[0]
+    train_per = options.train_per
+    Do_shuffle = options.Do_shuffle
+
+    print('split images in %s to train and test, with'%input_file)
+    print('train percentage: %.4f and shuffle: %s'%(train_per,str(Do_shuffle)))
+
+    train_sample_txt = options.train_list_txt
+    val_sample_txt = options.val_list_txt
+
+    train_test_split_main(input_file, train_per, Do_shuffle, train_sample_txt, val_sample_txt)
+
 
 
 

@@ -329,7 +329,7 @@ def main(options, args):
         raise ValueError('set image dir and output dir be the same, making it easy to update image list')
     extension = options.extension
 
-    is_groud_true = options.ground_truth
+    is_ground_truth = options.ground_truth
     proc_num = options.process_num
 
     # print(options.para_file)
@@ -365,12 +365,12 @@ def main(options, args):
     #     file_path  = line.strip()
     #     file_path = os.path.join(img_dir,file_path+extension)
     #     print ("Augmentation of image (%d / %d)"%(index,file_count))
-    #     if image_augment(file_path,out_dir,is_groud_true,augment=augmentation) is False:
+    #     if image_augment(file_path,out_dir,is_ground_truth,augment=augmentation) is False:
     #         print ('Error, Failed in image augmentation')
     #         return False
     #     index += 1
 
-    parameters_list = [(index+1, line, ignore_classes,file_count,img_dir,extension,out_dir,is_groud_true,augmentation)
+    parameters_list = [(index+1, line, ignore_classes,file_count,img_dir,extension,out_dir,is_ground_truth,augmentation)
                        for index, line in enumerate(files_list)]
     theadPool = Pool(proc_num)  # multi processes
     results = theadPool.starmap(augment_one_line, parameters_list)  # need python3
