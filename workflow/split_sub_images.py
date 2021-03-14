@@ -46,11 +46,9 @@ def split_a_pair_sub_image_label(line, patch_w, patch_h, overlay_x, overlay_y, s
     pre_name = os.path.splitext(os.path.basename(sub_image))[0]
     split_to_patches(sub_label, 'split_labels', patch_w, patch_h, overlay_x, overlay_y, split_image_format, file_pre_name=pre_name)
 
-def main(options, args):
+def split_sub_images(para_file):
+    print("split sub-images and sub-labels")
 
-    print("%s : split sub-images and sub-labels"% os.path.basename(sys.argv[0]))
-
-    para_file=args[0]
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s'%(para_file, os.getcwd()))
 
@@ -114,6 +112,12 @@ def main(options, args):
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of splitting sub images and labels: %.2f seconds">>time_cost.txt'%duration)
+
+
+def main(options, args):
+
+    para_file=args[0]
+    split_sub_images(para_file)
 
 if __name__ == '__main__':
 

@@ -69,12 +69,9 @@ def get_sample_cout_of_each_class(sample_txt, info_type='training'):
 
     return True
 
+def split_train_val(para_file):
+    print("split data set into training and validation")
 
-if __name__ == '__main__':
-
-    print("%s : split data set into training and validation" % os.path.basename(sys.argv[0]))
-
-    para_file = sys.argv[1]
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
@@ -110,3 +107,10 @@ if __name__ == '__main__':
     get_sample_cout_of_each_class(os.path.join(dir,train_sample_txt), info_type='training')
 
     get_sample_cout_of_each_class(os.path.join(dir,val_sample_txt), info_type='validation')
+
+
+if __name__ == '__main__':
+
+    para_file = sys.argv[1]
+    split_train_val(para_file)
+

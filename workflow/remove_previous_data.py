@@ -10,21 +10,19 @@ add time: 18 January, 2021
 
 import os,sys
 
-if __name__ == '__main__':
+# print(os.path.abspath(sys.argv[0]))
+code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+sys.path.insert(0, code_dir)
+import parameters
 
-    print("%s : remove previous data or results to run again" % os.path.basename(sys.argv[0]))
+import basic_src.io_function as io_function
 
-    para_file = sys.argv[1]
+def remove_previous_data(para_file):
+
+    print("remove previous data or results to run again" )
 
     if os.path.isfile(para_file) is False:
         raise IOError('File %s does not exists in current folder: %s' % (para_file, os.getcwd()))
-
-    # print(os.path.abspath(sys.argv[0]))
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-
-    import basic_src.io_function as io_function
 
     subImage_dir = parameters.get_string_parameters_None_if_absence(para_file,'input_train_dir')
     subLabel_dir = parameters.get_string_parameters_None_if_absence(para_file,'input_label_dir')
@@ -44,6 +42,25 @@ if __name__ == '__main__':
     if os.path.isdir(subLabel_dir_delete):
         io_function.delete_file_or_dir(subLabel_dir_delete)
         print('remove %s '% subLabel_dir_delete)
+
+    if os.path.isdir('split_images'):
+        io_function.delete_file_or_dir('split_images')
+        print('remove %s '% 'split_images')
+    if os.path.isdir('split_labels'):
+        io_function.delete_file_or_dir('split_labels')
+        print('remove %s ' % 'split_labels')
+
+    images_including_aug= os.path.join('list', 'images_including_aug.txt')
+    if os.path.isfile(images_including_aug):
+        io_function.delete_file_or_dir(images_including_aug)
+        print('remove %s ' % 'list/images_including_aug.txt')
+
+
+if __name__ == '__main__':
+    para_file = sys.argv[1]
+    remove_previous_data(para_file)
+
+
 
 
 

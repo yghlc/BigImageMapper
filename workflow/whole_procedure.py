@@ -26,8 +26,10 @@ def remove_previous_data_or_results(para_file):
     # remove previous data or result if necessary
     if os.path.isfile(time_txt):
         io_function.delete_file_or_dir(time_txt)
-    command_string = os.path.join(eo_dir, 'workflow', 'remove_previous_data.py') + ' ' + para_file
-    basic.os_system_exit_code(command_string)
+    # command_string = os.path.join(eo_dir, 'workflow', 'remove_previous_data.py') + ' ' + para_file
+    # basic.os_system_exit_code(command_string)
+    from remove_previous_data import remove_previous_data
+    return remove_previous_data(para_file)
 
 
 def extract_sub_images_using_training_polygons(para_file):
@@ -37,16 +39,20 @@ def extract_sub_images_using_training_polygons(para_file):
         basic.outputlogMessage('warning, sub-image and sub-label folder exists, skip extracting sub-images')
         return
     # extract sub_images based on the training polgyons
-    command_string = os.path.join(eo_dir, 'workflow', 'get_sub_images_multi_regions.py') + ' ' + para_file
-    basic.os_system_exit_code(command_string)
+    # command_string = os.path.join(eo_dir, 'workflow', 'get_sub_images_multi_regions.py') + ' ' + para_file
+    # basic.os_system_exit_code(command_string)
+    from get_sub_images_multi_regions import get_sub_images_multi_regions
+    return get_sub_images_multi_regions(para_file)
 
 
 def split_sub_images(para_file):
     if os.path.isdir('split_images') and os.path.isdir('split_labels'):
         basic.outputlogMessage('warning, split_image sand split_labels folder exists, skip splitting sub-images')
         return
-    command_string = os.path.join(eo_dir, 'workflow', 'split_sub_images.py') + ' ' + para_file
-    basic.os_system_exit_code(command_string)
+    # command_string = os.path.join(eo_dir, 'workflow', 'split_sub_images.py') + ' ' + para_file
+    # basic.os_system_exit_code(command_string)
+    from split_sub_images import split_sub_images
+    return split_sub_images(para_file)
 
 
 def training_img_augment(para_file):

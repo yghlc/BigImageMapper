@@ -40,11 +40,10 @@ def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize,
     if res != 0:
         sys.exit(1)
 
-def main(options, args):
-    print("%s : extract sub-images and sub-labels for a given shape file (training polygons)" %
-          os.path.basename(sys.argv[0]))
+def get_sub_images_multi_regions(para_file):
 
-    para_file = args[0]
+    print("extract sub-images and sub-labels for a given shape file (training polygons)")
+
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
@@ -142,6 +141,12 @@ def main(options, args):
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of getting sub images and labels: %.2f seconds">>time_cost.txt'%duration)
+
+
+def main(options, args):
+
+    para_file = args[0]
+    get_sub_images_multi_regions(para_file)
 
 if __name__ == '__main__':
 
