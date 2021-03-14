@@ -11,19 +11,18 @@ add time: 19 January, 2021
 import os,sys
 import time
 
-if __name__ == '__main__':
+code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+sys.path.insert(0, code_dir)
+import parameters
 
-    print("%s : split sub-images and sub-labels" % os.path.basename(sys.argv[0]))
+def training_img_augment(para_file):
 
-    para_file=sys.argv[1]
+    print("split sub-images and sub-labels")
+
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s'%(para_file, os.getcwd()))
 
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-
-    augscript = os.path.join(code_dir,'datasets','image_augment.py')
+    # augscript = os.path.join(code_dir,'datasets','image_augment.py')
 
     img_ext = parameters.get_string_parameters_None_if_absence(para_file,'split_image_format')
     print("image format: %s"% img_ext)
@@ -66,3 +65,9 @@ if __name__ == '__main__':
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of data augmentation: %.2f seconds">>time_cost.txt'%duration)
+
+if __name__ == '__main__':
+    para_file = sys.argv[1]
+    training_img_augment(para_file)
+
+

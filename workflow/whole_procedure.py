@@ -59,8 +59,10 @@ def training_img_augment(para_file):
     if os.path.isfile(os.path.join('list', 'images_including_aug.txt')):
         basic.outputlogMessage('warning, list/images_including_aug.txt exists, skip data augmentation')
         return
-    command_string = os.path.join(eo_dir, 'workflow', 'training_img_augment.py') + ' ' + para_file
-    basic.os_system_exit_code(command_string)
+    # command_string = os.path.join(eo_dir, 'workflow', 'training_img_augment.py') + ' ' + para_file
+    # basic.os_system_exit_code(command_string)
+    from training_img_augment import training_img_augment
+    return training_img_augment(para_file)
 
 
 def split_train_val(para_file):
