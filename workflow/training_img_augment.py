@@ -17,7 +17,7 @@ import parameters
 
 def training_img_augment(para_file):
 
-    print("split sub-images and sub-labels")
+    print("start data augmentation")
 
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s'%(para_file, os.getcwd()))
@@ -43,6 +43,7 @@ def training_img_augment(para_file):
     image_augment_main(para_file,'list/trainval.txt',img_list_aug_txt,'split_images','split_images',img_ext,False,proc_num)
 
     #augment training lables
+    print("image augmentation on label patches")
     # command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_labels' + ' -e ' + img_ext + ' -n ' + str(proc_num) + \
     #                  ' -o ' + 'split_labels' + ' -l ' + img_list_aug_txt + ' ' + 'list/trainval.txt' + ' --is_ground_truth '
     #
