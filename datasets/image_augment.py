@@ -25,6 +25,13 @@ num_classes = 0
 import multiprocessing
 from multiprocessing import Pool
 
+code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+sys.path.insert(0, code_dir)
+import parameters
+
+import basic_src.basic as basic
+import basic_src.io_function as io_function
+
 def remove_unexpected_ids(img_data, img_name):
     '''
     remove unexpected ids after augmentation, it will modify the numpy array
@@ -314,6 +321,8 @@ def augment_one_line(index, line, ignore_classes,file_count,img_dir,extension,ou
 
 def image_augment_main(para_file,img_list_txt,save_list,img_dir,out_dir,extension,is_ground_truth,proc_num):
 
+    basic.setlogfile('log_data_augmentation.txt')
+
     if os.path.isfile(img_list_txt) is False:
         raise IOError("File %s not exist" % img_list_txt)
 
@@ -445,13 +454,5 @@ if __name__ == "__main__":
         print('error, parameter file is required')
         sys.exit(2)
 
-    code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
-    sys.path.insert(0, code_dir)
-    import parameters
-
-
-    import basic_src.basic as basic
-    import basic_src.io_function as io_function
-    basic.setlogfile('log_data_augmentation.txt')
 
     main(options, args)
