@@ -20,6 +20,8 @@ from workflow.deeplab_train import evaluation_deeplab
 from workflow.deeplab_train import pre_trained_tar_21_classes
 from workflow.deeplab_train import pre_trained_tar_19_classes
 
+# the python with tensorflow 1.x installed
+tf1x_python = 'python'
 
 def run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num):
 
