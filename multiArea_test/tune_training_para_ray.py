@@ -102,7 +102,8 @@ def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training
 
     os.system('rm -rf %s/multi_inf_results'%work_dir)
     os.system('rm -rf %s/split*'%work_dir)
-    os.system('rm -rf %s/sub*'%work_dir)
+    os.system('rm -rf %s/sub*s'%work_dir)   # only subImages and subLabels
+    os.system('rm -rf %s/sub*s_delete'%work_dir)   # only subImages_delete and subLabels_delete
     os.system('rm -rf %s/tfrecord*'%work_dir)
 
     iou_path = os.path.join(work_dir,exp_name,'eval','miou.txt')
