@@ -72,8 +72,10 @@ def split_train_val(para_file):
     if os.path.isfile(train_list_txt) and os.path.isfile(val_list_txt):
         basic.outputlogMessage('warning, split sample list exists, skip split_train_val')
         return
-    command_string = os.path.join(eo_dir, 'workflow', 'split_train_val.py') + ' ' + para_file
-    basic.os_system_exit_code(command_string)
+    # command_string = os.path.join(eo_dir, 'workflow', 'split_train_val.py') + ' ' + para_file
+    # basic.os_system_exit_code(command_string)
+    import split_train_val
+    return split_train_val.split_train_val(para_file)
 
 
 def build_TFrecord_tf1x(para_file):

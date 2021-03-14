@@ -31,24 +31,27 @@ if __name__ == '__main__':
 
     SECONDS=time.time()
 
+    from datasets.image_augment import image_augment_main
 
     #augment training images
     print("image augmentation on image patches")
     img_list_aug_txt = 'list/images_including_aug.txt'
-    command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_images' + ' -e ' + img_ext + ' -n ' + str(proc_num) + \
-                     ' -o ' + 'split_images' + ' -l ' + img_list_aug_txt + ' ' + 'list/trainval.txt'
-    res = os.system(command_string)
-    if res!=0:
-        sys.exit(1)
-
+    # command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_images' + ' -e ' + img_ext + ' -n ' + str(proc_num) + \
+    #                  ' -o ' + 'split_images' + ' -l ' + img_list_aug_txt + ' ' + 'list/trainval.txt'
+    # res = os.system(command_string)
+    # if res!=0:
+    #     sys.exit(1)
+    image_augment_main(para_file,'list/trainval.txt',img_list_aug_txt,'split_images','split_images',img_ext,False,proc_num)
 
     #augment training lables
-    command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_labels' + ' -e ' + img_ext + ' -n ' + str(proc_num) + \
-                     ' -o ' + 'split_labels' + ' -l ' + img_list_aug_txt + ' ' + 'list/trainval.txt' + ' --is_ground_truth '
-
-    res = os.system(command_string)
-    if res!=0:
-        sys.exit(1)
+    # command_string = augscript + ' -p ' + para_file + ' -d ' + 'split_labels' + ' -e ' + img_ext + ' -n ' + str(proc_num) + \
+    #                  ' -o ' + 'split_labels' + ' -l ' + img_list_aug_txt + ' ' + 'list/trainval.txt' + ' --is_ground_truth '
+    #
+    # res = os.system(command_string)
+    # if res!=0:
+    #     sys.exit(1)
+    # save the result to the same file (redundant, they have the same filename)
+    image_augment_main(para_file, 'list/trainval.txt', img_list_aug_txt, 'split_labels', 'split_labels', img_ext, True,proc_num)
 
     if os.path.isfile(img_list_aug_txt):
         os.system(' cp %s list/trainval.txt'%img_list_aug_txt)

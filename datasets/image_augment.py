@@ -312,43 +312,31 @@ def augment_one_line(index, line, ignore_classes,file_count,img_dir,extension,ou
         raise ('Error, Failed in image augmentation')
     return True
 
+def image_augment_main(para_file,img_list_txt,save_list,img_dir,out_dir,extension,is_ground_truth,proc_num):
 
-def main(options, args):
-
-    if options.out_dir is None:
-        out_dir = "data_augmentation_dir"
-    else:
-        out_dir = options.out_dir
+    if os.path.isfile(img_list_txt) is False:
+        raise IOError("File %s not exist" % img_list_txt)
 
     if os.path.isdir(out_dir) is False:
         os.makedirs(out_dir)
 
-    # in most case, img_dir is the same as out_dir
-    img_dir = options.img_dir
     if img_dir != out_dir:
         raise ValueError('set image dir and output dir be the same, making it easy to update image list')
-    extension = options.extension
-
-    is_ground_truth = options.ground_truth
-    proc_num = options.process_num
 
     # print(options.para_file)
-    augmentation = parameters.get_string_list_parameters_None_if_absence(options.para_file,'data_augmentation')
+    augmentation = parameters.get_string_list_parameters_None_if_absence(para_file,'data_augmentation')
     if augmentation is None or len(augmentation) < 1  :
         basic.outputlogMessage('No input augmentation requirement (e.g. flip), skip data augmentation')
         return True
 
     # number of classes
-    num_classes_noBG = parameters.get_digit_parameters_None_if_absence(options.para_file, 'NUM_CLASSES_noBG', 'int')
+    num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     global num_classes
     num_classes = num_classes_noBG + 1
 
     # ignored classes
-    ignore_classes = parameters.get_string_list_parameters_None_if_absence(options.para_file,'data_aug_ignore_classes')
+    ignore_classes = parameters.get_string_list_parameters_None_if_absence(para_file,'data_aug_ignore_classes')
 
-    img_list_txt = args[0]
-    if os.path.isfile(img_list_txt) is False:
-        raise IOError("File %s not exist" % img_list_txt)
 
     with open(img_list_txt, 'r') as f_obj:
         files_list = f_obj.readlines()
@@ -370,23 +358,46 @@ def main(options, args):
     #         return False
     #     index += 1
 
-    parameters_list = [(index+1, line, ignore_classes,file_count,img_dir,extension,out_dir,is_ground_truth,augmentation)
-                       for index, line in enumerate(files_list)]
+    parameters_list = [
+        (index + 1, line, ignore_classes, file_count, img_dir, extension, out_dir, is_ground_truth, augmentation)
+        for index, line in enumerate(files_list)]
     theadPool = Pool(proc_num)  # multi processes
     results = theadPool.starmap(augment_one_line, parameters_list)  # need python3
-    augmented = [1 for item in results if item is True ]
+    augmented = [1 for item in results if item is True]
     # print(sum(augmented))
 
-    if sum(augmented)< file_count:
-        basic.outputlogMessage('Some of the images belong to %s are ignored'%','.join(ignore_classes))
-
+    if sum(augmented) < file_count:
+        basic.outputlogMessage('Some of the images belong to %s are ignored' % ','.join(ignore_classes))
 
     # update img_list_txt (img_dir is the same as out_dir)
-    new_files = io_function.get_file_list_by_ext(extension,out_dir,bsub_folder=False)
-    new_files_noext = [ os.path.splitext(os.path.basename(item))[0]+'\n'  for item in new_files]
-    basic.outputlogMessage('save new file list to %s'%options.save_list)
-    with open(options.save_list,'w') as f_obj:
+    new_files = io_function.get_file_list_by_ext(extension, out_dir, bsub_folder=False)
+    new_files_noext = [os.path.splitext(os.path.basename(item))[0] + '\n' for item in new_files]
+    basic.outputlogMessage('save new file list to %s' % save_list)
+    with open(save_list, 'w') as f_obj:
         f_obj.writelines(new_files_noext)
+
+
+def main(options, args):
+
+    if options.out_dir is None:
+        out_dir = "data_augmentation_dir"
+    else:
+        out_dir = options.out_dir
+
+    # in most case, img_dir is the same as out_dir
+    img_dir = options.img_dir
+
+    extension = options.extension
+
+    is_ground_truth = options.ground_truth
+    proc_num = options.process_num
+    para_file = options.para_file
+    save_list = options.save_list
+
+    img_list_txt = args[0]
+    image_augment_main(para_file, img_list_txt,save_list, img_dir, out_dir, extension, is_ground_truth, proc_num)
+
+
 
 
 

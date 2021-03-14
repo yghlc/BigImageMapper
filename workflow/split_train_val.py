@@ -88,13 +88,18 @@ def split_train_val(para_file):
     dir = 'list'
     all_img_list = os.path.join(dir,'trainval.txt')
 
-    command_string = script + ' -p ' + str(training_data_per) + \
-                     ' -t ' + train_sample_txt  + \
-                     ' -v ' + val_sample_txt  + \
-                     ' --shuffle ' + all_img_list
-    res = os.system(command_string)
-    if res!=0:
-        sys.exit(1)
+    # command_string = script + ' -p ' + str(training_data_per) + \
+    #                  ' -t ' + train_sample_txt  + \
+    #                  ' -v ' + val_sample_txt  + \
+    #                  ' --shuffle ' + all_img_list
+    # res = os.system(command_string)
+    # if res!=0:
+    #     sys.exit(1)
+
+    Do_shuffle = True
+    from datasets.train_test_split import train_test_split_main
+    train_test_split_main(all_img_list,training_data_per,Do_shuffle,train_sample_txt,val_sample_txt)
+
 
     # save brief information of image patches
     img_ext = parameters.get_string_parameters_None_if_absence(para_file, 'split_image_format')
