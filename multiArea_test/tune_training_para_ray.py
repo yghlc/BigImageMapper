@@ -143,7 +143,7 @@ def main():
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
         trial_name_creator=tune.function(trial_name_string),
         trial_dirname_creator=tune.function(trial_dir_string),
-        # resume=True,
+        resume=True,
         config={
             "lr": tune.grid_search([0.007, 0.014, 0.28]),   # ,0.007, 0.014, 0.028,0.056
             "iter_num": tune.grid_search([30000, 60000, 90000]), # , 60000,90000
