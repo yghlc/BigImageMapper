@@ -67,6 +67,7 @@ def copy_ini_files(ini_dir, work_dir, para_file, area_ini_list,backbone):
 def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes):
 
     sys.path.insert(0, code_dir)
+    sys.path.insert(0, os.path.join(code_dir,'workflow'))   # for some module in workflow folder
     import basic_src.io_function as io_function
     import parameters
     import workflow.whole_procedure as whole_procedure
