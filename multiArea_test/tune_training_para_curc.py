@@ -147,7 +147,8 @@ def remove_files(work_dir):
 
     os.system('rm -rf %s/multi_inf_results'%work_dir)
     os.system('rm -rf %s/split*'%work_dir)
-    os.system('rm -rf %s/sub*'%work_dir)
+    os.system('rm -rf %s/sub*s'%work_dir)   # only subImages and subLabels
+    os.system('rm -rf %s/sub*s_delete'%work_dir)   # only subImages_delete and subLabels_delete
     os.system('rm -rf %s/tfrecord*'%work_dir)
     
 
