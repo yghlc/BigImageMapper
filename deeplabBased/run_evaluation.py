@@ -20,7 +20,7 @@ import workflow.deeplab_train as deeplab_train
 from workflow.deeplab_train import evaluation_deeplab
 from workflow.deeplab_train import pre_trained_tar_21_classes
 from workflow.deeplab_train import pre_trained_tar_19_classes
-
+from workflow.deeplab_train import get_miou_list_class_all
 
 def run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num):
 
@@ -73,6 +73,10 @@ def run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_
                        EVAL_LOGDIR,
                        dataset_dir, crop_size_str, max_eva_number, depth_multiplier, decoder_output_stride,
                        aspp_convs_filters,eval_interval_secs=eval_interval_secs)
+
+
+    # get miou again
+    miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
 
 def prepare_data_for_evaluation(para_file):
 
