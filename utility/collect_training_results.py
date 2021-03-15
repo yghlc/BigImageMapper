@@ -178,10 +178,10 @@ def main(options, args):
     with pd.ExcelWriter(output_file) as writer:
         train_out_table_pd.to_excel(writer, sheet_name='training parameter and results')
         # set format
-        # workbook = writer.book
-        # format = workbook.add_format({'num_format': '#0.000'})
-        # train_out_table_sheet = writer.sheets['training parameter and results']
-        # train_out_table_sheet.set_column('G:I',None,format)
+        workbook = writer.book
+        format = workbook.add_format({'num_format': '#0.000'})
+        train_out_table_sheet = writer.sheets['training parameter and results']
+        train_out_table_sheet.set_column('O:P',None,format)
 
 
 
