@@ -197,9 +197,10 @@ def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1, b_tra
 
 def main(options, args):
     para_file = args[0]
-    gpu_num = options.gpu_num
+    # gpu_num = options.gpu_num
+    b_train_only = options.b_train_only
 
-    run_whole_procedure(para_file,gpu_num=gpu_num)
+    run_whole_procedure(para_file,b_train_only=b_train_only)
 
 
 if __name__ == '__main__':
@@ -207,9 +208,15 @@ if __name__ == '__main__':
     parser = OptionParser(usage=usage, version="1.0 2021-02-22")
     parser.description = 'Introduction: run the whole procedure: training, inference, and post-processing '
 
-    parser.add_option("-n", "--gpu_num",
-                      action="store", dest="gpu_num", type=int, default=2,
-                      help="the number of GPUs for training")
+    # should use CUDA_VISIBLE_DEVICES to set GPUs
+    # parser.add_option("-n", "--gpu_num",
+    #                   action="store", dest="gpu_num", type=int, default=2,
+    #                   help="the number of GPUs for training")
+
+    parser.add_option("-t", "--b_train_only",
+                      action="store_true", dest="b_train_only",default=False,
+                      help="indicate to run training only, not ")
+
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
