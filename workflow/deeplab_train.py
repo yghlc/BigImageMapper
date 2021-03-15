@@ -639,6 +639,13 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                         basic.outputlogMessage('kill training processing with id: %d' % train_pid)
 
                     break
+
+        # if the evaluation step is less than saved model iteration, run another iteration again immediately
+        already_trained_iteration = get_trained_iteration(TRAIN_LOGDIR)
+        miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
+        if already_trained_iteration > miou_dict['step'][-1]:
+            continue
+
         # if finished training
         if train_process.is_alive() is False:
             break
