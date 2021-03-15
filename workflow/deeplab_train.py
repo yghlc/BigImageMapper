@@ -710,14 +710,11 @@ def output_early_stopping_message(TRAIN_LOGDIR):
     with open('early_stopping.txt','w') as f_obj:
         f_obj.writelines('early stopping, saved model has been trained %d iteration\n'%trained_iter)
 
+def deeplab_train_main(para_file,gpu_num):
 
-def main(options, args):
-
-    print("%s : train deeplab" % os.path.basename(sys.argv[0]))
+    print("train deeplab")
     SECONDS = time.time()
 
-    para_file = sys.argv[1]
-    gpu_num = int(sys.argv[2])
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
@@ -753,6 +750,13 @@ def main(options, args):
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of training: %.2f seconds">>time_cost.txt'%duration)
+
+
+def main(options, args):
+
+    para_file = sys.argv[1]
+    gpu_num = int(sys.argv[2])
+    deeplab_train_main(para_file,gpu_num)
 
 if __name__ == '__main__':
 

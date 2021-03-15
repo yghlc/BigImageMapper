@@ -104,8 +104,10 @@ def training(para_file, gpu_num):
     #     gpu_num = len(deviceIDs)
 
     # the script can check the trained iteration and decide to train or not
-    command_string = os.path.join(eo_dir, 'workflow', 'deeplab_train.py') + ' ' + para_file + ' ' + str(gpu_num)
-    basic.os_system_exit_code(command_string)
+    # command_string = os.path.join(eo_dir, 'workflow', 'deeplab_train.py') + ' ' + para_file + ' ' + str(gpu_num)
+    # basic.os_system_exit_code(command_string)
+    import deeplab_train
+    deeplab_train.deeplab_train_main(para_file, gpu_num)
 
 
 def export_model(para_file):
