@@ -15,6 +15,9 @@ import time
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
+import basic_src.io_function as io_function
+
+import utility.plot_miou_loss_curve as plot_miou_loss_curve
 
 import workflow.deeplab_train as deeplab_train
 from workflow.deeplab_train import evaluation_deeplab
@@ -77,6 +80,26 @@ def run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_
 
     # get miou again
     miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
+
+    # # get iou and backup
+    # iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
+    #
+    # # backup miou and training_loss & learning rate
+    # test_id = os.path.basename(WORK_DIR) + '_' + expr_name
+    # backup_dir = os.path.join(WORK_DIR, 'result_backup')
+    # if os.path.isdir(backup_dir) is False:
+    #     io_function.mkdir(backup_dir)
+    # new_iou_name = os.path.join(backup_dir, test_id+ '_'+os.path.basename(iou_path))
+    # io_function.copy_file_to_dst(iou_path, new_iou_name, overwrite=True)
+    #
+    # # plot mIOU, loss, and learnint rate curves, and backup
+    # miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_path)
+    #
+    # miou_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(miou_curve_path))
+    # io_function.copy_file_to_dst(miou_curve_path, miou_curve_bakname, overwrite=True)
+
+
+
 
 def prepare_data_for_evaluation(para_file):
 
