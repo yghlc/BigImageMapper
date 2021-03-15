@@ -19,6 +19,8 @@ import parameters
 
 import pandas as pd
 
+import workflow.deeplab_train as deeplab_train
+
 # para_list = ['lr', 'iter_num', 'batch_size', 'backbone',
 #              'buffer_size', 'training_data_per', 'data_augmentation','data_aug_ignore_classes']
 
@@ -77,6 +79,20 @@ def read_para_values(work_dir,para_file,train_output):
 
     return True
 
+def get_early_stopping_trained_iteration(work_dir,para_file,train_output):
+    if os.path.isfile(os.path.join(work_dir,'early_stopping.txt')):
+        train_output['early_stopping'].append('Yes')
+    else:
+        train_output['early_stopping'].append('No')
+
+
+    exp_name = parameters.get_string_parameters(os.path.join(work_dir,para_file), 'expr_name')
+    TRAIN_LOGDIR = os.path.join(work_dir, exp_name, 'train')
+    trained_iter = deeplab_train.get_trained_iteration(TRAIN_LOGDIR)
+    train_output['model_train_iter'].append(trained_iter)
+
+    return True
+
 def main(options, args):
     root_dir = args[0]
     if os.path.isdir(root_dir) is False:
@@ -100,6 +116,8 @@ def main(options, args):
     train_output['class_1'] = []
     train_output['overall'] = []
     train_output['step'] = []
+    train_output['early_stopping'] = []
+    train_output['model_train_iter'] = []
 
     for folder in folder_list:
         print('read parameter and results for %s'%folder)
