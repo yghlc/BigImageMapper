@@ -144,6 +144,12 @@ def main(options, args):
     folder_list = [item for item in folder_list if os.path.isdir(item) ]
     folder_list.sort()
 
+    # ray may create a new folder if the previous one already exists
+    dupli_foldes = io_function.get_file_list_by_pattern(root_dir,folder_pattern + '_????')
+    dupli_foldes = [item for item in dupli_foldes if os.path.isdir(item) ]
+    dupli_foldes.sort()
+    folder_list.extend(dupli_foldes)
+
     para_file = options.para_file
     output_file = options.output
     if output_file is None:
