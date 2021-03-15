@@ -20,6 +20,7 @@ import time
 sys.path.insert(0, code_dir)
 import parameters
 # import workflow.whole_procedure as whole_procedure
+import workflow.deeplab_train as deeplab_train
 
 sys.path.insert(0, os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS'))
 import slurm_utility
@@ -88,37 +89,43 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
     if os.path.isdir(work_dir) is False:
         io_function.mkdir(work_dir)
         os.chdir(work_dir)
+
+        # create a training folder
+        copy_ini_files(ini_dir, work_dir, para_file, area_ini_list, backbone)
+
+        # change para_file
+        modify_parameter(os.path.join(work_dir, para_file), 'network_setting_ini', backbone)
+        modify_parameter(os.path.join(work_dir, backbone), 'base_learning_rate', lr)
+        modify_parameter(os.path.join(work_dir, backbone), 'batch_size', batch_size)
+        modify_parameter(os.path.join(work_dir, backbone), 'iteration_num', iter_num)
+
+        modify_parameter(os.path.join(work_dir, para_file), 'buffer_size', buffer_size)
+        modify_parameter(os.path.join(work_dir, para_file), 'training_data_per', training_data_per)
+        modify_parameter(os.path.join(work_dir, para_file), 'data_augmentation', data_augmentation)
+        modify_parameter(os.path.join(work_dir, para_file), 'data_aug_ignore_classes', data_aug_ignore_classes)
+
+        # run training
+        # whole_procedure.run_whole_procedure(para_file, b_train_only=True)
+        # copy job.sh exe.sh and other, run submit jobs
+        copy_curc_job_files(jobsh_dir, work_dir)
+        slurm_utility.modify_slurm_job_sh('job_tf_GPU.sh', 'job-name', job_name)
+
     else:
         os.chdir(work_dir)
-        o_miou = get_overall_miou_after_training(work_dir,para_file)
-        # if result exists
-        if o_miou is not False:
-            print('The folder: %s and the results already exist, skip submitting a new job'%work_dir)
-            return work_dir, os.path.join(work_dir, para_file)
+
         submit_job_names = slurm_utility.get_submited_job_names(curc_username)
         if job_name in submit_job_names:
             print('The folder: %s already exist and the job has been submitted, skip submitting a new job'%work_dir)
             return work_dir, os.path.join(work_dir, para_file)
 
-    # create a training folder
-    copy_ini_files(ini_dir,work_dir,para_file,area_ini_list,backbone)
-
-    # change para_file
-    modify_parameter(os.path.join(work_dir, para_file),'network_setting_ini',backbone)
-    modify_parameter(os.path.join(work_dir, backbone),'base_learning_rate',lr)
-    modify_parameter(os.path.join(work_dir, backbone),'batch_size',batch_size)
-    modify_parameter(os.path.join(work_dir, backbone),'iteration_num',iter_num)
-
-    modify_parameter(os.path.join(work_dir, para_file),'buffer_size',buffer_size)
-    modify_parameter(os.path.join(work_dir, para_file),'training_data_per',training_data_per)
-    modify_parameter(os.path.join(work_dir, para_file),'data_augmentation',data_augmentation)
-    modify_parameter(os.path.join(work_dir, para_file),'data_aug_ignore_classes',data_aug_ignore_classes)
-
-    # run training
-    # whole_procedure.run_whole_procedure(para_file, b_train_only=True)
-    # copy job.sh exe.sh and other, run submit jobs
-    copy_curc_job_files(jobsh_dir,work_dir)
-    slurm_utility.modify_slurm_job_sh('job_tf_GPU.sh', 'job-name', job_name)
+        # if result exists, well trained, or early stopping
+        early_stop, model_trained_iter = check_early_stopping_trained_iteration(work_dir,para_file)
+        if early_stop is True:
+            print('The folder: %s is early_stopping with trained model of % iteration, skip submitting a new job' % (work_dir,model_trained_iter))
+            return work_dir, os.path.join(work_dir, para_file)
+        if model_trained_iter >= iter_num:
+            print('The folder: %s has been trained of %d iteration (>=required), skip submitting a new job'%(work_dir,model_trained_iter))
+            return work_dir, os.path.join(work_dir, para_file)
 
     # submit the job
     # sometime, when submit a job, end with: singularity: command not found,and exist, wired, then try run submit a job in scomplie note
@@ -143,6 +150,18 @@ def remove_files(work_dir):
     os.system('rm -rf %s/sub*'%work_dir)
     os.system('rm -rf %s/tfrecord*'%work_dir)
     
+
+def check_early_stopping_trained_iteration(work_dir,para_file):
+    early_stop = False
+    if os.path.isfile(os.path.join(work_dir,'early_stopping.txt')):
+        early_stop = True
+
+    exp_name = parameters.get_string_parameters(os.path.join(work_dir,para_file), 'expr_name')
+    TRAIN_LOGDIR = os.path.join(work_dir, exp_name, 'train')
+    model_trained_iter = deeplab_train.get_trained_iteration(TRAIN_LOGDIR)
+
+    return early_stop, model_trained_iter
+
 
 def get_overall_miou_after_training(work_dir,para_file):
 
