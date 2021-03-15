@@ -93,6 +93,28 @@ def get_early_stopping_trained_iteration(work_dir,para_file,train_output):
 
     return True
 
+def get_training_image_patch_count(work_dir,train_output):
+    info_txt = os.path.join(work_dir, 'sub_images_patches_info.txt')
+    with open(info_txt, 'r') as f_obj:
+        lines = f_obj.readlines()
+        idx = 0
+        while idx < (len(lines)):
+            if 'Sample count' in lines[idx] and 'training' in lines[idx]: # next two line is sample count
+                train_output['train_class_0'] = int(lines[idx + 1].split(':')[1])
+                train_output['train_class_1'] = int(lines[idx + 2].split(':')[1])
+                idx += 2
+                continue
+
+            if 'Sample count' in lines[idx] and 'validation' in lines[idx]: # next two line is sample count
+                train_output['val_class_0'] = int(lines[idx + 1].split(':')[1])
+                train_output['val_class_1'] = int(lines[idx + 2].split(':')[1])
+                idx += 2
+                continue
+
+            idx += 1
+
+    return True
+
 def main(options, args):
     root_dir = args[0]
     if os.path.isdir(root_dir) is False:
@@ -119,10 +141,16 @@ def main(options, args):
     train_output['early_stopping'] = []
     train_output['model_train_iter'] = []
 
+    train_output['train_class_0'] = []
+    train_output['train_class_1'] = []
+    train_output['val_class_0'] = []
+    train_output['val_class_1'] = []
+
     for folder in folder_list:
         print('read parameter and results for %s'%folder)
         train_output['folder'].append(os.path.basename(folder))
         read_para_values(folder,para_file,train_output)
+        get_training_image_patch_count(folder,train_output)
         get_miou_of_overall_and_class_1_step(folder, para_file, train_output)
         get_early_stopping_trained_iteration(folder, para_file, train_output)
 
