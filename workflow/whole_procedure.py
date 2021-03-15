@@ -153,8 +153,9 @@ def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1, b_tra
         gpus_str = [ item.strip() for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
         gpu_num = len(gpus_str)
     else:
-        print('gpu number is set to 1')
-        gpu_num = 1
+        # print('gpu number is set to 1')
+        # gpu_num = 1
+        pass
 
 
 
@@ -199,10 +200,10 @@ def run_whole_procedure(para_file, working_dir=None, gpus=None, gpu_num=1, b_tra
 
 def main(options, args):
     para_file = args[0]
-    # gpu_num = options.gpu_num
+    gpu_num = options.gpu_num
     b_train_only = options.b_train_only
 
-    run_whole_procedure(para_file,b_train_only=b_train_only)
+    run_whole_procedure(para_file,b_train_only=b_train_only,gpu_num=gpu_num)
 
 
 if __name__ == '__main__':
@@ -211,9 +212,10 @@ if __name__ == '__main__':
     parser.description = 'Introduction: run the whole procedure: training, inference, and post-processing '
 
     # should use CUDA_VISIBLE_DEVICES to set GPUs
-    # parser.add_option("-n", "--gpu_num",
-    #                   action="store", dest="gpu_num", type=int, default=2,
-    #                   help="the number of GPUs for training")
+    # still need to set gpu_num if CUDA_VISIBLE_DEVICES is not set sometime
+    parser.add_option("-n", "--gpu_num",
+                      action="store", dest="gpu_num", type=int, default=2,
+                      help="the number of GPUs for training")
 
     parser.add_option("-t", "--b_train_only",
                       action="store_true", dest="b_train_only",default=False,
