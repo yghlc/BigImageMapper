@@ -149,17 +149,17 @@ def main(options, args):
     train_output['folder'] = []
     for para in para_ini_list:
         train_output[para] = []
+    
+    train_output['train_class_0'] = []
+    train_output['train_class_1'] = []
+    train_output['val_class_0'] = []
+    train_output['val_class_1'] = []
 
     train_output['class_1'] = []
     train_output['overall'] = []
     train_output['step'] = []
     train_output['early_stopping'] = []
     train_output['model_train_iter'] = []
-
-    train_output['train_class_0'] = []
-    train_output['train_class_1'] = []
-    train_output['val_class_0'] = []
-    train_output['val_class_1'] = []
 
     for folder in folder_list:
         print('read parameter and results for %s'%folder)
