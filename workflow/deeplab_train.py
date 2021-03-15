@@ -449,6 +449,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                     # if the last five miou did not improve, then stop training
                     if np.all(np.diff(miou_dict['overall'][-5:]) < 0.005): # 0.0001 (%0.01)  # 0.5 %
                         basic.outputlogMessage('early stopping: stop training because overall miou did not improved in the last five evaluation')
+                        output_early_stopping_message(TRAIN_LOGDIR)
                         break
 
     # plot mIOU, loss, and learnint rate curves
@@ -619,8 +620,9 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
             miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
             if 'overall' in miou_dict.keys() and  len(miou_dict['overall']) >= 5:
                 # if the last five miou did not improve, then stop training
-                if np.all(np.diff(miou_dict['overall'][-5:]) < 0.0001):
+                if np.all(np.diff(miou_dict['overall'][-5:]) < 0.005): # 0.0001 (%0.01)  # 0.5 %
                     basic.outputlogMessage('early stopping: stop training because overall miou did not improved in the last five evaluation')
+                    output_early_stopping_message(TRAIN_LOGDIR)
 
                     # train_process.kill()    # this one seems not working
                     # subprocess pid different from ps output
@@ -696,6 +698,10 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
 #     global work_dir
 #     work_dir = os.path.expanduser('~/codes/PycharmProjects/Landuse_DL/working_dir')
 
+def output_early_stopping_message(TRAIN_LOGDIR):
+    trained_iter = get_trained_iteration(TRAIN_LOGDIR)
+    with open('early_stopping.txt','w') as f_obj:
+        f_obj.writelines('early stopping, saved model has been trained %d iteration\n'%trained_iter)
 
 
 def main(options, args):

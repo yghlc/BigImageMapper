@@ -55,6 +55,9 @@ def remove_previous_data(para_file):
         io_function.delete_file_or_dir(images_including_aug)
         print('remove %s ' % 'list/images_including_aug.txt')
 
+    if os.path.isdir('tfrecord'):
+        io_function.delete_file_or_dir('tfrecord')
+        print('remove %s ' % 'tfrecord')
 
 if __name__ == '__main__':
     para_file = sys.argv[1]
