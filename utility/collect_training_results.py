@@ -103,15 +103,19 @@ def get_training_image_patch_count(work_dir,train_output):
             idx = 0
             while idx < (len(lines)):
                 if 'Sample count' in lines[idx] and 'training' in lines[idx]: # next two line is sample count
-                    train_output['train_class_0'].append(int(lines[idx + 1].split(':')[1]))
-                    train_output['train_class_1'].append(int(lines[idx + 2].split(':')[1]))
+                    line_str = lines[idx + 1].split()
+                    train_output['train_%s'%line_str[3]].append(int(line_str[-1]))
+                    line_str2 = lines[idx + 2].split()
+                    train_output['train_%s'%line_str2[3]].append(int(line_str2[-1]))
                     idx += 2
                     b_found_train = True
                     continue
 
                 if 'Sample count' in lines[idx] and 'validation' in lines[idx]: # next two line is sample count
-                    train_output['val_class_0'].append(int(lines[idx + 1].split(':')[1]))
-                    train_output['val_class_1'].append(int(lines[idx + 2].split(':')[1])) 
+                    line_str = lines[idx + 1].split()
+                    train_output['val_%s'%line_str[3]].append(int(line_str[-1]))
+                    line_str2 = lines[idx + 2].split()
+                    train_output['val_%s'%line_str2[3]].append(int(line_str2[-1]))
                     idx += 2
                     b_found_val = True
                     continue
