@@ -95,23 +95,38 @@ def get_early_stopping_trained_iteration(work_dir,para_file,train_output):
 
 def get_training_image_patch_count(work_dir,train_output):
     info_txt = os.path.join(work_dir, 'sub_images_patches_info.txt')
-    with open(info_txt, 'r') as f_obj:
-        lines = f_obj.readlines()
-        idx = 0
-        while idx < (len(lines)):
-            if 'Sample count' in lines[idx] and 'training' in lines[idx]: # next two line is sample count
-                train_output['train_class_0'] = int(lines[idx + 1].split(':')[1])
-                train_output['train_class_1'] = int(lines[idx + 2].split(':')[1])
-                idx += 2
-                continue
+    b_found_train = False
+    b_found_val = False
+    if os.path.isfile(info_txt):
+        with open(info_txt, 'r') as f_obj:
+            lines = [item.strip() for item in f_obj.readlines()]
+            idx = 0
+            while idx < (len(lines)):
+                if 'Sample count' in lines[idx] and 'training' in lines[idx]: # next two line is sample count
+                    train_output['train_class_0'].append(int(lines[idx + 1].split(':')[1]))
+                    train_output['train_class_1'].append(int(lines[idx + 2].split(':')[1]))
+                    idx += 2
+                    b_found_train = True
+                    continue
 
-            if 'Sample count' in lines[idx] and 'validation' in lines[idx]: # next two line is sample count
-                train_output['val_class_0'] = int(lines[idx + 1].split(':')[1])
-                train_output['val_class_1'] = int(lines[idx + 2].split(':')[1])
-                idx += 2
-                continue
+                if 'Sample count' in lines[idx] and 'validation' in lines[idx]: # next two line is sample count
+                    train_output['val_class_0'].append(int(lines[idx + 1].split(':')[1]))
+                    train_output['val_class_1'].append(int(lines[idx + 2].split(':')[1])) 
+                    idx += 2
+                    b_found_val = True
+                    continue
 
-            idx += 1
+                idx += 1
+    else:
+        print('warning: %s not in %s'%(info_txt, work_dir))
+    
+    if b_found_train is False:
+        train_output['train_class_0'].append(0)
+        train_output['train_class_1'].append(0)
+    if b_found_val is False:
+        train_output['val_class_0'].append(0)
+        train_output['val_class_1'].append(0)
+
 
     return True
 
