@@ -604,5 +604,20 @@ def get_path_from_txt_list_index(txt_name,input=''):
 
     return val_path
 
+def check_file_or_dir_is_old(file_folder, time_hour_thr):
+    # if not exists, then return False
+    if os.path.isfile(file_folder) is False and os.path.isdir(file_folder) is False:
+        return False
+    now = datetime.now()
+    m_time = datetime.fromtimestamp(os.path.getmtime(file_folder))
+    print('%s modified time: %s'%(file_folder,str(m_time)))
+    diff_time = now - m_time
+    diff_time_hour = diff_time.total_seconds()/3600
+    if diff_time_hour > time_hour_thr:
+        return True
+    else:
+        return False
+
+
 if __name__=='__main__':
     pass
