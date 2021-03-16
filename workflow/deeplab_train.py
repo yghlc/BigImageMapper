@@ -601,8 +601,9 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
         # only run evaluation when there is new trained model
         already_trained_iteration = get_trained_iteration(TRAIN_LOGDIR)
         miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
+        print('Already trained iteration: %d, latest evaluation at %d step'%(already_trained_iteration, miou_dict['step'][-1]))
         if already_trained_iteration > miou_dict['step'][-1]:
-            
+
             # run evaluation and wait until it finished
             gpuid = ""  # set gpuid to empty string, making evaluation run on CPU
             evl_script = os.path.join(deeplab_dir, 'eval.py')
