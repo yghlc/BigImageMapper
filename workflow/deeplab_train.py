@@ -251,7 +251,7 @@ def get_miou_list_class_all(log_dir,class_num):
         'scalars': 0,       # set a 0, to load all scalars
         'histograms': 1
     }
-    miou_dic = {}
+    miou_dic = {'step':[0]} # step 0, need some where
     events_files = io_function.get_file_list_by_pattern(log_dir,'events*')
     if len(events_files) < 1:
         print('warning, No events file in %s'%log_dir)
