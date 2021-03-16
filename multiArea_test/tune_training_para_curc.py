@@ -121,7 +121,7 @@ def submit_training_job(idx, lr, iter_num,batch_size,backbone,buffer_size,traini
         # if result exists, well trained, or early stopping
         early_stop, model_trained_iter = check_early_stopping_trained_iteration(work_dir,para_file)
         if early_stop is True:
-            print('The folder: %s is early_stopping with trained model of % iteration, skip submitting a new job' % (work_dir,model_trained_iter))
+            print('The folder: %s is early_stopping with trained model of %d iteration, skip submitting a new job' % (work_dir,model_trained_iter))
             return work_dir, os.path.join(work_dir, para_file)
         if model_trained_iter >= iter_num:
             print('The folder: %s has been trained of %d iteration (>=required), skip submitting a new job'%(work_dir,model_trained_iter))
