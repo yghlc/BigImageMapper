@@ -597,22 +597,28 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
     #     sys.exit(1)
 
     while True:
-        # run evaluation and wait until it finished
-        gpuid = ""  # set gpuid to empty string, making evaluation run on CPU
-        evl_script = os.path.join(deeplab_dir, 'eval.py')
-        evl_split = os.path.splitext(parameters.get_string_parameters(para_file, 'validation_sample_list_txt'))[0]
-        # max_eva_number = -1  # run as many evaluation as possible, --eval_interval_secs (default is 300 seconds)
-        max_eva_number = 1  # only run once inside the while loop, use while loop to control multiple evaluation
-        eval_process = Process(target=evaluation_deeplab,
-                               args=(evl_script, dataset, evl_split, num_of_classes, model_variant,
-                                     inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,
-                                     TRAIN_LOGDIR, EVAL_LOGDIR,
-                                     dataset_dir, crop_size_str, max_eva_number, depth_multiplier,
-                                     decoder_output_stride, aspp_convs_filters,
-                                     gpuid, eval_interval_secs))
-        eval_process.start()    # put Process inside while loop to avoid error: AssertionError: cannot start a process twice
-        while eval_process.is_alive():
-            time.sleep(5)
+
+        # only run evaluation when there is new trained model
+        already_trained_iteration = get_trained_iteration(TRAIN_LOGDIR)
+        miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
+        if already_trained_iteration > miou_dict['step'][-1]:
+            
+            # run evaluation and wait until it finished
+            gpuid = ""  # set gpuid to empty string, making evaluation run on CPU
+            evl_script = os.path.join(deeplab_dir, 'eval.py')
+            evl_split = os.path.splitext(parameters.get_string_parameters(para_file, 'validation_sample_list_txt'))[0]
+            # max_eva_number = -1  # run as many evaluation as possible, --eval_interval_secs (default is 300 seconds)
+            max_eva_number = 1  # only run once inside the while loop, use while loop to control multiple evaluation
+            eval_process = Process(target=evaluation_deeplab,
+                                   args=(evl_script, dataset, evl_split, num_of_classes, model_variant,
+                                         inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,
+                                         TRAIN_LOGDIR, EVAL_LOGDIR,
+                                         dataset_dir, crop_size_str, max_eva_number, depth_multiplier,
+                                         decoder_output_stride, aspp_convs_filters,
+                                         gpuid, eval_interval_secs))
+            eval_process.start()    # put Process inside while loop to avoid error: AssertionError: cannot start a process twice
+            while eval_process.is_alive():
+                time.sleep(5)
 
         # check if need early stopping
         if b_early_stopping:
