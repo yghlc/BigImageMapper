@@ -188,6 +188,7 @@ def main(options, args):
         get_training_image_patch_count(folder,train_output)
         get_miou_of_overall_and_class_1_step(folder, para_file, train_output)
         get_early_stopping_trained_iteration(folder, para_file, train_output)
+        get_time_other_info_from_tune(folder,train_output)
 
     # save to excel file
     train_out_table_pd = pd.DataFrame(train_output)
