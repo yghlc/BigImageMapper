@@ -18,7 +18,7 @@ sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
 
 
-time_hour_thr = 10
+time_hour_thr = 3
 
 from tune_training_para_curc import remove_files
 

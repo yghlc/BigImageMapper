@@ -100,7 +100,7 @@ def objective_overall_miou(data_augmentation):
 
     # run training
     # whole_procedure.run_whole_procedure(para_file, b_train_only=True)
-    res = os.system('exe_tesia.sh')
+    res = os.system('./exe_tesia.sh')
     if res != 0:
         sys.exit(1)
 
