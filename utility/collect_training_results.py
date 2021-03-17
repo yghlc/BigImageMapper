@@ -134,6 +134,14 @@ def get_training_image_patch_count(work_dir,train_output):
 
     return True
 
+def get_time_other_info_from_tune(work_dir,train_output):
+    res_json = os.path.join(work_dir,'result.json')
+    if os.path.isfile(res_json):
+        tune_res_dict = io_function.read_dict_from_txt_json(res_json)
+        train_output['time_total_h'].append(tune_res_dict['time_total_s']/3600.0)
+    else:
+        train_output['time_total_h'].append(0)
+
 def main(options, args):
     root_dir = args[0]
     if os.path.isdir(root_dir) is False:
@@ -170,6 +178,8 @@ def main(options, args):
     train_output['step'] = []
     train_output['early_stopping'] = []
     train_output['model_train_iter'] = []
+
+    train_output['time_total_h'] = []
 
     for folder in folder_list:
         print('read parameter and results for %s'%folder)
