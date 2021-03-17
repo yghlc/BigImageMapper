@@ -136,7 +136,7 @@ def get_training_image_patch_count(work_dir,train_output):
 
 def get_time_other_info_from_tune(work_dir,train_output):
     res_json = os.path.join(work_dir,'result.json')
-    if os.path.isfile(res_json):
+    if os.path.isfile(res_json) and os.stat(res_json).st_size > 0:
         tune_res_dict = io_function.read_dict_from_txt_json(res_json)
         train_output['time_total_h'].append(tune_res_dict['time_total_s']/3600.0)
     else:
