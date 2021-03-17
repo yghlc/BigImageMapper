@@ -113,7 +113,13 @@ def prepare_data_for_evaluation(para_file):
     whole_procedure.split_sub_images(para_file)
 
     # whole_procedure.training_img_augment(para_file)
-    whole_procedure.split_train_val(para_file)
+    # whole_procedure.split_train_val(para_file)
+
+    # put all the images patch for evaluation
+    trainval = os.path.join('list','trainval.txt')
+    test_list_txt = parameters.get_string_parameters(para_file,'validation_sample_list_txt')
+    test_list_txt = os.path.join('list',test_list_txt)
+    io_function.copy_file_to_dst(trainval,test_list_txt,overwrite=True)
 
     # covert image to tf-records
     whole_procedure.build_TFrecord_tf1x(para_file)
