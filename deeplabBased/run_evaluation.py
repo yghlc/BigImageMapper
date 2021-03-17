@@ -112,6 +112,9 @@ def prepare_data_for_evaluation(para_file):
     # split image
     whole_procedure.split_sub_images(para_file)
 
+    # whole_procedure.training_img_augment(para_file)
+    whole_procedure.split_train_val(para_file)
+
     # covert image to tf-records
     whole_procedure.build_TFrecord_tf1x(para_file)
 
