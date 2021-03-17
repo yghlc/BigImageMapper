@@ -155,20 +155,26 @@ def _convert_dataset(dataset_split):
 
 
 def main(unused_argv):
+    dataset_splits = []
+
     train_sample_txt = parameters.get_string_parameters_None_if_absence(para_file,'training_sample_list_txt')
-    val_sample_txt = parameters.get_string_parameters_None_if_absence(para_file,'validation_sample_list_txt')
-    if train_sample_txt is not None and val_sample_txt is not None:
+    if train_sample_txt is not None:
         train_sample_txt = os.path.join(FLAGS.list_folder, train_sample_txt)
+        if os.path.isfile(train_sample_txt) is False:
+            raise IOError('%s does not exist' % train_sample_txt)
+        dataset_splits.append(train_sample_txt)
+
+    val_sample_txt = parameters.get_string_parameters_None_if_absence(para_file, 'validation_sample_list_txt')
+    if val_sample_txt is not None:
         val_sample_txt = os.path.join(FLAGS.list_folder, val_sample_txt)
-    else:
-        raise ValueError('training_sample_list_txt or validation_sample_list_txt are not in %s'%para_file)
+        if os.path.isfile(val_sample_txt) is False:
+            raise IOError('%s does not exist' % val_sample_txt)
+        dataset_splits.append(val_sample_txt)
+    # else:
+    #     raise ValueError('training_sample_list_txt or validation_sample_list_txt are not in %s'%para_file)
 
-    if os.path.isfile(train_sample_txt) is False:
-        raise IOError('%s does not exist'%train_sample_txt)
-    if os.path.isfile(val_sample_txt) is False:
-        raise IOError('%s does not exist'%val_sample_txt)
 
-    dataset_splits = [train_sample_txt,val_sample_txt]
+    # dataset_splits = [train_sample_txt,val_sample_txt]
     # dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, '*val.txt'))
     print(dataset_splits)
 
