@@ -645,7 +645,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                         os.system('kill ' + str(train_pid))
                         basic.outputlogMessage('kill training processing with id: %d' % train_pid)
 
-                    break
+                    break # this breaks the while loop, making that it may not evaluate on some new saved model.
 
         # if the evaluation step is less than saved model iteration, run another iteration again immediately
         already_trained_iteration = get_trained_iteration(TRAIN_LOGDIR)
