@@ -26,10 +26,13 @@ from workflow.deeplab_train import pre_trained_tar_21_classes
 from workflow.deeplab_train import pre_trained_tar_19_classes
 from workflow.deeplab_train import get_miou_list_class_all
 
-def run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num):
+def run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num, train_dir = None):
 
     EXP_FOLDER = expr_name
-    TRAIN_LOGDIR = os.path.join(WORK_DIR,EXP_FOLDER,'train')
+    if train_dir is None:
+        TRAIN_LOGDIR = os.path.join(WORK_DIR,EXP_FOLDER,'train')
+    else:
+        TRAIN_LOGDIR = train_dir
     EVAL_LOGDIR = os.path.join(WORK_DIR,EXP_FOLDER,'eval')
     dataset_dir = os.path.join(WORK_DIR, 'tfrecord')
 
@@ -133,6 +136,7 @@ def main(options, args):
     para_file = args[0]
     gpu_num = 1
     b_new_validation_data = options.b_new_validation_data
+    train_dir = options.train_dir
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
@@ -167,7 +171,7 @@ def main(options, args):
         prepare_data_for_evaluation(para_file)
 
 
-    run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num)
+    run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num,train_dir=train_dir)
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of running evaluation: %.2f seconds">>time_cost.txt'%duration)
@@ -182,6 +186,10 @@ if __name__ == '__main__':
                       action="store_true", dest="b_new_validation_data",default=False,
                       help="indicate whether indicate the validation is different with the one in folder, "
                            "need to create new image patches and tfrecord, also change some parameters in para file")
+
+    parser.add_option("-t", "--train_dir",
+                      action="store", dest="train_dir", default=None,
+                      help="the folder of trained model")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
