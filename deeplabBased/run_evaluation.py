@@ -128,15 +128,13 @@ def prepare_data_for_evaluation(para_file):
     whole_procedure.build_TFrecord_tf1x(para_file)
 
 
-def main(options, args):
+def run_evaluation_main(para_file,b_new_validation_data=False,train_dir=None):
 
-    print("%s : run evaluation" % os.path.basename(sys.argv[0]))
+    print("run evaluation" )
     SECONDS = time.time()
 
-    para_file = args[0]
     gpu_num = 1
-    b_new_validation_data = options.b_new_validation_data
-    train_dir = options.train_dir
+
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
@@ -170,11 +168,20 @@ def main(options, args):
     if b_new_validation_data:
         prepare_data_for_evaluation(para_file)
 
-
     run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_ini,gpu_num,train_dir=train_dir)
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of running evaluation: %.2f seconds">>time_cost.txt'%duration)
+
+
+def main(options, args):
+
+    para_file = args[0]
+    b_new_validation_data = options.b_new_validation_data
+    train_dir = options.train_dir
+
+    run_evaluation_main(para_file,b_new_validation_data=b_new_validation_data,train_dir=train_dir)
+
 
 if __name__ == '__main__':
 
