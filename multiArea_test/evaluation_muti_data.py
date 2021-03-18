@@ -32,30 +32,33 @@ def run_evaluation_one_dataset(idx, area_ini):
 
     curr_dir = os.getcwd()
 
-    run_eval_dir = os.path.basename(area_ini)[:-4]
+    run_eval_dir = os.path.basename(area_ini)[:-4] +'_%d'%idx
+    main_para = 'main_para_eval_on_testData.ini'
+    area_ini_name = os.path.basename(area_ini)
+
     if os.path.isdir(run_eval_dir) is False:
         io_function.mkdir(run_eval_dir)
+        os.chdir(run_eval_dir)
 
-    os.chdir(run_eval_dir)
+        # copy and modify parameters
+        io_function.copy_file_to_dst(os.path.join(template_dir, main_para), main_para)
+        io_function.copy_file_to_dst(area_ini, area_ini_name)
+        modify_parameter(main_para, 'training_regions', area_ini_name)
+        io_function.copy_file_to_dst(os.path.join(template_dir, 'deeplabv3plus_xception65.ini'),'deeplabv3plus_xception65.ini')
 
-    # copy and modify parameters
-    main_para = 'main_para_eval_on_testData.ini'
-    io_function.copy_file_to_dst(os.path.join(template_dir,main_para), main_para)
+        if 'login' in machine_name or 'shas' in machine_name or 'sgpu' in machine_name:
+            io_function.copy_file_to_dst(os.path.join(template_dir, 'exe_curc.sh'), 'exe_curc.sh')
+            io_function.copy_file_to_dst(os.path.join(template_dir, 'run_INsingularity_curc_GPU_tf.sh'),
+                                         'run_INsingularity_curc_GPU_tf.sh')
+            io_function.copy_file_to_dst(os.path.join(template_dir, 'job_tf_GPU.sh'), 'job_tf_GPU.sh')
 
-    area_ini_name = os.path.basename(area_ini)
-    io_function.copy_file_to_dst(area_ini, area_ini_name)
-    modify_parameter(main_para,'training_regions',area_ini_name)
-
-    io_function.copy_file_to_dst(os.path.join(template_dir,'deeplabv3plus_xception65.ini'), 'deeplabv3plus_xception65.ini')
+            job_name = 'eval_%d_area' % idx
+            slurm_utility.modify_slurm_job_sh('job_tf_GPU.sh', 'job-name', job_name)
+    else:
+        os.chdir(run_eval_dir)
 
     # if run in curc cluster
     if 'login' in machine_name or 'shas' in machine_name or 'sgpu' in machine_name:
-        io_function.copy_file_to_dst(os.path.join(template_dir, 'exe_curc.sh'),'exe_curc.sh')
-        io_function.copy_file_to_dst(os.path.join(template_dir, 'run_INsingularity_curc_GPU_tf.sh'),'run_INsingularity_curc_GPU_tf.sh')
-        io_function.copy_file_to_dst(os.path.join(template_dir, 'job_tf_GPU.sh'),'job_tf_GPU.sh')
-
-        job_name = 'eval_%d_area'%idx
-        slurm_utility.modify_slurm_job_sh('job_tf_GPU.sh', 'job-name', job_name)
 
         while True:
             job_count = slurm_utility.get_submit_job_count(curc_username)
