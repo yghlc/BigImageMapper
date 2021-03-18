@@ -39,11 +39,13 @@ def run_evaluation_multi_trained_models(train_root_dir,train_dir_pattern,para_fi
     folder_list.sort()
 
     eval_output = {}
-    eval_output['train_dir'] = []
+
 
     eval_output['class_1'] = []
     eval_output['overall'] = []
     eval_output['step'] = []
+    eval_output['train_dir'] = []
+    eval_output['train_dir_path'] = []
 
 
     for train_folder in folder_list:
@@ -52,20 +54,23 @@ def run_evaluation_multi_trained_models(train_root_dir,train_dir_pattern,para_fi
         bak_miou_dir = os.path.join(working_dir, exp_name, 'eval_%s' % os.path.basename(train_folder))
         if os.path.isdir(bak_miou_dir):
             basic.outputlogMessage('Evaluation on test data uisng model %s already exist, skip'%os.path.basename(train_folder))
-            continue
+        else:
+            # run evaluation
+            basic.outputlogMessage('run evaluation using trained model in %s' % train_folder)
+            TRAIN_LOGDIR = os.path.join(train_folder, exp_name, 'train')
+            run_evaluation.run_evaluation_main(para_file, b_new_validation_data=True, train_dir=TRAIN_LOGDIR)
 
-        basic.outputlogMessage('run evaluation using trained model in %s'%train_folder)
+            # move eval dir for next run.
+            io_function.move_file_to_dst(eval_dir, bak_miou_dir, overwrite=False)
+
+        # read
         eval_output['train_dir'].append(os.path.basename(train_folder))
-
-        # run evaluation
-        TRAIN_LOGDIR = os.path.join(train_folder, exp_name, 'train')
-        run_evaluation.run_evaluation_main(para_file,b_new_validation_data=True, train_dir=TRAIN_LOGDIR)
+        eval_output['train_dir_path'].append(train_folder)
 
         # get miou
-        get_miou_of_overall_and_class_1_step(working_dir, para_file, eval_output)
+        get_miou_of_overall_and_class_1_step(working_dir, para_file, eval_output, eval_folder=os.path.basename(bak_miou_dir))
 
-        # move eval dir for next run.
-        io_function.move_file_to_dst(eval_dir,bak_miou_dir,overwrite=False)
+
 
 
 

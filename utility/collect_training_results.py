@@ -28,10 +28,13 @@ para_ini_list = ['base_learning_rate', 'iteration_num', 'batch_size', 'network_s
              'buffer_size', 'training_data_per', 'data_augmentation', 'data_aug_ignore_classes']
 
 
-def get_miou_of_overall_and_class_1_step(work_dir,para_file,train_output):
+def get_miou_of_overall_and_class_1_step(work_dir,para_file,train_output, eval_folder=None):
 
     exp_name = parameters.get_string_parameters(os.path.join(work_dir,para_file), 'expr_name')
-    miou_path = os.path.join(work_dir,exp_name,'eval','miou.txt')
+    if eval_folder is None:
+        miou_path = os.path.join(work_dir,exp_name,'eval','miou.txt')
+    else:
+        miou_path = os.path.join(work_dir, exp_name, eval_folder, 'miou.txt')
     if os.path.isfile(miou_path) is False:
         print("warning, no miou.txt in %s"%work_dir)
         train_output['class_1'].append(0)
