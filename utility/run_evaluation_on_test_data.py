@@ -93,7 +93,7 @@ def main(options, args):
     para_file = options.para_file
     output_file = options.output
     if output_file is None:
-        output_file = os.path.basename(root_dir) + '.xlsx'
+        output_file = os.path.basename(os.getcwd()) + '.xlsx'
 
     run_evaluation_multi_trained_models(root_dir,folder_pattern,para_file,output_file)
 
