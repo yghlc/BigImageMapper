@@ -16,6 +16,7 @@ sys.path.insert(0, code_dir)
 import deeplabBased.run_evaluation as run_evaluation
 
 import basic_src.io_function as io_function
+import basic_src.basic as basic
 import parameters
 
 import pandas as pd
@@ -46,21 +47,25 @@ def run_evaluation_multi_trained_models(train_root_dir,train_dir_pattern,para_fi
 
 
     for train_folder in folder_list:
-        print('run evaluation using trained model in %s'%train_folder)
+        exp_name = parameters.get_string_parameters(para_file, 'expr_name')
+        eval_dir = os.path.join(working_dir, exp_name, 'eval')
+        bak_miou_dir = os.path.join(working_dir, exp_name, 'eval_%s' % os.path.basename(train_folder))
+        if os.path.isdir(bak_miou_dir):
+            basic.outputlogMessage('Evaluation on test data uisng model %s already exist, skip'%os.path.basename(train_folder))
+            continue
+
+        basic.outputlogMessage('run evaluation using trained model in %s'%train_folder)
         eval_output['train_dir'].append(os.path.basename(train_folder))
 
         # run evaluation
-        exp_name = parameters.get_string_parameters(para_file,'expr_name')
         TRAIN_LOGDIR = os.path.join(train_folder, exp_name, 'train')
         run_evaluation.run_evaluation_main(para_file,b_new_validation_data=True, train_dir=TRAIN_LOGDIR)
 
         # get miou
-        get_miou_of_overall_and_class_1_step(train_folder, para_file, eval_output)
+        get_miou_of_overall_and_class_1_step(working_dir, para_file, eval_output)
 
-        # move miou for next run.
-        miou_path = os.path.join(working_dir, exp_name, 'eval', 'miou.txt')
-        bak_miou_path = os.path.join(working_dir, exp_name, 'eval', 'miou_%s.txt'%os.path.basename(train_folder))
-        io_function.move_file_to_dst(miou_path,bak_miou_path,overwrite=False)
+        # move eval dir for next run.
+        io_function.move_file_to_dst(eval_dir,bak_miou_dir,overwrite=False)
 
 
 
