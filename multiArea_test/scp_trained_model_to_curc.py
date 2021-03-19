@@ -53,9 +53,10 @@ def main():
                 continue
 
             basic.outputlogMessage('copy trained folder in %s'%folder_name)
-            res = os.system('scp -r ${tesia_host}:%s %s/%s'%(remote_folders,local_dir,folder_name))
+            command_str = 'scp -r ${tesia_host}:%s %s/%s'%(remote_folders,local_dir,folder_name)
+            status, result = basic.getstatusoutput(command_str)
 
-            if res !=0:
+            if status !=0:
                 sys.exit(1)
 
         # reomve incomplete folders
