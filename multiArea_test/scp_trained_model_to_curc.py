@@ -53,7 +53,7 @@ def main():
                 continue
 
             basic.outputlogMessage('copy trained folder in %s'%folder_name)
-            res = os.system('scp -r $tesia_host:%s %s/%s'%(remote_folders,local_dir,folder_name))
+            res = os.system('scp -r ${tesia_host}:%s %s/%s'%(remote_folders,local_dir,folder_name))
 
             if res !=0:
                 sys.exit(1)
