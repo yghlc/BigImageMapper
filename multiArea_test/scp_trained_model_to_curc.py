@@ -29,6 +29,13 @@ def get_remote_folder(remote_dir,folder_pattern):
     # print(dir_list)
     return dir_list
 
+def get_local_folder(local_dir,folder_pattern):
+    # get local dir
+    folder_list = io_function.get_file_list_by_pattern(local_dir, folder_pattern)
+    folder_list = [item for item in folder_list if os.path.isdir(item)]
+    folder_list.sort()
+    return folder_list
+
 def main():
 
     basic.setlogfile('scp_log.txt')
@@ -39,10 +46,7 @@ def main():
         remote_folders = get_remote_folder(remote_dir, folder_pattern)
         basic.outputlogMessage("%d remote folders"%len(remote_folders))
 
-        # get local dir
-        folder_list = io_function.get_file_list_by_pattern(local_dir,folder_pattern)
-        folder_list = [item for item in folder_list if os.path.isdir(item) ]
-        folder_list.sort()
+        folder_list = get_local_folder(local_dir,folder_pattern)
         basic.outputlogMessage("%d local folders" % len(folder_list))
 
         folder_name_list = [os.path.basename(item) for item in folder_list]
@@ -60,6 +64,7 @@ def main():
             if status !=0:
                 sys.exit(1)
 
+        folder_list = get_local_folder(local_dir, folder_pattern)   # update local folder
         # reomve incomplete folders
         for folder in folder_list:
             res_json = os.path.join(folder,'result.json')
