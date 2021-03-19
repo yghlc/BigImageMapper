@@ -66,7 +66,7 @@ def main():
             if os.path.isfile(res_json) and os.path.getsize(res_json) > 0:
                 continue
             else:
-                basic.outputlogMessage('remote incomplete folder %s'%os.path.basename(folder))
+                basic.outputlogMessage('remove incomplete folder: %s'%os.path.basename(folder))
                 io_function.delete_file_or_dir(folder)
 
         basic.outputlogMessage('wait five hours')
