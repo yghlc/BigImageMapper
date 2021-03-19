@@ -53,7 +53,8 @@ def main():
                 continue
 
             basic.outputlogMessage('copy trained folder in %s'%folder_name)
-            command_str = 'scp -r ${tesia_host}:%s %s/%s'%(remote_folders,local_dir,folder_name)
+            command_str = 'scp -r ${tesia_host}:%s %s/%s'%(r_folders,local_dir,folder_name)
+            print(command_str)
             status, result = basic.getstatusoutput(command_str)
 
             if status !=0:
