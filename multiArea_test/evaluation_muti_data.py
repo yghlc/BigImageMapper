@@ -94,7 +94,7 @@ if __name__ == '__main__':
     training_root_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/ray_results/tune_dataAug_para_tesia')
     template_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/eval_new_data')
 
-    max_run_jobs = 4
+    max_run_jobs = 5
     curc_username = 'lihu9680'
 
     main()
