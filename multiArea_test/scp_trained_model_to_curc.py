@@ -69,6 +69,7 @@ def main():
                 basic.outputlogMessage('remote incomplete folder %s'%os.path.basename(folder))
                 io_function.delete_file_or_dir(folder)
 
+        basic.outputlogMessage('wait five hours')
         time.sleep(3600*5)  # wait five hours
 
 
