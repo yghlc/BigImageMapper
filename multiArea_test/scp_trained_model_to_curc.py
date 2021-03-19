@@ -19,7 +19,7 @@ import time
 
 def get_remote_folder(remote_dir,folder_pattern):
 
-    command_str = 'ssh $tesia_host ls -d %s/%s'%(remote_dir,folder_pattern)
+    command_str = 'ssh $tesia_host "ls -d %s/%s"'%(remote_dir,folder_pattern)
 
     status, result = basic.getstatusoutput(command_str)
     # r_scan =$(ssh hlc @ 10.0.0.203 ls -d / home / hlc / Data / rock / Synchrotron / * _0${scan}_ *)
