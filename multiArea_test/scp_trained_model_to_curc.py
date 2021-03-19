@@ -37,11 +37,13 @@ def main():
         # get remote dir
         basic.outputlogMessage('get remote folders')
         remote_folders = get_remote_folder(remote_dir, folder_pattern)
+        basic.outputlogMessage("%d remote folders"%len(remote_folders))
 
         # get local dir
         folder_list = io_function.get_file_list_by_pattern(local_dir,folder_pattern)
         folder_list = [item for item in folder_list if os.path.isdir(item) ]
         folder_list.sort()
+        basic.outputlogMessage("%d local folders" % len(folder_list))
 
         folder_name_list = [os.path.basename(item) for item in folder_list]
 
