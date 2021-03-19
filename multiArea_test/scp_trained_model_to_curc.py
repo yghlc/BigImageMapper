@@ -35,6 +35,7 @@ def main():
 
     while True:
         # get remote dir
+        basic.outputlogMessage('get remote folders')
         remote_folders = get_remote_folder(remote_dir, folder_pattern)
 
         # get local dir
@@ -50,7 +51,7 @@ def main():
                 continue
 
             basic.outputlogMessage('copy trained folder in %s'%folder_name)
-            res = os.system('scp $tesia_host:%s %s/%s'%(remote_folders,local_dir,folder_name))
+            res = os.system('scp -r $tesia_host:%s %s/%s'%(remote_folders,local_dir,folder_name))
 
             if res !=0:
                 sys.exit(1)
@@ -61,6 +62,7 @@ def main():
             if os.path.isfile(res_json) and os.path.getsize(res_json) > 0:
                 continue
             else:
+                basic.outputlogMessage('remote incomplete folder %s'%os.path.basename(folder))
                 io_function.delete_file_or_dir(folder)
 
         time.sleep(3600*5)  # wait five hours
