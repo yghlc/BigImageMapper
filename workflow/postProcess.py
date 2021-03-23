@@ -104,7 +104,7 @@ def get_observation_save_dir_shp_pre(inf_dir, area_name, area_time, area_remark,
 
 
 def get_occurence_for_multi_observation(shp_list):
-    if len(shp_list) < 1:
+    if len(shp_list) < 2:
         return False
 
     # need for calculating the occurrence.
