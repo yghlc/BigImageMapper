@@ -25,10 +25,6 @@ from datasets.get_polygon_attributes import add_polygon_attributes
 from datasets.remove_mappedPolygons import remove_polygons_main
 from datasets.evaluation_result import evaluation_polygons
 
-# need for calculating the occurrence.
-cd_dir = os.path.expanduser('~/codes/PycharmProjects/ChangeDet_DL/thawSlumpChangeDet')
-sys.path.insert(0, cd_dir)
-import polygons_change_analyze
 
 def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
@@ -110,6 +106,11 @@ def get_observation_save_dir_shp_pre(inf_dir, area_name, area_time, area_remark,
 def get_occurence_for_multi_observation(shp_list):
     if len(shp_list) < 1:
         return False
+
+    # need for calculating the occurrence.
+    cd_dir = os.path.expanduser('~/codes/PycharmProjects/ChangeDet_DL/thawSlumpChangeDet')
+    sys.path.insert(0, cd_dir)
+    import polygons_change_analyze
 
     # check projection of the shape file, should be the same
     new_shp_proj4 = map_projection.get_raster_or_vector_srs_info_proj4(shp_list[0])
