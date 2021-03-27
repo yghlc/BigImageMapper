@@ -16,6 +16,8 @@ sing_img=${sing_dir}/programs/yoltv4_noconda.sif
 
 yoltv4=~/programs/miniconda3/envs/yoltv4
 
+#export SINGULARITY_BINDPATH=/500G:/500G,/DATA1:/DATA1,/home/hlc:/home/hlc
+
 # HOME will be overwrite by the value in host machine, no matter what I did, it still be overwritten.
 # LD_LIBRARY_PATH has been overwrite as well, but if we unset LD_LIBRARY_PATH or use --cleanenv, then the problem is solved
 
