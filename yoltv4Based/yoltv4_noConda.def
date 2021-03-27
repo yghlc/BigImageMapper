@@ -1,0 +1,62 @@
+Bootstrap: docker
+FROM: nvidia/cuda:9.2-devel-ubuntu16.04
+OSVersion: ubuntu:16.04
+
+
+%help
+    Singularity container for running yoltv4, modified from Dockerfile created by avanetten
+
+%labels
+	Maintainer: Lingcao Huang
+	# ENV CUDNN_VERSION 7.3.0.29
+	# com.nvidia.cudnn.version="${CUDNN_VERSION}"
+	com.nvidia.cudnn.version=7.3.0.29
+
+%environment
+	export CUDNN_VERSION=7.3.0.29
+	export PATH=/opt/conda/bin:$PATH
+	export PATH=/opt/conda/envs/yoltv4/bin:$PATH
+
+#setup
+
+%post
+# prep apt-get and cudnn
+    apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils \
+    libcudnn7=$CUDNN_VERSION-1+cuda9.0 \
+    libcudnn7-dev=$CUDNN_VERSION-1+cuda9.0 && \
+    apt-mark hold libcudnn7 && \
+    rm -rf /var/lib/apt/lists/*
+	
+# install requirements
+    apt-get update \
+  	&& apt-get install -y --no-install-recommends \
+	    bc \
+	    bzip2 \
+        apt-utils \
+	    ca-certificates \
+	    curl \
+	    git \
+	    libgdal-dev \
+	    libssl-dev \
+	    libffi-dev \
+	    libncurses-dev \
+	    libgl1 \
+	    jq \
+	    nfs-common \
+	    parallel \
+	    python-dev \
+	    python-pip \
+	    python-wheel \
+	    python-setuptools \
+	    unzip \
+	    vim \
+		tmux \
+	    wget \
+	    build-essential \
+        libopencv-dev \
+        python-opencv \
+        eog \
+        cmake \
+	  && apt-get clean \
+	  && rm -rf /var/lib/apt/lists/*
