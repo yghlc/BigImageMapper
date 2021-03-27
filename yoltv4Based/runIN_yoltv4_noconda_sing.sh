@@ -24,7 +24,7 @@ yoltv4=~/programs/miniconda3/envs/yoltv4
 #SINGULARITYENV_LD_LIBRARY_PATH=/usr/lib64:${yoltv4}/lib:${LD_LIBRARY_PATH} \
 
 # use SINGULARITYENV_APPEND_PATH or SINGULARITYENV_PREPEND_PATH to add path on the host machine
-export SINGULARITYENV_PREPEND_PATH=${yoltv4}
+export SINGULARITYENV_PREPEND_PATH=${yoltv4}/bin
 
 
 # set environment
