@@ -24,7 +24,7 @@ yoltv4=~/programs/miniconda3/envs/yoltv4
 #SINGULARITYENV_LD_LIBRARY_PATH=${env_home}/programs/miniconda3/lib:$LD_LIBRARY_PATH \
 # set environment
 SINGULARITYENV_TZ=America/Denver \
-SINGULARITYENV_PATH=${yoltv4}/bin:$PATH \
+SINGULARITYENV_PATH=/bin:${yoltv4}/bin:$PATH \
 SINGULARITYENV_LD_LIBRARY_PATH=/usr/lib64:${yoltv4}/lib:$LD_LIBRARY_PATH \
 SINGULARITYENV_GDAL_DATA=${yoltv4}/share/gdal \
 singularity exec --nv ${sing_img} ${exe_script}
