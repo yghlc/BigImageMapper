@@ -4,7 +4,7 @@
 
 #  build a sanbox, for testing
 
-sudo singularity build --sandbox yoltv4_sanbox yoltv4_2.def
+#sudo singularity build --sandbox yoltv4_sanbox yoltv4_2.def
 # get error: 2021/03/27 13:55:33  info unpack layer: sha256:4007a89234b4f56c03e6831dc220550d2e5fba935d9f5f5bcea64857ac4f4888
 #FATAL:   While performing build: packer failed to pack: while unpacking tmpfs: error unpacking rootfs: unpack layer: unpack entry: bin/uncompress:
 # link: link rootfs-0f87c549-8f04-11eb-a113-0800272be0ec/bin/gunzip rootfs-0f87c549-8f04-11eb-a113-0800272be0ec/bin/uncompress:
@@ -19,6 +19,8 @@ sudo singularity build --sandbox yoltv4_sanbox yoltv4_2.def
 
 ###############################################################
 #singularity build  yoltv4.sif yoltv4_2.def
+
+sudo singularity build --sandbox yoltv4_noconda yoltv4_noConda.def
 
 sudo singularity build  yoltv4_noconda.sif yoltv4_noConda.def
 
