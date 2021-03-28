@@ -61,7 +61,7 @@ def run_evaluation_one_dataset(idx, area_ini):
     if 'login' in machine_name or 'shas' in machine_name or 'sgpu' in machine_name:
 
         while True:
-            job_count = slurm_utility.get_submit_job_count(curc_username)
+            job_count = slurm_utility.get_submit_job_count(curc_username,job_name_substr='eval')
             if job_count >= max_run_jobs:
                 print(machine_name, datetime.now(), 'You have submitted %d or more jobs, wait '%max_run_jobs)
                 time.sleep(60)  #
