@@ -24,6 +24,9 @@ sudo singularity build --sandbox yoltv4_noconda yoltv4_noConda.def
 
 sudo singularity build  yoltv4_noconda.sif yoltv4_noConda.def
 
+# not success, something wrong when installing package in conda.
+sudo singularity build  yoltv4.sif yoltv4.def
+
 
 # Using shell to explore containers
 # it is nice that the container have the same user and home folder on the host machine
