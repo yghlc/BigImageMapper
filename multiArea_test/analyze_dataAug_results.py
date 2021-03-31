@@ -80,13 +80,77 @@ def output_miou_for_each_dataAug_options(pd_table):
         print('overall: exp count: %d, mean, max, and min miou_c1: %f %f %f, aug option: %s'%
               (len(value_ist), sum(value_ist)/len(value_ist), max(value_ist), min(value_ist),key))
 
+def find_info_realted_to_train_dir(train_val_table, train_dir, info_key):
+    folder_list = train_val_table['folder'].tolist()
+    info_list = train_val_table[info_key].tolist()
+    for dir, info in zip(folder_list, info_list):
+        if dir == train_dir:
+            return info
 
+    return None
+
+def output_mean_max_miou_all_test_data(test_xlsx_list, train_val_table):
+
+    mean_miou_c1_each_test = {}
+    max_miou_c1_each_test = {}
+    max_miou_c1_test_aug_options = {}
+    for xlsx in test_xlsx_list:
+        print(xlsx)
+        test_pd_table = pd.read_excel(xlsx)
+        miou_c1_list = test_pd_table['class_1'].tolist()
+        train_dir_list = test_pd_table['train_dir'].tolist()
+        key = os.path.splitext(os.path.basename(xlsx))[0]
+        mean_miou_c1_each_test[key] = sum(miou_c1_list)/len(miou_c1_list)
+        max_miou_c1_each_test[key] = max(miou_c1_list)
+
+        # get trianing_dir
+        max_idx = miou_c1_list.index(max_miou_c1_each_test[key])
+        train_dir = train_dir_list[max_idx]
+        data_aug_options = find_info_realted_to_train_dir(train_val_table,train_dir,'data_augmentation')
+        max_miou_c1_test_aug_options[key] = data_aug_options
+
+    key_list = list(mean_miou_c1_each_test.keys())
+    key_list.sort()
+    mean_list = []
+    max_list = []
+    aug_option_list = []
+    for key in key_list:
+        print('%s mean miou c1: %f, max miou c1: %f'%(key, mean_miou_c1_each_test[key], max_miou_c1_each_test[key]))
+        mean_list.append(mean_miou_c1_each_test[key])
+        max_list.append(max_miou_c1_each_test[key])
+        aug_option_list.append(max_miou_c1_test_aug_options[key])
+
+
+    # data augmentation count:
+    data_option_count = {}
+    for key in key_list:
+        opt_list = [ item.strip() for item in max_miou_c1_test_aug_options[key].split(',')]
+        for opt in opt_list:
+            if opt in data_option_count.keys():
+                data_option_count[opt] += 1
+            else:
+                data_option_count[opt] = 1
+
+    print(data_option_count)
+
+    save_dict = {'test_images':key_list, 'mean_miou_class_1':mean_list,
+               'max_miou_class_1':max_list, 'max_miou_aug_options':aug_option_list}
+
+    save_dict_pd = pd.DataFrame(save_dict)
+    with pd.ExcelWriter('miou_mean_max_test_data.xlsx') as writer:
+        save_dict_pd.to_excel(writer, sheet_name='table')
+
+    print("save to %s"%'miou_mean_max_test_data.xlsx')
 
 def main():
-    #
+    # miou for the validation data (10%)
     dataAug_table = pd.read_excel(dataAug_res_WR)
-    output_max_min_miou(dataAug_table)
-    output_miou_for_each_dataAug_options(dataAug_table)
+    # output_max_min_miou(dataAug_table)
+    # output_miou_for_each_dataAug_options(dataAug_table)
+
+    # miou for test data (different dates)
+    output_mean_max_miou_all_test_data(test_dataAug_res_WR_list,dataAug_table)
+
 
     pass
 
