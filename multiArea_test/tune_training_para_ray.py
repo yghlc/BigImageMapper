@@ -17,6 +17,7 @@ from ray import tune
 from datetime import datetime
 import pandas as pd
 
+sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
 
 backbones = ['deeplabv3plus_xception65.ini','deeplabv3plus_xception41.ini','deeplabv3plus_xception71.ini',
