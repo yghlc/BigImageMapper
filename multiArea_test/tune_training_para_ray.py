@@ -17,6 +17,8 @@ from ray import tune
 from datetime import datetime
 import pandas as pd
 
+import basic_src.io_function as io_function
+
 backbones = ['deeplabv3plus_xception65.ini','deeplabv3plus_xception41.ini','deeplabv3plus_xception71.ini',
             'deeplabv3plus_resnet_v1_50_beta.ini','deeplabv3plus_resnet_v1_101_beta.ini',
             'deeplabv3plus_mobilenetv2_coco_voc_trainval.ini','deeplabv3plus_mobilenetv3_large_cityscapes_trainfine.ini',
@@ -152,18 +154,25 @@ def main():
     # import workflow.whole_procedure as whole_procedure
     # from utility.eva_report_to_tables import read_accuracy_multi_reports
 
+    loc_dir = "./ray_results"
+    # tune_name = "tune_traning_para_tesia"
+    tune_name = "tune_backbone_para_tesia"
+    file_folders = io_function.get_file_list_by_pattern(os.path.join(loc_dir, tune_name),'*')
+    if len(file_folders) > 1:
+        b_resume = True
+    else:
+        b_resume = False
 
     analysis = tune.run(
         training_function,
         resources_per_trial={"gpu": 2}, # use two GPUs, 12 CPUs on tesia  # "cpu": 14, don't limit cpu, eval.py will not use all
-        local_dir="./ray_results",
-        # name="tune_traning_para_tesia",
-        name="tune_backbone_para_tesia",
+        local_dir=loc_dir,
+        name=tune_name,
         # fail_fast=True,     # Stopping after the first failure
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
         trial_name_creator=tune.function(trial_name_string),
         trial_dirname_creator=tune.function(trial_dir_string),
-        resume=True,
+        resume=b_resume,
         config={
             "lr": tune.grid_search([0.007, 0.014, 0.28]),   # ,0.007, 0.014, 0.028,0.056
             "iter_num": tune.grid_search([30000]), # , 60000,90000,
