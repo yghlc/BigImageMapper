@@ -17,12 +17,12 @@ from ray import tune
 from datetime import datetime
 import pandas as pd
 
-# backbones = ['deeplabv3plus_xception65.ini','deeplabv3plus_xception41.ini','deeplabv3plus_xception71.ini',
-#             'deeplabv3plus_resnet_v1_50_beta.ini','deeplabv3plus_resnet_v1_101_beta.ini',
-#             'deeplabv3plus_mobilenetv2_coco_voc_trainval.ini','deeplabv3plus_mobilenetv3_large_cityscapes_trainfine.ini',
-#             'deeplabv3plus_mobilenetv3_small_cityscapes_trainfine.ini','deeplabv3plus_EdgeTPU-DeepLab.ini']
+backbones = ['deeplabv3plus_xception65.ini','deeplabv3plus_xception41.ini','deeplabv3plus_xception71.ini',
+            'deeplabv3plus_resnet_v1_50_beta.ini','deeplabv3plus_resnet_v1_101_beta.ini',
+            'deeplabv3plus_mobilenetv2_coco_voc_trainval.ini','deeplabv3plus_mobilenetv3_large_cityscapes_trainfine.ini',
+            'deeplabv3plus_mobilenetv3_small_cityscapes_trainfine.ini','deeplabv3plus_EdgeTPU-DeepLab.ini']
 
-backbones = ['deeplabv3plus_xception65.ini']
+# backbones = ['deeplabv3plus_xception65.ini']
 
 area_ini_list = ['area_Willow_River.ini', 'area_Banks_east.ini', 'area_Ellesmere_Island.ini',
                  'area_Willow_River_nirGB.ini','area_Banks_east_nirGB.ini','area_Ellesmere_Island_nirGB.ini']
@@ -30,6 +30,7 @@ area_ini_list = ['area_Willow_River.ini', 'area_Banks_east.ini', 'area_Ellesmere
 
 # template para (contain para_files)
 ini_dir=os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/ini_files')
+training_data_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/training_find_tune_data')
 
 from hyper_para_ray import modify_parameter
 # from hyper_para_ray import get_total_F1score
@@ -64,6 +65,19 @@ def copy_ini_files(ini_dir, work_dir, para_file, area_ini_list,backbone):
     for ini in ini_list:
         io_function.copy_file_to_dst(os.path.join(ini_dir, ini ), os.path.join(work_dir,ini), overwrite=True)
 
+def copy_training_datas(data_dir, work_dir):
+    # for the case, we have same parameter for preparing data, then just copy the data to save time.
+    # buffer_size, training_data_per, data_augmentation, data_aug_ignore_classes
+
+    sub_files = ['sub', 'split', 'list','tfrecord']
+    for sub_str in sub_files:
+        command_str = 'cp -r %s/%s*  %s/.'%(data_dir,sub_str, work_dir)
+        print(command_str)
+        res = os.system(command_str)
+        if res != 0:
+            sys.exit(1)
+    return
+
 def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes):
 
     sys.path.insert(0, code_dir)
@@ -78,6 +92,10 @@ def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training
 
     # create a training folder
     copy_ini_files(ini_dir,work_dir,para_file,area_ini_list,backbone)
+
+    # for the cases, we have same parameter for preparing data, then just copy the data to save time.
+    copy_training_datas(training_data_dir,work_dir)
+
 
     exp_name = parameters.get_string_parameters(para_file,'expr_name')
 
@@ -139,7 +157,8 @@ def main():
         training_function,
         resources_per_trial={"gpu": 2}, # use two GPUs, 12 CPUs on tesia  # "cpu": 14, don't limit cpu, eval.py will not use all
         local_dir="./ray_results",
-        name="tune_traning_para_tesia",
+        # name="tune_traning_para_tesia",
+        name="tune_backbone_para_tesia",
         # fail_fast=True,     # Stopping after the first failure
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
         trial_name_creator=tune.function(trial_name_string),
@@ -147,13 +166,13 @@ def main():
         resume=True,
         config={
             "lr": tune.grid_search([0.007, 0.014, 0.28]),   # ,0.007, 0.014, 0.028,0.056
-            "iter_num": tune.grid_search([30000, 60000, 90000]), # , 60000,90000
+            "iter_num": tune.grid_search([30000]), # , 60000,90000,
             "batch_size": tune.grid_search([8,16,32]), # 16, 32, 64, 128
             "backbone": tune.grid_search(backbones),
             "buffer_size": tune.grid_search([300]),     # 600
             "training_data_per": tune.grid_search([0.9]),   #, 0.8
-            "data_augmentation": tune.grid_search(['scale, bright, contrast, noise']),
-            'data_aug_ignore_classes':tune.grid_search(['class_0',''])
+            "data_augmentation": tune.grid_search(['blur,crop,bright,contrast,noise']),
+            'data_aug_ignore_classes':tune.grid_search(['class_0'])
         }
         # config={
         #     "lr": tune.grid_search([0.014]),   # ,0.007, 0.014, 0.028,0.056
