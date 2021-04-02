@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
+#introduction: Run the training and prediction of yolov4 using custom dataset
+#
+#authors: Huang Lingcao
+#email:huanglingcao@gmail.com
+#add time: 2 April, 2021
+
+
 # Exit immediately if a command exits with a non-zero status. E: error trace
 set -eE -o functrace
 
-# run this in the singularity container
+# any folder defined in yolov4_obj.cfg need to be created first.
 
-echo $PATH
+# run this in the singularity container
+#echo $PATH
+
 
 # -dont_show flag stops chart from popping up
 # -map flag overlays mean average precision on chart to see how accuracy of your model is, only add map flag if you have a validation dataset
