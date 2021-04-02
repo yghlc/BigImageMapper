@@ -24,4 +24,4 @@ set -eE -o functrace
 
 # stop 1-gpu training, then start multiple GPU trianing.
 # need to check if get Nan, if yes, need to change learning rates and burn in https://github.com/AlexeyAB/darknet#how-to-train-with-multi-gpu
-darknet detector train obj.data yolov4_obj.cfg train_backup/yolov4_obj_1gpu.weights -gpus 0,1,2,3
+darknet detector train obj.data yolov4_obj.cfg train_backup/yolov4_obj_1gpu.weights -gpus 0,1,2,3  -dont_show -map
