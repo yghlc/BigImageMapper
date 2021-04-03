@@ -148,14 +148,17 @@ def training_function(config,checkpoint_dir=None):
     # Feed the score back back to Tune.
     tune.report(overall_miou=overall_miou)
 
-def stop_function(loc_dir,tune_name,trial_id, result):
-    exp_folder =  'multiArea_deeplabv3P' + str(trial_id)[-6:]
-    exp_dir = os.path.join(loc_dir, tune_name,exp_folder)
-    if os.path.isdir(exp_dir):
-        print("%s exists, skip this experiment"%exp_dir)
-        return True
+def stop_function(trial_id, result):
+    # it turns out that stop_function it to check weather to run more experiments, not to decide whether run one experiment.
+    pass
 
-    return False
+    # exp_folder =  'multiArea_deeplabv3P' + str(trial_id)[-6:]
+    # # exp_dir = os.path.join(loc_dir, tune_name,exp_folder)
+    # if os.path.isdir(exp_dir):
+    #     print("%s exists, skip this experiment"%exp_dir)
+    #     return True
+    #
+    # return False
 
 # tune.choice([1])  # randomly chose one value
 
@@ -181,6 +184,7 @@ def main():
     # "Trials did not complete", incomplete_trials, so don't resume.
     b_resume = False
     # max_failures = 2,
+    # stop = tune.function(stop_function),
 
     analysis = tune.run(
         training_function,
@@ -188,7 +192,6 @@ def main():
         local_dir=loc_dir,
         name=tune_name,
         # fail_fast=True,     # Stopping after the first failure
-        stop =tune.function(stop_function),
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
         trial_name_creator=tune.function(trial_name_string),
         trial_dirname_creator=tune.function(trial_dir_string),
