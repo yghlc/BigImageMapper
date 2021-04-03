@@ -13,11 +13,9 @@ exe_script=./exe.sh
 
 
 sing_dir=${HOME}
-sing_img=${sing_dir}/programs/yoltv4_noconda.sif
+sing_img=${sing_dir}/programs/yolov4_20210403.sif
 
 
-yoltv4=~/programs/miniconda3/envs/yoltv4
-darknet=~/codes/PycharmProjects/yghlc_yoltv4/darknet
 
 # more about the environment setting: https://sylabs.io/guides/3.7/user-guide/environment_and_metadata.html
 
@@ -26,10 +24,9 @@ export SINGULARITY_BINDPATH=/projects/lihu9680:/projects/lihu9680
 #SINGULARITYENV_LD_LIBRARY_PATH=/usr/lib64:${yoltv4}/lib:${LD_LIBRARY_PATH} \
 
 # use SINGULARITYENV_APPEND_PATH or SINGULARITYENV_PREPEND_PATH to add path on the host machine
-export SINGULARITYENV_PREPEND_PATH=${yoltv4}/bin:${darknet}
+#export SINGULARITYENV_PREPEND_PATH=${yoltv4}/bin:${darknet}
 
 
 # set environment
 SINGULARITYENV_TZ=America/Denver \
-SINGULARITYENV_GDAL_DATA=${yoltv4}/share/gdal \
 singularity exec --nv ${sing_img} ${exe_script}
