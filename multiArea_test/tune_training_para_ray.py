@@ -173,6 +173,7 @@ def main():
         resources_per_trial={"gpu": 2}, # use two GPUs, 12 CPUs on tesia  # "cpu": 14, don't limit cpu, eval.py will not use all
         local_dir=loc_dir,
         name=tune_name,
+        max_failures = 2,
         # fail_fast=True,     # Stopping after the first failure
         log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
         trial_name_creator=tune.function(trial_name_string),
