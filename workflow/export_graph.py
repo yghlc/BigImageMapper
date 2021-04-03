@@ -129,7 +129,7 @@ def main(options, args):
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
     b_initialize_last_layer = parameters.get_bool_parameters(para_file, 'b_initialize_last_layer')
-    if b_initialize_last_layer is False:
+    if b_initialize_last_layer is True:
         pre_trained_tar = parameters.get_string_parameters(network_setting_ini, 'TF_INIT_CKPT')
         if pre_trained_tar in pre_trained_tar_21_classes:
             print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)

@@ -54,7 +54,7 @@ def run_evaluation(WORK_DIR, deeplab_dir, expr_name, para_file, network_setting_
     dataset = parameters.get_string_parameters(para_file,'dataset_name')
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
-    if b_initialize_last_layer is False:
+    if b_initialize_last_layer is True:
         if pre_trained_tar in pre_trained_tar_21_classes:
             print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)
             num_classes_noBG = 20
