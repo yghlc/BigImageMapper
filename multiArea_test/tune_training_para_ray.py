@@ -102,6 +102,10 @@ def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training
 
     exp_name = parameters.get_string_parameters(para_file,'expr_name')
 
+    # don't initialize when using this backbones
+    if 'mobilenetv2' in backbone or 'mobilenetv3' in backbone or 'EdgeTPU' in backbone:
+        modify_parameter(os.path.join(work_dir, para_file), 'b_initialize_last_layer', 'No')
+
     # change para_file
     modify_parameter(os.path.join(work_dir, para_file),'network_setting_ini',backbone)
     modify_parameter(os.path.join(work_dir, backbone),'base_learning_rate',lr)
