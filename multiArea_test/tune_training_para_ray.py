@@ -96,11 +96,22 @@ def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training
     # create a training folder
     copy_ini_files(ini_dir,work_dir,para_file,area_ini_list,backbone)
 
+    exp_name = parameters.get_string_parameters(para_file, 'expr_name')
+
+    # check if ray create a new folder because previous run dir already exist.
+    # e.g., previous dir: "multiArea_deeplabv3P_00000", new dir: "multiArea_deeplabv3P_00000_ce9a"
+    # then read the miou directly
+    pre_work_dir = work_dir[:-5]  # remove something like _ce9a
+    if os.path.isdir(pre_work_dir):
+        iou_path = os.path.join(pre_work_dir, exp_name, 'eval', 'miou.txt')
+        overall_miou = get_overall_miou(iou_path)
+        return overall_miou
+
     # for the cases, we have same parameter for preparing data, then just copy the data to save time.
     copy_training_datas(training_data_dir,work_dir)
 
 
-    exp_name = parameters.get_string_parameters(para_file,'expr_name')
+
 
     # don't initialize the last layer when using these backbones
     if 'mobilenetv2' in backbone or 'mobilenetv3' in backbone or 'EdgeTPU' in backbone:
