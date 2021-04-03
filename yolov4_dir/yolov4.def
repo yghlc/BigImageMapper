@@ -1,0 +1,51 @@
+Bootstrap: docker
+FROM: nvidia/cuda:10.2-cudnn8-devel-ubuntu18.04
+OSVersion: ubuntu:18.04
+
+
+%help
+    Singularity container for running yolov4
+    #created based on https://github.com/AlexeyAB/darknet#requirements
+    The nvidia driver on my server is 440.118.02, cannot support CUDA > 10.2
+
+
+%labels
+	Maintainer: Lingcao Huang
+
+%environment
+    export LC_ALL=C
+    export PATH=/usr/local/darknet:$PATH
+
+#setup
+
+## %post -c /bin/bash : use bash as default intead of sh
+%post
+    # avoid setting tzdata
+    export DEBIAN_FRONTEND=noninteractive
+# prep apt-get and cudnn
+    apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils
+
+# install requirements
+    apt-get update \
+  	&& apt-get install -y --no-install-recommends \
+	    build-essential \
+        libopencv-dev \
+        cmake \
+        git \
+        vim \
+	  && apt-get clean \
+	  && rm -rf /var/lib/apt/lists/*
+
+# install  darknet
+    cd /usr/local && \
+    git clone https://github.com/AlexeyAB/darknet
+    # go into the folder, change makefile to have GPU and OPENCV enabled
+    cd darknet && sed -i 's/OPENCV=0/OPENCV=1/' Makefile \
+    && sed -i 's/GPU=0/GPU=1/' Makefile && sed -i 's/CUDNN=0/CUDNN=1/' Makefile \
+    && sed -i 's/CUDNN_HALF=0/CUDNN_HALF=1/' Makefile \
+    && make
+
+
+
+
