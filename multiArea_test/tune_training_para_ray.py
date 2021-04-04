@@ -184,7 +184,8 @@ def main():
 
     loc_dir = "./ray_results"
     # tune_name = "tune_traning_para_tesia"
-    tune_name = "tune_backbone_para_tesia"
+    # tune_name = "tune_backbone_para_tesia"
+    tune_name = "tune_backbone_largeBatchS_tesia"
     file_folders = io_function.get_file_list_by_pattern(os.path.join(loc_dir, tune_name),'*')
     # if len(file_folders) > 1:
     #     b_resume = True
@@ -210,7 +211,7 @@ def main():
         config={
             "lr": tune.grid_search([0.007, 0.014, 0.28]),   # ,0.007, 0.014, 0.028,0.056
             "iter_num": tune.grid_search([30000]), # , 60000,90000,
-            "batch_size": tune.grid_search([8,16,32]), # 16, 32, 64, 128
+            "batch_size": tune.grid_search([48, 64, 96]), # 8,16,32 16, 32, 64, 128
             "backbone": tune.grid_search(backbones),
             "buffer_size": tune.grid_search([300]),     # 600
             "training_data_per": tune.grid_search([0.9]),   #, 0.8
