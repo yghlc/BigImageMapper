@@ -43,8 +43,9 @@ def split_a_pair_sub_image_label(line, patch_w, patch_h, overlay_x, overlay_y, s
     split_to_patches(sub_image, 'split_images', patch_w, patch_h, overlay_x, overlay_y, split_image_format)
 
     # split sub label (change the file name to be the same as sub_image name)
-    pre_name = os.path.splitext(os.path.basename(sub_image))[0]
-    split_to_patches(sub_label, 'split_labels', patch_w, patch_h, overlay_x, overlay_y, split_image_format, file_pre_name=pre_name)
+    if os.path.isfile(sub_label):
+        pre_name = os.path.splitext(os.path.basename(sub_image))[0]
+        split_to_patches(sub_label, 'split_labels', patch_w, patch_h, overlay_x, overlay_y, split_image_format, file_pre_name=pre_name)
 
 def split_sub_images(para_file):
     print("split sub-images and sub-labels")
@@ -59,7 +60,6 @@ def split_sub_images(para_file):
         io_function.delete_file_or_dir('split_labels')
 
     io_function.mkdir('split_images')
-    io_function.mkdir('split_labels')
 
     ### split the training image to many small patch (480*480)
     patch_w=parameters.get_string_parameters(para_file,'train_patch_width')
@@ -75,7 +75,10 @@ def split_sub_images(para_file):
     if os.path.isdir(trainImg_dir) is False:
         raise IOError('%s not in the current folder, please get subImages first'%trainImg_dir)
     if os.path.isdir(labelImg_dir) is False:
-        raise IOError('%s not in the current folder, please get subImages first'%labelImg_dir)
+        print('warning, %s not in the current folder'%labelImg_dir)
+    else:
+        io_function.mkdir('split_labels')
+
     sub_img_label_txt = 'sub_images_labels_list.txt'
     if os.path.isfile(sub_img_label_txt) is False:
         raise IOError('%s not in the current folder, please get subImages first' % sub_img_label_txt)
