@@ -55,6 +55,16 @@ def get_train_val_sample_count(work_dir, para_file):
 
     return len(train_lines), len(val_lines)
 
+def is_called_by_ray_tune():
+    # when called by ray tune, there are some additional files in the current folder
+    ray_tune_files = ['progress.csv','result.json','params.pkl','params.json','stderr.log','stdout.log']
+    for item in ray_tune_files:
+        if os.path.isfile(item):
+            print('This is could be folder called by ray tune')
+            return True
+
+    return False
+
 def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
                   atrous_rates1,atrous_rates2,atrous_rates3,output_stride,crop_size_str,batch_size,iteration_num,depth_multiplier,
                   decoder_output_stride,aspp_convs_filters,b_initialize_last_layer):
@@ -112,6 +122,9 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         command_string += ' --decoder_output_is_logits=1 '
         command_string += ' --image_se_uses_qsigmoid=1 '
 
+    if is_called_by_ray_tune():
+        command_string + ' > train_deeplab_print.txt'
+        print(command_string)
     res = os.system(command_string)
     if res != 0:
         sys.exit(1) # sometime the res is 256 and bash cannot recognize that, then continue run.
@@ -174,6 +187,9 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
         command_string += ' --decoder_output_is_logits=1 '
         command_string += ' --image_se_uses_qsigmoid=1 '
 
+    if is_called_by_ray_tune():
+        command_string + ' > evaluation_deeplab_print.txt'
+        print(command_string)
     res = os.system(command_string)
     if res != 0:
         sys.exit(1)
