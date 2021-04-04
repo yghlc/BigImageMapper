@@ -40,6 +40,24 @@ def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize,
     if res != 0:
         sys.exit(1)
 
+def get_subImage_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
+                                  input_image_dir, file_pattern = None, process_num=1):
+    if file_pattern is None:
+        file_pattern = '*.tif'
+
+    command_string = get_subImage_script + ' -f ' + all_train_shp + ' -b ' + str(buffersize) + ' -e ' + file_pattern + \
+                    ' -o ' + os.getcwd() + ' -n ' + str(dstnodata)  + ' -p ' + str(process_num) \
+                     + ' ' + rectangle_ext +' --no_label_image '  + train_shp + ' '+ input_image_dir
+
+    # ${eo_dir}/sentinelScripts/get_subImages.py -f ${all_train_shp} -b ${buffersize} -e .tif \
+    #             -o ${PWD} -n ${dstnodata} -r ${train_shp} ${input_image_dir}
+
+    # status, result = basic.exec_command_string(command_string)  # this will wait command finished
+    # os.system(command_string + "&")  # don't know when it finished
+    res = os.system(command_string )      # this work
+    if res != 0:
+        sys.exit(1)
+
 def get_sub_images_multi_regions(para_file):
 
     print("extract sub-images and sub-labels for a given shape file (training polygons)")
@@ -62,6 +80,8 @@ def get_sub_images_multi_regions(para_file):
     rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
     process_num = parameters.get_digit_parameters(para_file,'process_num', 'int')
 
+    b_no_label_image = parameters.get_bool_parameters_None_if_absence(para_file,'b_no_label_image')
+
     if os.path.isfile('sub_images_labels_list.txt'):
         io_function.delete_file_or_dir('sub_images_labels_list.txt')
 
@@ -81,7 +101,11 @@ def get_sub_images_multi_regions(para_file):
 
         # get subImage and subLabel for one training polygons
         print('extract training data from image folder (%s) and polgyons (%s)' % (input_image_dir, train_shp))
-        get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
+        if b_no_label_image is True:
+            get_subImage_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
+                                      input_image_dir, file_pattern=input_image_or_pattern, process_num=process_num)
+        else:
+            get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
                                       input_image_dir, file_pattern=input_image_or_pattern, process_num=process_num)
 
 
@@ -91,7 +115,8 @@ def get_sub_images_multi_regions(para_file):
     subImage_dir_delete = subImage_dir + '_delete'
     subLabel_dir_delete = subLabel_dir + '_delete'
     io_function.mkdir(subImage_dir_delete)
-    io_function.mkdir(subLabel_dir_delete)
+    if b_no_label_image is None or b_no_label_image is False:
+        io_function.mkdir(subLabel_dir_delete)
     get_valid_percent_entropy.plot_valid_entropy(subImage_dir)
     with open('sub_images_labels_list.txt','r') as f_obj:
         lines = f_obj.readlines()
@@ -104,18 +129,20 @@ def get_sub_images_multi_regions(para_file):
             else:
                 delete_sub_image_label_list.append(line)
                 io_function.movefiletodir(image_path,subImage_dir_delete)
-                io_function.movefiletodir(label_path,subLabel_dir_delete)
+                if os.path.isfile(label_path):
+                    io_function.movefiletodir(label_path,subLabel_dir_delete)
     if len(delete_sub_image_label_list) > 0:
         with open('sub_images_labels_list.txt', 'w') as f_obj:
             for line in new_sub_image_label_list:
                 f_obj.writelines(line)
 
     # check weather they have the same subImage and subLabel
-    sub_image_list = io_function.get_file_list_by_pattern(subImage_dir,'*.tif')
-    sub_label_list = io_function.get_file_list_by_pattern(subLabel_dir,'*.tif')
-    if len(sub_image_list) != len(sub_label_list):
-        raise ValueError('the count of subImage (%d) and subLabel (%d) is different'
-                         %(len(sub_image_list),len(sub_label_list)))
+    if b_no_label_image is None or b_no_label_image is False:
+        sub_image_list = io_function.get_file_list_by_pattern(subImage_dir,'*.tif')
+        sub_label_list = io_function.get_file_list_by_pattern(subLabel_dir,'*.tif')
+        if len(sub_image_list) != len(sub_label_list):
+            raise ValueError('the count of subImage (%d) and subLabel (%d) is different'
+                             %(len(sub_image_list),len(sub_label_list)))
 
     # save brief information of sub-images
     height_list = []
