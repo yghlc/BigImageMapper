@@ -123,7 +123,7 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         command_string += ' --image_se_uses_qsigmoid=1 '
 
     if is_called_by_ray_tune():
-        command_string + ' > train_deeplab_print.txt'
+        command_string += ' > train_deeplab_print.txt'
         print(command_string)
     res = os.system(command_string)
     if res != 0:
@@ -188,7 +188,7 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
         command_string += ' --image_se_uses_qsigmoid=1 '
 
     if is_called_by_ray_tune():
-        command_string + ' > evaluation_deeplab_print.txt'
+        command_string += ' > evaluation_deeplab_print.txt'
         print(command_string)
     res = os.system(command_string)
     if res != 0:
