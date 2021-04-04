@@ -42,3 +42,6 @@ darknet detector train obj.data yolov4_obj.cfg train_backup/yolov4_obj_1gpu.weig
 #darknet detector test obj.data yolov4_obj.cfg train_backup/yolov4_obj_5000.weights -dont_show  -ext_output -out result.json < test_images.txt
 # save result to txt (same things previously on the screen)
 #darknet detector test obj.data yolov4_obj.cfg train_backup/yolov4_obj_5000.weights -dont_show  -ext_output < test_images.txt > result.txt
+
+# Checking the Mean Average Precision (mAP) of Your Model
+#darknet detector map obj.data yolov4_obj.cfg train_backup/yolov4_obj_5000.weights
