@@ -33,6 +33,7 @@ def split_to_patches(image_path, out_dir, patch_width, patch_height, overlay_x, 
 
     if out_format == '.png': out_format = 'PNG'
     if out_format == '.tif': out_format = 'GTIFF'
+    if out_format == '.jpg': out_format = 'JPEG'
 
     split_image.split_image(image_path, out_dir, patch_width, patch_height, overlay_x, overlay_y, out_format, pre_name=file_pre_name)
 
