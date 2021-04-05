@@ -46,6 +46,10 @@ echo "$(date): time cost of preparing training data: ${duration} seconds">>"time
 # -map flag overlays mean average precision on chart to see how accuracy of your model is, only add map flag if you have a validation dataset
 darknet detector train data/obj.data yolov4_obj.cfg yolov4.conv.137 -dont_show -map
 
+# trained on multiple GPUs (up to 4), according to YOLOv4 website, we need try with 1 GPU first for like 1000 iterations.
+#darknet detector train data/obj.data yolov4_obj.cfg exp1/yolov4_obj_last.weights -gpus 0,1,2,3  -dont_show -map
+# why not try 4 GPUs at the beginning?
+#darknet detector train data/obj.data yolov4_obj.cfg yolov4.conv.137 -gpus 0,1,2,3  -dont_show -map
 
 ################################################
 #compare model
