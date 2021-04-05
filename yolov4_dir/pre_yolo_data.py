@@ -32,6 +32,8 @@ def get_yolo_boxes_one_img(idx, total, image_path, label_path):
     with open(save_object_txt, 'w') as f_obj:
         for object in objects:
             class_id, minX, minY, maxX, maxY = object
+            # in semantic, class_id 0 is background, yolo, class 0 is target, so minus 1
+            class_id -= 1
             x, y, w, h = convert((width,height), (minX, maxX, minY, maxY))
             f_obj.writelines('%d %f %f %f %f\n'%(class_id, x, y, w, h))
 
