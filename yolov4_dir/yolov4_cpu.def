@@ -14,7 +14,9 @@ OSVersion: ubuntu:20.04
     export LC_ALL=C
     export PATH=/usr/local/darknet:$PATH
     export PATH=/usr/local/miniconda3/bin:$PATH
-    export GDAL_DATA=/usr/local/miniconda3/share/gdal
+
+    # don't set GDAL_DATA, gdal after 2.5 version, they don't include gcs.csv files.
+#    export GDAL_DATA=/usr/local/miniconda3/share/gdal
 
 #setup
 
@@ -35,8 +37,30 @@ OSVersion: ubuntu:20.04
         git \
         wget \
         vim \
+        gdal-bin \
+        libgdal-dev \
+        python3-dev \
+        python3-pip \
+        python3-wheel \
+        python3-setuptools \
 	  && apt-get clean \
 	  && rm -rf /var/lib/apt/lists/*
+
+    # the default installation is python 3.8.5
+    ln -s /usr/bin/python3 /usr/bin/python &&  ln -s /usr/bin/pip3 /usr/bin/pip
+
+#    pip install conda
+    # install other python packages
+    pip install numpy psutil \
+    && pip install opencv-python rasterio geopandas  \
+    && pip install pyshp==1.2.12 rasterstats \
+    && pip install scikit-image scikit-learn
+
+    # not working, need miniconda or ananconda
+#    conda install -c conda-forge -y gdal=2.4.2
+    # clean
+#    conda clean -tipy
+
 
 # install  darknet
     cd /usr/local && \
@@ -54,32 +78,32 @@ OSVersion: ubuntu:20.04
     make
 
 
-# install miniconda
-    wget --quiet --no-check-certificate https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh -O ~/miniconda.sh \
-    && /bin/bash ~/miniconda.sh -b -p /usr/local/miniconda3 \
-    && rm ~/miniconda.sh \
-    && /usr/local/miniconda3/bin/conda clean -tipy
-
-#    # conda clean  -tipsy  # t: tarball, i index-cache p: package  y: Do not ask for confirmation
-#    # conda build purge-all # remove source cache files.
+## install miniconda
+#    wget --quiet --no-check-certificate https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh -O ~/miniconda.sh \
+#    && /bin/bash ~/miniconda.sh -b -p /usr/local/miniconda3 \
+#    && rm ~/miniconda.sh \
+#    && /usr/local/miniconda3/bin/conda clean -tipy
 #
-    export PATH=/usr/local/miniconda3/bin:$PATH
-# install python package
-    # need to install numpy first
-    pip install numpy psutil \
-    && pip install opencv-python rasterio geopandas  \
-    && pip install pyshp==1.2.12 rasterstats \
-    && pip install scikit-image scikit-learn
-
-    #This version of GDAL 2.3 clobbering PATH environment variable # https://github.com/OSGeo/gdal/issues/1231
-    # breaking any subprocesses that depend, like os.system()
-    # we change to gdal2.4, or set export PATH=/unusePath:$PATH. # because it only affects the first path.
-#    conda install -y gdal=2.3
-
-    conda install -c conda-forge -y gdal=2.4.2
-
-    # clean
-    conda clean -tipy
+##    # conda clean  -tipsy  # t: tarball, i index-cache p: package  y: Do not ask for confirmation
+##    # conda build purge-all # remove source cache files.
+##
+#    export PATH=/usr/local/miniconda3/bin:$PATH
+## install python package
+#    # need to install numpy first
+#    pip install numpy psutil \
+#    && pip install opencv-python rasterio geopandas  \
+#    && pip install pyshp==1.2.12 rasterstats \
+#    && pip install scikit-image scikit-learn
+#
+#    #This version of GDAL 2.3 clobbering PATH environment variable # https://github.com/OSGeo/gdal/issues/1231
+#    # breaking any subprocesses that depend, like os.system()
+#    # we change to gdal2.4, or set export PATH=/unusePath:$PATH. # because it only affects the first path.
+##    conda install -y gdal=2.3
+#
+#    conda install -c conda-forge -y gdal=2.4.2
+#
+#    # clean
+#    conda clean -tipy
 
 
 
