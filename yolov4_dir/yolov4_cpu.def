@@ -13,6 +13,8 @@ OSVersion: ubuntu:20.04
 %environment
     export LC_ALL=C
     export PATH=/usr/local/darknet:$PATH
+    export PATH=/usr/local/miniconda3/bin:$PATH
+    export GDAL_DATA=/usr/local/miniconda3/share/gdal
 
 #setup
 
@@ -26,11 +28,12 @@ OSVersion: ubuntu:20.04
 # install requirements
     apt-get update \
   	&& apt-get install -y --no-install-recommends \
-	    build-essential \
+  	    build-essential \
         libopencv-dev \
         cmake \
         libomp-dev  \
         git \
+        wget \
         vim \
 	  && apt-get clean \
 	  && rm -rf /var/lib/apt/lists/*
@@ -40,12 +43,44 @@ OSVersion: ubuntu:20.04
     export GIT_SSL_NO_VERIFY=1 && \
     git clone https://github.com/AlexeyAB/darknet
     # go into the folder, change makefile to have OPENCV enabled and others
-    cd darknet && \
+    cd darknet
+    # use the verion latest commit on March 28, 2021
+    git reset --hard 1e3a616ed6cefc517db6c8c106c83de24fad275c
+
     sed -i 's/OPENCV=0/OPENCV=1/' Makefile && \
     sed -i 's/OPENMP=0/OPENMP=1/' Makefile && \
     sed -i 's/AVX=0/AVX=1/' Makefile && \
     sed -i 's/LIBSO=0/LIBSO=1/' Makefile && \
     make
+
+
+# install miniconda
+    wget --quiet --no-check-certificate https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh -O ~/miniconda.sh \
+    && /bin/bash ~/miniconda.sh -b -p /usr/local/miniconda3 \
+    && rm ~/miniconda.sh \
+    && /usr/local/miniconda3/bin/conda clean -tipy
+
+#    # conda clean  -tipsy  # t: tarball, i index-cache p: package  y: Do not ask for confirmation
+#    # conda build purge-all # remove source cache files.
+#
+    export PATH=/usr/local/miniconda3/bin:$PATH
+# install python package
+    # need to install numpy first
+    pip install numpy psutil \
+    && pip install opencv-python rasterio geopandas  \
+    && pip install pyshp==1.2.12 rasterstats \
+    && pip install scikit-image scikit-learn
+
+    #This version of GDAL 2.3 clobbering PATH environment variable # https://github.com/OSGeo/gdal/issues/1231
+    # breaking any subprocesses that depend, like os.system()
+    # we change to gdal2.4, or set export PATH=/unusePath:$PATH. # because it only affects the first path.
+#    conda install -y gdal=2.3
+
+    conda install -c conda-forge -y gdal=2.4.2
+
+    # clean
+    conda clean -tipy
+
 
 
 
