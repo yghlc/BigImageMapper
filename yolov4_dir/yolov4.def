@@ -15,6 +15,8 @@ OSVersion: ubuntu:18.04
 %environment
     export LC_ALL=C
     export PATH=/usr/local/darknet:$PATH
+    export PATH=/usr/local/miniconda3/bin:$PATH
+    export GDAL_DATA=/usr/local/miniconda3/share/gdal
 
 #setup
 
@@ -49,6 +51,7 @@ OSVersion: ubuntu:18.04
     sed -i 's/OPENCV=0/OPENCV=1/' Makefile \
     && sed -i 's/GPU=0/GPU=1/' Makefile && sed -i 's/CUDNN=0/CUDNN=1/' Makefile \
     && sed -i 's/CUDNN_HALF=0/CUDNN_HALF=1/' Makefile \
+    && sed -i 's/LIBSO=0/LIBSO=1/' Makefile \
     && make
 
 
