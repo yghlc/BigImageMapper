@@ -25,7 +25,7 @@ Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https:
     pip install pillow
     pip install opencv-python==3.4.6.27 (choose a earlier verion to avoid error)
     pip install conda
-    conda install gdal=2.3
+    conda install gdal=2.4.2
     pip install rasterio
     
     which python  # output the path of python then set tf1x_python in network parameter (e.g., deeplabv3plus_xception65.ini):
