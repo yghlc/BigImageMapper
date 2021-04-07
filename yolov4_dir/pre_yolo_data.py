@@ -23,7 +23,7 @@ from yoltv4Based.yolt_func import convert
 
 from yoltv4Based.yolt_func import convert_reverse
 
-def get_yolo_boxes_one_img(idx, total, image_path, label_path):
+def get_yolo_boxes_one_img(idx, total, image_path, label_path,num_classes_noBG,rm_edge_obj=False):
     print('to yolo box: %d/%d'%(idx+1, total))
     # a object : [ class_id,  minX, minY, maxX, maxY ]
     objects = get_boxes_from_label_image(label_path)
@@ -33,6 +33,17 @@ def get_yolo_boxes_one_img(idx, total, image_path, label_path):
     with open(save_object_txt, 'w') as f_obj:
         for object in objects:
             class_id, minX, minY, maxX, maxY = object
+            if class_id > num_classes_noBG:
+                raise ValueError('Class ID: %d greater than number of classes in label: %s'%(class_id, label_path))
+
+            # remove objects touch the image edge, usually, target object is in the center of images,
+            # but some targets close to this one may be cut when we extract sub-images or split imgaes
+            if rm_edge_obj:
+                if minX==0 or minY==0 or maxX==(width-1) or maxY==(height-1):
+                    print('warning, object (minX, minY, maxX, maxY): (%d %d %d %d) touched the edge in %s, ignore it'%
+                          (minX, minY, maxX, maxY, label_path))
+                    continue
+
             # in semantic, class_id 0 is background, yolo, class 0 is target, so minus 1
             class_id -= 1
             x, y, w, h = convert((width,height), (minX, maxX, minY, maxY))
@@ -67,12 +78,15 @@ def image_label_to_yolo_format(para_file):
             image_list.append(os.path.join('split_images', line + img_ext))
             label_list.append(os.path.join('split_labels', line + img_ext))
 
+    num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
+    b_ignore_edge_objects = parameters.get_bool_parameters_None_if_absence(para_file,'b_ignore_edge_objects')
+    if b_ignore_edge_objects is None:
+        b_ignore_edge_objects = False
 
     # get boxes
     total_count = len(image_list)
     for idx, (img, label) in enumerate(zip(image_list,label_list)):
-        get_yolo_boxes_one_img(idx, total_count, img, label)
-
+        get_yolo_boxes_one_img(idx, total_count, img, label,num_classes_noBG,rm_edge_obj=b_ignore_edge_objects)
 
     # write obj.data file
     train_sample_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
@@ -82,7 +96,6 @@ def image_label_to_yolo_format(para_file):
 
     expr_name = parameters.get_string_parameters(para_file,'expr_name')
     object_names = parameters.get_string_list_parameters(para_file,'object_names')
-    num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     io_function.mkdir('data')
     io_function.mkdir(expr_name)
 
