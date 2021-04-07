@@ -26,6 +26,8 @@ export SINGULARITY_BINDPATH=/projects/lihu9680:/projects/lihu9680
 # use SINGULARITYENV_APPEND_PATH or SINGULARITYENV_PREPEND_PATH to add path on the host machine
 #export SINGULARITYENV_PREPEND_PATH=${yoltv4}/bin:${darknet}
 
+# DARKNET_PATH is need for loading libdarknet.so (need when using python)
+export SINGULARITYENV_DARKNET_PATH=/usr/local/darknet
 
 # set environment
 SINGULARITYENV_TZ=America/Denver \
