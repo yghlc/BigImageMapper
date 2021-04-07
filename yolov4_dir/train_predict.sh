@@ -27,11 +27,11 @@ set -eE -o functrace
 
 # stop 1-gpu training, then start multiple GPU trianing.
 # need to check if get Nan, if yes, need to change learning rates and burn in https://github.com/AlexeyAB/darknet#how-to-train-with-multi-gpu
-darknet detector train obj.data yolov4_obj.cfg train_backup/yolov4_obj_1gpu.weights -gpus 0,1,2,3  -dont_show -map
+#darknet detector train obj.data yolov4_obj.cfg train_backup/yolov4_obj_1gpu.weights -gpus 0,1,2,3  -dont_show -map
 
 
 
-## prediction
+## prediction # test in ~/Data/objection_detection/googleOpenImages
 #./darknet detector test <path to .data file> <path to config> <path to weights> <path to image>
 
 # #it wil save to "predictions.jpg" or show it if there is display env
@@ -45,3 +45,15 @@ darknet detector train obj.data yolov4_obj.cfg train_backup/yolov4_obj_1gpu.weig
 
 # Checking the Mean Average Precision (mAP) of Your Model
 #darknet detector map obj.data yolov4_obj.cfg train_backup/yolov4_obj_5000.weights
+
+
+###########
+# test on Planet Images ~/Data/Arctic/canada_arctic/autoMapping/multiArea_yolov4_1
+#darknet detector test data/obj.data yolov4_obj.cfg exp1/yolov4_obj_best.weights split_images/20200818_mosaic_8bit_rgb_0_class_1_p_0.png -ext_output -dont_show
+
+## prediction using the python version
+## darknet_images.py is in the darknet folder, the same as "darknet"
+#python3 /usr/local/darknet/darknet_images.py --help
+python /usr/local/darknet/darknet_images.py --input=split_images/20200818_mosaic_8bit_rgb_0_class_1_p_0.png --batch_size=1 \
+  --weights=exp1/yolov4_obj_best.weights --config_file=yolov4_obj.cfg --data_file=data/obj.data --ext_output
+  #--dont_show
