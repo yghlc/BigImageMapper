@@ -47,7 +47,7 @@ def convert_reverse(size, box):
 
 # https://github.com/avanetten/simrdwn/blob/master/simrdwn/core/post_process.py
 ###############################################################################
-def non_max_suppression(boxes, probs=[], overlapThresh=0.5):
+def non_max_suppression(boxes, probs=[], overlapThresh=0.5, b_geo=False):
     """
     Apply non-max suppression.
     Adapted from:
@@ -96,7 +96,11 @@ def non_max_suppression(boxes, probs=[], overlapThresh=0.5):
     x2 = boxes[:, 2]
     y2 = boxes[:, 3]
     # compute the area of the bounding boxes
-    area = (x2 - x1 + 1) * (y2 - y1 + 1)
+    if b_geo:   # if it's already georefence, no need to +1, if it's in pixel system, then yes.  hlc April 8, 2021.
+        offset = 0
+    else:
+        offset = 1
+    area = (x2 - x1 + offset) * (y2 - y1 + offset)
 
     # sort the boxes by the bottom-right y-coordinate of the bounding box
     if len(probs) == 0:
@@ -123,8 +127,8 @@ def non_max_suppression(boxes, probs=[], overlapThresh=0.5):
         yy2 = np.minimum(y2[i], y2[idxs[:last]])
 
         # compute the width and height of the bounding box
-        w = np.maximum(0, xx2 - xx1 + 1)
-        h = np.maximum(0, yy2 - yy1 + 1)
+        w = np.maximum(0, xx2 - xx1 + offset)
+        h = np.maximum(0, yy2 - yy1 + offset)
 
         # compute the ratio of overlap
         overlap = (w * h) / area[idxs[:last]]
