@@ -70,7 +70,7 @@ OSVersion: ubuntu:18.04
     export PATH=/usr/local/miniconda3/bin:$PATH
 # install python package
     # need to install numpy first
-    pip install numpy psutil GPUtil\
+    pip install numpy psutil GPUtil openpyxl xlsxwriter \
     && pip install opencv-python rasterio geopandas  \
     && pip install pyshp==1.2.12 rasterstats \
     && pip install scikit-image scikit-learn
