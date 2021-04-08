@@ -228,17 +228,18 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
 
             merged_shp = os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
 
-            # add attributes to shapefile
-            shp_attributes = os.path.join(WORK_DIR,area_save_dir, shp_pre+'_post_NOrm.shp')
+            # add attributes to shapefile (no other attribute to add)
+            # shp_attributes = os.path.join(WORK_DIR,area_save_dir, shp_pre+'_post_NOrm.shp')
+            shp_attributes = merged_shp
             # add_polygon_attributes(merged_shp, shp_attributes, para_file, area_ini)
 
             # remove polygons
             shp_post = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_post.shp')
-            # remove_polygons_main(shp_attributes, shp_post, para_file)
+            remove_polygons_main(shp_attributes, shp_post, para_file)
 
             # evaluate the mapping results
             out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
-            # evaluation_polygons(shp_post,para_file,area_ini,out_report)
+            evaluation_polygons(shp_post,para_file,area_ini,out_report)
 
             ##### copy and backup files ######
             # copy files to result_backup
@@ -269,14 +270,14 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
 
     if len(test_note) > 0:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id,'para',test_note]) + '.ini' )
-        bak_network_ini = os.path.join(backup_dir, '_'.join([test_id,'network',test_note]) + '.ini' )
+        # bak_network_ini = os.path.join(backup_dir, '_'.join([test_id,'network',test_note]) + '.ini' )
         bak_time_cost = os.path.join(backup_dir, '_'.join([test_id,'time_cost',test_note]) + '.txt' )
     else:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id, 'para']) + '.ini')
-        bak_network_ini = os.path.join(backup_dir, '_'.join([test_id, 'network']) + '.ini')
+        # bak_network_ini = os.path.join(backup_dir, '_'.join([test_id, 'network']) + '.ini')
         bak_time_cost = os.path.join(backup_dir, '_'.join([test_id, 'time_cost']) + '.txt')
     io_function.copy_file_to_dst(para_file, bak_para_ini)
-    io_function.copy_file_to_dst(network_setting_ini, bak_network_ini)
+    # io_function.copy_file_to_dst(network_setting_ini, bak_network_ini)
     if os.path.isfile('time_cost.txt'):
         io_function.copy_file_to_dst('time_cost.txt', bak_time_cost)
 
