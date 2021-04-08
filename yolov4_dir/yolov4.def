@@ -16,6 +16,8 @@ OSVersion: ubuntu:18.04
     export LC_ALL=C
     export PATH=/usr/local/darknet:$PATH
     export PATH=/usr/local/miniconda3/bin:$PATH
+
+    # don't set GDAL_DATA, if gdal >= 2.5 version, they don't include gcs.csv files.
     export GDAL_DATA=/usr/local/miniconda3/share/gdal
 
 #setup
@@ -40,19 +42,20 @@ OSVersion: ubuntu:18.04
 	  && apt-get clean \
 	  && rm -rf /var/lib/apt/lists/*
 
-# install  darknet
-    cd /usr/local && \
-    git clone https://github.com/AlexeyAB/darknet
-    # go into the folder, change makefile to have GPU and OPENCV enabled
-    cd darknet
-    # use the verion latest commit on March 28, 2021
-    git reset --hard 1e3a616ed6cefc517db6c8c106c83de24fad275c
-
-    sed -i 's/OPENCV=0/OPENCV=1/' Makefile \
-    && sed -i 's/GPU=0/GPU=1/' Makefile && sed -i 's/CUDNN=0/CUDNN=1/' Makefile \
-    && sed -i 's/CUDNN_HALF=0/CUDNN_HALF=1/' Makefile \
-    && sed -i 's/LIBSO=0/LIBSO=1/' Makefile \
-    && make
+#    # the default installation on ubuntu 18.04 is python 3.6, too old.
+#    ln -s /usr/bin/python3 /usr/bin/python &&  ln -s /usr/bin/pip3 /usr/bin/pip
+#
+##    pip install conda
+#    # install other python packages
+#    pip install numpy psutil \
+#    && pip install opencv-python rasterio geopandas  \
+#    && pip install pyshp==1.2.12 rasterstats \
+#    && pip install scikit-image scikit-learn
+#
+#    # not working, need miniconda or ananconda
+##    conda install -c conda-forge -y gdal=2.4.2
+#    # clean
+##    conda clean -tipy
 
 
 # install miniconda
@@ -67,7 +70,7 @@ OSVersion: ubuntu:18.04
     export PATH=/usr/local/miniconda3/bin:$PATH
 # install python package
     # need to install numpy first
-    pip install numpy psutil \
+    pip install numpy psutil GPUtil\
     && pip install opencv-python rasterio geopandas  \
     && pip install pyshp==1.2.12 rasterstats \
     && pip install scikit-image scikit-learn
@@ -81,5 +84,20 @@ OSVersion: ubuntu:18.04
 
     # clean
     conda clean -tipy
+
+
+# install  darknet
+    cd /usr/local && \
+    git clone https://github.com/AlexeyAB/darknet
+    # go into the folder, change makefile to have GPU and OPENCV enabled
+    cd darknet
+    # use the verion latest commit on March 28, 2021
+    git reset --hard 1e3a616ed6cefc517db6c8c106c83de24fad275c
+
+    sed -i 's/OPENCV=0/OPENCV=1/' Makefile \
+    && sed -i 's/GPU=0/GPU=1/' Makefile && sed -i 's/CUDNN=0/CUDNN=1/' Makefile \
+    && sed -i 's/CUDNN_HALF=0/CUDNN_HALF=1/' Makefile \
+    && sed -i 's/LIBSO=0/LIBSO=1/' Makefile \
+    && make
 
 
