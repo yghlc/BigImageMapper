@@ -23,7 +23,13 @@ import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 import datasets.split_image as split_image
+import datasets.raster_io as raster_io
 
+# add darknet Python API
+sys.path.insert(0, '/usr/local/darknet')
+import darknet
+import cv2
+import numpy as np
 
 def is_file_exist_in_folder(folder):
     # only check the first ten files
@@ -58,20 +64,55 @@ def split_an_image(para_file, image_path,save_dir, patch_w, patch_h, overlay_x, 
     # get list
     patch_list = io_function.get_file_list_by_ext(split_format,save_dir,bsub_folder=False)
     if len(patch_list) < 1:
+        print('Wanring, no images in %s'%save_dir)
         return None
     list_txt_path = save_dir + '_list.txt'
     io_function.save_list_to_txt(list_txt_path,patch_list)
     return list_txt_path
 
+def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, yolo_data,
+                                     patch_w, patch_h, overlay_x, overlay_y, batch_size=1):
+    '''
+    predict an remote sensing using YOLO Python API
+    :param image_path:
+    :param save_dir:
+    :param model:
+    :param config_file:
+    :param yolo_data:
+    :param patch_w:
+    :param patch_h:
+    :param overlay_x:
+    :param overlay_y:
+    :param batch_size:
+    :return:
+    '''
+    height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(image_path)
+    # print('input image: height, width, band_num, date_type',height, width, band_num, date_type)
 
-def predict_remoteSensing_image(para_file, image_path, save_dir,model, config_file, yolo_data, batch_siz=1, b_python_api=True):
+    # divide the image the many small patches, then calcuate one by one, solving memory issues.
+    image_patches = split_image.sliding_window(width,height,patch_w,patch_h,adj_overlay_x=overlay_x,adj_overlay_y=overlay_y)
+    patch_count = len(image_patches)
+
+    for idx, patch in enumerate(image_patches):
+        one_band_img, nodata = raster_io.read_raster_all_bands_np(image_path,boundary=patch)
+
+        # prediction
+
+        # save results
+
+
+
+
+
+
+def predict_remoteSensing_image(para_file, image_path, save_dir,model, config_file, yolo_data, batch_size=1, b_python_api=True):
     '''
     run prediction of a remote sensing using yolov4
     :param image_path:
     :param model:
     :param config_file:
     :param yolo_data:
-    :param batch_siz:
+    :param batch_size:
     :param b_python_api: if true, use the python API of yolo
     :return:
     '''
@@ -83,10 +124,13 @@ def predict_remoteSensing_image(para_file, image_path, save_dir,model, config_fi
 
     if b_python_api:
         # using the python API
-        pass
+        predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, yolo_data,
+                                         patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size)
     else:
         # divide image the many patches, then run prediction.
         patch_list_txt = split_an_image(para_file,image_path,save_dir,patch_w,patch_h,overlay_x,overlay_y)
+        if patch_list_txt is None:
+            return False
         result_json = save_dir + '_result.json'
         commond_str = 'darknet detector test ' + yolo_data + ' ' + config_file + ' ' + model + ' -dont_show '
         commond_str += ' -ext_output -out ' + result_json + ' < ' + patch_list_txt
@@ -102,7 +146,7 @@ def predict_one_image_yolo(para_file, image_path, img_save_dir, inf_list_file, g
     yolo_data = os.path.join('data','obj.data')
     b_python_api = False
 
-    predict_remoteSensing_image(para_file,image_path, img_save_dir,trained_model, config_file, yolo_data, batch_siz=1, b_python_api=b_python_api)
+    predict_remoteSensing_image(para_file,image_path, img_save_dir,trained_model, config_file, yolo_data, batch_size=1, b_python_api=b_python_api)
     pass
 
 
