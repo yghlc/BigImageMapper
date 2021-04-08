@@ -17,16 +17,21 @@ import shapely
 from shapely.geometry import mapping # transform to GeJSON format
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
+from shapely.strtree import STRtree
 import geopandas as gpd
 from shapely.geometry import Point
 import pandas as pd
 
 import math
 import numpy as np
+import time
 
 import basic_src.basic as basic
 
 import basic_src.map_projection as map_projection
+
+from datetime import datetime
+from multiprocessing import Pool
 
 def read_polygons_json(polygon_shp, no_json=False):
     '''
@@ -220,6 +225,20 @@ def read_attribute_values_list(polygon_shp, field_name):
         basic.outputlogMessage('Warning: %s not in the shape file, will return None'%field_name)
         return None
 
+def is_field_name_in_shp(polygon_shp, field_name):
+    '''
+    check a attribute name is in the shapefile
+    :param polygon_shp:
+    :param field_name:
+    :return:
+    '''
+    shapefile = gpd.read_file(polygon_shp)
+    if field_name in shapefile.keys():
+        return True
+    else:
+        return False
+
+
 def read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygon = True):
     '''
     read polygons and attribute value (list)
@@ -254,6 +273,19 @@ def read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygo
     else:
         raise ValueError('unknown type of %s'%str(field_nameS))
 
+def is_two_bound_disjoint(box1, box2):
+    # same to the one in raster_io by calling rasterio.coords.disjoint_bounds(box1,box2)
+    # but just do not want to import rater_io
+    # box: (minx, miny, maxx, maxy)
+
+    # left 1 > right 2 or  right 1 < left 2 or bottom 1 > top 2 or top 1 < bottom 2
+    if box1[0] > box2[2] or box1[2] < box2[0] or box1[1] > box2[3] or box1[3] < box2[1]:
+        return True
+    return False
+
+def get_polygon_bounding_box(polygon):
+    # return the bounding box of a shapely polygon (minx, miny, maxx, maxy)
+    return polygon.bounds
 
 def remove_polygon_equal(shapefile,field_name, expect_value, b_equal, output):
     '''
@@ -759,6 +791,224 @@ def get_overlap_area_two_boxes(box1, box2, buffer=None):
     else:
         raise ValueError('need more support of the type: %s'% str(inter.geom_type))
 
+def is_two_polygons_connected(polygon1, polygon2):
+    intersection = polygon1.intersection(polygon2)
+    if intersection.is_empty:
+        return False
+    return True
+
+def find_adjacent_polygons(in_polygon, polygon_list, buffer_size=None, Rtree=None):
+    # find adjacent polygons
+    # in_polygon is the center polygon
+    # polygon_list is a polygon list without in_polygon
+
+    if buffer_size is not None:
+        center_poly =  in_polygon.buffer(buffer_size)
+    else:
+        center_poly = in_polygon
+
+    if len(polygon_list) < 1:
+        return [], []
+
+    # https://shapely.readthedocs.io/en/stable/manual.html#str-packed-r-tree
+    if Rtree is None:
+        tree = STRtree(polygon_list)
+    else:
+        tree = Rtree
+    # query: Returns a list of all geometries in the strtree whose extents intersect the extent of geom.
+    # This means that a subsequent search through the returned subset using the desired binary predicate
+    # (eg. intersects, crosses, contains, overlaps) may be necessary to further filter the results according
+    # to their specific spatial relationships.
+
+    # https://www.geeksforgeeks.org/introduction-to-r-tree/
+    # R-trees are faster than Quad-trees for Nearest Neighbour queries while for window queries, Quad-trees are faster than R-trees
+
+
+    # quicker than check one by one
+    # adjacent_polygons = [item for item in tree.query(center_poly) if item.intersection(center_poly) ]
+    # t0= time.time()
+    adjacent_polygons = [item for item in tree.query(center_poly) if item.intersects(center_poly) ]
+    adjacent_poly_idx = [polygon_list.index(item) for item in adjacent_polygons ]
+    # print('cost %f seconds'%(time.time() - t0))
+
+    # adjacent_polygons = []
+    # adjacent_poly_idx = []
+    # for idx, poly in enumerate(polygon_list):
+    #     if is_two_polygons_connected(poly, center_poly):
+    #         adjacent_polygons.append(poly)
+    #         adjacent_poly_idx.append(idx)
+
+    # print(datetime.now(), 'find %d adjacent polygons' % len(adjacent_polygons))
+
+    return adjacent_polygons, adjacent_poly_idx
+
+def find_adjacent_polygons_from_sub(c_polygon_idx, polygon_list,polygon_boxes,  start_idx, end_idx):
+
+    check_polygons = [polygon_list[j] for j in range(start_idx, end_idx)
+                      if is_two_bound_disjoint(polygon_boxes[c_polygon_idx],polygon_boxes[j]) is False ]
+    adj_polygons, adj_poly_idxs = find_adjacent_polygons(polygon_list[c_polygon_idx], check_polygons)
+    return c_polygon_idx, adj_polygons, adj_poly_idxs
+
+
+def build_adjacent_map_of_polygons(polygons_list, process_num = 1):
+    """
+    build an adjacent matrix of the tou
+    :param polygons_list: a list contains all the shapely (not pyshp) polygons
+    :return: a matrix storing the adjacent (shared points) for all polygons
+    """
+
+    # another implement is in the vector_features.py,
+    # here, we implement the calculation parallel to improve the efficiency.
+
+    # the input polgyons are all valid.
+
+    polygon_count = len(polygons_list)
+    if polygon_count < 2:
+        basic.outputlogMessage('error, the count of polygon is less than 2')
+        return False
+
+    # # https://shapely.readthedocs.io/en/stable/manual.html#str-packed-r-tree
+    # tree = STRtree(polygons_list)
+    polygon_boxes = [ get_polygon_bounding_box(item) for item in polygons_list]
+
+    # this would take a lot of memory if they are many polyton, such as more than 10 000
+    ad_matrix = np.zeros((polygon_count, polygon_count),dtype=np.int8)
+
+    if process_num == 1:
+        for i in range(0,polygon_count):
+            t0 = time.time()
+            # if i%100 == 0:
+            #     start_idx = i+1
+            #     check_polygons = [polygons_list[j] for j in range(start_idx, polygon_count)]
+            #     tree = STRtree(check_polygons)
+            start_idx = i + 1
+            check_polygons = [ polygons_list[j] for j in range(i+1, polygon_count)
+                               if is_two_bound_disjoint(polygon_boxes[i],polygon_boxes[j]) is False]
+            adj_polygons, adj_poly_idxs = find_adjacent_polygons(polygons_list[i], check_polygons)
+
+            # find index from the entire polygon list
+            # adj_polygons, adj_poly_idxs = find_adjacent_polygons(polygons_list[i], polygons_list, Rtree=tree)
+
+            # adj_polygons, adj_poly_idxs = find_adjacent_polygons(polygons_list[i], check_polygons, Rtree=tree)
+
+            # find adjacent from entire list using tree, but slower
+            # adjacent_polygons = [item for item in tree.query(polygons_list[i]) if item.intersection(polygons_list[i])]
+            # adjacent_poly_idx = [polygons_list.index(item) for item in adjacent_polygons]
+            # remove itself
+            # adjacent_poly_idx.remove(i)
+            # for idx in adjacent_poly_idx:
+            #     ad_matrix[i, idx] = 1
+            #     ad_matrix[idx, i] = 1  # also need the low part of matrix, or later polygon can not find previous neighbours
+
+            # print(datetime.now(), '%d/%d'%(i, polygon_count),'cost', time.time() - t0)
+
+            for idx in adj_poly_idxs:
+                j = start_idx+idx
+                # j = idx
+                # if j==i:
+                #     continue
+                ad_matrix[i, j] = 1
+                ad_matrix[j, i] = 1  # also need the low part of matrix, or later polygon can not find previous neighbours
+    elif process_num > 1:
+        theadPool = Pool(process_num)
+        parameters_list = [(i, polygons_list, polygon_boxes, i+1, polygon_count) for i in range(0,polygon_count)]
+        results = theadPool.starmap(find_adjacent_polygons_from_sub, parameters_list)
+        print(datetime.now(), 'finish parallel runing')
+        for i, adj_polygons, adj_poly_idxs in results:
+            # print(adj_poly_idxs)
+            for idx in adj_poly_idxs:
+                j = i+1+idx
+                # j = idx
+                # if j==i:
+                #     continue
+                # print(i, j)
+                ad_matrix[i, j] = 1
+                ad_matrix[j, i] = 1  # also need the low part of matrix, or later polygon can not find previous neighbours
+
+    else:
+        raise ValueError('wrong process_num: %d'%process_num)
+
+    # print(ad_matrix)
+    return ad_matrix
+
+
+def get_surrounding_polygons(in_polygons,buffer_size):
+    '''
+    get polygons surround the input polygons
+    similar to the one: "get_buffer_polygons" in "vector_features.py"
+    Args:
+        in_polygons:
+        buffer_size:
+
+    Returns: a list of expanding polygons
+
+    '''
+    # remove holes
+    polygons = [ fill_holes_in_a_polygon(poly) for poly in  in_polygons]
+    # buffer the polygons
+    expansion_polygons = [ item.buffer(buffer_size) for item in polygons]
+    # difference
+    surround_polys = [exp_poly.difference(poly) for exp_poly, poly in zip(expansion_polygons,polygons)]
+
+    return surround_polys
+
+
+def merge_shape_files(file_list, save_path):
+
+    if os.path.isfile(save_path):
+        print('%s already exists'%save_path)
+        return True
+    if len(file_list) < 1:
+        raise IOError("no input shapefiles")
+
+    ref_prj = map_projection.get_raster_or_vector_srs_info_proj4(file_list[0])
+
+    # read polygons as shapely objects
+    attribute_names = None
+    polygons_list = []
+    polygon_attributes_list = []
+
+    b_get_field_name = False
+
+    for idx, shp_path in enumerate(file_list):
+
+        # check projection
+        prj = map_projection.get_raster_or_vector_srs_info_proj4(file_list[idx])
+        if prj != ref_prj:
+            raise ValueError('Projection inconsistent: %s is different with the first one'%shp_path)
+
+        shapefile = gpd.read_file(shp_path)
+        if len(shapefile.geometry.values) < 1:
+            basic.outputlogMessage('warning, %s is empty, skip'%shp_path)
+            continue
+
+        # go through each geometry
+        for ri, row in shapefile.iterrows():
+            # if idx == 0 and ri==0:
+            if b_get_field_name is False:
+                attribute_names = row.keys().to_list()
+                attribute_names = attribute_names[:len(attribute_names) - 1]
+                # basic.outputlogMessage("attribute names: "+ str(row.keys().to_list()))
+                b_get_field_name = True
+
+            polygons_list.append(row['geometry'])
+            polygon_attributes = row[:len(row) - 1].to_list()
+            if len(polygon_attributes) < len(attribute_names):
+                polygon_attributes.extend([None]* (len(attribute_names) - len(polygon_attributes)))
+            polygon_attributes_list.append(polygon_attributes)
+
+    # save results
+    save_polyons_attributes = {}
+    for idx, attribute in enumerate(attribute_names):
+        # print(idx, attribute)
+        values = [item[idx] for item in polygon_attributes_list]
+        save_polyons_attributes[attribute] = values
+
+    save_polyons_attributes["Polygons"] = polygons_list
+    polygon_df = pd.DataFrame(save_polyons_attributes)
+
+
+    return save_polygons_to_files(polygon_df, 'Polygons', ref_prj, save_path)
 
 def main(options, args):
 
