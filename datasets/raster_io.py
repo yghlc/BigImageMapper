@@ -50,6 +50,10 @@ def get_height_width_bandnum_dtype(file_path):
     with rasterio.open(file_path) as src:
         return src.height, src.width, src.count, src.dtypes[0]
 
+def get_nodata(file_path):
+    with rasterio.open(file_path) as src:
+        return src.nodata
+
 def get_area_image_box(file_path):
     # get the area of an image coverage (including nodata area)
     with rasterio.open(file_path) as src:
@@ -111,6 +115,8 @@ def get_valid_pixel_count(image_path):
             valid_pixel_count += valid_loc[0].size
             total_count += band_block_data.size
             # break
+        src.close()     # when call this function many time (> 10), the script frozen, try to manually close it.
+                        # on uist, has this problem, but on tesia, don't have this problem # 2021-3-10 hlc
     # total_count = src.width*src.height
     # print('valid_pixel_count, total_count, time cost',valid_pixel_count, total_count,time.time() - t0)
     return valid_pixel_count, total_count
@@ -328,7 +334,7 @@ def read_raster_one_band_np(raster_path,band=1,boundary=None):
         return data, src.nodata
 
 def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='GTiff', nodata=None,
-                                   compress=None, tiled=None, bigtiff=None):
+                                   compress=None, tiled=None, bigtiff=None,boundary=None ):
     '''
     save a numpy to file, the numpy has the same projection and extent with ref_raster
     Args:
@@ -336,6 +342,7 @@ def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='G
         save_path:
         ref_raster:
         format:
+        boundary: (xoff,yoff ,xsize, ysize)
 
     Returns:
 
@@ -377,6 +384,13 @@ def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='G
         if bigtiff is not None:
             out_meta.update(bigtiff=bigtiff)
 
+        if boundary is not None:
+            if boundary[2] != width or boundary[3] != height:
+                raise ValueError('boundary (%s) is not consistent with width (%d) and height (%d)'%(str(boundary),width,height))
+            window = boundary_to_window(boundary)
+            new_transform = src.window_transform(window)
+            out_meta.update(transform=new_transform)
+
         colorinterp = [src.colorinterp[idx] for idx in range(src.count)]
         # print(colorinterp)
 
@@ -394,14 +408,21 @@ def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='G
 
 def image_numpy_allBands_to_8bit_hist(img_np_allbands, min_max_values=None, per_min=0.01, per_max=0.99, src_nodata=None, dst_nodata=None):
 
-    band_count, height, width = img_np_allbands.shape
+    input_ndim = img_np_allbands.ndim
+    if input_ndim == 3:
+        band_count, height, width = img_np_allbands.shape
+    else:
+        # add one dimension
+        band_count = 1
+        img_np_allbands = np.expand_dims(img_np_allbands, axis=0)
+
     if min_max_values is not None:
         # if we input multiple scales, it should has the same size the band count
         if len(min_max_values) > 1 and len(min_max_values) != band_count:
             raise ValueError('The number of min_max_value is not the same with band account')
         # if only input one scale, then duplicate for multiple band account.
         if len(min_max_values) == 1 and len(min_max_values) != band_count:
-            min_max_value = min_max_values * band_count
+            min_max_values = min_max_values * band_count
 
     # get min, max
     bin_count = 500
@@ -419,9 +440,17 @@ def image_numpy_allBands_to_8bit_hist(img_np_allbands, min_max_values=None, per_
             if found_max > min_max_values[band][1]:
                 found_max = min_max_values[band][1]
                 print('reset the max value to %s' % found_max)
-        new_img_np[band,:] = image_numpy_to_8bit(img_oneband, found_max, found_min, src_nodata=src_nodata, dst_nodata=dst_nodata)
+        if found_min == found_max:
+            print('warning, found_min == find_max, set the output as nodata or found_min')
+            new_img_np[band, :] = dst_nodata if dst_nodata is not None else found_min
+        else:
+            new_img_np[band,:] = image_numpy_to_8bit(img_oneband, found_max, found_min, src_nodata=src_nodata, dst_nodata=dst_nodata)
 
-    return new_img_np
+    if input_ndim == 3:
+        return new_img_np
+    else:
+        # remove the add dimension
+        return np.squeeze(new_img_np)
 
 
 def image_numpy_allBands_to_8bit(img_np_allbands, scales, src_nodata=None, dst_nodata=None):
