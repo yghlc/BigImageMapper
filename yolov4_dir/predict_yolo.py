@@ -30,13 +30,14 @@ sys.path.insert(0, '/usr/local/darknet')
 import darknet
 import cv2
 import numpy as np
+import json
 
 def is_file_exist_in_folder(folder):
     # only check the first ten files
     # update on July 21, 2020. For some case, the first 10 may not exist (ignore if they are black)
     # so, if we find any file exist from 0 to 100000, then return True
     for i in range(100000):
-        if os.path.isfile(os.path.join(folder, 'I0_%d.txt' % i)):
+        if os.path.isfile(os.path.join(folder, '%d.json' % i)):
             return True
     return False
     # file_list = io_function.get_file_list_by_pattern(folder, '*.*')  # this may take time if a lot of file exist
@@ -181,12 +182,66 @@ def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, y
     image_patches = split_image.sliding_window(width,height,patch_w,patch_h,adj_overlay_x=overlay_x,adj_overlay_y=overlay_y)
     patch_count = len(image_patches)
 
-    for idx, patch in enumerate(image_patches):
-        one_band_img, nodata = raster_io.read_raster_all_bands_np(image_path,boundary=patch)
+    if os.path.isdir(save_dir) is False:
+        io_function.mkdir(save_dir)
 
-        # prediction
+    # group patches based on size, each patch is (xoff,yoff ,xsize, ysize)
+    patch_groups = {}
+    for patch in image_patches:
+        wh_str = 'w%d'%patch[2] + '_' + 'h%d'%patch[3]
+        if wh_str in patch_groups.keys():
+            patch_groups[wh_str].append(patch)
+        else:
+            patch_groups[wh_str] = [patch]
 
-        # save results
+    network, class_names, _ = load_darknet_network(config_file, yolo_data, model, batch_size=batch_size)
+
+    patch_idx = 0
+    for key in patch_groups.keys():
+        patches_sameSize = patch_groups[key]
+
+        # get width, height, and band_num of a patch, then create a darknet image.
+        img_data, nodata = raster_io.read_raster_all_bands_np(image_path, boundary=patches_sameSize[0])
+        img_data = img_data.transpose(1, 2, 0)
+        height, width, band_num = img_data.shape
+        if band_num not in [1, 3]:
+            raise ValueError('only accept one band or three band images')
+        # Create one with image we reuse for each detect : images with the same size.
+        darknet_image = darknet.make_image(width, height, band_num)
+
+        for idx, patch in enumerate(patches_sameSize):
+            t0 = time.time()
+            # patch: (xoff,yoff ,xsize, ysize)
+            img_data, nodata = raster_io.read_raster_all_bands_np(image_path,boundary=patch)
+            img_data = img_data.transpose(1, 2, 0)
+
+            # prediction
+            darknet.copy_image_from_bytes(darknet_image, img_data.tobytes())
+            # thresh=0.25, relative low, set to 0 will output too many, post-process later
+            detections = darknet.detect_image(network, class_names, darknet_image, thresh=0.25)
+
+            # save results
+            save_res_json = os.path.join(save_dir,'%d.json'%patch_idx)
+            objects = []
+            for label, confidence, bbox in detections:
+                bbox = darknet.bbox2points(bbox)  # to [xmin, ymin, xmax, ymax]
+                bbox = [ bbox[0]+patch[0], bbox[1]+patch[1], bbox[2]+patch[0], bbox[3]+patch[1] ] # to entire image coordinate
+
+                object = {'class_id':class_names.index(label),
+                          'name':label,
+                          'bbox':bbox,
+                          'confidence':confidence}
+                objects.append(object)
+
+            json_data = json.dumps(objects, indent=2)
+            with open(save_res_json, "w") as f_obj:
+                f_obj.write(json_data)
+
+            print('saving %d patch, total: %d, cost %f second'%(patch_idx,patch_count, time.time()-t0))
+
+            patch_idx += 1
+
+        darknet.free_image(darknet_image)
 
 
 
@@ -232,7 +287,8 @@ def predict_one_image_yolo(para_file, image_path, img_save_dir, inf_list_file, g
 
     config_file = 'yolov4_obj.cfg'
     yolo_data = os.path.join('data','obj.data')
-    b_python_api = False
+    # b_python_api = False
+    b_python_api = True
 
     predict_remoteSensing_image(para_file,image_path, img_save_dir,trained_model, config_file, yolo_data, batch_size=1, b_python_api=b_python_api)
     pass
