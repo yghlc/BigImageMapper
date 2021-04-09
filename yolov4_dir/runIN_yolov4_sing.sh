@@ -13,7 +13,7 @@ exe_script=./exe.sh
 
 
 sing_dir=${HOME}
-sing_img=${sing_dir}/programs/yolov4_20210403.sif
+sing_img=${sing_dir}/programs/yolov4_py_20210409.sif
 
 
 
