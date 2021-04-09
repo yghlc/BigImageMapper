@@ -70,6 +70,94 @@ def split_an_image(para_file, image_path,save_dir, patch_w, patch_h, overlay_x, 
     io_function.save_list_to_txt(list_txt_path,patch_list)
     return list_txt_path
 
+def load_darknet_network(config_file,data_file, weights, batch_size = 1):
+    network, class_names, class_colors = darknet.load_network(
+        config_file,
+        data_file,
+        weights,
+        batch_size=batch_size
+    )
+    return network, class_names, class_colors
+
+def darknet_image_detection_v0(image_path, network, class_names, thresh):
+    # Darknet doesn't accept numpy images.
+    # Create one with image we reuse for each detect
+
+    # no need to use network width and size, only if images have the same size
+    # width = darknet.network_width(network)
+    # height = darknet.network_height(network)
+
+    image = cv2.imread(image_path)
+
+    height, width, _ = image.shape
+    darknet_image = darknet.make_image(width, height, 3)
+
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # image_resized = cv2.resize(image_rgb, (width, height),
+    #                            interpolation=cv2.INTER_LINEAR)
+
+    print('image_rgb shape', image_rgb.shape)
+    for ii in range(3):
+        band = image_rgb[:,:,ii]
+        print('band %d'%ii, 'mean: %f'%np.mean(band))
+    # using rasterio to read, then check if it's the same as cv2.
+    img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
+    print('img_data shape', img_data.shape)
+    img_data = img_data.transpose(1,2,0)
+    print('img_data shape', img_data.shape)
+    for ii in range(3):
+        band = img_data[:,:,ii]
+        print('band %d'%ii, 'mean: %f'%np.mean(band))
+
+    # darknet.copy_image_from_bytes(darknet_image, image_rgb.tobytes())
+    darknet.copy_image_from_bytes(darknet_image, img_data.tobytes())
+    detections = darknet.detect_image(network, class_names, darknet_image, thresh=thresh)
+
+    darknet.free_image(darknet_image)
+
+    return detections
+
+def darknet_image_detection(image_path, network, class_names, thresh):
+    # Create one with image we reuse for each detect : images with the same size.
+    img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
+    img_data = img_data.transpose(1, 2, 0)
+    height, width, band_num = img_data.shape
+    if band_num not in [1,3]:
+        raise ValueError('only accept one band or three band images')
+    darknet_image = darknet.make_image(width, height, band_num)
+
+    # darknet.copy_image_from_bytes(darknet_image, image_rgb.tobytes())
+    darknet.copy_image_from_bytes(darknet_image, img_data.tobytes())
+    detections = darknet.detect_image(network, class_names, darknet_image, thresh=thresh)
+    darknet.free_image(darknet_image)
+
+    return detections
+
+def test_darknet_image_detection():
+    # run in ~/Data/Arctic/canada_arctic/autoMapping/multiArea_yolov4_1
+    # run inside Vagrant machine and call singularity container.
+    print('\n')
+    print('Run test_darknet_image_detection')
+
+    config_file = 'yolov4_obj.cfg'
+    yolo_data = os.path.join('data','obj.data')
+    weights = os.path.join('exp1', 'yolov4_obj_best.weights')
+
+    img_path = os.path.join('debug_img', '20200818_mosaic_8bit_rgb_0_class_1_p_0.png')
+
+    network, class_names, _ = load_darknet_network(config_file, yolo_data, weights, batch_size=1)
+    # detections = darknet_image_detection_v0(img_path, network, class_names, 0.1)
+    detections = darknet_image_detection(img_path, network, class_names, 0.1)
+    for label, confidence, bbox in detections:
+        bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
+        print(label, class_names.index(label), bbox, confidence)
+        # print('%s %s %s %s'%(str(label), str(class_names.index(label)), str(bbox), str(confidence)))
+        # x, y, w, h = convert2relative(image, bbox)
+        # label = class_names.index(label)
+        # f.write("{} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n".format(label, x, y, w, h, float(confidence)))
+
+
+
 def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, yolo_data,
                                      patch_w, patch_h, overlay_x, overlay_y, batch_size=1):
     '''
