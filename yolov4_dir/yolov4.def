@@ -18,7 +18,7 @@ OSVersion: ubuntu:18.04
     export PATH=/usr/local/miniconda3/bin:$PATH
 
     # don't set GDAL_DATA, if gdal >= 2.5 version, they don't include gcs.csv files.
-    export GDAL_DATA=/usr/local/miniconda3/share/gdal
+#    export GDAL_DATA=/usr/local/miniconda3/share/gdal
 
 #setup
 
@@ -80,7 +80,10 @@ OSVersion: ubuntu:18.04
     # we change to gdal2.4, or set export PATH=/unusePath:$PATH. # because it only affects the first path.
 #    conda install -y gdal=2.3
 
-    conda install -c conda-forge -y gdal=2.4.2
+#    conda install -c conda-forge -y gdal=2.4.2
+    # let conda install the default gdal,would be 3.0.2,
+    # when install gdal=2.4.2, it also install an old version of glib2, and complain cannot find g_log_structured_standard
+    conda install -y gdal
 
     # clean
     conda clean -tipy
