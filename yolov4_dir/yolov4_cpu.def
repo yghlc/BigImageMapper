@@ -54,7 +54,8 @@ OSVersion: ubuntu:20.04
     pip install numpy psutil GPUtil openpyxl xlsxwriter \
     && pip install opencv-python rasterio geopandas  \
     && pip install pyshp==1.2.12 rasterstats \
-    && pip install scikit-image scikit-learn
+    && pip install scikit-image scikit-learn \
+    && pip install pytest
 
     # not working, need miniconda or ananconda
 #    conda install -c conda-forge -y gdal=2.4.2
