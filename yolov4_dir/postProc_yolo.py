@@ -41,6 +41,13 @@ import rasterio
 import pandas as pd
 import numpy as np
 
+def pixel_xy_to_geo_xy(x0,y0, transform):
+    # pixel to geo XY
+    # https://rasterio.readthedocs.io/en/latest/topics/georeferencing.html
+    x0_geo = transform[0] * x0 + transform[1] * y0 + transform[2]
+    y0_geo = transform[3] * x0 + transform[4] * y0 + transform[5]
+    return x0_geo, y0_geo
+
 def one_box_yoloXY2imageXY(img_path, object_list,  boundary=None):
     with rasterio.open(img_path) as src:
         if boundary is None:
@@ -68,13 +75,8 @@ def one_box_yoloXY2imageXY(img_path, object_list,  boundary=None):
             # x0, x1, y0, y1
             x0, x1, y0, y1 = convert_reverse((width,height),box)
 
-            # pixel to geo XY
-            # https://rasterio.readthedocs.io/en/latest/topics/georeferencing.html
-            x0_geo = transform[0]*x0 + transform[1]*y0 + transform[2]
-            y0_geo = transform[3]*x0 + transform[4]*y0 + transform[5]
-
-            x1_geo = transform[0]*x1 + transform[1]*y1 + transform[2]
-            y1_geo = transform[3]*x1 + transform[4]*y1 + transform[5]
+            x0_geo, y0_geo = pixel_xy_to_geo_xy(x0,y0,transform)
+            x1_geo, y1_geo = pixel_xy_to_geo_xy(x1,y1,transform)
 
             #  minX, minY, maxX, maxY that is: bounds:
             # remove, will convert to polygons after non_max_suppression
@@ -99,12 +101,49 @@ def boxes_yoloXY_to_imageXY(idx, total, yolo_dict, ref_image=None):
 
     return one_box_yoloXY2imageXY(ref_image, objects, boundary=None)
 
+def boxes_minXYmaxXY_to_imageXY(idx, total, json_file, ref_image_src):
+    # return: class_id_list, name_list, confidence,box_poly_list
+    # ref_image_src is open rasterio image object.
+    objects = io_function.read_dict_from_txt_json(json_file)
+    if len(objects) < 1:
+        return [],[],[],[]
+
+    class_id_list = []
+    name_list = []
+    confidence_list = []
+    box_poly_list = []
+    transform = ref_image_src.transform
+
+    for object in objects:
+
+        [xmin, ymin, xmax, ymax] = object['bbox']
+
+        class_id_list.append(object['class_id'])
+        name_list.append(object['name'])
+        confidence_list.append(object['confidence'])
+
+        x0_geo, y0_geo = pixel_xy_to_geo_xy(xmin, ymin, transform)
+        x1_geo, y1_geo = pixel_xy_to_geo_xy(xmax, ymax, transform)
+
+        #  minX, minY, maxX, maxY that is: bounds
+        # because Y direction in geo is opposite to the in pixel, so y0_geo > y1_geo
+        box_poly_list.append([x0_geo, y1_geo, x1_geo, y0_geo])
+
+    return class_id_list, name_list, confidence_list, box_poly_list
+
 def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
     img_save_dir = os.path.join(area_save_dir, 'I%d' % img_idx)
     res_yolo_json = img_save_dir + '_result.json'
-    if os.path.isfile(res_yolo_json) is False:
-        raise IOError('%s not in %s'%(res_yolo_json, area_save_dir))
+    res_json_files = []
+    if os.path.isfile(res_yolo_json):
+        print('found %s in %s, will get shapefile from it'%(res_yolo_json, area_save_dir))
+    else:
+        res_json_files = io_function.get_file_list_by_ext('.json',img_save_dir,bsub_folder=False)
+        if len(res_json_files) < 1:
+            raise IOError('no YOLO results in %s'%(img_save_dir))
+
+        print('found %d json files for patches in %s, will get shapefile from them' % (len(res_json_files),area_save_dir))
 
     out_name = os.path.basename(area_save_dir) + '_' + test_id
 
@@ -114,21 +153,35 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     if os.path.isfile(out_shp_path):
         print('%s already exist' % out_shp_path)
     else:
-        yolo_res_dict_list = io_function.read_dict_from_txt_json(res_yolo_json)
-        total_frame = len(yolo_res_dict_list)
         class_id_list = []
         name_list = []
         box_bounds_list = []
         confidence_list = []
 
-        image1 = yolo_res_dict_list[0]['filename']
+        if len(res_json_files) < 1:
+            # use the result in *_result.json
+            yolo_res_dict_list = io_function.read_dict_from_txt_json(res_yolo_json)
+            total_frame = len(yolo_res_dict_list)
+            image1 = yolo_res_dict_list[0]['filename']
+            for idx, res_dict in enumerate(yolo_res_dict_list):
+                id_list, na_list, con_list, box_list = boxes_yoloXY_to_imageXY(idx, total_frame, res_dict, ref_image=None)
+                class_id_list.extend(id_list)
+                name_list.extend(na_list)
+                confidence_list.extend(con_list)
+                box_bounds_list.extend(box_list)
+        else:
+            # use the results in I0/*.json
+            image1 = io_function.read_list_from_txt(os.path.join(area_save_dir, '%d.txt'%img_idx))[0]
+            total_frame = len(res_json_files)   # the patch numbers
 
-        for idx, res_dict in enumerate(yolo_res_dict_list):
-            id_list, na_list, con_list, box_list = boxes_yoloXY_to_imageXY(idx, total_frame, res_dict, ref_image=None)
-            class_id_list.extend(id_list)
-            name_list.extend(na_list)
-            confidence_list.extend(con_list)
-            box_bounds_list.extend(box_list)
+            # only open image once
+            with rasterio.open(image1) as src:
+                for idx, f_json in enumerate(res_json_files):
+                    id_list, na_list, con_list, box_list = boxes_minXYmaxXY_to_imageXY(idx, total_frame,f_json,src)
+                    class_id_list.extend(id_list)
+                    name_list.extend(na_list)
+                    confidence_list.extend(con_list)
+                    box_bounds_list.extend(box_list)
 
         # apply non_max_suppression
         pick_index = non_max_suppression(np.array(box_bounds_list), probs=np.array(confidence_list),
