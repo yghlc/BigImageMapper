@@ -4,7 +4,10 @@
 
 #authors: Huang Lingcao
 #email:huanglingcao@gmail.com
-#add time: 27 March, 2021
+#add time: 10 April, 2021
+
+# Exit immediately if a command exits with a non-zero status. E: error trace
+set -eE -o functrace
 
 # need singularity >= 3.6
 # run this inside the singularity container (with CUDA and cudnn).
