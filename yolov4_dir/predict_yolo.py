@@ -142,28 +142,110 @@ def darknet_image_detection(image_path, network, class_names, thresh):
 
     return detections
 
-def test_darknet_image_detection():
+# def test_darknet_image_detection():
+#     # run in ~/Data/Arctic/canada_arctic/autoMapping/multiArea_yolov4_1
+#     # run inside Vagrant machine and call singularity container.
+#     print('\n')
+#     print('Run test_darknet_image_detection')
+#
+#     config_file = 'yolov4_obj.cfg'
+#     yolo_data = os.path.join('data','obj.data')
+#     weights = os.path.join('exp1', 'yolov4_obj_best.weights')
+#
+#     img_path = os.path.join('debug_img', '20200818_mosaic_8bit_rgb_0_class_1_p_0.png')
+#
+#     network, class_names, _ = load_darknet_network(config_file, yolo_data, weights, batch_size=1)
+#     # detections = darknet_image_detection_v0(img_path, network, class_names, 0.1)
+#     detections = darknet_image_detection(img_path, network, class_names, 0.1)
+#     for label, confidence, bbox in detections:
+#         bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
+#         print(label, class_names.index(label), bbox, confidence)
+#         # print('%s %s %s %s'%(str(label), str(class_names.index(label)), str(bbox), str(confidence)))
+#         # x, y, w, h = convert2relative(image, bbox)
+#         # label = class_names.index(label)
+#         # f.write("{} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n".format(label, x, y, w, h, float(confidence)))
+
+def check_batch_shape(images, batch_size):
+    """
+        Image sizes should be the same width and height
+    """
+    shapes = [image.shape for image in images]
+    if len(set(shapes)) > 1:
+        raise ValueError("Images don't have same shape")
+    if len(shapes) > batch_size:
+        raise ValueError("Batch size higher than number of images")
+    return shapes[0]
+
+def prepare_batch(images, network, channels=3):
+    width = darknet.network_width(network)
+    height = darknet.network_height(network)
+
+    darknet_images = []
+    for image in images:
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image_resized = cv2.resize(image_rgb, (width, height),
+                                   interpolation=cv2.INTER_LINEAR)
+        custom_image = image_resized.transpose(2, 0, 1)
+        darknet_images.append(custom_image)
+
+    batch_array = np.concatenate(darknet_images, axis=0)
+    batch_array = np.ascontiguousarray(batch_array.flat, dtype=np.float32)/255.0
+    darknet_images = batch_array.ctypes.data_as(darknet.POINTER(darknet.c_float))
+    return darknet.IMAGE(width, height, channels, darknet_images)
+
+def darknet_batch_detection(network, images, class_names,class_colors,
+                    thresh=0.25, hier_thresh=.5, nms=.45, batch_size=4):
+    # hier_thresh: hierarchical softmax
+    image_height, image_width, _ = check_batch_shape(images, batch_size)
+    print(image_height, image_width)
+    darknet_images = prepare_batch(images, network)
+    print("done prepare_batch")
+    batch_detections = darknet.network_predict_batch(network, darknet_images, batch_size, image_width,
+                                                     image_height, thresh, hier_thresh, None, 0, 0)
+    print("done prediction")
+    batch_predictions = []
+    for idx in range(batch_size):
+        num = batch_detections[idx].num
+        detections = batch_detections[idx].dets
+        if nms:
+            darknet.do_nms_obj(detections, num, len(class_names), nms)
+        predictions = darknet.remove_negatives(detections, class_names, num)
+        images[idx] = darknet.draw_boxes(predictions, images[idx], class_colors)
+        batch_predictions.append(predictions)
+    darknet.free_batch_detections(batch_detections, batch_size)
+    return images, batch_predictions
+
+
+def test_darknet_batch_images_detection():
     # run in ~/Data/Arctic/canada_arctic/autoMapping/multiArea_yolov4_1
     # run inside Vagrant machine and call singularity container.
     print('\n')
-    print('Run test_darknet_image_detection')
+    print('Run test_darknet_batch_images_detection')
 
     config_file = 'yolov4_obj.cfg'
     yolo_data = os.path.join('data','obj.data')
     weights = os.path.join('exp1', 'yolov4_obj_best.weights')
+    batch_size = 3
 
-    img_path = os.path.join('debug_img', '20200818_mosaic_8bit_rgb_0_class_1_p_0.png')
+    # these three have the same size
+    image_names = ['20200818_mosaic_8bit_rgb_p_1001.png', '20200818_mosaic_8bit_rgb_p_1038.png',
+                   '20200818_mosaic_8bit_rgb_p_1131.png']
+    image_names = [os.path.join('debug_img', item)  for item in image_names]
 
-    network, class_names, _ = load_darknet_network(config_file, yolo_data, weights, batch_size=1)
-    # detections = darknet_image_detection_v0(img_path, network, class_names, 0.1)
-    detections = darknet_image_detection(img_path, network, class_names, 0.1)
+    # load network
+    network, class_names, class_colors = load_darknet_network(config_file, yolo_data, weights, batch_size=batch_size)
+
+    images = [cv2.imread(image) for image in image_names]
+    for cv_img, img_path in zip(images,image_names):
+        print(img_path, cv_img.shape)
+    images, detections = darknet_batch_detection(network, images, class_names, class_colors, batch_size=batch_size)
+
+
     for label, confidence, bbox in detections:
         bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
         print(label, class_names.index(label), bbox, confidence)
-        # print('%s %s %s %s'%(str(label), str(class_names.index(label)), str(bbox), str(confidence)))
-        # x, y, w, h = convert2relative(image, bbox)
-        # label = class_names.index(label)
-        # f.write("{} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n".format(label, x, y, w, h, float(confidence)))
+
+
 
 
 
