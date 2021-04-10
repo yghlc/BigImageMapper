@@ -78,7 +78,8 @@ OSVersion: ubuntu:18.04
     pip install numpy psutil GPUtil openpyxl xlsxwriter \
     && pip install opencv-python rasterio geopandas  \
     && pip install pyshp==1.2.12 rasterstats \
-    && pip install scikit-image scikit-learn
+    && pip install scikit-image scikit-learn \
+    && pip install pytest
 
     #This version of GDAL 2.3 clobbering PATH environment variable # https://github.com/OSGeo/gdal/issues/1231
     # breaking any subprocesses that depend, like os.system()
