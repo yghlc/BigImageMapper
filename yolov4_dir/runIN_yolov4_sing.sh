@@ -25,7 +25,7 @@ export SINGULARITY_BINDPATH=/projects/lihu9680:/projects/lihu9680
 #SINGULARITYENV_LD_LIBRARY_PATH=/usr/lib64:${yoltv4}/lib:${LD_LIBRARY_PATH} \
 
 # use SINGULARITYENV_APPEND_PATH or SINGULARITYENV_PREPEND_PATH to add path on the host machine
-#export SINGULARITYENV_PREPEND_PATH=${yoltv4}/bin:${darknet}
+export SINGULARITYENV_PREPEND_PATH=${sing_dir}/programs/miniconda3/envs/darknet/bin:${sing_dir}/programs/darknet
 
 # DARKNET_PATH is need for loading libdarknet.so (need when using python)
 export SINGULARITYENV_DARKNET_PATH=${sing_dir}/programs/darknet
