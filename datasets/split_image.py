@@ -10,6 +10,8 @@ add time: 15 July, 2017
 import sys,os,subprocess
 from optparse import OptionParser
 
+from multiprocessing import Pool
+
 def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj_overlay_y=0):
     """
     get the subset windows of each patch
@@ -77,9 +79,20 @@ def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj
     # f_obj.close()
     return patch_boundary
 
+def get_one_patch(input, index, patch,output_dir,out_format,extension,pre_name):
+    # print information
+    print(patch)
+    output_path = os.path.join(output_dir, pre_name + '_p_%d' % index + extension)
+
+    args_list = ['gdal_translate', '-of', out_format, '-srcwin', str(patch[0]), str(patch[1]), str(patch[2]),
+                 str(patch[3]), input, output_path]
+    ps = subprocess.Popen(args_list)
+    returncode = ps.wait()
+    if os.path.isfile(output_path) is False:
+        print('Failed in gdal_translate, return codes: ' + str(returncode))
 
 
-def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_overlay_y=0,out_format='PNG', pre_name = None):
+def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_overlay_y=0,out_format='PNG', pre_name = None, process_num=1):
     """
     split a large image to many separate patches
     Args:
@@ -127,17 +140,24 @@ def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_o
     else:
         raise ValueError("unknow output format:%s" % out_format)
 
-    for patch in patch_boundary:
-        # print information
-        print(patch)
-        output_path = os.path.join(output_dir, pre_name + '_p_%d'%index + extension)
+    if process_num==1:
+        for patch in patch_boundary:
+            # print information
+            print(patch)
+            output_path = os.path.join(output_dir, pre_name + '_p_%d'%index + extension)
 
-        args_list = ['gdal_translate','-of',out_format,'-srcwin',str(patch[0]),str(patch[1]),str(patch[2]),str(patch[3]), input, output_path]
-        ps = subprocess.Popen(args_list)
-        returncode = ps.wait()
-        if os.path.isfile(output_path) is False:
-            raise IOError('Failed in gdal_translate, return codes: ' + str(returncode))
-        index = index + 1
+            args_list = ['gdal_translate','-of',out_format,'-srcwin',str(patch[0]),str(patch[1]),str(patch[2]),str(patch[3]), input, output_path]
+            ps = subprocess.Popen(args_list)
+            returncode = ps.wait()
+            if os.path.isfile(output_path) is False:
+                raise IOError('Failed in gdal_translate, return codes: ' + str(returncode))
+            index = index + 1
+    elif process_num > 1:
+        parameters_list = [(input, idx, patch, output_dir, out_format, extension, pre_name) for idx, patch in enumerate(patch_boundary)]
+        theadPool = Pool(process_num)  # multi processes
+        results = theadPool.starmap(get_one_patch, parameters_list)  # need python3
+    else:
+        raise ValueError('incorrect process number: %s'%(str(process_num)))
 
 
 
