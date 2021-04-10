@@ -36,9 +36,11 @@ def is_file_exist_in_folder(folder):
     # only check the first ten files
     # update on July 21, 2020. For some case, the first 10 may not exist (ignore if they are black)
     # so, if we find any file exist from 0 to 100000, then return True
+    file_ext = ['.json', '.png','.jpg','.tif']
     for i in range(100000):
-        if os.path.isfile(os.path.join(folder, '%d.json' % i)):
-            return True
+        for ext in file_ext:
+            if os.path.isfile(os.path.join(folder, '%d'%i + ext)):
+                return True
     return False
     # file_list = io_function.get_file_list_by_pattern(folder, '*.*')  # this may take time if a lot of file exist
     # if len(file_list) > 0:
@@ -388,7 +390,7 @@ def parallel_prediction_main(para_file, trained_model):
             if b_use_multiGPUs is False:
                 # wait until previous one finished
                 while sub_process.is_alive():
-                    time.sleep(5)
+                    time.sleep(3)
 
             idx += 1
 
@@ -401,7 +403,7 @@ def parallel_prediction_main(para_file, trained_model):
                 if file_exist is True or sub_process.is_alive() is False:
                     break
                 else:
-                    time.sleep(5)
+                    time.sleep(3)
 
             if sub_process.exitcode is not None and sub_process.exitcode != 0:
                 sys.exit(1)
@@ -412,9 +414,12 @@ def parallel_prediction_main(para_file, trained_model):
             #     time.sleep(10)
 
     # check all the tasks already finished
+    wait_all_finish = 0
     while b_all_task_finish(sub_tasks) is False:
-        basic.outputlogMessage('wait all tasks to finish')
-        time.sleep(60)
+        if wait_all_finish % 100 == 0:
+            basic.outputlogMessage('wait all tasks to finish')
+        time.sleep(1)
+        wait_all_finish += 1
 
     end_time = datetime.now()
 
