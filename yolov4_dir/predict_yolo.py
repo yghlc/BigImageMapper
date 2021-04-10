@@ -420,7 +420,7 @@ def parallel_prediction_main(para_file, trained_model):
             elapsed_time = time.time() - time0
             while elapsed_time < 20 * 60:
                 elapsed_time = time.time() - time0
-                file_exist = is_file_exist_in_folder(img_save_dir)
+                file_exist = os.path.isdir(img_save_dir) and is_file_exist_in_folder(img_save_dir)
                 if file_exist is True or sub_process.is_alive() is False:
                     break
                 else:
