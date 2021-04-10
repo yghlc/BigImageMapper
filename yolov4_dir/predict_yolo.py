@@ -347,7 +347,8 @@ def parallel_prediction_main(para_file, trained_model):
 
             if b_use_multiGPUs:
                 # get available GPUs  # https://github.com/anderskm/gputil
-                deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
+                # memory: orders the available GPU device ids by ascending memory usage
+                deviceIDs = GPUtil.getAvailable(order='memory', limit=100, maxLoad=0.5,
                                                 maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
                 # only use the one in CUDA_VISIBLE_DEVICES
                 if len(CUDA_VISIBLE_DEVICES) > 0:
