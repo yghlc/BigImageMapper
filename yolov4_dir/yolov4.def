@@ -20,6 +20,11 @@ OSVersion: ubuntu:18.04
     # don't set GDAL_DATA, if gdal >= 2.5 version, they don't include gcs.csv files.
 #    export GDAL_DATA=/usr/local/miniconda3/share/gdal
 
+    # set PROJ_LIB for the one install by apt-get, it is in "/usr/share/proj" (seems not need to set)
+    # this is installed by conda,
+    # or set outside the container export SINGULARITYENV_PROJ_LIB=/usr/local/miniconda3/share/proj
+    export PROJ_LIB=/usr/local/miniconda3/share/proj
+
 #setup
 
 ## %post -c /bin/bash : use bash as default intead of sh
