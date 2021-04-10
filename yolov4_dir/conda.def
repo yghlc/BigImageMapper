@@ -1,0 +1,55 @@
+Bootstrap: docker
+FROM: ubuntu:18.04
+OSVersion: ubuntu:18.04
+
+
+%help
+    Singularity container for testing installing and running conda environment, especially for GDAL environment.
+
+
+%labels
+	Maintainer: Lingcao Huang
+
+%environment
+    export LC_ALL=C
+    export PATH=/usr/local/miniconda3/bin:$PATH
+
+#setup
+
+## %post -c /bin/bash : use bash as default intead of sh
+%post
+    # avoid setting tzdata
+    export DEBIAN_FRONTEND=noninteractive
+# prep apt-get and cudnn
+    apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils
+
+# install requirements
+    apt-get update \
+  	&& apt-get install -y --no-install-recommends \
+        wget \
+        vim \
+	  && apt-get clean \
+	  && rm -rf /var/lib/apt/lists/*
+
+
+# install miniconda
+    wget --quiet --no-check-certificate https://repo.anaconda.com/miniconda/Miniconda3-py37_4.9.2-Linux-x86_64.sh -O ~/miniconda.sh \
+    && /bin/bash ~/miniconda.sh -b -p /usr/local/miniconda3 \
+    && rm ~/miniconda.sh \
+    && /usr/local/miniconda3/bin/conda clean -tipy
+
+#    # conda clean  -tipsy  # t: tarball, i index-cache p: package  y: Do not ask for confirmation
+#    # conda build purge-all # remove source cache files.
+#
+    export PATH=/usr/local/miniconda3/bin:$PATH
+# install python package
+    # need to install numpy first
+    pip install numpy psutil GPUtil
+
+    conda install -y gdal
+
+    # clean
+    conda clean -tipy
+
+
