@@ -292,8 +292,22 @@ def predict_one_image_yolo(para_file, image_path, img_save_dir, inf_list_file, g
     # b_python_api = False
     b_python_api = True
 
+    done_indicator = '%s_done'%inf_list_file
+    if os.path.isfile(done_indicator):
+        basic.outputlogMessage('warning, %s exist, skip prediction'%done_indicator)
+        return
+    # use a specific GPU for prediction, only inference one image
+    time0 = time.time()
+    if gpuid is not None:
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(gpuid)
+
     predict_remoteSensing_image(para_file,image_path, img_save_dir,trained_model, config_file, yolo_data, batch_size=1, b_python_api=b_python_api)
-    pass
+
+    duration = time.time() - time0
+    os.system('echo "$(date): time cost of inference for image in %s: %.2f seconds">>"time_cost.txt"' % (inf_list_file, duration))
+    # write a file to indicate that the prediction has done.
+    os.system('echo %s > %s_done'%(inf_list_file,inf_list_file))
+    return
 
 
 def parallel_prediction_main(para_file, trained_model):
