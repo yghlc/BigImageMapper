@@ -26,7 +26,8 @@ import datasets.split_image as split_image
 import datasets.raster_io as raster_io
 
 # add darknet Python API
-sys.path.insert(0, '/usr/local/darknet')
+darknet_dir = os.environ.get('DARKNET_PATH', './')
+sys.path.insert(0, darknet_dir)
 import darknet
 import cv2
 import numpy as np
