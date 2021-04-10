@@ -7,13 +7,14 @@
 #add time: 27 March, 2021
 
 # need singularity >= 3.6
+# need to activate darknet for python scripts: conda activate darknet
 
 # running script
 exe_script=./exe.sh
 
 
 sing_dir=${HOME}
-sing_img=${sing_dir}/programs/yolov4_py_20210409.sif
+sing_img=${sing_dir}/programs/ubuntu1804_cuda1002_cudnn8.sif
 
 
 
@@ -27,7 +28,7 @@ export SINGULARITY_BINDPATH=/projects/lihu9680:/projects/lihu9680
 #export SINGULARITYENV_PREPEND_PATH=${yoltv4}/bin:${darknet}
 
 # DARKNET_PATH is need for loading libdarknet.so (need when using python)
-export SINGULARITYENV_DARKNET_PATH=/usr/local/darknet
+export SINGULARITYENV_DARKNET_PATH=${sing_dir}/programs/darknet
 
 # set environment
 SINGULARITYENV_TZ=America/Denver \
