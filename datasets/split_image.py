@@ -118,18 +118,20 @@ def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_o
     # f_obj = open('split_image_info.txt', 'a+')
     # f_obj.writelines("pre FileName:"+pre_name+'_p_\n')
     # f_obj.close()
+    if out_format.upper() == 'PNG':
+        extension = '.png'
+    elif out_format.upper() == 'GTIFF':  # GTiff
+        extension = '.tif'
+    elif out_format.upper() == 'JPEG':  # jpg
+        extension = '.jpg'
+    else:
+        raise ValueError("unknow output format:%s" % out_format)
 
     for patch in patch_boundary:
         # print information
         print(patch)
-        if out_format.upper()=='PNG':
-            output_path = os.path.join(output_dir,pre_name+'_p_%d.png'%index)
-        elif out_format.upper()=='GTIFF':   #GTiff
-            output_path = os.path.join(output_dir, pre_name + '_p_%d.tif' % index)
-        elif out_format.upper()=='JPEG':   #GTiff
-            output_path = os.path.join(output_dir, pre_name + '_p_%d.jpg' % index)
-        else:
-            raise ValueError("unknow output format:%s"%out_format)
+        output_path = os.path.join(output_dir, pre_name + '_p_%d'%index + extension)
+
         args_list = ['gdal_translate','-of',out_format,'-srcwin',str(patch[0]),str(patch[1]),str(patch[2]),str(patch[3]), input, output_path]
         ps = subprocess.Popen(args_list)
         returncode = ps.wait()
