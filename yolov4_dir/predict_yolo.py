@@ -36,12 +36,18 @@ def is_file_exist_in_folder(folder):
     # only check the first ten files
     # update on July 21, 2020. For some case, the first 10 may not exist (ignore if they are black)
     # so, if we find any file exist from 0 to 100000, then return True
-    file_ext = ['.json', '.png','.jpg','.tif']
-    for i in range(100000):
-        for ext in file_ext:
-            if os.path.isfile(os.path.join(folder, '%d'%i + ext)):
-                return True
-    return False
+    # file_ext = ['.json', '.png','.jpg','.tif']
+    # for i in range(100000):
+    #     for ext in file_ext:
+    #         if os.path.isfile(os.path.join(folder, '%d'%i + ext)):
+    #             return True
+    # return False
+
+    # just check if the folder is empty
+    if len(os.listdir(folder)) == 0:
+        return False
+    else:
+        return True
     # file_list = io_function.get_file_list_by_pattern(folder, '*.*')  # this may take time if a lot of file exist
     # if len(file_list) > 0:
     #     return True
@@ -63,7 +69,7 @@ def split_an_image(para_file, image_path,save_dir, patch_w, patch_h, overlay_x, 
     if os.path.isdir(save_dir) is False:
         io_function.mkdir(save_dir)
 
-    split_image.split_image(image_path, save_dir, patch_w, patch_h, overlay_x, overlay_y, out_format, pre_name=None)
+    split_image.split_image(image_path, save_dir, patch_w, patch_h, overlay_x, overlay_y, out_format, pre_name=None,process_num=8)
     # get list
     patch_list = io_function.get_file_list_by_ext(split_format,save_dir,bsub_folder=False)
     if len(patch_list) < 1:
