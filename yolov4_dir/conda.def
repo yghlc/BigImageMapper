@@ -13,6 +13,7 @@ OSVersion: ubuntu:18.04
 %environment
     export LC_ALL=C
     export PATH=/usr/local/miniconda3/bin:$PATH
+    export PROJ_LIB=/usr/local/miniconda3/share/proj
 
 #setup
 
@@ -38,6 +39,11 @@ OSVersion: ubuntu:18.04
     && /bin/bash ~/miniconda.sh -b -p /usr/local/miniconda3 \
     && rm ~/miniconda.sh \
     && /usr/local/miniconda3/bin/conda clean -tipy
+
+    # no idea if this works. Still need to set PROJ_LIB manunally
+    ln -s /usr/local/miniconda3/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /usr/local/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
 
 #    # conda clean  -tipsy  # t: tarball, i index-cache p: package  y: Do not ask for confirmation
 #    # conda build purge-all # remove source cache files.
