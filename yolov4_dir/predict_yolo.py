@@ -483,6 +483,7 @@ def predict_one_image_yolo(para_file, image_path, img_save_dir, inf_list_file, g
     config_file =  parameters.get_string_parameters(para_file, 'network_setting_ini')  # 'yolov4_obj.cfg'
     yolo_data = os.path.join('data','obj.data')
     # b_python_api = False
+    inf_batch_size = parameters.get_digit_parameters(para_file,'inf_batch_size','int')
     b_python_api = parameters.get_bool_parameters(para_file,'b_inf_use_python_api')
 
     done_indicator = '%s_done'%inf_list_file
@@ -494,7 +495,7 @@ def predict_one_image_yolo(para_file, image_path, img_save_dir, inf_list_file, g
     if gpuid is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = str(gpuid)
 
-    predict_remoteSensing_image(para_file,image_path, img_save_dir,trained_model, config_file, yolo_data, batch_size=1, b_python_api=b_python_api)
+    predict_remoteSensing_image(para_file,image_path, img_save_dir,trained_model, config_file, yolo_data, batch_size=inf_batch_size, b_python_api=b_python_api)
 
     duration = time.time() - time0
     os.system('echo "$(date): time cost of inference for image in %s: %.2f seconds">>"time_cost.txt"' % (inf_list_file, duration))
