@@ -252,8 +252,8 @@ def test_darknet_batch_images_detection():
     for name, image in zip(image_names, images):
         cv2.imwrite(name.replace("20200818", "res_20200818"), image)
     # for label, confidence, bbox in detections:
-        # bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
-        # print(label, class_names.index(label), bbox, confidence)
+    #     bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
+    #     print(label, class_names.index(label), bbox, confidence)
 
 
 def copy_one_patch_image_data(patch, entire_img_data):
@@ -289,6 +289,10 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
     if band_num not in [1, 3]:
         raise ValueError('only accept one band or three band images')
 
+    # class_colors={} #{'thaw_slump': (139, 140, 228)}  # class_colors should get when load network
+    # for name in class_names:
+    #     class_colors[name] = (0,0,0)
+
     patch_idx = 0
     for key in patch_groups.keys():
         patches_sameSize = patch_groups[key]
@@ -300,13 +304,17 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
             t0 = time.time()
             images = [copy_one_patch_image_data(patch,entire_img_data) for patch in a_batch_patch ]
 
-            height, width, band_num = images[0].shape
+            # for the batch prediction, it seems have to resize to the network size
+            img_height, img_width, band_num = images[0].shape
+            width = darknet.network_width(network)
+            height = darknet.network_height(network)        
 
             # darknet_images = prepare_batch(images, network)
             # prepare_batch
             darknet_images = []
             for image in images:
-                custom_image = image.transpose(2, 0, 1)
+                image_resized = cv2.resize(image, (width, height),interpolation=cv2.INTER_LINEAR)
+                custom_image = image_resized.transpose(2, 0, 1)
                 darknet_images.append(custom_image)
             batch_array = np.concatenate(darknet_images, axis=0)
             batch_array = np.ascontiguousarray(batch_array.flat, dtype=np.float32) / 255.0
@@ -314,8 +322,8 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
             darknet_images = darknet.IMAGE(width, height, band_num, darknet_images)
 
             # prediction
-            batch_detections = darknet.network_predict_batch(network, darknet_images, batch_size, width,
-                                                             height, thresh, hier_thresh, None, 0, 0)
+            batch_detections = darknet.network_predict_batch(network, darknet_images, batch_size, img_height,
+                                                             img_width, thresh, hier_thresh, None, 0, 0)
             batch_predictions = []
             for idx in range(batch_size):
                 num = batch_detections[idx].num
@@ -323,16 +331,18 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
                 if nms:
                     darknet.do_nms_obj(detections, num, len(class_names), nms)
                 predictions = darknet.remove_negatives(detections, class_names, num)
+                # images[idx] = np.ascontiguousarray(images[idx])
                 # images[idx] = darknet.draw_boxes(predictions, images[idx], class_colors)
                 batch_predictions.append(predictions)
             darknet.free_batch_detections(batch_detections, batch_size)
 
-            for patch,predictions in zip(a_batch_patch,batch_predictions):
+            for patch,image,predictions in zip(a_batch_patch,images,batch_predictions):
                 # save results
                 # save_res_json = os.path.join(save_dir, '%d.json' % patch_idx)
                 # save_one_patch_detection_json(patch, detections, class_names, save_res_json)
 
-                # test
+                
+                # cv2.imwrite('%d.png'%patch_idx, image)    # save for testing
                 for label, confidence, bbox in predictions:
                     bbox = darknet.bbox2points(bbox)  # to [xmin, ymin, xmax, ymax]
                     print(label, class_names.index(label), bbox, confidence)
