@@ -285,6 +285,7 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
     entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
     entire_img_data = entire_img_data.transpose(1, 2, 0)    # to opencv format
     entire_height, entire_width, band_num = entire_img_data.shape
+    print("entire_height, entire_width, band_num",entire_height, entire_width, band_num)
     if band_num not in [1, 3]:
         raise ValueError('only accept one band or three band images')
 
@@ -296,6 +297,7 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
                  range((len(patches_sameSize) + batch_size - 1) // batch_size )]
 
         for a_batch_patch in batch_patches:
+            t0 = time.time()
             images = [copy_one_patch_image_data(patch,entire_img_data) for patch in a_batch_patch ]
 
             height, width, band_num = images[0].shape
@@ -336,7 +338,7 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
                     print(label, class_names.index(label), bbox, confidence)
 
                 if patch_idx % 100 == 0:
-                    print('saving %d patch, total: %d, cost %f second' % (patch_idx, patch_count, time.time() - t0))
+                    print('saving %d patch, total: %d, cost %f second' % (patch_idx, patch_count, (time.time() - t0)/batch_size))
 
                 patch_idx += 1
 
