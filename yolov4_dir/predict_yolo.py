@@ -480,10 +480,10 @@ def predict_remoteSensing_image(para_file, image_path, save_dir,model, config_fi
 
 def predict_one_image_yolo(para_file, image_path, img_save_dir, inf_list_file, gpuid,trained_model):
 
-    config_file = 'yolov4_obj.cfg'
+    config_file =  parameters.get_string_parameters(para_file, 'network_setting_ini')  # 'yolov4_obj.cfg'
     yolo_data = os.path.join('data','obj.data')
     # b_python_api = False
-    b_python_api = True
+    b_python_api = parameters.get_bool_parameters(para_file,'b_inf_use_python_api')
 
     done_indicator = '%s_done'%inf_list_file
     if os.path.isfile(done_indicator):
