@@ -242,9 +242,17 @@ def test_darknet_batch_images_detection():
     images, detections = darknet_batch_detection(network, images, class_names, class_colors, batch_size=batch_size)
 
 
-    for label, confidence, bbox in detections:
-        bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
-        print(label, class_names.index(label), bbox, confidence)
+    for img, det in zip(image_names,detections):
+        print(img)
+        for label, confidence, bbox in det:
+            bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
+            print(label, class_names.index(label), bbox, confidence)
+
+    for name, image in zip(image_names, images):
+        cv2.imwrite(name.replace("20200818", "res_20200818"), image)
+    # for label, confidence, bbox in detections:
+        # bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
+        # print(label, class_names.index(label), bbox, confidence)
 
 
 
