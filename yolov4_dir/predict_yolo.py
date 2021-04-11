@@ -336,7 +336,8 @@ def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, y
             with open(save_res_json, "w") as f_obj:
                 f_obj.write(json_data)
 
-            print('saving %d patch, total: %d, cost %f second'%(patch_idx,patch_count, time.time()-t0))
+            if patch_idx % 100 == 0:
+                print('saving %d patch, total: %d, cost %f second'%(patch_idx,patch_count, time.time()-t0))
 
             patch_idx += 1
 
