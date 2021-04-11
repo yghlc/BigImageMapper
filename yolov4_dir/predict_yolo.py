@@ -472,24 +472,36 @@ def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, y
         return darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups, patch_count,class_names,batch_size)
 
 
+    # read the entire image
+    entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
+    entire_img_data = entire_img_data.transpose(1, 2, 0)    # to opencv format
+    entire_height, entire_width, band_num = entire_img_data.shape
+    print("entire_height, entire_width, band_num",entire_height, entire_width, band_num)
+    if band_num not in [1, 3]:
+        raise ValueError('only accept one band or three band images')
+
     patch_idx = 0
     for key in patch_groups.keys():
         patches_sameSize = patch_groups[key]
 
         # get width, height, and band_num of a patch, then create a darknet image.
-        img_data, nodata = raster_io.read_raster_all_bands_np(image_path, boundary=patches_sameSize[0])
-        img_data = img_data.transpose(1, 2, 0)
-        height, width, band_num = img_data.shape
-        if band_num not in [1, 3]:
-            raise ValueError('only accept one band or three band images')
+        # img_data, nodata = raster_io.read_raster_all_bands_np(image_path, boundary=patches_sameSize[0])
+        # img_data = img_data.transpose(1, 2, 0)
+        # height, width, band_num = img_data.shape
+        # if band_num not in [1, 3]:
+        #     raise ValueError('only accept one band or three band images')
+
+        height, width = patches_sameSize[0][3], patches_sameSize[0][2]
+
         # Create one with image we reuse for each detect : images with the same size.
         darknet_image = darknet.make_image(width, height, band_num)
 
         for idx, patch in enumerate(patches_sameSize):
             t0 = time.time()
             # patch: (xoff,yoff ,xsize, ysize)
-            img_data, nodata = raster_io.read_raster_all_bands_np(image_path,boundary=patch)
-            img_data = img_data.transpose(1, 2, 0)
+            # img_data, nodata = raster_io.read_raster_all_bands_np(image_path,boundary=patch)
+            # img_data = img_data.transpose(1, 2, 0)
+            img_data = copy_one_patch_image_data(patch, entire_img_data)
 
             # prediction
             darknet.copy_image_from_bytes(darknet_image, img_data.tobytes())
