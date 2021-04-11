@@ -302,6 +302,12 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
 
         for a_batch_patch in batch_patches:
             t0 = time.time()
+            input_batch_size = len(a_batch_patch)
+            if input_batch_size != batch_size:
+                if input_batch_size > batch_size:
+                    raise ValueError('input_batch_size (%d) is greater than batch_size (%d)'%(input_batch_size,batch_size))
+                while(len(a_batch_patch)<batch_size):
+                    a_batch_patch.append(a_batch_patch[0])  # copy the first one to fit the batch size
             images = [copy_one_patch_image_data(patch,entire_img_data) for patch in a_batch_patch ]
 
             # for the batch prediction, it seems have to resize to the network size
@@ -325,7 +331,7 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
             batch_detections = darknet.network_predict_batch(network, darknet_images, batch_size, img_height,
                                                              img_width, thresh, hier_thresh, None, 0, 0)
             batch_predictions = []
-            for idx in range(batch_size):
+            for idx in range(input_batch_size):
                 num = batch_detections[idx].num
                 detections = batch_detections[idx].dets
                 if nms:
@@ -336,16 +342,19 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
                 batch_predictions.append(predictions)
             darknet.free_batch_detections(batch_detections, batch_size)
 
-            for patch,image,predictions in zip(a_batch_patch,images,batch_predictions):
+            for idx, (patch,image,predictions) in enumerate(zip(a_batch_patch,images,batch_predictions)):
+                # remove the duplicated ones
+                if idx >= input_batch_size:
+                    break
                 # save results
-                # save_res_json = os.path.join(save_dir, '%d.json' % patch_idx)
-                # save_one_patch_detection_json(patch, detections, class_names, save_res_json)
+                save_res_json = os.path.join(save_dir, '%d.json' % patch_idx)
+                save_one_patch_detection_json(patch, predictions, class_names, save_res_json)
 
                 
                 # cv2.imwrite('%d.png'%patch_idx, image)    # save for testing
-                for label, confidence, bbox in predictions:
-                    bbox = darknet.bbox2points(bbox)  # to [xmin, ymin, xmax, ymax]
-                    print(label, class_names.index(label), bbox, confidence)
+                # for label, confidence, bbox in predictions:
+                #     bbox = darknet.bbox2points(bbox)  # to [xmin, ymin, xmax, ymax]
+                #     print(label, class_names.index(label), bbox, confidence)
 
                 if patch_idx % 100 == 0:
                     print('saving %d patch, total: %d, cost %f second' % (patch_idx, patch_count, (time.time() - t0)/batch_size))
