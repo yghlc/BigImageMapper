@@ -343,6 +343,51 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
                 patch_idx += 1
 
 
+def test_darknet_batch_detection_rs_images():
+    print('\n')
+    print('Run test_darknet_batch_detection_rs_images')
+
+    config_file = 'yolov4_obj.cfg'
+    yolo_data = os.path.join('data', 'obj.data')
+    weights = os.path.join('exp1', 'yolov4_obj_best.weights')
+    batch_size = 1
+
+    # these three have the same size
+    image_names = ['20200818_mosaic_8bit_rgb_p_1001.png'] #, '20200818_mosaic_8bit_rgb_p_1038.png', '20200818_mosaic_8bit_rgb_p_1131.png']
+    image_names = [os.path.join('debug_img', item) for item in image_names]
+    image_path = image_names[0]
+    save_dir = './'
+
+    height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(image_path)
+    # print('input image: height, width, band_num, date_type',height, width, band_num, date_type)
+
+    # divide the image the many small patches, then calcuate one by one, solving memory issues.
+    patch_w = 480
+    patch_h = 480
+    overlay_x = 160
+    overlay_y = 160
+    image_patches = split_image.sliding_window(width,height,patch_w,patch_h,adj_overlay_x=overlay_x,adj_overlay_y=overlay_y)
+    patch_count = len(image_patches)
+
+    if os.path.isdir(save_dir) is False:
+        io_function.mkdir(save_dir)
+
+    # group patches based on size, each patch is (xoff,yoff ,xsize, ysize)
+    patch_groups = {}
+    for patch in image_patches:
+        wh_str = 'w%d'%patch[2] + '_' + 'h%d'%patch[3]
+        if wh_str in patch_groups.keys():
+            patch_groups[wh_str].append(patch)
+        else:
+            patch_groups[wh_str] = [patch]
+
+
+    # load network
+    network, class_names, class_colors = load_darknet_network(config_file, yolo_data, weights, batch_size=batch_size)
+
+    darknet_batch_detection_rs_images(network, image_path, save_dir, patch_groups, patch_count, class_names, batch_size,
+                                      thresh=0.25, hier_thresh=.5, nms=.45)
+
 
 
 def save_one_patch_detection_json(patch,detections,class_names,save_res_json):
