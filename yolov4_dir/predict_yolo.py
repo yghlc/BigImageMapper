@@ -24,6 +24,7 @@ import basic_src.io_function as io_function
 import basic_src.basic as basic
 import datasets.split_image as split_image
 import datasets.raster_io as raster_io
+import datasets.build_RS_data as build_RS_data
 
 # add darknet Python API
 darknet_dir = os.environ.get('DARKNET_PATH', './')
@@ -255,7 +256,109 @@ def test_darknet_batch_images_detection():
         # print(label, class_names.index(label), bbox, confidence)
 
 
+def copy_one_patch_image_data(patch, entire_img_data):
+    #(xoff,yoff ,xsize, ysize)
+    row_s = patch[1]
+    row_e = patch[1] + patch[3]
+    col_s = patch[0]
+    col_e = patch[0] + patch[2]
+    # entire_img_data is in opencv format:  height, width, band_num
+    patch_data = entire_img_data[row_s:row_e, col_s:col_e, :]
+    return patch_data
 
+
+def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups, patch_count, class_names,batch_size,
+                    thresh=0.25, hier_thresh=.5, nms=.45):
+    '''
+    # run batch detection of YOLO on an remote sensing image.
+    :param network: a darknet network (already load the weight)
+    :param image_path: the image patch.
+    :param patch_groups: the group of images patch, each group has the same width and height.
+    :param class_names:
+    :param batch_size:
+    :param thresh:
+    :param hier_thresh:
+    :param nms:
+    :return:
+    '''
+    # read the entire image
+    entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
+    entire_img_data = entire_img_data.transpose(1, 2, 0)    # to opencv format
+    entire_height, entire_width, band_num = entire_img_data.shape
+    if band_num not in [1, 3]:
+        raise ValueError('only accept one band or three band images')
+
+    patch_idx = 0
+    for key in patch_groups.keys():
+        patches_sameSize = patch_groups[key]
+
+        batch_patches = [patches_sameSize[i*batch_size : (i+1)*batch_size] for i in
+                 range((len(patches_sameSize) + batch_size - 1) // batch_size )]
+
+        for a_batch_patch in batch_patches:
+            images = [copy_one_patch_image_data(patch,entire_img_data) for patch in a_batch_patch ]
+
+            height, width, band_num = images[0].shape
+
+            # darknet_images = prepare_batch(images, network)
+            # prepare_batch
+            darknet_images = []
+            for image in images:
+                custom_image = image.transpose(2, 0, 1)
+                darknet_images.append(custom_image)
+            batch_array = np.concatenate(darknet_images, axis=0)
+            batch_array = np.ascontiguousarray(batch_array.flat, dtype=np.float32) / 255.0
+            darknet_images = batch_array.ctypes.data_as(darknet.POINTER(darknet.c_float))
+            darknet_images = darknet.IMAGE(width, height, band_num, darknet_images)
+
+            # prediction
+            batch_detections = darknet.network_predict_batch(network, darknet_images, batch_size, width,
+                                                             height, thresh, hier_thresh, None, 0, 0)
+            batch_predictions = []
+            for idx in range(batch_size):
+                num = batch_detections[idx].num
+                detections = batch_detections[idx].dets
+                if nms:
+                    darknet.do_nms_obj(detections, num, len(class_names), nms)
+                predictions = darknet.remove_negatives(detections, class_names, num)
+                # images[idx] = darknet.draw_boxes(predictions, images[idx], class_colors)
+                batch_predictions.append(predictions)
+            darknet.free_batch_detections(batch_detections, batch_size)
+
+            for patch,predictions in zip(a_batch_patch,batch_predictions):
+                # save results
+                # save_res_json = os.path.join(save_dir, '%d.json' % patch_idx)
+                # save_one_patch_detection_json(patch, detections, class_names, save_res_json)
+
+                # test
+                for label, confidence, bbox in predictions:
+                    bbox = darknet.bbox2points(bbox)  # to [xmin, ymin, xmax, ymax]
+                    print(label, class_names.index(label), bbox, confidence)
+
+                if patch_idx % 100 == 0:
+                    print('saving %d patch, total: %d, cost %f second' % (patch_idx, patch_count, time.time() - t0))
+
+                patch_idx += 1
+
+
+
+
+def save_one_patch_detection_json(patch,detections,class_names,save_res_json):
+    objects = []
+    for label, confidence, bbox in detections:
+        bbox = darknet.bbox2points(bbox)  # to [xmin, ymin, xmax, ymax]
+        bbox = [bbox[0] + patch[0], bbox[1] + patch[1], bbox[2] + patch[0],
+                bbox[3] + patch[1]]  # to entire image coordinate
+
+        object = {'class_id': class_names.index(label),
+                  'name': label,
+                  'bbox': bbox,
+                  'confidence': confidence}
+        objects.append(object)
+
+    json_data = json.dumps(objects, indent=2)
+    with open(save_res_json, "w") as f_obj:
+        f_obj.write(json_data)
 
 
 def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, yolo_data,
@@ -295,6 +398,11 @@ def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, y
 
     network, class_names, _ = load_darknet_network(config_file, yolo_data, model, batch_size=batch_size)
 
+    # batch detection
+    if batch_size > 1:
+        return darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups, patch_count,class_names,batch_size)
+
+
     patch_idx = 0
     for key in patch_groups.keys():
         patches_sameSize = patch_groups[key]
@@ -321,20 +429,7 @@ def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, y
 
             # save results
             save_res_json = os.path.join(save_dir,'%d.json'%patch_idx)
-            objects = []
-            for label, confidence, bbox in detections:
-                bbox = darknet.bbox2points(bbox)  # to [xmin, ymin, xmax, ymax]
-                bbox = [ bbox[0]+patch[0], bbox[1]+patch[1], bbox[2]+patch[0], bbox[3]+patch[1] ] # to entire image coordinate
-
-                object = {'class_id':class_names.index(label),
-                          'name':label,
-                          'bbox':bbox,
-                          'confidence':confidence}
-                objects.append(object)
-
-            json_data = json.dumps(objects, indent=2)
-            with open(save_res_json, "w") as f_obj:
-                f_obj.write(json_data)
+            save_one_patch_detection_json(patch,detections,class_names,save_res_json)
 
             if patch_idx % 100 == 0:
                 print('saving %d patch, total: %d, cost %f second'%(patch_idx,patch_count, time.time()-t0))
