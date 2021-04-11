@@ -348,7 +348,8 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
                     break
                 # save results
                 save_res_json = os.path.join(save_dir, '%d.json' % patch_idx)
-                save_one_patch_detection_json(patch, predictions, class_names, save_res_json)
+                # the confidence output by network_predict_batch is 0-1, convert to percent
+                save_one_patch_detection_json(patch, predictions, class_names, save_res_json, b_percent=True)
 
                 
                 # cv2.imwrite('%d.png'%patch_idx, image)    # save for testing
@@ -409,13 +410,15 @@ def test_darknet_batch_detection_rs_images():
 
 
 
-def save_one_patch_detection_json(patch,detections,class_names,save_res_json):
+def save_one_patch_detection_json(patch,detections,class_names,save_res_json,b_percent=False):
     objects = []
     for label, confidence, bbox in detections:
         bbox = darknet.bbox2points(bbox)  # to [xmin, ymin, xmax, ymax]
         bbox = [bbox[0] + patch[0], bbox[1] + patch[1], bbox[2] + patch[0],
                 bbox[3] + patch[1]]  # to entire image coordinate
 
+        if b_percent:
+            confidence = round(confidence*100,2)
         object = {'class_id': class_names.index(label),
                   'name': label,
                   'bbox': bbox,
