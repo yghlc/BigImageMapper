@@ -680,7 +680,7 @@ def parallel_prediction_main(para_file, trained_model):
             if b_use_multiGPUs is False:
                 # wait until previous one finished
                 while sub_process.is_alive():
-                    time.sleep(3)
+                    time.sleep(1)
 
             idx += 1
 
@@ -693,7 +693,7 @@ def parallel_prediction_main(para_file, trained_model):
                 if file_exist is True or sub_process.is_alive() is False:
                     break
                 else:
-                    time.sleep(3)
+                    time.sleep(1)
 
             if sub_process.exitcode is not None and sub_process.exitcode != 0:
                 sys.exit(1)
