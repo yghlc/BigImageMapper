@@ -51,18 +51,19 @@ darknet detector train data/obj.data yolov4_obj.cfg yolov4.conv.137 -dont_show -
 # why not try 4 GPUs at the beginning?
 #darknet detector train data/obj.data yolov4_obj.cfg yolov4.conv.137 -gpus 0,1,2,3  -dont_show -map
 
-################################################
-#compare model
 
 
 ################################################
 ### prediction
-#rm -r multi_inf_results || true
-#${eo_dir}/workflow/parallel_prediction.py ${para_file}
+rm -r multi_inf_results || true
+${eo_dir}/yolov4_dir/predict_yolo.py ${para_file}
 
 
 ## post processing and copy results, inf_post_note indicate notes for inference and post-processing
-#inf_post_note=1
-#${eo_dir}/workflow/postProcess.py ${para_file}  ${inf_post_note}
+inf_post_note=1
+${eo_dir}/yolov4_dir/postProc_yolo.py ${para_file}  ${inf_post_note}
+
+# run some code debug
+#pytest -s ${eo_dir}/yolov4_dir/predict_yolo.py
 
 
