@@ -648,7 +648,7 @@ def parallel_prediction_main(para_file, trained_model):
                     basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
 
                 if len(deviceIDs) < 1:
-                    time.sleep(60)  # wait one minute, then check the available GPUs again
+                    time.sleep(5)  # wait 5 seconds, then check the available GPUs again
                     continue
                 # set only the first available visible
                 gpuid = deviceIDs[0]
