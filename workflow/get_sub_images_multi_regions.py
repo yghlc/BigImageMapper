@@ -22,6 +22,8 @@ import basic_src.io_function as io_function
 import datasets.raster_io as raster_io
 import time
 
+import datasets.get_subImages_json as get_subImages_json
+
 def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
                                   input_image_dir, file_pattern = None, process_num=1):
     if file_pattern is None:
@@ -96,17 +98,27 @@ def get_sub_images_multi_regions(para_file):
         # it is ok consider a file name as pattern and pass it the following functions to get file list
         input_image_or_pattern = parameters.get_string_parameters(area_ini, 'input_image_or_pattern')
 
-        all_train_shp = parameters.get_file_path_parameters_None_if_absence(area_ini, 'training_polygons')
-        train_shp = parameters.get_string_parameters(area_ini, 'training_polygons_sub')
+        b_sub_images_json = parameters.get_bool_parameters(area_ini,'b_sub_images_json')
+        if b_sub_images_json is True:
+            # copy sub-images, then covert json files to label images.
+            object_names = parameters.get_string_list_parameters(para_file,'object_names')
+            get_subImages_json.get_subimages_label_josn(input_image_dir,input_image_or_pattern,subImage_dir,subLabel_dir,object_names,
+                                                        b_no_label_image=b_no_label_image,process_num=process_num)
 
-        # get subImage and subLabel for one training polygons
-        print('extract training data from image folder (%s) and polgyons (%s)' % (input_image_dir, train_shp))
-        if b_no_label_image is True:
-            get_subImage_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
-                                      input_image_dir, file_pattern=input_image_or_pattern, process_num=process_num)
+            pass
         else:
-            get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
-                                      input_image_dir, file_pattern=input_image_or_pattern, process_num=process_num)
+
+            all_train_shp = parameters.get_file_path_parameters_None_if_absence(area_ini, 'training_polygons')
+            train_shp = parameters.get_string_parameters(area_ini, 'training_polygons_sub')
+
+            # get subImage and subLabel for one training polygons
+            print('extract training data from image folder (%s) and polgyons (%s)' % (input_image_dir, train_shp))
+            if b_no_label_image is True:
+                get_subImage_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
+                                          input_image_dir, file_pattern=input_image_or_pattern, process_num=process_num)
+            else:
+                get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
+                                          input_image_dir, file_pattern=input_image_or_pattern, process_num=process_num)
 
 
     # check black sub-images or most part of the sub-images is black (nodata)
