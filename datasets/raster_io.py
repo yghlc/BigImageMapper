@@ -35,10 +35,19 @@ def get_driver_format(file_path):
     with rasterio.open(file_path) as src:
         return src.driver
 
-def get_projection(file_path):
+def get_projection(file_path, format=None):
     # https://rasterio.readthedocs.io/en/latest/api/rasterio.crs.html
     # convert the different type, to epsg, proj4, and wkt
     with rasterio.open(file_path) as src:
+        if format is not None:
+            if format == 'proj4':
+                return src.crs.to_proj4() # string like '+init=epsg:32608', differnt from GDAL output
+            elif format == 'wkt':
+                return src.crs.to_wkt()     # string,  # its OGC WKT representation
+            elif format == 'epsg':
+                return src.crs.to_epsg()    # to epsg code, iint
+            else:
+                raise ValueError('Unknown format: %s'%str(format))
         return src.crs
 
 def get_xres_yres_file(file_path):
