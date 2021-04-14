@@ -201,6 +201,7 @@ def get_raster_or_vector_srs_info_wkt(spatial_data):
     Returns:the string of srs info in WKT format, False otherwise
 
     """
+    # after gdal > 3.0. there are: wkt_all, wkt1, wkt_simple, wkt_noct, wkt_esri, wkt2, wkt2_2015, wkt2_2018 too complex
     return get_raster_or_vector_srs_info(spatial_data,'wkt')
 
 def get_raster_or_vector_srs_info_proj4(spatial_data):

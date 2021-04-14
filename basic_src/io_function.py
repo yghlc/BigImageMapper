@@ -259,6 +259,10 @@ def get_file_list_by_pattern(folder,pattern):
 
     return file_list
 
+def get_free_disk_space_GB(dir):
+    total, used, free = shutil.disk_usage(dir)  # output in bytes
+    return free/(1000*1000*1000)    # convert to GB
+
 def get_absolute_path(path):
     return os.path.abspath(path)
 
@@ -288,6 +292,20 @@ def get_file_path_new_home_folder(in_path):
         new_path = os.path.expanduser(new_tmp)
         basic.outputlogMessage('Warning, change to a new path under the new home folder: %s'%new_path)
         return new_path
+
+def get_name_no_ext(file_path):
+    """
+    get file name without extension
+    Args:
+        file_path: exist file name
+
+    Returns: a new name if successfull
+    Notes: if input error, it will exit program
+
+    """
+    # get file name without extension
+    filename_no_ext = os.path.splitext(os.path.basename(file_path))[0]
+    return filename_no_ext
 
 def get_name_by_adding_tail(basename,tail):
     """
@@ -514,6 +532,16 @@ def keep_only_used_files_in_list(output_list_file,old_image_list_txt,used_images
     image_list_txt_obj.close()
     used_images_txt_obj.close()
     output_list_obj.close()
+
+def delete_shape_file(input):
+    arg1 = os.path.splitext(input)[0]
+    exts = ['.shx', '.shp','.prj','.dbf']
+    for ext in exts:
+        file_path = arg1 + ext
+        if os.path.isfile(file_path):
+            delete_file_or_dir(file_path)
+
+    return True
 
 def copy_shape_file(input, output):
 
