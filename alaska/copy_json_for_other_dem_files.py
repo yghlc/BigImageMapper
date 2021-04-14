@@ -47,9 +47,15 @@ def main():
             for tif in tif_list:
                 name_noext = io_function.get_name_no_ext(tif)
                 if date_str in name_noext and poly_num in name_noext:
-                    # copy the json file
+                    # modify and save the json file
                     dst_path = os.path.join(os.path.dirname(tif), name_noext+'.json')
-                    io_function.copy_file_to_dst(json_path,dst_path)
+                    # io_function.copy_file_to_dst(json_path,dst_path)
+                    data_dict = io_function.read_dict_from_txt_json(json_path)
+                    data_dict['imagePath'] = os.path.basename(tif)
+                    data_dict['imageData'] = None
+                    io_function.save_dict_to_txt_json(dst_path, data_dict)
+                    print('saving %s'%dst_path)
+
                     break
 
         pass
