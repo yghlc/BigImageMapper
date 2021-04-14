@@ -595,8 +595,10 @@ def parallel_prediction_main(para_file, trained_model):
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    network_cfg = parameters.get_string_parameters(para_file,'network_setting_ini')
     if trained_model is None:
-        trained_model = os.path.join(expr_name, 'yolov4_obj_best.weights')
+        cfg_name = os.path.splitext(os.path.basename(network_cfg))[0]
+        trained_model = os.path.join(expr_name, cfg_name+'_best.weights')
 
     outdir = parameters.get_directory(para_file, 'inf_output_dir')
     # remove previous results (let user remove this folder manually or in exe.sh folder)
