@@ -44,13 +44,21 @@ def get_image_with_height_list(sample_txt, img_ext, info_type='training'):
 
     return True
 
-def get_sample_cout_of_each_class(sample_txt, info_type='training'):
+def get_sample_count_of_each_class(sample_txt, info_type='training'):
 
     sample_count = {}
     with open(sample_txt, 'r') as f_obj:
         lines = f_obj.readlines()
         for line in lines:
             c_labels = re.findall(r'class_\d+',line)
+            # if class_1 not set, the output unknown
+            if len(c_labels) == 0:
+                if 'unknown_class' in sample_count.keys():
+                    sample_count['unknown_class'] += 1
+                else:
+                    sample_count['unknown_class'] = 1
+                continue
+
             if len(c_labels) != 1:
                 raise ValueError('class label (e.g,. class_1) is not correctly set in %s of file %s'%(line,sample_txt))
             c_label = c_labels[0]
@@ -109,9 +117,9 @@ def split_train_val(para_file):
     get_image_with_height_list(os.path.join(dir,val_sample_txt), img_ext, info_type='validation')
 
     # save the count of each classes in training and validation
-    get_sample_cout_of_each_class(os.path.join(dir,train_sample_txt), info_type='training')
+    get_sample_count_of_each_class(os.path.join(dir, train_sample_txt), info_type='training')
 
-    get_sample_cout_of_each_class(os.path.join(dir,val_sample_txt), info_type='validation')
+    get_sample_count_of_each_class(os.path.join(dir, val_sample_txt), info_type='validation')
 
 
 if __name__ == '__main__':
