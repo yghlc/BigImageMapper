@@ -565,6 +565,15 @@ def image_numpy_to_8bit(img_np, max_value, min_value, src_nodata=None, dst_nodat
 
     return new_img_np
 
+
+def pixel_xy_to_geo_xy(x0,y0, transform):
+    # pixel to geo XY
+    # transform is from rasterio. (not GDAL)
+    # https://rasterio.readthedocs.io/en/latest/topics/georeferencing.html
+    x0_geo = transform[0] * x0 + transform[1] * y0 + transform[2]
+    y0_geo = transform[3] * x0 + transform[4] * y0 + transform[5]
+    return x0_geo, y0_geo
+
 def main():
     pass
 
