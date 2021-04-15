@@ -687,6 +687,12 @@ def parallel_prediction_main(para_file, trained_model):
             img_save_dir = os.path.join(area_save_dir, 'I%d' % idx)
             inf_list_file = os.path.join(area_save_dir, '%d.txt' % idx)
 
+            done_indicator = '%s_done' % inf_list_file
+            if os.path.isfile(done_indicator):
+                basic.outputlogMessage('warning, %s exist, skip prediction' % done_indicator)
+                idx += 1
+                continue
+
             # if it already exist, then skip
             if os.path.isdir(img_save_dir) and is_file_exist_in_folder(img_save_dir):
                 basic.outputlogMessage('folder of %dth image (%s) already exist, '
