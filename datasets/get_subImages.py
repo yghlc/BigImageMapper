@@ -106,7 +106,7 @@ def check_projection_rasters(image_path_list):
             raise ValueError('error, %s have different projection with the first raster'%image_path_list[idx])
     return True
 
-def check_3band_8bit(image_path_list):
+def check_1or3band_8bit(image_path_list):
     '''
     check the raster is 3-band and 8-bit
     :param image_path_list: a list containing all the images
@@ -115,8 +115,11 @@ def check_3band_8bit(image_path_list):
     for img_path in image_path_list:
         _, _, band_count, dtype = raster_io.get_height_width_bandnum_dtype(img_path)
         print(band_count, dtype)
-        if band_count!=3 or dtype!='uint8':
-            raise ValueError('Currenty, only support images with 3-band and uint8 type, input %s is %d bands and %s'
+        if band_count not in [1,3]:
+            raise ValueError('Currenty, only support images with 1 or 3-band, input %s is %d bands'
+                             % (img_path, band_count))
+        if dtype!='uint8':
+            raise ValueError('Currenty, only support images with uint8 type, input %s is %d bands and %s'
                              %(img_path,band_count,dtype))
 
 def meters_to_degress_onEarth(distance):
@@ -583,7 +586,7 @@ def main(options, args):
 
     check_projection_rasters(image_tile_list)   # it will raise errors if found problems
 
-    check_3band_8bit(image_tile_list)   # it will raise errors if found problems
+    check_1or3band_8bit(image_tile_list)  # it will raise errors if found problems
 
     #need to check: the shape file and raster should have the same projection.
     if get_projection_proj4(t_polygons_shp) != get_projection_proj4(image_tile_list[0]):
