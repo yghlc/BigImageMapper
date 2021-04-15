@@ -319,7 +319,11 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
             # prepare_batch
             darknet_images = []
             for image in images:
+                # print('image shape',image.shape)
                 image_resized = cv2.resize(image, (width, height),interpolation=cv2.INTER_LINEAR)
+                if band_num == 1:
+                    image_resized = np.expand_dims(image_resized, axis=2) # add one diminsion at the last
+                # print('image_resized shape', image_resized.shape)
                 custom_image = image_resized.transpose(2, 0, 1)
                 darknet_images.append(custom_image)
             batch_array = np.concatenate(darknet_images, axis=0)
