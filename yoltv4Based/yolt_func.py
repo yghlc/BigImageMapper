@@ -78,7 +78,7 @@ def non_max_suppression(boxes, probs=[], overlapThresh=0.5, b_geo=False):
 
     # if there are no boxes, return an empty list
     if len(boxes) == 0:
-        return [], [], []
+        return []
 
     # boxes_tot = boxes  # np.asarray(boxes)
     boxes = np.asarray([b[:4] for b in boxes])
