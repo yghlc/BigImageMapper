@@ -139,11 +139,17 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     if os.path.isfile(res_yolo_json):
         print('found %s in %s, will get shapefile from it'%(res_yolo_json, area_save_dir))
     else:
-        res_json_files = io_function.get_file_list_by_ext('.json',img_save_dir,bsub_folder=False)
-        if len(res_json_files) < 1:
-            raise IOError('no YOLO results in %s'%(img_save_dir))
+        if os.path.isdir(img_save_dir):
+            res_json_files = io_function.get_file_list_by_ext('.json',img_save_dir,bsub_folder=False)
+            if len(res_json_files) < 1:
+                print('Warning, no YOLO results in %s, skip'%(img_save_dir))
+                return
 
-        print('found %d json files for patches in %s, will get shapefile from them' % (len(res_json_files),area_save_dir))
+            print('found %d json files for patches in %s, will get shapefile from them' % (len(res_json_files),area_save_dir))
+        else:
+            print('Warning, folder: %s doest not exist, skip'%img_save_dir)
+            return
+
 
     out_name = os.path.basename(area_save_dir) + '_' + test_id
 
