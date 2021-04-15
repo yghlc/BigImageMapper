@@ -441,7 +441,9 @@ def merge_patch_json_files_to_one(res_json_files, save_path):
         if len(objects) < 1:
             continue
         all_objects.extend(objects)
-    io_function.save_dict_to_txt_json(save_path,all_objects)
+    json_data = json.dumps(all_objects, indent=2)
+    with open(save_path, "w") as f_obj:
+        f_obj.write(json_data)
 
 def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, yolo_data,
                                      patch_w, patch_h, overlay_x, overlay_y, batch_size=1):
