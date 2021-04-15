@@ -189,6 +189,10 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
                     confidence_list.extend(con_list)
                     box_bounds_list.extend(box_list)
 
+        if len(box_bounds_list) < 1:
+            print('Warning, no predicted boxes in %s' % img_save_dir)
+            return None
+
         # apply non_max_suppression
         # print('box_bounds_list',box_bounds_list)
         # print('confidence_list',confidence_list)
