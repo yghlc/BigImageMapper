@@ -589,6 +589,8 @@ def save_dict_to_txt_json(file_name, save_dict):
         f_obj.write(json_data)
 
 def read_dict_from_txt_json(file_path):
+    if os.path.getsize(file_path) == 0:
+        return None
     with open(file_path) as f_obj:
         data = json.load(f_obj)
         return data
