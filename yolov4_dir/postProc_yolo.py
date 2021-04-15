@@ -143,12 +143,12 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
             res_json_files = io_function.get_file_list_by_ext('.json',img_save_dir,bsub_folder=False)
             if len(res_json_files) < 1:
                 print('Warning, no YOLO results in %s, skip'%(img_save_dir))
-                return
+                return None
 
             print('found %d json files for patches in %s, will get shapefile from them' % (len(res_json_files),area_save_dir))
         else:
             print('Warning, folder: %s doest not exist, skip'%img_save_dir)
-            return
+            return None
 
 
     out_name = os.path.basename(area_save_dir) + '_' + test_id
@@ -271,7 +271,8 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
                 result_shp_list = []
                 for img_idx, img_path in enumerate(inf_img_list):
                     out_shp = yolo_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
-                    result_shp_list.append(os.path.join(WORK_DIR,out_shp))
+                    if out_shp is not None:
+                        result_shp_list.append(os.path.join(WORK_DIR,out_shp))
                 # merge shapefiles
                 merge_shape_files(result_shp_list,merged_shp)
 
