@@ -434,6 +434,14 @@ def save_one_patch_detection_json(patch,detections,class_names,save_res_json,b_p
     with open(save_res_json, "w") as f_obj:
         f_obj.write(json_data)
 
+def merge_patch_json_files_to_one(res_json_files, save_path):
+    all_objects = []
+    for idx, f_json in enumerate(res_json_files):
+        objects = io_function.read_dict_from_txt_json(f_json)
+        if len(objects) < 1:
+            continue
+        all_objects.extend(objects)
+    io_function.save_dict_to_txt_json(save_path,all_objects)
 
 def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, yolo_data,
                                      patch_w, patch_h, overlay_x, overlay_y, batch_size=1):
@@ -550,6 +558,15 @@ def predict_remoteSensing_image(para_file, image_path, save_dir,model, config_fi
         # using the python API
         predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, yolo_data,
                                          patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size)
+
+        # for each patch has a json file, may end up with a lot of json files, affect I/O
+        # try to merge them to one json file.
+        res_json_files = io_function.get_file_list_by_ext('.json', save_dir, bsub_folder=False)
+        merge_josn_path = os.path.join(save_dir,'all_patches.json')
+        merge_patch_json_files_to_one(res_json_files,merge_josn_path)
+        for f_json in res_json_files:
+            io_function.delete_file_or_dir(f_json)
+
     else:
         # divide image the many patches, then run prediction.
         patch_list_txt = split_an_image(para_file,image_path,save_dir,patch_w,patch_h,overlay_x,overlay_y)
