@@ -55,7 +55,7 @@ darknet detector train data/obj.data yolov4_obj.cfg yolov4.conv.137 -dont_show -
 
 ################################################
 ### prediction
-rm -r multi_inf_results || true
+
 ${eo_dir}/yolov4_dir/predict_yolo.py ${para_file}
 
 
