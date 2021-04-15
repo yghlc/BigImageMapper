@@ -145,7 +145,7 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
                 print('Warning, no YOLO results in %s, skip'%(img_save_dir))
                 return None
 
-            print('found %d json files for patches in %s, will get shapefile from them' % (len(res_json_files),area_save_dir))
+            print('found %d json files for patches in %s, will get shapefile from them' % (len(res_json_files),img_save_dir))
         else:
             print('Warning, folder: %s doest not exist, skip'%img_save_dir)
             return None
@@ -190,8 +190,11 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
                     box_bounds_list.extend(box_list)
 
         # apply non_max_suppression
+        # print('box_bounds_list',box_bounds_list)
+        # print('confidence_list',confidence_list)
         pick_index = non_max_suppression(np.array(box_bounds_list), probs=np.array(confidence_list),
                                          overlapThresh=0.5,b_geo=True)
+        # print('pick_index', pick_index)
         class_id_list = [class_id_list[idx] for idx in pick_index]
         name_list = [name_list[idx] for idx in pick_index ]
         confidence_list = [confidence_list[idx] for idx in pick_index ]
