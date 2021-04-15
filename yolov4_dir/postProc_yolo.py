@@ -105,7 +105,7 @@ def boxes_minXYmaxXY_to_imageXY(idx, total, json_file, ref_image_src):
     # return: class_id_list, name_list, confidence,box_poly_list
     # ref_image_src is open rasterio image object.
     objects = io_function.read_dict_from_txt_json(json_file)
-    if len(objects) < 1:
+    if objects is None or len(objects) < 1:
         return [],[],[],[]
 
     class_id_list = []
