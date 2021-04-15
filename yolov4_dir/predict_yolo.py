@@ -218,42 +218,42 @@ def darknet_batch_detection(network, images, class_names,class_colors,
     return images, batch_predictions
 
 
-def test_darknet_batch_images_detection():
-    # run in ~/Data/Arctic/canada_arctic/autoMapping/multiArea_yolov4_1
-    # run inside Vagrant machine and call singularity container.
-    print('\n')
-    print('Run test_darknet_batch_images_detection')
-
-    config_file = 'yolov4_obj.cfg'
-    yolo_data = os.path.join('data','obj.data')
-    weights = os.path.join('exp1', 'yolov4_obj_best.weights')
-    batch_size = 3
-
-    # these three have the same size
-    image_names = ['20200818_mosaic_8bit_rgb_p_1001.png', '20200818_mosaic_8bit_rgb_p_1038.png',
-                   '20200818_mosaic_8bit_rgb_p_1131.png']
-    image_names = [os.path.join('debug_img', item)  for item in image_names]
-
-    # load network
-    network, class_names, class_colors = load_darknet_network(config_file, yolo_data, weights, batch_size=batch_size)
-
-    images = [cv2.imread(image) for image in image_names]
-    for cv_img, img_path in zip(images,image_names):
-        print(img_path, cv_img.shape)
-    images, detections = darknet_batch_detection(network, images, class_names, class_colors, batch_size=batch_size)
-
-
-    for img, det in zip(image_names,detections):
-        print(img)
-        for label, confidence, bbox in det:
-            bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
-            print(label, class_names.index(label), bbox, confidence)
-
-    for name, image in zip(image_names, images):
-        cv2.imwrite(name.replace("20200818", "res_20200818"), image)
-    # for label, confidence, bbox in detections:
-    #     bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
-    #     print(label, class_names.index(label), bbox, confidence)
+# def test_darknet_batch_images_detection():
+#     # run in ~/Data/Arctic/canada_arctic/autoMapping/multiArea_yolov4_1
+#     # run inside Vagrant machine and call singularity container.
+#     print('\n')
+#     print('Run test_darknet_batch_images_detection')
+#
+#     config_file = 'yolov4_obj.cfg'
+#     yolo_data = os.path.join('data','obj.data')
+#     weights = os.path.join('exp1', 'yolov4_obj_best.weights')
+#     batch_size = 3
+#
+#     # these three have the same size
+#     image_names = ['20200818_mosaic_8bit_rgb_p_1001.png', '20200818_mosaic_8bit_rgb_p_1038.png',
+#                    '20200818_mosaic_8bit_rgb_p_1131.png']
+#     image_names = [os.path.join('debug_img', item)  for item in image_names]
+#
+#     # load network
+#     network, class_names, class_colors = load_darknet_network(config_file, yolo_data, weights, batch_size=batch_size)
+#
+#     images = [cv2.imread(image) for image in image_names]
+#     for cv_img, img_path in zip(images,image_names):
+#         print(img_path, cv_img.shape)
+#     images, detections = darknet_batch_detection(network, images, class_names, class_colors, batch_size=batch_size)
+#
+#
+#     for img, det in zip(image_names,detections):
+#         print(img)
+#         for label, confidence, bbox in det:
+#             bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
+#             print(label, class_names.index(label), bbox, confidence)
+#
+#     for name, image in zip(image_names, images):
+#         cv2.imwrite(name.replace("20200818", "res_20200818"), image)
+#     # for label, confidence, bbox in detections:
+#     #     bbox = darknet.bbox2points(bbox)    # to [xmin, ymin, xmax, ymax]
+#     #     print(label, class_names.index(label), bbox, confidence)
 
 
 def copy_one_patch_image_data(patch, entire_img_data):
@@ -367,13 +367,14 @@ def test_darknet_batch_detection_rs_images():
     print('\n')
     print('Run test_darknet_batch_detection_rs_images')
 
-    config_file = 'yolov4_obj.cfg'
+    config_file = 'yolov4_obj_oneband.cfg'
     yolo_data = os.path.join('data', 'obj.data')
-    weights = os.path.join('exp1', 'yolov4_obj_best.weights')
+    weights = os.path.join('exp1', 'yolov4_obj_oneband_best.weights')
     batch_size = 1
 
     # these three have the same size
-    image_names = ['20200818_mosaic_8bit_rgb_p_1001.png'] #, '20200818_mosaic_8bit_rgb_p_1038.png', '20200818_mosaic_8bit_rgb_p_1131.png']
+    # image_names = ['20200818_mosaic_8bit_rgb_p_1001.png'] #, '20200818_mosaic_8bit_rgb_p_1038.png', '20200818_mosaic_8bit_rgb_p_1131.png']
+    image_names = ['Alaska_north_slope_hillshade_20170426_poly_28_p_0.png'] #, '20200818_mosaic_8bit_rgb_p_1038.png', '20200818_mosaic_8bit_rgb_p_1131.png']
     image_names = [os.path.join('debug_img', item) for item in image_names]
     image_path = image_names[0]
     save_dir = './'
