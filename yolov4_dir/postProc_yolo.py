@@ -328,10 +328,11 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
 
             io_function.copy_shape_file(merged_shp,bak_merged_shp)
             io_function.copy_shape_file(shp_post, bak_post_shp)
-            io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
             io_function.copy_file_to_dst(area_ini, bak_area_ini, overwrite=True)
 
-            region_eva_reports[shp_pre] = bak_eva_report
+            if os.path.isfile(out_report):
+                io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
+                region_eva_reports[shp_pre] = bak_eva_report
 
 
 
@@ -360,7 +361,8 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
     else:
         out_table = os.path.join(backup_dir, '_'.join([test_id, 'accuracy_table']) + '.xlsx')
     eva_reports = [ region_eva_reports[key] for key in region_eva_reports]
-    eva_report_to_tables.eva_reports_to_table(eva_reports, out_table)
+    if len(eva_reports) > 0:
+        eva_report_to_tables.eva_reports_to_table(eva_reports, out_table)
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of post-procesing: %.2f seconds">>time_cost.txt'%duration)
