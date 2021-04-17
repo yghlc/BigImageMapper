@@ -136,7 +136,7 @@ def get_sub_images_multi_regions(para_file):
             image_path, label_path = line.strip().split(':')
             # valid_per = raster_io.get_valid_pixel_percentage(image_path)
             valid_per, entropy = raster_io.get_valid_percent_shannon_entropy(image_path)    # base=10
-            if valid_per > 80 and entropy >= 0.5:
+            if valid_per > 60 and entropy >= 0.5:
                 new_sub_image_label_list.append(line)
             else:
                 delete_sub_image_label_list.append(line)
