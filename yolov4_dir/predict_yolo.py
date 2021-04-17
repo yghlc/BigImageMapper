@@ -416,9 +416,28 @@ def test_darknet_batch_detection_rs_images():
 
 
 def save_one_patch_detection_json(patch,detections,class_names,save_res_json,b_percent=False):
+    # patch (xoff,yoff ,xsize, ysize)
     objects = []
+    bbox_list = []
     for label, confidence, bbox in detections:
+        # print('yolo relative',bbox, confidence,label)
         bbox = darknet.bbox2points(bbox)  # to [xmin, ymin, xmax, ymax]
+        # print('yolo xmin, ymin, xmax, ymax',bbox, confidence,label)
+        
+        #make sure # xmin >=0, ymin >=0, xmax<=xsize, ymax <= yszie
+        bbox = [max(bbox[0],0),  max(bbox[1],0), min(bbox[2], patch[2]), min(bbox[3], patch[3]) ]
+        # sometime, darknet went wrong, output many duplicate boxes, remove them
+        if bbox in bbox_list:
+            # print('remove duplicated')
+            continue
+        else:
+            bbox_list.append(bbox)
+
+        # sometime, darknet went wrong, output very thin box
+        if bbox[0]==bbox[2] or bbox[1] == bbox[3]:
+            # print('xmin == xmax or ymin=ymax')
+            continue
+
         bbox = [bbox[0] + patch[0], bbox[1] + patch[1], bbox[2] + patch[0],
                 bbox[3] + patch[1]]  # to entire image coordinate
 

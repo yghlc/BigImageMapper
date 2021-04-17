@@ -75,6 +75,7 @@ def non_max_suppression(boxes, probs=[], overlapThresh=0.5, b_geo=False):
 
     print("Executing non-max suppression...")
     len_init = len(boxes)
+    print("  non-max suppression init boxes:", len_init)
 
     # if there are no boxes, return an empty list
     if len(boxes) == 0:
@@ -138,6 +139,5 @@ def non_max_suppression(boxes, probs=[], overlapThresh=0.5, b_geo=False):
             idxs,
             np.concatenate(([last], np.where(overlap > overlapThresh)[0])))
 
-    print("  non-max suppression init boxes:", len_init)
     print("  non-max suppression final boxes:", len(pick))
     return pick
