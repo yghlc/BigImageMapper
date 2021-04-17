@@ -87,7 +87,7 @@ def one_box_yoloXY2imageXY(img_path, object_list,  boundary=None):
 
             box_poly_list.append([x0_geo,y1_geo,x1_geo,y0_geo])
 
-        return class_id_list, name_list, confidence_list, box_poly_list
+        return class_id_list, name_list, confidence_list, box_poly_list, img_path
 
 
 
@@ -163,6 +163,7 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         name_list = []
         box_bounds_list = []
         confidence_list = []
+        source_image_list = []
 
         if len(res_json_files) < 1:
             # use the result in *_result.json
@@ -170,11 +171,12 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
             total_frame = len(yolo_res_dict_list)
             image1 = yolo_res_dict_list[0]['filename']
             for idx, res_dict in enumerate(yolo_res_dict_list):
-                id_list, na_list, con_list, box_list = boxes_yoloXY_to_imageXY(idx, total_frame, res_dict, ref_image=None)
+                id_list, na_list, con_list, box_list, image1 = boxes_yoloXY_to_imageXY(idx, total_frame, res_dict, ref_image=None)
                 class_id_list.extend(id_list)
                 name_list.extend(na_list)
                 confidence_list.extend(con_list)
                 box_bounds_list.extend(box_list)
+                source_image_list.extend( [os.path.basename(image1)]*len(box_list) )
         else:
             # use the results in I0/*.json
             image1 = io_function.read_list_from_txt(os.path.join(area_save_dir, '%d.txt'%img_idx))[0]
@@ -188,6 +190,8 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
                     name_list.extend(na_list)
                     confidence_list.extend(con_list)
                     box_bounds_list.extend(box_list)
+
+            source_image_list.extend([os.path.basename(image1)]*len(box_bounds_list))
 
         if len(box_bounds_list) < 1:
             print('Warning, no predicted boxes in %s' % img_save_dir)
@@ -209,7 +213,8 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         # box_poly_list
 
         # save to shapefile
-        detect_boxes_dict = {'class_id':class_id_list, 'name':name_list, 'confidence':confidence_list, "Polygon":box_poly_list}
+        detect_boxes_dict = {'class_id':class_id_list, 'name':name_list, 'source_img':source_image_list,
+                             'confidence':confidence_list, "Polygon":box_poly_list}
         save_pd = pd.DataFrame(detect_boxes_dict)
         ref_prj = map_projection.get_raster_or_vector_srs_info_proj4(image1)
         vector_gpd.save_polygons_to_files(save_pd,'Polygon',ref_prj,out_shp_path)
