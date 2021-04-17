@@ -207,6 +207,7 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         name_list = [name_list[idx] for idx in pick_index ]
         confidence_list = [confidence_list[idx] for idx in pick_index ]
         box_bounds_list = [ box_bounds_list[idx] for idx in pick_index ]
+        source_image_list = [ source_image_list[idx] for idx in pick_index ]
         # to polygon
         box_poly_list = [ vector_gpd.convert_image_bound_to_shapely_polygon(item) for item in box_bounds_list]
 
