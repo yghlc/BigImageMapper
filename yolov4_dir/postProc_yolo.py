@@ -131,7 +131,7 @@ def boxes_minXYmaxXY_to_imageXY(idx, total, json_file, ref_image_src):
 
     return class_id_list, name_list, confidence_list, box_poly_list
 
-def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
+def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, nms_overlap_thr, test_id):
 
     img_save_dir = os.path.join(area_save_dir, 'I%d' % img_idx)
     res_yolo_json = img_save_dir + '_result.json'
@@ -201,7 +201,7 @@ def yolo_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         # print('box_bounds_list',box_bounds_list)
         # print('confidence_list',confidence_list)
         pick_index = non_max_suppression(np.array(box_bounds_list), probs=np.array(confidence_list),
-                                         overlapThresh=0.5,b_geo=True)
+                                         overlapThresh=nms_overlap_thr,b_geo=True)
         # print('pick_index', pick_index)
         class_id_list = [class_id_list[idx] for idx in pick_index]
         name_list = [name_list[idx] for idx in pick_index ]
@@ -242,6 +242,7 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
 
 
     inf_dir = parameters.get_directory(para_file, 'inf_output_dir')
+    nms_overlap_thr = parameters.get_digit_parameters(para_file,'nms_overlapThresh')
     if test_id is None:
         test_id = os.path.basename(WORK_DIR) + '_' + expr_name
 
@@ -283,7 +284,7 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
                 # post image one by one
                 result_shp_list = []
                 for img_idx, img_path in enumerate(inf_img_list):
-                    out_shp = yolo_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
+                    out_shp = yolo_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, nms_overlap_thr, test_id)
                     if out_shp is not None:
                         result_shp_list.append(os.path.join(WORK_DIR,out_shp))
                 # merge shapefiles
