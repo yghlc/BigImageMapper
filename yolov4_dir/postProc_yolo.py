@@ -24,7 +24,7 @@ from merge_shapefiles import merge_shape_files
 import vector_gpd
 import raster_io
 
-from datasets.get_polygon_attributes import add_polygon_attributes
+from datasets.get_polygon_attributes import add_boxes_attributes
 from datasets.remove_mappedPolygons import remove_polygons_main
 from datasets.evaluation_result import evaluation_polygons
 import utility.eva_report_to_tables as eva_report_to_tables
@@ -302,9 +302,9 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
             merged_shp = os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
 
             # add attributes to shapefile (no other attribute to add)
-            # shp_attributes = os.path.join(WORK_DIR,area_save_dir, shp_pre+'_post_NOrm.shp')
-            shp_attributes = merged_shp
-            # add_polygon_attributes(merged_shp, shp_attributes, para_file, area_ini)
+            shp_attributes = os.path.join(WORK_DIR,area_save_dir, shp_pre+'_post_NOrm.shp')
+            # shp_attributes = merged_shp
+            add_boxes_attributes(merged_shp, shp_attributes) # para_file, area_ini
 
             # remove polygons
             shp_post = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_post.shp')

@@ -348,6 +348,39 @@ def add_polygon_attributes(input, output, para_file, data_para_file):
 
     return True
 
+def add_boxes_attributes(input, output):
+    if io_function.is_file_exist(input) is False:
+        return False
+
+    # copy output
+    if io_function.copy_shape_file(input, output) is False:
+        raise IOError('copy shape file %s failed'%input)
+
+    # calculate area, perimeter of polygons
+    if cal_add_area_length_of_polygon(output) is False:
+        return False
+
+    # calculate the width, height, and width_height ratio
+    boxes = vector_gpd.read_polygons_gpd(input)
+    bounding_boxes = [ vector_gpd.get_polygon_bounding_box(item) for item in boxes ]
+    # bounding box  (minx, miny, maxx, maxy)
+    width_list = [ bound[2] - bound[0] for bound in  bounding_boxes]
+    height_list = [ bound[3] - bound[1] for bound in  bounding_boxes]
+
+    ratio_w_h_list = []
+    for w, h in zip(width_list, height_list):
+        if w > h:
+            ratio = h / w
+        else:
+            ratio = w / h
+        ratio_w_h_list.append(ratio)
+
+    add_attributes = {'WIDTH':width_list,'HEIGHT':height_list, 'ratio_w_h':ratio_w_h_list}
+    vector_gpd.add_attributes_to_shp(output,add_attributes)
+
+    return output
+
+
 
 def main(options, args):
     input = args[0]
