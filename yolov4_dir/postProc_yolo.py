@@ -242,7 +242,7 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
 
 
     inf_dir = parameters.get_directory(para_file, 'inf_output_dir')
-    nms_overlap_thr = parameters.get_digit_parameters(para_file,'nms_overlapThresh')
+    nms_overlap_thr = parameters.get_digit_parameters(para_file,'nms_overlapThresh','float')
     if test_id is None:
         test_id = os.path.basename(WORK_DIR) + '_' + expr_name
 
