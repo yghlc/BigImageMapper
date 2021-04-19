@@ -574,6 +574,13 @@ def pixel_xy_to_geo_xy(x0,y0, transform):
     y0_geo = transform[3] * x0 + transform[4] * y0 + transform[5]
     return x0_geo, y0_geo
 
+def geo_xy_to_pixel_xy(x_list, y_list, transform, op=round, precision=None):
+
+    # rows (list of ints) – list of row indices
+    # cols (list of ints) – list of column indices
+    rows, cols  = rasterio.transform.rowcol(transform, x_list, y_list, op=op, precision = precision)
+    return cols, rows
+
 def main():
     pass
 

@@ -12,20 +12,23 @@ add time: 15 April, 2021
 import sys,os
 from optparse import OptionParser
 
-codes_dir2 = os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
-sys.path.insert(0, codes_dir2)
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
 
 import basic_src.io_function as io_function
 import basic_src.basic as basic
+from datasets import raster_io
 
 import geopandas as gpd
+import rasterio
+import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
 import get_subImages
 
 # def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle ):
 
-def get_one_sub_image_json_file(idx, center_polygon, c_class_int, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle,
+def get_one_sub_image_json_file(idx, center_polygon, c_class_int,class_names, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle,
                                 bufferSize, polygons_all, class_labels_all):
     '''
 
@@ -56,18 +59,44 @@ def get_one_sub_image_json_file(idx, center_polygon, c_class_int, image_tile_lis
     adj_polygons.extend([center_polygon])
     adj_polygons_class.extend([c_class_int])
 
-    # convert to pixel coordinates
+    with rasterio.open(save_path) as src:
+        transform = src.transform
+        labelme_json = {}
+        labelme_json['version'] = "4.5.7"
+        labelme_json['flags'] =  {}
+        # labelme_json['shapes'] = {}
 
-    print(adj_polygons)
-    print(adj_polygons_class)
+        objects = []
+        # convert to pixel coordinates
+        for poly, class_int in zip(adj_polygons, adj_polygons_class):
+            # print('polygon:', poly, class_int)
+            x, y = poly.exterior.coords.xy
+            pixel_xs, pixel_ys = raster_io.geo_xy_to_pixel_xy(x,y,transform)
+            # print(pixel_xs,pixel_ys)
 
+            points = [ [xx,yy] for xx,yy in zip(pixel_xs,  pixel_ys) ]
+            object_name = class_names[class_int]
+            object = {'label':object_name}
+            object['points'] = points
+
+            objects.append(object)
+
+        labelme_json['shapes'] = objects
+        labelme_json['imageData'] = None
+        labelme_json['imageHeight'] = src.height
+        labelme_json['imageWidth'] = src.width
+        labelme_json['imagePath'] = os.path.basename(save_path)
+
+        json_data = json.dumps(labelme_json, indent=2)
+        with open(save_josn_path, "w") as f_obj:
+            f_obj.write(json_data)
 
     return save_path, save_josn_path
 
 
 
 
-def get_sub_images_and_json_files(polygons_shp, bufferSize, image_tile_list,
+def get_sub_images_and_json_files(polygons_shp, class_names,bufferSize, image_tile_list,
                               saved_dir, pre_name, dstnodata, brectangle=True, proc_num=1):
     '''
     get sub-images and corresponding josn file (labelme)
@@ -98,7 +127,7 @@ def get_sub_images_and_json_files(polygons_shp, bufferSize, image_tile_list,
     if proc_num == 1:
         for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons,class_labels)):
             save_path = os.path.join(saved_dir,pre_name + '_sub_%d.tif'%idx)
-            tif_path, json_path = get_one_sub_image_json_file(idx, c_polygon, c_class_int, image_tile_list, img_tile_boxes, save_path,
+            tif_path, json_path = get_one_sub_image_json_file(idx, c_polygon, c_class_int, class_names, image_tile_list, img_tile_boxes, save_path,
                                 dstnodata, brectangle, bufferSize, polygons_all, class_labels_all)
 
     elif proc_num > 1:
@@ -114,7 +143,7 @@ def get_sub_images_and_json_files(polygons_shp, bufferSize, image_tile_list,
 
 
 
-def get_sub_images_pixel_json_files(polygons_shp,image_folder_or_path,bufferSize,dstnodata,saved_dir,b_rectangle,process_num):
+def get_sub_images_pixel_json_files(polygons_shp,image_folder_or_path,image_pattern,class_names, bufferSize,dstnodata,saved_dir,b_rectangle,process_num):
 
     # check training polygons
     assert io_function.is_file_exist(polygons_shp)
@@ -122,7 +151,7 @@ def get_sub_images_pixel_json_files(polygons_shp,image_folder_or_path,bufferSize
     # get image tile list
     # image_tile_list = io_function.get_file_list_by_ext(options.image_ext, image_folder, bsub_folder=False)
     if os.path.isdir(image_folder_or_path):
-        image_tile_list = io_function.get_file_list_by_pattern(image_folder_or_path, options.image_ext)
+        image_tile_list = io_function.get_file_list_by_pattern(image_folder_or_path, image_pattern)
     else:
         assert io_function.is_file_exist(image_folder_or_path)
         image_tile_list = [image_folder_or_path]
@@ -149,25 +178,26 @@ def get_sub_images_pixel_json_files(polygons_shp,image_folder_or_path,bufferSize
     if os.path.isdir(saved_dir) is False:
         io_function.mkdir(saved_dir)
 
-    get_sub_images_and_json_files(polygons_shp, bufferSize, image_tile_list,
+    get_sub_images_and_json_files(polygons_shp,class_names, bufferSize, image_tile_list,
                               saved_dir, pre_name, dstnodata, brectangle=b_rectangle, proc_num=process_num)
 
 
 def test_get_sub_images_pixel_json_files():
     print('\n')
     print('running test_get_sub_images_pixel_json_files')
-    dir = os.path.expanduser(
-        '~/Data/Arctic/alaska/autoMapping/alaskaNS_yolov4_1/multi_inf_results/alaska_north_slope_hillshade_2010to2017')
+    dir = os.path.expanduser('~/Data/Arctic/alaska/autoMapping/alaskaNS_yolov4_3/multi_inf_results')
 
-    polygons_shp = os.path.join(dir, 'I0/I0_alaska_north_slope_hillshade_2010to2017_alaskaNS_yolov4_1_exp1.shp')
+    polygons_shp = os.path.join(dir, 'I0/I0_alaska_north_slope_planet_rgb_2020_alaskaNS_yolov4_3_exp3.shp')
     image_folder_or_path = io_function.read_list_from_txt(os.path.join(dir, '0.txt'))[0]
     process_num = 1
     bufferSize = 300
     dstnodata = 0
     saved_dir = './'
     b_rectangle = True
+    image_pattern = '.tif'
+    class_names = ['rts']
 
-    get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, bufferSize, dstnodata, saved_dir,b_rectangle, process_num)
+    get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, image_pattern,class_names, bufferSize, dstnodata, saved_dir,b_rectangle, process_num)
 
 def main(options, args):
 
@@ -178,8 +208,11 @@ def main(options, args):
     dstnodata = options.dstnodata
     saved_dir = options.out_dir
     b_rectangle = options.rectangle
+    image_pattern = options.image_pattern
 
-    get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, bufferSize, dstnodata, saved_dir,b_rectangle, process_num)
+    class_names = ['rts']
+
+    get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, image_pattern,class_names, bufferSize, dstnodata, saved_dir,b_rectangle, process_num)
 
 
 
@@ -191,8 +224,8 @@ if __name__ == '__main__':
     parser.add_option("-b", "--bufferSize",
                       action="store", dest="bufferSize", type=float,
                       help="buffer size is in the projection, normally, it is based on meters")
-    parser.add_option("-e", "--image_ext",
-                      action="store", dest="image_ext", default='*.tif',
+    parser.add_option("-e", "--image_pattern",
+                      action="store", dest="image_pattern", default='*.tif',
                       help="the image pattern of the image file")
     parser.add_option("-o", "--out_dir",
                       action="store", dest="out_dir", default='./',
