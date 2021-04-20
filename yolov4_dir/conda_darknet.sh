@@ -18,7 +18,7 @@ pip install numpy psutil GPUtil openpyxl xlsxwriter \
 && pip install opencv-python rasterio geopandas  \
 && pip install pyshp==1.2.12 rasterstats \
 && pip install scikit-image scikit-learn \
-&& pip install pytest
+&& pip install pytest imgaug
 
 conda install -y gdal
 
