@@ -720,6 +720,43 @@ def MultiPolygon_to_polygons(idx, multiPolygon, attributes=None):
 
     return polygons
 
+def fill_holes_in_polygons_shp(in_shp, out_shp):
+    '''
+    fill all holes in polygons in a shape file
+    :param in_shp:
+    :param out_shp:
+    :return:
+    '''
+
+    # read polygons as shapely objects
+    shapefile = gpd.read_file(in_shp)
+
+    for idx, row in shapefile.iterrows():
+
+        poly = row['geometry']
+        if poly.type == 'MultiPolygon':
+            out_polygons = MultiPolygon_to_polygons(idx, poly)
+            basic.outputlogMessage('Warning, %d geometry is "MultiPolygon", convert it to Polygons and copy attributes' % idx)
+            for ii, new_poly in enumerate(out_polygons):
+                new_poly = fill_holes_in_a_polygon(new_poly)
+                row['geometry'] = new_poly
+                # replace the first one, appends others
+                if ii == 0:
+                    shapefile.iloc[idx] = row
+                else:
+                    shapefile = shapefile.append(row)
+
+        else:
+            new_poly = fill_holes_in_a_polygon(poly)
+            row['geometry'] = new_poly
+            # replace the row
+            shapefile.iloc[idx] = row
+
+    # save results
+    shapefile.to_file(out_shp, driver='ESRI Shapefile')
+
+    return True
+
 def fill_holes_in_a_polygon(polygon):
     '''
     fill holes in a polygon
