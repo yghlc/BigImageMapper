@@ -15,6 +15,7 @@ from optparse import OptionParser
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 
+import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 from datasets import raster_io
@@ -123,6 +124,7 @@ def get_sub_images_and_json_files(polygons_shp, class_names,bufferSize, image_ti
     class_labels_all = class_labels
     img_tile_boxes = get_subImages.get_image_tile_bound_boxes(image_tile_list)
 
+    proc_num = min(1, proc_num) # for test, current version.
     # go through each polygon
     if proc_num == 1:
         for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons,class_labels)):
@@ -132,12 +134,13 @@ def get_sub_images_and_json_files(polygons_shp, class_names,bufferSize, image_ti
 
     elif proc_num > 1:
         pass
+
         # parameters_list = [
-        #     (idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
-        #                     img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all)
-        #     for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons, class_labels))]
+        #     (idx, c_polygon, c_class_int, class_names, image_tile_list, img_tile_boxes, save_path,
+        #                         dstnodata, brectangle, bufferSize, polygons_all, class_labels_all)
+        #     for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons,class_labels))]
         # theadPool = Pool(proc_num)  # multi processes
-        # results = theadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
+        # results = theadPool.starmap(get_one_sub_image_json_file, parameters_list)  # need python3
     else:
         raise ValueError('Wrong process number: %s'%(proc_num))
 
@@ -199,21 +202,48 @@ def test_get_sub_images_pixel_json_files():
 
     get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, image_pattern,class_names, bufferSize, dstnodata, saved_dir,b_rectangle, process_num)
 
+
+def get_sub_images_from_prediction_results(para_file,polygons_shp,image_folder_or_path,image_pattern,saved_dir):
+
+    class_names = parameters.get_string_list_parameters(para_file,'object_names')
+
+    dstnodata = parameters.get_digit_parameters(para_file, 'dst_nodata', 'int')
+    bufferSize = parameters.get_digit_parameters(para_file, 'buffer_size', 'int')
+    rectangle_ext = parameters.get_string_parameters_None_if_absence(para_file, 'b_use_rectangle')
+    if rectangle_ext is not None:
+        b_rectangle = True
+    else:
+        b_rectangle = False
+
+    process_num = parameters.get_digit_parameters(para_file,'process_num', 'int')
+
+    get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, image_pattern, class_names, bufferSize,
+                                    dstnodata, saved_dir, b_rectangle, process_num)
+
+    pass
+
+
 def main(options, args):
 
     polygons_shp = args[0]
     image_folder_or_path = args[1]  # folder for store image tile (many split block of a big image)
-    process_num = options.process_num
-    bufferSize = options.bufferSize
-    dstnodata = options.dstnodata
-    saved_dir = options.out_dir
-    b_rectangle = options.rectangle
     image_pattern = options.image_pattern
+    saved_dir = options.out_dir
+    para_file = options.para_file
 
-    class_names = ['rts']
+    if para_file is None:
+        process_num = options.process_num
+        bufferSize = options.bufferSize
+        dstnodata = options.dstnodata
+        b_rectangle = options.rectangle
+        class_names = ['rts']
 
-    get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, image_pattern,class_names, bufferSize, dstnodata, saved_dir,b_rectangle, process_num)
+        get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, image_pattern,class_names, bufferSize, dstnodata, saved_dir,b_rectangle, process_num)
+    else:
+        polygons_shp = args[0]
+        image_folder_or_path = args[1]  # folder for store image tile (many split block of a big image)
 
+        get_sub_images_from_prediction_results(para_file,polygons_shp,image_folder_or_path,image_pattern,saved_dir)
 
 
 
@@ -236,9 +266,13 @@ if __name__ == '__main__':
     parser.add_option("-r", "--rectangle",
                       action="store_true", dest="rectangle", default=False,
                       help="whether use the rectangular extent of the polygon")
-    parser.add_option("-p", "--process_num", type=int,
+    parser.add_option("", "--process_num", type=int,
                       action="store", dest="process_num", default=4,
                       help="the process number for parallel computing")
+
+    parser.add_option("-p", "--para_file",
+                      action="store", dest="para_file",
+                      help="the parameters file")
 
     (options, args) = parser.parse_args()
     # print(options.no_label_image)
