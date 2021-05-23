@@ -139,7 +139,10 @@ def get_projection_proj4(geo_file):
     #     raise ValueError('error, get projection information of %s failed'%geo_file)
     # return prj4_str.decode().strip()
     import basic_src.map_projection as map_projection
-    return map_projection.get_raster_or_vector_srs_info_proj4(geo_file)
+    proj4 = map_projection.get_raster_or_vector_srs_info_proj4(geo_file)
+    if proj4 is False:
+        raise ValueError('Failed to get the projection of %s'%geo_file)
+    return proj4
 
 def get_bounds_of_polygons(polygons):
     '''
