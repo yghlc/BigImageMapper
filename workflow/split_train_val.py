@@ -14,6 +14,7 @@ code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 
 import datasets.raster_io as raster_io
+import basic_src.io_function as io_function
 import re
 
 def get_image_with_height_list(sample_txt, img_ext, info_type='training'):
@@ -104,9 +105,28 @@ def split_train_val(para_file):
     # if res!=0:
     #     sys.exit(1)
 
-    Do_shuffle = True
-    from datasets.train_test_split import train_test_split_main
-    train_test_split_main(all_img_list,training_data_per,Do_shuffle,train_sample_txt,val_sample_txt)
+    if training_data_per is None:
+        # similar to VOC dataset, we only used 1449 images for validation (because the data also used for training,
+        # so it is training accuracy, not validation accuracy)
+        with open(all_img_list, 'r') as f_obj:
+            file_names = f_obj.readlines()
+            if len(file_names) < 1449:
+                # val.txt is identical to trainval.txt
+                io_function.copy_file_to_dst(all_img_list,os.path.join(dir,train_sample_txt))
+                io_function.copy_file_to_dst(all_img_list,os.path.join(dir,val_sample_txt))
+            else:
+                io_function.copy_file_to_dst(all_img_list, os.path.join(dir, train_sample_txt))
+                # randomly get 1449 image from trainval.txt
+                import random
+                sel_file_index = random.sample(range(len(file_names)), 1449)  # get a list of number without duplicates
+                with open(os.path.join(dir, val_sample_txt), 'w') as w_obj:
+                    sel_file_names = [file_names[item] for item in sel_file_index]
+                    w_obj.writelines(sel_file_names)
+    else:
+        # split training and validation datasets
+        Do_shuffle = True
+        from datasets.train_test_split import train_test_split_main
+        train_test_split_main(all_img_list,training_data_per,Do_shuffle,train_sample_txt,val_sample_txt)
 
 
     # save brief information of image patches
