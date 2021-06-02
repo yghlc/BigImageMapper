@@ -256,7 +256,7 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
 
                 # crop image and saved to disk
                 out_image, out_transform = mask(src, [polygon_json], nodata=dstnodata, all_touched=True, crop=True)
-                if np.std(out_image) < 0.0001:
+                if np.std(out_image[out_image != dstnodata]) < 0.0001:
                     basic.outputlogMessage('out_image is total black or white, ignore, %s: %d' % (save_path, k_img))
                     continue
 
@@ -272,7 +272,8 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
                     dest.write(out_image)
                 tmp_saved_files.append(tmp_saved)
         if len(tmp_saved_files) == 1:
-            io_function.copy_file_to_dst(tmp_saved_files[0],save_path)
+            io_function.move_file_to_dst(tmp_saved_files[0],save_path)
+            del tmp_saved_files[0]
         else:
             # mosaic files in tmp_saved_files
             mosaic_args_list = ['gdal_merge.py', '-o', save_path,'-n',str(dstnodata),'-a_nodata',str(dstnodata)]

@@ -1,0 +1,34 @@
+Bootstrap: docker
+FROM: nvidia/cuda:10.2-cudnn8-devel-ubuntu18.04
+OSVersion: ubuntu:18.04
+
+
+%help
+    Singularity container for DeepLabv3+ (tensorflow 1.14)
+
+
+%labels
+	Maintainer: Lingcao Huang
+
+%environment
+    export LC_ALL=C
+
+## %post -c /bin/bash : use bash as default intead of sh
+%post
+    # avoid setting tzdata
+    export DEBIAN_FRONTEND=noninteractive
+# prep apt-get and cudnn
+    apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils
+
+# install requirements for building darknet.
+    apt-get update \
+  	&& apt-get install -y --no-install-recommends \
+	    build-essential \
+        libopencv-dev \
+        cmake \
+        git \
+	  && apt-get clean \
+	  && rm -rf /var/lib/apt/lists/*
+
+
