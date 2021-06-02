@@ -256,6 +256,9 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
 
                 # crop image and saved to disk
                 out_image, out_transform = mask(src, [polygon_json], nodata=dstnodata, all_touched=True, crop=True)
+                if np.std(out_image) < 0.0001:
+                    basic.outputlogMessage('out_image is total black or white, ignore, %s: %d' % (save_path, k_img))
+                    continue
 
                 tmp_saved = os.path.splitext(save_path)[0] +'_%d'%k_img + os.path.splitext(save_path)[1]
                 # test: save it to disk
@@ -268,12 +271,14 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
                 with rasterio.open(tmp_saved, "w", **out_meta) as dest:
                     dest.write(out_image)
                 tmp_saved_files.append(tmp_saved)
-
-        # mosaic files in tmp_saved_files
-        mosaic_args_list = ['gdal_merge.py', '-o', save_path,'-n',str(dstnodata),'-a_nodata',str(dstnodata)]
-        mosaic_args_list.extend(tmp_saved_files)
-        if basic.exec_command_args_list_one_file(mosaic_args_list,save_path) is False:
-            raise IOError('error, obtain a mosaic (%s) failed'%save_path)
+        if len(tmp_saved_files) == 1:
+            io_function.copy_file_to_dst(tmp_saved_files[0],save_path)
+        else:
+            # mosaic files in tmp_saved_files
+            mosaic_args_list = ['gdal_merge.py', '-o', save_path,'-n',str(dstnodata),'-a_nodata',str(dstnodata)]
+            mosaic_args_list.extend(tmp_saved_files)
+            if basic.exec_command_args_list_one_file(mosaic_args_list,save_path) is False:
+                raise IOError('error, obtain a mosaic (%s) failed'%save_path)
 
         # # for test
         # if idx==13:
