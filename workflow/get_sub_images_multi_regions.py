@@ -98,7 +98,7 @@ def get_sub_images_multi_regions(para_file):
         # it is ok consider a file name as pattern and pass it the following functions to get file list
         input_image_or_pattern = parameters.get_string_parameters(area_ini, 'input_image_or_pattern')
 
-        b_sub_images_json = parameters.get_bool_parameters(area_ini,'b_sub_images_json')
+        b_sub_images_json = parameters.get_bool_parameters_None_if_absence(area_ini,'b_sub_images_json')
         if b_sub_images_json is True:
             # copy sub-images, then covert json files to label images.
             object_names = parameters.get_string_list_parameters(para_file,'object_names')
