@@ -25,7 +25,7 @@ from deeplab_train import pre_trained_tar_19_classes
 tf1x_python = 'python'
 
 def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classes,atrous_rates1,atrous_rates2,atrous_rates3,output_stride,
-                 crop_size_height, crop_size_width,multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters):
+                 crop_size_height, crop_size_width,band_count,multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters):
     command_string = tf1x_python + ' ' \
                      + export_script \
                      + ' --logtostderr' \
@@ -34,7 +34,8 @@ def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classe
                      + ' --model_variant=' + model_variant \
                      + ' --num_classes=' + str(num_of_classes) \
                      + ' --crop_size='+crop_size_height \
-                     + ' --crop_size='+crop_size_width
+                     + ' --crop_size='+crop_size_width \
+                     + ' --band_count='+str(band_count)
 
     if output_stride is not None:
         command_string += ' --output_stride='+ str(output_stride)
@@ -143,6 +144,10 @@ def main(options, args):
     if len(image_crop_size) != 2 and image_crop_size[0].isdigit() and image_crop_size[1].isdigit():
         raise ValueError('image_crop_size should be height,width')
 
+    image_band_count = parameters.get_digit_parameters_None_if_absence(para_file, 'image_band_count','int')
+    if image_band_count is None:
+        image_band_count = 3
+
     iteration_num = get_trained_iteration(TRAIN_LOGDIR)
 
     multi_scale = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'export_multi_scale', 'int')
@@ -156,7 +161,7 @@ def main(options, args):
         return
     export_graph(export_script, CKPT_PATH, EXPORT_PATH, model_variant, num_of_classes,
                  inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,image_crop_size[0], image_crop_size[1],
-                 multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters)
+                 image_band_count,multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters)
 
 
 if __name__ == '__main__':
