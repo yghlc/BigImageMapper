@@ -29,6 +29,8 @@ def merge_shape_files(file_list, save_path):
         raise IOError("no input shapefiles")
 
     ref_prj = get_raster_or_vector_srs_info_proj4(file_list[0])
+    if ref_prj is False:
+        raise ValueError('Failed to get projection of %s'%file_list[0])
 
     # read polygons as shapely objects
     attribute_names = None
