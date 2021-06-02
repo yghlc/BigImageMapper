@@ -256,7 +256,8 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
 
                 # crop image and saved to disk
                 out_image, out_transform = mask(src, [polygon_json], nodata=dstnodata, all_touched=True, crop=True)
-                if np.std(out_image[out_image != dstnodata]) < 0.0001:
+                non_nodata_loc = np.where(out_image != dstnodata)
+                if non_nodata_loc[0].size < 1 or np.std(non_nodata_loc) < 0.0001:
                     basic.outputlogMessage('out_image is total black or white, ignore, %s: %d' % (save_path, k_img))
                     continue
 
