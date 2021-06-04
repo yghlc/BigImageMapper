@@ -236,7 +236,8 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
 
             io_function.copy_shape_file(merged_shp,bak_merged_shp)
             io_function.copy_shape_file(shp_post, bak_post_shp)
-            io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
+            if os.path.isfile(out_report):
+                io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
             io_function.copy_file_to_dst(area_ini, bak_area_ini, overwrite=True)
 
             region_eva_reports[shp_pre] = bak_eva_report
