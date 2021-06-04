@@ -85,7 +85,9 @@ def read_accuracy_multi_reports(eva_reports):
     return acc_table, acc_table_IOU_version
 
 def eva_reports_to_table(eva_reports, output_file):
-
+    if len(eva_reports) < 1:
+        print('warning, no input reports')
+        return False
     eva_reports.sort()
 
     eva_report_rmTimeiou = [item for item in eva_reports if 'rmTimeiou' in item ]

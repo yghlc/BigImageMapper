@@ -260,6 +260,8 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
     # output the evaluation report to screen
     for key in region_eva_reports.keys():
         report = region_eva_reports[key]
+        if os.path.isfile(report) is False:
+            continue
         print('evaluation report for %s:'%key)
         os.system('head -n 7 %s'%report)
 
@@ -268,7 +270,7 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
         out_table = os.path.join(backup_dir, '_'.join([test_id,'accuracy_table',test_note]) + '.xlsx' )
     else:
         out_table = os.path.join(backup_dir, '_'.join([test_id, 'accuracy_table']) + '.xlsx')
-    eva_reports = [ region_eva_reports[key] for key in region_eva_reports]
+    eva_reports = [ region_eva_reports[key] for key in region_eva_reports if os.path.isfile(region_eva_reports[key])]
     eva_report_to_tables.eva_reports_to_table(eva_reports, out_table)
 
     duration= time.time() - SECONDS
