@@ -38,6 +38,7 @@ def plot_valid_entropy(in_folder, save_file_pre=None):
     if save_file_pre is None:
         save_file_pre  = os.path.basename(in_folder)
 
+    logfile = basic.logfile
     basic.setlogfile(save_file_pre + 'hist_info.txt')
     image_paths = io_function.get_file_list_by_ext('.tif', in_folder, bsub_folder=True)
     if len(image_paths) < 1:
@@ -65,6 +66,7 @@ def plot_valid_entropy(in_folder, save_file_pre=None):
     plt.savefig(save_hist_path, dpi=200)  # 300
     histogram2logfile(entropy_list,bins,hist_tag=save_hist_path)
 
+    basic.setlogfile(logfile)   # change log file name back
     return save_hist_path
 
 def main(options, args):
