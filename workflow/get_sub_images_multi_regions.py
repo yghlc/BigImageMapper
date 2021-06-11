@@ -145,6 +145,10 @@ def get_sub_images_multi_regions(para_file):
                     io_function.movefiletodir(image_path,subImage_dir_delete)
                     if os.path.isfile(label_path):
                         io_function.movefiletodir(label_path,subLabel_dir_delete)
+    else:
+        with open('sub_images_labels_list.txt','r') as f_obj:
+            new_sub_image_label_list = f_obj.readlines()
+
     if len(delete_sub_image_label_list) > 0:
         with open('sub_images_labels_list.txt', 'w') as f_obj:
             for line in new_sub_image_label_list:
