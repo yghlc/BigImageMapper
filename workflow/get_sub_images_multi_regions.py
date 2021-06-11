@@ -166,6 +166,8 @@ def get_sub_images_multi_regions(para_file):
         height, width, band_count, dtype = raster_io.get_height_width_bandnum_dtype(image_path)
         height_list.append(height)
         width_list.append(width)
+    if len(height_list) < 1 or len(width_list) < 1:
+        raise ValueError('No sub-images')
     # save info to file, if it exists, it will be overwritten
     img_count = len(new_sub_image_label_list)
     with open('sub_images_patches_info.txt','w') as f_obj:
