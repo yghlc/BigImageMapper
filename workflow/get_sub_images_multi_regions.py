@@ -130,19 +130,21 @@ def get_sub_images_multi_regions(para_file):
     if b_no_label_image is None or b_no_label_image is False:
         io_function.mkdir(subLabel_dir_delete)
     get_valid_percent_entropy.plot_valid_entropy(subImage_dir)
-    with open('sub_images_labels_list.txt','r') as f_obj:
-        lines = f_obj.readlines()
-        for line in lines:
-            image_path, label_path = line.strip().split(':')
-            # valid_per = raster_io.get_valid_pixel_percentage(image_path)
-            valid_per, entropy = raster_io.get_valid_percent_shannon_entropy(image_path)    # base=10
-            if valid_per > 60 and entropy >= 0.5:
-                new_sub_image_label_list.append(line)
-            else:
-                delete_sub_image_label_list.append(line)
-                io_function.movefiletodir(image_path,subImage_dir_delete)
-                if os.path.isfile(label_path):
-                    io_function.movefiletodir(label_path,subLabel_dir_delete)
+    b_check_sub_image_quality = parameters.get_bool_parameters_None_if_absence(para_file,'b_check_sub_image_quality')
+    if b_check_sub_image_quality is True:
+        with open('sub_images_labels_list.txt','r') as f_obj:
+            lines = f_obj.readlines()
+            for line in lines:
+                image_path, label_path = line.strip().split(':')
+                # valid_per = raster_io.get_valid_pixel_percentage(image_path)
+                valid_per, entropy = raster_io.get_valid_percent_shannon_entropy(image_path)    # base=10
+                if valid_per > 60 and entropy >= 0.5:
+                    new_sub_image_label_list.append(line)
+                else:
+                    delete_sub_image_label_list.append(line)
+                    io_function.movefiletodir(image_path,subImage_dir_delete)
+                    if os.path.isfile(label_path):
+                        io_function.movefiletodir(label_path,subLabel_dir_delete)
     if len(delete_sub_image_label_list) > 0:
         with open('sub_images_labels_list.txt', 'w') as f_obj:
             for line in new_sub_image_label_list:
