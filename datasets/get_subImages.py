@@ -274,6 +274,7 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
                 tmp_saved_files.append(tmp_saved)
         if len(tmp_saved_files) < 1:
             basic.outputlogMessage('Warning, %dth polygon overlap multiple image tiles, but all are black or white, please check ' % idx)
+            return False
         elif len(tmp_saved_files) == 1:
             io_function.move_file_to_dst(tmp_saved_files[0],save_path)
             del tmp_saved_files[0]
