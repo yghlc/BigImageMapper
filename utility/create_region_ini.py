@@ -79,8 +79,8 @@ def create_region_parafile_for_one_image(template_para_file, img_path, area_name
     modify_parameter(new_para_file, 'input_image_dir', img_dir)
     modify_parameter(new_para_file, 'inf_image_dir', img_dir)
 
-    modify_parameter(new_para_file, 'input_image_or_pattern', img_path)
-    modify_parameter(new_para_file, 'inf_image_or_pattern', img_path)
+    modify_parameter(new_para_file, 'input_image_or_pattern', os.path.basename(img_path))
+    modify_parameter(new_para_file, 'inf_image_or_pattern', os.path.basename(img_path))
 
     print("modified and saved new parameter file: %s "%new_para_file)
 
