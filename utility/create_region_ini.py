@@ -48,13 +48,15 @@ def create_region_parafile_for_one_image(template_para_file, img_path, area_name
     img_dir = os.path.dirname(img_path)
 
     if area_name is None:
-        if area_remark is not None:
-            new_para_file = io_function.get_name_by_adding_tail(template_para_file,area_time +'_'+ area_remark)
-        else:
-            new_para_file = io_function.get_name_by_adding_tail(template_para_file, area_time)
-        new_para_file = os.path.basename(new_para_file) # save to current folder
+        new_para_file = os.path.basename(template_para_file) # save to current folder
     else:
         new_para_file = 'area_%s.ini'%area_name  # save to current folder
+
+    if area_remark is not None:
+        new_para_file = io_function.get_name_by_adding_tail(new_para_file, area_time + '_' + area_remark)
+    else:
+        new_para_file = io_function.get_name_by_adding_tail(new_para_file, area_time)
+
     # if os.path.isfile(new_para_file):
     #     raise IOError('%s already exists, please check or remove first')
     count = 1
