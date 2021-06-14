@@ -57,8 +57,8 @@ def create_region_parafile_for_one_image(template_para_file, img_path, area_name
     #     raise IOError('%s already exists, please check or remove first')
     count = 1
     while os.path.isfile(new_para_file):
+        print('%s already exists, using a new file name' % new_para_file)
         new_para_file = io_function.get_name_by_adding_tail(new_para_file,'%d'%count)
-        print('%s already exists, using a new file name: %s'%new_para_file)
         count += 1
 
     # copy the file
