@@ -43,6 +43,7 @@ def run_evaluation_one_dataset(idx, area_ini):
         # copy and modify parameters
         io_function.copy_file_to_dst(os.path.join(template_dir, main_para), main_para)
         io_function.copy_file_to_dst(area_ini, area_ini_name)
+        # set training_data_per=0, then all the data will be input for evaluation
         modify_parameter(main_para, 'training_regions', area_ini_name)
         io_function.copy_file_to_dst(os.path.join(template_dir, 'deeplabv3plus_xception65.ini'),'deeplabv3plus_xception65.ini')
 
