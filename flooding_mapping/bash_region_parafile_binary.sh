@@ -22,7 +22,7 @@ function new_ini(){
 rm region_ini_files.txt || true
 rm *.ini || true
 
-ref_ini=~/Data/flooding_area/automapping/houston_deeplabV3+_1/area_Houston.ini
+ref_ini=~/Data/flooding_area/automapping/houston_deeplabV3+_1/area_Houston_binary.ini
 
 #region=Houston
 #dir=~/Bhaltos2/lingcaoHuang/flooding_area/Houston/Houston_binary/Harvey_8_29_255
