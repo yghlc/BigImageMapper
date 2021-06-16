@@ -40,7 +40,7 @@ new_ini ${dir} ${ref_ini} ${region}
 
 
 region=Vadodara_upper
-dir=~/Bhaltos2/lingcaoHuang/flooding_area/Vadodara/Vadodara_2020_upper_binary_255c
+dir=~/Bhaltos2/lingcaoHuang/flooding_area/Vadodara/Vadodara_2020_upper_binary_255
 new_ini ${dir} ${ref_ini} ${region}
 
 
