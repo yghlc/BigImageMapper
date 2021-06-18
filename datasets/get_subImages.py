@@ -599,7 +599,8 @@ def main(options, args):
 
     check_projection_rasters(image_tile_list)   # it will raise errors if found problems
 
-    check_1or3band_8bit(image_tile_list)  # it will raise errors if found problems
+    # comment out on June 18, 2021,
+    # check_1or3band_8bit(image_tile_list)  # it will raise errors if found problems
 
     #need to check: the shape file and raster should have the same projection.
     if get_projection_proj4(t_polygons_shp) != get_projection_proj4(image_tile_list[0]):
