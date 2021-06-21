@@ -153,7 +153,7 @@ def visualize_model(model, dataloaders,device,class_names, num_images=6):
                 if images_for_far == num_images:
                     model.train(mode=was_training)
                     return
-            model.train(model=was_training)
+            model.train(mode=was_training)
 
 
 
