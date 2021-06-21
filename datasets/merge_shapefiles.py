@@ -67,6 +67,9 @@ def merge_shape_files(file_list, save_path):
             polygon_attributes_list.append(polygon_attributes)
 
     # save results
+    if attribute_names is None:
+        basic.outputlogMessage('warning, NO geomerties will be saved to %s' % save_path)
+        return False
     save_polyons_attributes = {}
     for idx, attribute in enumerate(attribute_names):
         # print(idx, attribute)

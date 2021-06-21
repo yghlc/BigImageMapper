@@ -183,7 +183,8 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
                     out_shp = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
                     result_shp_list.append(os.path.join(WORK_DIR,out_shp))
                 # merge shapefiles
-                merge_shape_files(result_shp_list,merged_shp)
+                if merge_shape_files(result_shp_list,merged_shp) is False:
+                    continue
 
             merged_shp_list.append(merged_shp)
 
