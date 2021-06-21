@@ -12,8 +12,13 @@ set -eE -o functrace
 for dd in $(ls -d *_1); do
 
   echo $dd
+  out=${dd}.zip
+  if [ -f ${out} ]; then
+    echo ${out} exist, skip
+    continue
+  fi
   # only add post*.shp and ini files
-  zip -r ${dd}.zip ${dd}/*post* ${dd}/*.ini
+  zip -r ${out} ${dd}/*post* ${dd}/*.ini
 
 done
 
