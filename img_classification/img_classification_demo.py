@@ -147,7 +147,7 @@ def visualize_model(model, dataloaders,device,class_names, num_images=6):
                 images_for_far += 1
                 ax = plt.subplot(num_images//2, 2, images_for_far)
                 ax.axis('off')
-                ax.set_title('predicted: {}'.format(class_names[[preds[j]]]))
+                ax.set_title('predicted: {}'.format(class_names[preds[j]]))
                 imshow(inputs.cpu().data[j],save_path='predictions.jpg')
 
                 if images_for_far == num_images:
