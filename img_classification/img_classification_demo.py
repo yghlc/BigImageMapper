@@ -148,7 +148,7 @@ def visualize_model(model, dataloaders,device,class_names, num_images=6):
                 ax = plt.subplot(num_images//2, 2, images_for_far)
                 ax.axis('off')
                 ax.set_title('predicted: {}'.format(class_names[preds[j]]))
-                imshow(inputs.cpu().data[j],save_path='predictions.jpg')
+                imshow(inputs.cpu().data[j],save_path='predictions_%d.jpg'%images_for_far)
 
                 if images_for_far == num_images:
                     model.train(model=was_training)
