@@ -151,7 +151,7 @@ def visualize_model(model, dataloaders,device,class_names, num_images=6):
                 imshow(inputs.cpu().data[j],save_path='predictions.jpg') #_%d %images_for_far
 
                 if images_for_far == num_images:
-                    model.train(model=was_training)
+                    model.train(mode=was_training)
                     return
             model.train(model=was_training)
 
