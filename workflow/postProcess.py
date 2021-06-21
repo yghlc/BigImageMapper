@@ -197,6 +197,9 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
             area_save_dir, shp_pre, area_remark_time  = get_observation_save_dir_shp_pre(inf_dir, area_name, area_time, area_remark,test_id)
 
             merged_shp = os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
+            if os.path.isfile(merged_shp) is False:
+                print('Warning, %s not exist, skip'%merged_shp)
+                continue
 
             # add attributes to shapefile
             # add_attributes_script = os.path.join(code_dir,'datasets', 'get_polygon_attributes.py')
