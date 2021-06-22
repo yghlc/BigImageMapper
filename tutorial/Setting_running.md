@@ -5,12 +5,14 @@ This file introduces how to set the environment for running this repo.
 It also provides a reference for setting and running on your own workstations.
 
 
-#### Step 1: install packages and dependencies
+#### Step 1: install miniconda 
 
 Install python using miniconda 
 
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     sh Miniconda3-latest-Linux-x86_64.sh -p $HOME/programs/miniconda3 -b
+
+#### Step 2: install tensorflow 1.14 and dependencies for DeepLabv3+
 
 Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https://github.com/tensorflow/models/tree/master/research/deeplab)
     
@@ -48,8 +50,8 @@ Ubuntu 18 or 20 already may have CUDA 10.0 or 10.2 installed.
 They should be downloaded via NVIDIA website, but for this tutorial, you can download them
 from my Dropbox. 
     
-    wget https://www.dropbox.com/s/c1zzpriid1zng2d/cuda-10.0.tar.gz?dl=0 --output-document=cuda-10.0.tar.gz
-    wget https://www.dropbox.com/s/8yj8fu7a08f7dx8/cuDNN_7.4_cuda10.tar.gz?dl=0 --output-document=cuDNN_7.4_cuda10.tar.gz
+    wget https://www.dropbox.com/s/7hovzayglxzjwhj/cuda-10.0.tar.gz?dl=0 --output-document=cuda-10.0.tar.gz
+    wget https://www.dropbox.com/s/3tuetbaf29umonp/cuDNN_7.4_cuda10.tar.gz?dl=0  --output-document=cuDNN_7.4_cuda10.tar.gz
 
 Then we unpack them to the folder "programs"
  
@@ -77,7 +79,7 @@ Clone codes from GitHub:
     
 
 
-## Run training, prediction, and post-processing
+## Step 3: Run training, prediction, and post-processing
 After the environment for running Landuse_DL is ready, you can start training your model as well as prediction. 
 Suppose your working folder is *test_deeplabV3+_1*, in this folder, a list of files should be presented:
     
