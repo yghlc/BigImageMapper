@@ -22,10 +22,10 @@ sing_img=${sing_dir}/programs/ubuntu2004_cuda1000_cudnn74.sif
 
 #export SINGULARITY_BINDPATH=/500G:/500G,/DATA1:/DATA1,/home/hlc:/home/hlc
 #export SINGULARITY_BINDPATH=/projects/lihu9680:/projects/lihu9680
-#SINGULARITYENV_LD_LIBRARY_PATH=/usr/lib64:${yoltv4}/lib:${LD_LIBRARY_PATH} \
 
 # use SINGULARITYENV_APPEND_PATH or SINGULARITYENV_PREPEND_PATH to add path on the host machine
-#export SINGULARITYENV_PREPEND_PATH=${sing_dir}/programs/miniconda3/envs/darknet/bin:${sing_dir}/programs/darknet
+
+export SINGULARITYENV_PREPEND_PATH=/aa:${sing_dir}/programs/miniconda3/bin
 
 
 # set environment
