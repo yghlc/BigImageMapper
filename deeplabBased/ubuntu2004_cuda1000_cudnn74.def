@@ -25,18 +25,17 @@ OSVersion: ubuntu:20.04
 %post
     # avoid setting tzdata
     export DEBIAN_FRONTEND=noninteractive
-## prep apt-get and cudnn
-#    apt-get update && apt-get install -y --no-install-recommends \
-#    apt-utils
-#
-## install requirements for building darknet.
-#    apt-get update \
-#  	&& apt-get install -y --no-install-recommends \
-#	    build-essential \
-#        libopencv-dev \
-#        cmake \
-#        git \
-#	  && apt-get clean \
-#	  && rm -rf /var/lib/apt/lists/*
+# prep apt-get and cudnn
+    apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils
+
+# install some packages
+    apt-get update \
+  	&& apt-get install -y --no-install-recommends \
+	    build-essential \
+        libopencv-dev \
+        cmake \
+	  && apt-get clean \
+	  && rm -rf /var/lib/apt/lists/*
 
 
