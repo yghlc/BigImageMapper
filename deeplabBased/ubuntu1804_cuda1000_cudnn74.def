@@ -1,6 +1,6 @@
 Bootstrap: docker
-FROM: nvidia/cuda:10.2-cudnn8-devel-ubuntu18.04
-OSVersion: ubuntu:18.04
+FROM: ubuntu:20.04
+OSVersion: ubuntu:20.04
 
 
 %help
@@ -12,23 +12,31 @@ OSVersion: ubuntu:18.04
 
 %environment
     export LC_ALL=C
+    export PATH=/usr/local/cuda-10.0/bin:$PATH
+    export LD_LIBRARY_PATH=/usr/local/cuda-10.0/lib64:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/usr/local/cuDNN_7.4_cuda10/cuda/lib64:$LD_LIBRARY_PATH
+
+# copy cuda-10.0 and cuDNN_7.4 from my ubuntu machine directly
+%files
+    cuda-10.0  /usr/local/cuda-10.0
+    cuDNN_7.4_cuda10 /usr/local/cuDNN_7.4_cuda10
 
 ## %post -c /bin/bash : use bash as default intead of sh
 %post
     # avoid setting tzdata
     export DEBIAN_FRONTEND=noninteractive
-# prep apt-get and cudnn
-    apt-get update && apt-get install -y --no-install-recommends \
-    apt-utils
-
-# install requirements for building darknet.
-    apt-get update \
-  	&& apt-get install -y --no-install-recommends \
-	    build-essential \
-        libopencv-dev \
-        cmake \
-        git \
-	  && apt-get clean \
-	  && rm -rf /var/lib/apt/lists/*
+## prep apt-get and cudnn
+#    apt-get update && apt-get install -y --no-install-recommends \
+#    apt-utils
+#
+## install requirements for building darknet.
+#    apt-get update \
+#  	&& apt-get install -y --no-install-recommends \
+#	    build-essential \
+#        libopencv-dev \
+#        cmake \
+#        git \
+#	  && apt-get clean \
+#	  && rm -rf /var/lib/apt/lists/*
 
 
