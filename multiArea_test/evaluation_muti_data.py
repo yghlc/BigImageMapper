@@ -31,7 +31,8 @@ from multiprocessing import Process
 def modify_parameter(para_file, para_name, new_value):
     parameters.write_Parameters_file(para_file,para_name,new_value)
 
-def run_exe_eval(job_sh):
+def run_exe_eval():
+    job_sh = 'exe_eval.sh'
     res = os.system('./' + job_sh)
     if res != 0:
         sys.exit(1)
@@ -116,7 +117,7 @@ def run_evaluation_one_dataset(idx, area_ini):
             outputfile.close()
         
         # run
-        sub_process = Process(target=run_exe_eval, args=(job_sh))
+        sub_process = Process(target=run_exe_eval)
         sub_process.start()
 
         return sub_process
