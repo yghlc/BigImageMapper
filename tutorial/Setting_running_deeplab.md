@@ -41,6 +41,7 @@ the container, so we need to submit a job for running singularity. -->
     pip install imgaug==0.2.6
     pip install geopandas
     pip install GPUtil
+    pip install scikit-learn
 
 
 If we run the GPU version of tensorflow 1.14, we need to install CUDA and cuDNN (on Ubuntu). 
