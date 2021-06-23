@@ -86,21 +86,29 @@ def run_evaluation_one_dataset(idx, area_ini):
             # get available GPUs  # https://github.com/anderskm/gputil
             deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
                                             maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
+            print('deviceIDs:',deviceIDs)
             if len(deviceIDs) < 1:
                 time.sleep(60)  # wait one minute, then check the available GPUs again
                 continue
-
+            break
+        
+        job_sh = 'exe_eval.sh'
         gpuid = deviceIDs[0]
         # modify gpuid in exe_eval.sh
-        with open('exe_eval.sh', 'r') as inputfile:
+        with open(job_sh, 'r') as inputfile:
             list_of_all_the_lines = inputfile.readlines()
             for i in range(0, len(list_of_all_the_lines)):
                 line = list_of_all_the_lines[i]
                 if 'CUDA_VISIBLE_DEVICES' in line:
                     list_of_all_the_lines[i] = 'export CUDA_VISIBLE_DEVICES=%d\n'%gpuid
                     print('Set %s'%list_of_all_the_lines[i])
+            # write the new file and overwrite the old one
+        with open(job_sh,'w') as outputfile:
+            outputfile.writelines(list_of_all_the_lines)
+            outputfile.close()
+        
         # run
-        res = os.system('exe_eval.sh')
+        res = os.system('./'+job_sh)
         if res != 0:
             sys.exit(1)
 
@@ -122,7 +130,7 @@ if __name__ == '__main__':
     # training_root_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/ray_results/tune_dataAug_para_tesia')
     # template_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/eval_new_data')
 
-    data_ini_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/WR_multiDate_inis')
+    data_ini_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/area_multiDate_inis')
     training_root_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/multiArea_deeplabV3+_8')
     template_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/multiArea_deeplabV3+_8')
 
