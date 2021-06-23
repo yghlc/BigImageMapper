@@ -120,7 +120,6 @@ def run_evaluation_one_dataset(idx, area_ini):
         sub_process = Process(target=run_exe_eval)
         sub_process.start()
 
-        return sub_process
 
 
 
