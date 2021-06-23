@@ -25,6 +25,8 @@ import parameters
 sys.path.insert(0, os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS'))
 import slurm_utility
 
+import GPUtil
+
 def modify_parameter(para_file, para_name, new_value):
     parameters.write_Parameters_file(para_file,para_name,new_value)
 
@@ -55,6 +57,10 @@ def run_evaluation_one_dataset(idx, area_ini):
 
             job_name = 'eval_%d_area' % idx
             slurm_utility.modify_slurm_job_sh('job_tf_GPU.sh', 'job-name', job_name)
+        else:
+            # copy
+            io_function.copy_file_to_dst(os.path.join(template_dir, 'exe_eval.sh'), 'exe_eval.sh')
+
     else:
         os.chdir(run_eval_dir)
 
@@ -74,8 +80,29 @@ def run_evaluation_one_dataset(idx, area_ini):
         if res != 0:
             sys.exit(1)
     else:
-        io_function.copy_file_to_dst(os.path.join(template_dir, 'exe.sh'),'exe.sh')
+
+        deviceIDs = []
+        while True:
+            # get available GPUs  # https://github.com/anderskm/gputil
+            deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
+                                            maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
+            if len(deviceIDs) < 1:
+                time.sleep(60)  # wait one minute, then check the available GPUs again
+                continue
+
+        gpuid = deviceIDs[0]
+        # modify gpuid in exe_eval.sh
+        with open('exe_eval.sh', 'r') as inputfile:
+            list_of_all_the_lines = inputfile.readlines()
+            for i in range(0, len(list_of_all_the_lines)):
+                line = list_of_all_the_lines[i]
+                if 'CUDA_VISIBLE_DEVICES' in line:
+                    list_of_all_the_lines[i] = 'export CUDA_VISIBLE_DEVICES=%d\n'%gpuid
+                    print('Set %s'%list_of_all_the_lines[i])
         # run
+        res = os.system('exe_eval.sh')
+        if res != 0:
+            sys.exit(1)
 
 
     os.chdir(curr_dir)
@@ -91,9 +118,13 @@ def main():
 
 if __name__ == '__main__':
 
+    # data_ini_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/WR_multiDate_inis')
+    # training_root_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/ray_results/tune_dataAug_para_tesia')
+    # template_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/eval_new_data')
+
     data_ini_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/WR_multiDate_inis')
-    training_root_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/ray_results/tune_dataAug_para_tesia')
-    template_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/eval_new_data')
+    training_root_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/multiArea_deeplabV3+_8')
+    template_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/multiArea_deeplabV3+_8')
 
     max_run_jobs = 5
     curc_username = 'lihu9680'

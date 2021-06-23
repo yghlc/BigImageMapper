@@ -34,9 +34,12 @@ def run_evaluation_multi_trained_models(train_root_dir,train_dir_pattern,para_fi
     if os.path.isdir(train_root_dir) is False:
         raise ValueError('%s not exists'%train_root_dir)
 
-    folder_list = io_function.get_file_list_by_pattern(train_root_dir,train_dir_pattern)
-    folder_list = [item for item in folder_list if os.path.isdir(item) ]
-    folder_list.sort()
+    if train_dir_pattern is None:
+        folder_list = [train_root_dir]
+    else:
+        folder_list = io_function.get_file_list_by_pattern(train_root_dir,train_dir_pattern)
+        folder_list = [item for item in folder_list if os.path.isdir(item) ]
+        folder_list.sort()
 
     eval_output = {}
 
@@ -112,7 +115,7 @@ if __name__ == '__main__':
                       help="the output file path ")
 
     parser.add_option("-f", "--folder_pattern",
-                      action="store", dest="folder_pattern",default='multiArea_deeplabv3P_?????',
+                      action="store", dest="folder_pattern",  #default='multiArea_deeplabv3P_?????',
                       help="the pattern of training folder")
 
     (options, args) = parser.parse_args()
