@@ -28,6 +28,8 @@ import slurm_utility
 import GPUtil
 from multiprocessing import Process
 
+local_tasks = []
+
 def modify_parameter(para_file, para_name, new_value):
     parameters.write_Parameters_file(para_file,para_name,new_value)
 
@@ -100,7 +102,15 @@ def run_evaluation_one_dataset(idx, area_ini):
                 time.sleep(60)  # wait one minute, then check the available GPUs again
                 continue
             break
-        
+
+        while True:
+            job_count = basic.alive_process_count(local_tasks)
+            if job_count >= max_run_jobs:
+                print(machine_name, datetime.now(), '%d (>%d) jobs are running, wait '%(job_count,max_run_jobs))
+                time.sleep(60)  #
+                continue
+            break
+
         job_sh = 'exe_eval.sh'
         gpuid = deviceIDs[0]
         # modify gpuid in exe_eval.sh
@@ -119,6 +129,7 @@ def run_evaluation_one_dataset(idx, area_ini):
         # run
         sub_process = Process(target=run_exe_eval)
         sub_process.start()
+        local_tasks.append(sub_process)
 
 
 
