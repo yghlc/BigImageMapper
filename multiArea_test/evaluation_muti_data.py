@@ -26,9 +26,17 @@ sys.path.insert(0, os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS'))
 import slurm_utility
 
 import GPUtil
+from multiprocessing import Process
 
 def modify_parameter(para_file, para_name, new_value):
     parameters.write_Parameters_file(para_file,para_name,new_value)
+
+def run_exe_eval(job_sh):
+    res = os.system('./' + job_sh)
+    if res != 0:
+        sys.exit(1)
+    return res
+
 
 def run_evaluation_one_dataset(idx, area_ini):
 
@@ -108,9 +116,11 @@ def run_evaluation_one_dataset(idx, area_ini):
             outputfile.close()
         
         # run
-        res = os.system('./'+job_sh)
-        if res != 0:
-            sys.exit(1)
+        sub_process = Process(target=run_exe_eval, args=(job_sh))
+        sub_process.start()
+
+        return sub_process
+
 
 
     os.chdir(curr_dir)
