@@ -32,6 +32,7 @@ Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https:
     cp ~/codes/PycharmProjects/Landuse_DL/deeplabBased/tf1.14.yml .
     conda env create -f tf1.14.yml
     
+    # if there is some packages failed to install, then unset PYTHONPATH by "export PYTHONPATH=" and try again.
 
 
 ## Step 3: Run training, prediction, and post-processing
