@@ -19,11 +19,6 @@ which is required by the GPU version of tensorflow 1.14.
 
     wget https://www.dropbox.com/s/opxwfc5erdsx8vi/ubuntu2004_cuda1000_cudnn74.sif?dl=0 --output-document=ubuntu2004_cuda1000_cudnn74.sif
 
-Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https://github.com/tensorflow/models/tree/master/research/deeplab).
-    
-    wget https://github.com/yghlc/Landuse_DL/blob/master/deeplabBased/tf1.14.yml
-    conda env create -f tf1.14.yml
-
 Clone codes from GitHub:
 
     git clone https://github.com/yghlc/Landuse_DL ./codes/PycharmProjects/Landuse_DL
@@ -31,6 +26,11 @@ Clone codes from GitHub:
     
     # then set the tensorflow research in the network parameter (e.g.,, deeplabv3plus_xception65.ini):
     tf_research_dir = ~/codes/PycharmProjects/tensorflow/yghlc_tf_model/research
+
+Install tensorflow 1.14 (a relative old version) for running [DeepLabv3+](https://github.com/tensorflow/models/tree/master/research/deeplab).
+    
+    cp ~/codes/PycharmProjects/Landuse_DL/deeplabBased/tf1.14.yml .
+    conda env create -f tf1.14.yml
     
 
 
