@@ -38,7 +38,7 @@ the container, so we need to submit a job for running singularity. -->
     
     pip install pyshp==1.2.12
     pip install rasterstats
-    pip install imgaug==0.2.6
+    pip install imgaug==0.4.0
     pip install geopandas
     pip install GPUtil
     pip install scikit-learn
