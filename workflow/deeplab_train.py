@@ -347,6 +347,8 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         res  = os.system('wget %s '%pre_trained_url)
         if res != 0:
             sys.exit(1)
+        if os.path.isdir(pre_trained_dir) is False:
+            io_function.mkdir(pre_trained_dir)
         io_function.movefiletodir(pre_trained_tar,pre_trained_dir)
 
     # unpack pre-trained model to INIT_FOLDER
