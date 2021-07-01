@@ -14,9 +14,9 @@ voc_format_dir=SpaceNet_voc
 root=spaceNet2
 for AOI in $(ls -d ${root}/*train*/*Train*); do
   echo $AOI
-  echo training data dir: ${root}/${AOI}
-  training_data_root=${root}/${AOI}
-  outputDirectory=${voc_format_dir}/${root}/${AOI}
+  echo training data dir: ${AOI}
+  training_data_root=${AOI}
+  outputDirectory=${voc_format_dir}/${AOI}
   echo ${training_data_root}
   echo ${outputDirectory}
 
