@@ -8,27 +8,26 @@ set -eE -o functrace
 
 # script for format conversion.
 python_script=${HOME}/codes/PycharmProjects/rsBuildingSeg_python3/SpaceNetChallenge/utilities/python/createDataSpaceNet.py
-voc_format_dir=../SpaceNet_voc
+voc_format_dir=SpaceNet_voc
 
 # SpaceNet2
 root=spaceNet2
-cd ${root}
-  for AOI in $(ls -d *train*/*Train*); do
-    echo $AOI
-    echo training data dir: ${root}/${AOI}
-    training_data_root=${root}/${AOI}
-    outputDirectory=${voc_format_dir}/${root}/${AOI}
-    echo ${training_data_root}
-    echo ${outputDirectory}
+for AOI in $(ls -d ${root}/*train*/*Train*); do
+  echo $AOI
+  echo training data dir: ${root}/${AOI}
+  training_data_root=${root}/${AOI}
+  outputDirectory=${voc_format_dir}/${root}/${AOI}
+  echo ${training_data_root}
+  echo ${outputDirectory}
 
-    mkdir -p ${outputDirectory}
-    python ${python_script} ${training_data_root} --convertTo8Bit --trainTestSplit 0.8 \
-    --srcImageryDirectory RGB-PanSharpen --outputDirectory ${outputDirectory} --annotationType PASCALVOC2012
+  mkdir -p ${outputDirectory}
+  python ${python_script} ${training_data_root} --convertTo8Bit --trainTestSplit 0.8 \
+  --srcImageryDirectory RGB-PanSharpen --outputDirectory ${outputDirectory} --annotationType PASCALVOC2012
 
-    exit
+  exit
 
-  done
-cd ..
+done
+
 
 exit
 
