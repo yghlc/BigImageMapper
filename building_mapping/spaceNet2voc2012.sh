@@ -1,27 +1,38 @@
 #!/bin/bash
 
-# convert data format from SpanceNet to VOC format for segmentation.
+# Exit immediately if a command exits with a non-zero status. E: error trace
+set -eE -o functrace
+
+# convert training data format from SpanceNet to VOC format for segmentation.
 # run this in /BhaltosMount/Bhaltos/lingcaoHuang/SpaceNet
 
 # script for format conversion.
-python_script=${HOME}/codes/PycharmProjects/rsBuildingMapping/SpaceNetChallenge/utilities/python/createDataSpaceNet.py
+python_script=${HOME}/codes/PycharmProjects/rsBuildingSeg_python3/SpaceNetChallenge/utilities/python/createDataSpaceNet.py
+voc_format_dir=../SpaceNet_voc
 
-for spaceNet in spaceNet?; do
-  echo $spaceNet
-  cd $spaceNet
+# SpaceNet2
+root=spaceNet2
+cd ${root}
+  for AOI in $(ls -d *train*/*Train*); do
+    echo $AOI
+    echo training data dir: ${root}/${AOI}
+    training_data_root=${root}/${AOI}
+    outputDirectory=${voc_format_dir}/${root}/${AOI}
+    echo ${training_data_root}
+    echo ${outputDirectory}
+
+    mkdir -p ${outputDirectory}
+    python ${python_script} ${training_data_root} --convertTo8Bit --trainTestSplit 0.8 \
+    --srcImageryDirectory RGB-PanSharpen --outputDirectory ${outputDirectory} --annotationType PASCALVOC2012
+
+    exit
+
+  done
+cd ..
+
+exit
 
 
-
-  cd ..
-
-done
-
-
-#${spacenet_root}
-AOI_2=AOI_2_Vegas_Train
-AOI_3=AOI_3_Paris_Train
-AOI_4=AOI_4_Shanghai_Train
-AOI_5=AOI_5_Khartoum_Train
 
 # remove previous success_save.txt file
 rm success_save.txt
