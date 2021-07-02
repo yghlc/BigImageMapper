@@ -24,9 +24,10 @@ rm *.ini || true
 
 ref_ini=~/Data/flooding_area/automapping/houston_deeplabV3+_1/area_Houston_binary.ini
 
-#region=Houston
+region=Houston
 #dir=~/Bhaltos2/lingcaoHuang/flooding_area/Houston/Houston_binary/Harvey_8_29_255
-#new_ini ${dir} ${ref_ini} ${region}
+dir=~/Bhaltos2/lingcaoHuang/flooding_area/Houston/Houston_binary/Harvey_255
+new_ini ${dir} ${ref_ini} ${region}
 
 
 region=Goalpara
