@@ -40,7 +40,7 @@ dir=~/Bhaltos2/lingcaoHuang/flooding_area/Vadodara/Vadodara_2020_lower_power_tra
 new_ini ${dir} ${ref_ini} ${region}
 
 
-region=Vadodara_upperu
+region=Vadodara_upper
 dir=~/Bhaltos2/lingcaoHuang/flooding_area/Vadodara/Vadodara_2020_upper_binary_255
 new_ini ${dir} ${ref_ini} ${region}
 
