@@ -25,6 +25,9 @@ import geopandas as gpd
 import numpy as np
 from rasterio.features import rasterize
 
+sys.path.insert(0, os.path.join(code_dir,'datasets'))
+from get_subImages import get_projection_proj4
+
 def rasterize_polygons_to_ref_raster(ref_raster, poly_path, burn_value, attribute_name, save_path, datatype='Byte',ignore_edge=True):
     '''
     rasterize polygons to a raster with the same size of ref_raster
@@ -37,6 +40,11 @@ def rasterize_polygons_to_ref_raster(ref_raster, poly_path, burn_value, attribut
     :param ignore_edge: if True, will burn a buffer areas (~5 pixel as 255)
     :return:
     '''
+
+    # need to check the projection
+    # need to check: the shape file and raster should have the same projection.
+    if get_projection_proj4(ref_raster) != get_projection_proj4(poly_path):
+        raise ValueError('error, the input raster (e.g., %s) and vector (%s) files don\'t have the same projection'%(ref_raster, poly_path))
 
     # read polygons (can read geojson file directly)
     shapefile = gpd.read_file(poly_path)
