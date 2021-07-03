@@ -41,6 +41,9 @@ def rasterize_polygons_to_ref_raster(ref_raster, poly_path, burn_value, attribut
     :return:
     '''
 
+    if isinstance(burn_value,int) is False or isinstance(burn_value,float):
+        raise ValueError('The burn value should be int or float')
+
     # need to check the projection
     # need to check: the shape file and raster should have the same projection.
     if get_projection_proj4(ref_raster) != get_projection_proj4(poly_path):
@@ -153,6 +156,9 @@ def main(options, args):
 
     file_name = os.path.splitext(os.path.basename(shp_path))[0]
     save_path = os.path.join(out_dir, file_name + '_label.tif')
+    if os.path.isfile(save_path):
+        print('Warning, %s already exists'%save_path)
+        return True
 
     if ref_raster is not None:
         rasterize_polygons_to_ref_raster(ref_raster, shp_path, burn_value, attribute_name, save_path,ignore_edge=b_burn_edge)
@@ -184,7 +190,7 @@ if __name__ == "__main__":
                       action="store", dest="attribute",
                       help="the attribute name in the vector files for rasterization")
     parser.add_option("-b", "--burn_value",
-                      action="store", dest="burn_value",default=1,
+                      action="store", dest="burn_value",default=1, type=int,
                       help="the burn value will be used if attribute is not assigned")
     parser.add_option("-x", "--pixel_size_x",
                       action="store", dest="pixel_size_x",
