@@ -85,18 +85,29 @@ def merge_shape_files(file_list, save_path):
 
 def main(options, args):
 
-    folder = args[0]
-    shp_list = io_function.get_file_list_by_ext('.shp',folder,bsub_folder=False)
+    if len(args) == 1:
+        folder = args[0]
+        shp_list = io_function.get_file_list_by_ext('.shp',folder,bsub_folder=False)
 
-    # remove I*
-    out_name_list = [ '_'.join(os.path.basename(shp).split('_')[1:]) for shp in shp_list ]
-    # remove duplicated ones
-    out_name_list = [ item for item in set(out_name_list) ]
+        # remove I*
+        out_name_list = [ '_'.join(os.path.basename(shp).split('_')[1:]) for shp in shp_list ]
+        # remove duplicated ones
+        out_name_list = [ item for item in set(out_name_list) ]
 
-    for out_name in out_name_list:
-        file_list = [ item for item in shp_list if out_name in item ]
-        # no need to remove "out_name" if it exist, it will be overwrite
-        merge_shape_files(file_list, out_name)
+        for out_name in out_name_list:
+            file_list = [ item for item in shp_list if out_name in item ]
+            # no need to remove "out_name" if it exist, it will be overwrite
+            merge_shape_files(file_list, out_name)
+    else:
+        file_list = [ item for item in  args]
+        print('Input shp files:')
+        for shp in file_list:
+            print(shp)
+        save_path = options.output
+        if save_path is None:
+            raise ValueError('output is None')
+
+        merge_shape_files(file_list, save_path)
 
     pass
 
@@ -119,9 +130,9 @@ if __name__ == "__main__":
     #                   action="store", dest="para_file",
     #                   help="the parameters file")
 
-    # parser.add_option('-o', '--output',
-    #                   action="store", dest = 'output',
-    #                   help='the path to save the change detection results')
+    parser.add_option('-o', '--output',
+                      action="store", dest = 'output',
+                      help='the path to save the merged results')
 
     (options, args) = parser.parse_args()
     # if len(sys.argv) < 2:
