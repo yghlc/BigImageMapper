@@ -16,6 +16,9 @@ import pandas as pd
 import geopandas as gpd
 from optparse import OptionParser
 
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+
 import basic_src.basic as basic
 from basic_src.map_projection import get_raster_or_vector_srs_info_proj4
 import vector_gpd
