@@ -20,6 +20,7 @@ sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
 import raster_io
 import basic_src.RSImageProcess as RSImageProcess
+import basic_src.map_projection as map_projection
 
 code_dir2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir2)
@@ -53,6 +54,12 @@ def resample_crop_raster(ref_raster, input_raster, output_raster=None, resample_
     # RSImageProcess.resample_image(input_raster,resample_raster,xres,yres,resample_method)
     # if os.path.isfile(resample_raster) is False:
     #     raise ValueError('Resample %s failed'%input_raster)
+
+    # check projection
+    prj4_ref = map_projection.get_raster_or_vector_srs_info_proj4(ref_raster)
+    prj4_input = map_projection.get_raster_or_vector_srs_info_proj4(input_raster)
+    if prj4_ref != prj4_input:
+        raise ValueError('projection inconsistent: %s and %s'%(ref_raster, input_raster))
 
     if os.path.isfile(output_raster):
         print('Warning, %s exists'%output_raster)
