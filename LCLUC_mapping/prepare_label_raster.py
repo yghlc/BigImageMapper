@@ -44,9 +44,10 @@ def resample_crop_raster(ref_raster, input_raster, output_raster=None, resample_
         return False
 
 def crop_resample_label_raster():
-    img_path = os.path.join(data_dir,'rs_imagery/Planet/Brazil_area1_2019Feb07_psscene4band_analytic_sr_udm2/Brazil_area1_20190207_3B_AnalyticMS_SR_mosaic_8bit_rgb.tif')
+    img_path = os.path.join(data_dir,'rs_imagery/Planet/Brazil_area1_2019Feb07_psscene4band_analytic_sr_udm2/'
+                                     'Brazil_area1_20190207_3B_AnalyticMS_SR_mosaic_8bit_rgb_sub.tif')
 
-    label_path = os.path.join(data_dir, 'LCLUC_MapBiomas_Gabriel/COLECAO_5_DOWNLOADS_COLECOES_ANUAL_2019_merge.tif')
+    label_path = os.path.join(data_dir, 'LCLUC_MapBiomas_Gabriel/COLECAO_5_DOWNLOADS_COLECOES_ANUAL_2019_merge_prj.tif')
 
     # crop and resample
     resample_crop_raster(img_path,label_path)
