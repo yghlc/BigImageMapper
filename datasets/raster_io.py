@@ -228,6 +228,18 @@ def get_max_min_histogram_percent_oneband(data, bin_count, min_percent=0.01, max
 
     return found_min, found_max, hist, bin_edges
 
+
+def set_nodata_to_raster_metadata(raster_path, nodata):
+    # modifiy the nodata value in the metadata
+    cmd_str = 'gdal_edit.py -a_nodata %s  %s' % (str(nodata), raster_path)
+    print(cmd_str)
+    res = os.system(cmd_str)
+    if res == 0:
+        return True
+    else:
+        return False
+
+
 def is_two_bound_disjoint(box1, box2):
     # box1 and box2: bounding box: (left, bottom, right, top)
     # Compare two bounds and determine if they are disjoint.
@@ -580,6 +592,24 @@ def geo_xy_to_pixel_xy(x_list, y_list, transform, op=round, precision=None):
     # cols (list of ints) – list of column indices
     rows, cols  = rasterio.transform.rowcol(transform, x_list, y_list, op=op, precision = precision)
     return cols, rows
+
+def burn_polygon_to_raster_oneband(raster_path, polygon_shp, burn_value):
+    # burn values to the extent of polygon to a raster
+    # it will updated the raster
+
+    # check projection
+
+    shp_name = os.path.splitext(os.path.basename(polygon_shp))[0]
+
+    # -at all touch
+    cmd_str = 'gdal_rasterize -b 1 -at -burn %s -l %s '%(str(burn_value),shp_name)
+    cmd_str += polygon_shp + ' ' + raster_path
+    print(cmd_str)
+    res = os.system(cmd_str)
+    if res == 0:
+        return raster_path
+    else:
+        return False
 
 def main():
     pass
