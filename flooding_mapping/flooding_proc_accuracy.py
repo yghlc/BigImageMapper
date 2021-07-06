@@ -171,7 +171,7 @@ def post_processing_Goapara():
     surface_water = os.path.join(sur_water_dir,'extent_UTM46N_Goalpara/extent_80_90E_30N_v1_3_2020.tif')
 
     # elevation (SRTM)
-    dem_path = os.path.join(data_dir, 'extent_UTM46N_Goalpara/extent_80_90E_30N_v1_3_2020.tif')
+    dem_path = os.path.join(data_dir, 'DEM/Goalpara/Goalpara_SRTM_prj.tif')
 
     # resample and crop to the same resolution and extent
     surface_water_crop = resample_crop_raster(dl_map_20200516,surface_water)
@@ -184,12 +184,12 @@ def post_processing_Goapara():
 
     # post-processing by using the DEM
     elevation_thr = 500
-    dl_map_results_watermask = [mask_by_elevation(item, dem_crop,elevation_thr) for item in dl_map_results]
+    dl_map_results_mask = [mask_by_elevation(item, dem_crop,elevation_thr) for item in dl_map_results]
 
     # post-processing the multi-temporal results
 
     # calculate accuracy for each dl mapping results
-    for idx, dl_map in enumerate(dl_map_results_watermask):
+    for idx, dl_map in enumerate(dl_map_results_mask):
         print(idx, dl_map)
         classify_assess.pixel_accuracy_assessment(modis_map_20200705_watermask,dl_map)
 
