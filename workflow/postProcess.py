@@ -55,7 +55,8 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
     os.chdir(curr_dir)
     out_shp_path = os.path.join(img_save_dir,out_shp)
-    return out_shp_path
+    out_raster = os.path.join(img_save_dir,merged_tif)
+    return out_shp_path, out_raster
 
 # def add_polygon_attributes(script, in_shp_path, save_shp_path, para_file, data_para_file):
 #
@@ -160,6 +161,7 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
         area_name = parameters.get_string_parameters(multi_observations[0], 'area_name')  # they have the same name and time
         area_time = parameters.get_string_parameters(multi_observations[0], 'area_time')
         merged_shp_list = []
+        map_raster_list_2d = [None] * len(multi_observations)
         for area_idx, area_ini in enumerate(multi_observations):
             area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
             area_save_dir, shp_pre,_ = get_observation_save_dir_shp_pre(inf_dir,area_name,area_time,area_remark,test_id)
@@ -179,12 +181,15 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
             else:
                 # post image one by one
                 result_shp_list = []
+                map_raster_list = []
                 for img_idx, img_path in enumerate(inf_img_list):
-                    out_shp = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
+                    out_shp, out_raster = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
                     result_shp_list.append(os.path.join(WORK_DIR,out_shp))
+                    map_raster_list.append(out_raster)
                 # merge shapefiles
                 if merge_shape_files(result_shp_list,merged_shp) is False:
                     continue
+                map_raster_list_2d[area_idx] = map_raster_list
 
             merged_shp_list.append(merged_shp)
 
@@ -243,6 +248,14 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
             if os.path.isfile(out_report):
                 io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
             io_function.copy_file_to_dst(area_ini, bak_area_ini, overwrite=True)
+
+            # copy map raster
+            b_backup_map_raster = parameters.get_bool_parameters_None_if_absence(area_ini,'b_backup_map_raster')
+            if b_backup_map_raster is True:
+                if map_raster_list_2d[area_idx] is not None:
+                    for map_tif in map_raster_list_2d[area_idx]:
+                        bak_map_tif = os.path.join(backup_dir_area,os.path.basename(map_tif))
+                        io_function.copy_file_to_dst(map_tif,bak_map_tif,overwrite=True)
 
             region_eva_reports[shp_pre] = bak_eva_report
 
