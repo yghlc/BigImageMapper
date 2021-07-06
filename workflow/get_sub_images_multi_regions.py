@@ -60,6 +60,46 @@ def get_subImage_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodat
     if res != 0:
         sys.exit(1)
 
+def copy_subImages_labels_directly(subImage_dir,subLabel_dir,area_ini):
+
+    input_image_dir = parameters.get_directory_None_if_absence(area_ini, 'input_image_dir')
+    # it is ok consider a file name as pattern and pass it the following functions to get file list
+    input_image_or_pattern = parameters.get_string_parameters(area_ini, 'input_image_or_pattern')
+
+    # label raster folder
+    label_raster_dir = parameters.get_string_parameters(area_ini, 'label_raster_dir')
+    sub_images_list = []
+    label_path_list = []
+
+    sub_images = io_function.get_file_list_by_pattern(input_image_dir,input_image_or_pattern)
+    for sub_img in sub_images:
+        # find the corresponding label raster
+        label_name = io_function.get_name_by_adding_tail(os.path.basename(sub_img),'label')
+        label_path = os.path.join(label_raster_dir,label_name)
+        if os.path.isfile(label_path):
+            sub_images_list.append(sub_img)
+            label_path_list.append(label_path)
+        else:
+            print('Warning, cannot find label for %s in %s'%(sub_img,label_raster_dir))
+
+
+    # copy sub-images, adding to txt files
+    with open('sub_images_labels_list.txt','a') as f_obj:
+        for tif_path, label_file in zip(sub_images_list, label_path_list):
+            if label_file is None:
+                continue
+            dst_subImg = os.path.join(subImage_dir, os.path.basename(tif_path))
+
+            # copy sub-images
+            io_function.copy_file_to_dst(tif_path,dst_subImg, overwrite=True)
+
+            dst_label_file = os.path.join(subLabel_dir, os.path.basename(label_file))
+            io_function.copy_file_to_dst(label_file, dst_label_file, overwrite=True)
+
+            sub_image_label_str = dst_subImg + ":" + dst_label_file + '\n'
+            f_obj.writelines(sub_image_label_str)
+
+
 def get_sub_images_multi_regions(para_file):
 
     print("extract sub-images and sub-labels for a given shape file (training polygons)")
@@ -99,6 +139,7 @@ def get_sub_images_multi_regions(para_file):
         input_image_or_pattern = parameters.get_string_parameters(area_ini, 'input_image_or_pattern')
 
         b_sub_images_json = parameters.get_bool_parameters_None_if_absence(area_ini,'b_sub_images_json')
+        b_label_raster_aval = parameters.get_bool_parameters_None_if_absence(area_ini,'b_label_raster_aval')
         if b_sub_images_json is True:
             # copy sub-images, then covert json files to label images.
             object_names = parameters.get_string_list_parameters(para_file,'object_names')
@@ -106,6 +147,10 @@ def get_sub_images_multi_regions(para_file):
                                                         b_no_label_image=b_no_label_image,process_num=process_num)
 
             pass
+        elif b_label_raster_aval is True:
+            # copy the label raster and images directly.
+            copy_subImages_labels_directly(subImage_dir,subLabel_dir,area_ini)
+
         else:
 
             all_train_shp = parameters.get_file_path_parameters_None_if_absence(area_ini, 'training_polygons')

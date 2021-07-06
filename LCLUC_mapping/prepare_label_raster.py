@@ -50,7 +50,12 @@ def crop_resample_label_raster():
     label_path = os.path.join(data_dir, 'LCLUC_MapBiomas_Gabriel/COLECAO_5_DOWNLOADS_COLECOES_ANUAL_2019_merge_prj.tif')
 
     # crop and resample
-    resample_crop_raster(img_path,label_path)
+    label_sub = resample_crop_raster(img_path,label_path)
+
+    # rename the label raster
+    new_label_img = io_function.get_name_by_adding_tail(os.path.basename(img_path),'label')
+    io_function.move_file_to_dst(label_sub,new_label_img)
+
 
 
 
