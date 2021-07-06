@@ -9,6 +9,7 @@ add time: 25 December, 2019
 modified on 19 January, 2021
 """
 
+import io
 import os,sys
 from optparse import OptionParser
 
@@ -67,9 +68,14 @@ def copy_subImages_labels_directly(subImage_dir,subLabel_dir,area_ini):
     input_image_or_pattern = parameters.get_string_parameters(area_ini, 'input_image_or_pattern')
 
     # label raster folder
-    label_raster_dir = parameters.get_string_parameters(area_ini, 'label_raster_dir')
+    label_raster_dir = parameters.get_directory_None_if_absence(area_ini, 'label_raster_dir')
     sub_images_list = []
     label_path_list = []
+
+    if os.path.isdir(subImage_dir) is False:
+        io_function.mkdir(subImage_dir)
+    if os.path.isdir(subLabel_dir) is False:
+        io_function.mkdir(subLabel_dir)
 
     sub_images = io_function.get_file_list_by_pattern(input_image_dir,input_image_or_pattern)
     for sub_img in sub_images:
