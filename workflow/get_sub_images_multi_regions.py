@@ -189,9 +189,9 @@ def get_sub_images_multi_regions(para_file):
     io_function.mkdir(subImage_dir_delete)
     if b_no_label_image is None or b_no_label_image is False:
         io_function.mkdir(subLabel_dir_delete)
-    get_valid_percent_entropy.plot_valid_entropy(subImage_dir)
     b_check_sub_image_quality = parameters.get_bool_parameters_None_if_absence(para_file,'b_check_sub_image_quality')
     if b_check_sub_image_quality is True:
+        get_valid_percent_entropy.plot_valid_entropy(subImage_dir)
         with open('sub_images_labels_list.txt','r') as f_obj:
             lines = f_obj.readlines()
             for line in lines:
