@@ -24,6 +24,7 @@ import datasets.raster_io as raster_io
 import time
 
 import datasets.get_subImages_json as get_subImages_json
+import datasets.rasterize_polygons as rasterize_polygons
 
 def get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
                                   input_image_dir, file_pattern = None, process_num=1):
@@ -146,6 +147,7 @@ def get_sub_images_multi_regions(para_file):
 
         b_sub_images_json = parameters.get_bool_parameters_None_if_absence(area_ini,'b_sub_images_json')
         b_label_raster_aval = parameters.get_bool_parameters_None_if_absence(area_ini,'b_label_raster_aval')
+        b_polygons_for_entire_scene = parameters.get_bool_parameters_None_if_absence(area_ini,'b_polygons_for_entire_scene')
         if b_sub_images_json is True:
             # copy sub-images, then covert json files to label images.
             object_names = parameters.get_string_list_parameters(para_file,'object_names')
@@ -156,6 +158,13 @@ def get_sub_images_multi_regions(para_file):
         elif b_label_raster_aval is True:
             # copy the label raster and images directly.
             copy_subImages_labels_directly(subImage_dir,subLabel_dir,area_ini)
+        elif b_polygons_for_entire_scene is True:
+            # get label raster for entire scenes (not extract sub-images) by using rasterizing
+            input_polygon_dir = parameters.get_string_parameters(area_ini, 'input_polygon_dir')
+            input_polygon_or_pattern = parameters.get_string_parameters(area_ini,'input_polygon_or_pattern')
+            rasterize_polygons.get_subimages_SpaceNet(input_image_dir,input_image_or_pattern,input_polygon_dir,input_polygon_or_pattern,subImage_dir,
+                                                      subLabel_dir,burn_value=1)
+            pass
 
         else:
 

@@ -18,6 +18,7 @@ from optparse import OptionParser
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 
+import basic_src.basic as basic
 import basic_src.io_function as io_function
 
 import rasterio
@@ -27,6 +28,78 @@ from rasterio.features import rasterize
 
 sys.path.insert(0, os.path.join(code_dir,'datasets'))
 from get_subImages import get_projection_proj4
+
+def find_corresponding_geojson_SpaceNet(tif_path, geojson_list, geojson_name_list):
+    img_name = os.path.basename(tif_path)
+    temp_list = os.path.splitext(img_name)[0].split('_')[1:]
+    com_name = '_'.join(temp_list)
+    # find string like: "AOI_2_Vegas_img4491"
+    for g_name, g_path in zip(geojson_name_list,geojson_list):
+        if com_name in g_name:
+            return g_path
+
+    return None
+
+
+def get_subimages_SpaceNet(input_image_dir,image_pattern,input_polygon_dir, polygon_pattern, subImage_dir,subLabel_dir,process_num=1,
+                           burn_value=1, b_no_label_image=False):
+
+    sub_images_list = io_function.get_file_list_by_pattern(input_image_dir, image_pattern)
+    if len(sub_images_list) < 1:
+        basic.outputlogMessage('No sub-images in: %s with pattern: %s'%(input_image_dir, image_pattern))
+        return False
+
+    sub_images_count = len(sub_images_list)
+    # do we need to check the projection of each sub-images?
+
+    if os.path.isdir(subLabel_dir) is False:
+        io_function.mkdir(subLabel_dir)
+    if os.path.isdir(subImage_dir) is False:
+        io_function.mkdir(subImage_dir)
+
+    label_path_list = []
+    if b_no_label_image is True:
+        pass
+    else:
+        # polygon file list
+        polygon_files_list = io_function.get_file_list_by_pattern(input_polygon_dir, polygon_pattern)
+        if len(polygon_files_list) < 1:
+            basic.outputlogMessage('No polygon files in: %s with pattern: %s' % (input_polygon_dir, polygon_pattern))
+            return False
+
+        polygon_name_list = [os.path.basename(item) for item in polygon_files_list ]
+
+        # create label images
+        for idx, tif_path in enumerate(sub_images_list):
+            print('%d / %d create label raster for %s'%(idx,sub_images_count,tif_path))
+            # find polygon file
+            poly_path = find_corresponding_geojson_SpaceNet(tif_path,polygon_files_list, polygon_name_list)
+            if poly_path is None:
+                print('Warning, cannot find corresponding polygon files')
+                continue
+
+            save_path = os.path.join(subLabel_dir, io_function.get_name_no_ext(poly_path) + '.tif')
+            if rasterize_polygons_to_ref_raster(tif_path, poly_path, burn_value, None, save_path,
+                                             datatype='Byte', ignore_edge=True) is True:
+                label_path_list.append(save_path)
+
+    # copy sub-images, adding to txt files
+    with open('sub_images_labels_list.txt','a') as f_obj:
+        for tif_path, label_file in zip(sub_images_list, label_path_list):
+            if label_file is None:
+                continue
+            dst_subImg = os.path.join(subImage_dir, os.path.basename(tif_path))
+
+            # copy sub-images
+            io_function.copy_file_to_dst(tif_path,dst_subImg, overwrite=True)
+
+            sub_image_label_str = dst_subImg + ":" + label_file + '\n'
+            f_obj.writelines(sub_image_label_str)
+
+    return True
+
+
+
 
 def rasterize_polygons_to_ref_raster(ref_raster, poly_path, burn_value, attribute_name, save_path, datatype='Byte',ignore_edge=True):
     '''
