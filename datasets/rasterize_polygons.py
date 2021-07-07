@@ -159,13 +159,17 @@ def rasterize_polygons_to_ref_raster(ref_raster, poly_path, burn_value, attribut
                 xres, yres = src.res
                 outer_list = [poly.buffer(2 *xres) for poly in polygons]
                 inner_list = [poly.buffer(-2 *xres) for poly in polygons]
-
-                # rasterize the outer
-                burn_shapes = [(item_shape, 255) for item_shape in outer_list]
-                out_label = rasterize(burn_shapes, out=burn_out, transform=transform, fill=0, all_touched=False, dtype=dtype)
-                # rasterize the inner  parts
-                burn_shapes = [(item_shape, item_class_int) for (item_shape, item_class_int) in zip(inner_list, class_labels)]
-                out_label = rasterize(burn_shapes, out=out_label, transform=transform, fill=0, all_touched=False, dtype=dtype)
+                # after negative buffer, some small polygons may be deleted, need to check
+                inner_list = [ item for item in inner_list if item.is_valid ]
+                if len(inner_list) > 0:
+                    # rasterize the outer
+                    burn_shapes = [(item_shape, 255) for item_shape in outer_list]
+                    out_label = rasterize(burn_shapes, out=burn_out, transform=transform, fill=0, all_touched=False, dtype=dtype)
+                    # rasterize the inner  parts
+                    burn_shapes = [(item_shape, item_class_int) for (item_shape, item_class_int) in zip(inner_list, class_labels)]
+                    out_label = rasterize(burn_shapes, out=out_label, transform=transform, fill=0, all_touched=False, dtype=dtype)
+                else:
+                    print('After negative buffer operation, there is no polygon valid for rasterizing')
         else:
             print('Warning, no Polygon in %s, will save a dark label'%poly_path)
 
