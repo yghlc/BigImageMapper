@@ -79,6 +79,10 @@ def get_subimages_SpaceNet(input_image_dir,image_pattern,input_polygon_dir, poly
                 continue
 
             save_path = os.path.join(subLabel_dir, io_function.get_name_no_ext(poly_path) + '.tif')
+            if os.path.isfile(save_path):
+                print('warning, %s already exists, skip')
+                label_path_list.append(save_path)
+                continue
             if rasterize_polygons_to_ref_raster(tif_path, poly_path, burn_value, None, save_path,
                                              datatype='Byte', ignore_edge=True) is True:
                 label_path_list.append(save_path)
