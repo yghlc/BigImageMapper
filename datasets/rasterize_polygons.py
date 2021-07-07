@@ -34,8 +34,9 @@ def find_corresponding_geojson_SpaceNet(tif_path, geojson_list, geojson_name_lis
     temp_list = os.path.splitext(img_name)[0].split('_')[1:]
     com_name = '_'.join(temp_list)
     # find string like: "AOI_2_Vegas_img4491"
+    com_name = com_name + '.geojson'
     for g_name, g_path in zip(geojson_name_list,geojson_list):
-        if com_name in g_name:
+        if g_name.endswith(com_name):
             return g_path
 
     return None
@@ -95,7 +96,7 @@ def get_subimages_SpaceNet(input_image_dir,image_pattern,input_polygon_dir, poly
             dst_subImg = os.path.join(subImage_dir, os.path.basename(tif_path))
 
             # copy sub-images
-            io_function.copy_file_to_dst(tif_path,dst_subImg, overwrite=True)
+            io_function.copy_file_to_dst(tif_path,dst_subImg, overwrite=False)
 
             sub_image_label_str = dst_subImg + ":" + label_file + '\n'
             f_obj.writelines(sub_image_label_str)
