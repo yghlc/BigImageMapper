@@ -19,17 +19,28 @@ for year in $(seq 1985 2019); do
   echo $year
 
   # these two *-2019.tif is large and require a lot of memory, need to run on Tesia
-
-  gdal_merge.py -o COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge.tif -n ${nodata} -a_nodata ${nodata} -co compress=lzw  \
+  if [ -f COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge.tif ]; then
+    echo COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge.tif exists
+  else
+    gdal_merge.py -o COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge.tif -n ${nodata} -a_nodata ${nodata} -co compress=lzw  \
           PAMPA_1985-2019/*-${year}.tif   MATAATLANTICA_1985-2019/*-${year}.tif
+  fi
 
   # reprojection
-  gdalwarp -t_srs ${t_prj} -co compress=lzw  COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge.tif \
+  if [ -f COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj.tif ]; then
+    echo COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj.tif exists
+  else
+    gdalwarp -t_srs ${t_prj} -co compress=lzw  COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge.tif \
           COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj.tif
+  fi
 
   # crop
-  gdalwarp -co compress=lzw  -cutline ${crop_shp} -crop_to_cutline  \
-  COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj.tif COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj_crop.tif
+  if [ -f COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj_crop.tif ]; then
+    echo COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj_crop.tif exists
+  else
+    gdalwarp -co compress=lzw  -cutline ${crop_shp} -crop_to_cutline  \
+    COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj.tif COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj_crop.tif
+  fi
 
 done
 
