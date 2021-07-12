@@ -1,0 +1,44 @@
+1	#1299122	2	#1299122 L ; Froest
+2	#1F4423	3	#1F4423	L  ; Natural Forest
+3	#006400	4	#006400	L  ; Forest Formation
+4	#32CD32	5	#32CD32	L  ; Savanna Formation
+5	#687537	6	#687537	L  ; Mangrove
+6	white	7	white	L
+7	white	8	white	L
+8	white	9	white	L
+9	#935132	10	#935132	L ; Forest Plantation
+10	#BBFCAC	11	#BBFCAC	L ; Non Forest Natural Formation
+11	#45C2A5	12	#45C2A5	L ; Wetland
+12	#B8AF4F	13	#B8AF4F	L ; Grassland
+13	#BDB76B	14	#BDB76B	L ; Other non Forest Formations
+14	#FFFFB2	15	#FFFFB2	L ; Farming
+15	#FFD966	16	#FFD966	L ; Pasture
+16	white	17	white	L
+17	white	18	white	L
+18	#E974ED	19	#E974ED	L ; Agriculture
+19	#D5A6BD	20	#D5A6BD	L ; Temporary Crop
+20	#C27BA0	21	#C27BA0	L ; Sugar Cane
+21	#fff3bf	22	#fff3bf	L ; Mosaic of Agriculture and Pasture
+22	#EA9999	23	#EA9999	L ; Non vegetated area
+23	#DD7E6B	24	#DD7E6B	L ; Beach and Dune
+24	#aa0000	25	#aa0000	L ; Urban Infrastructure
+25	#FF99FF	26	#FF99FF	L ; Other Non Vegetated Areas
+26	#0000FF	27	#0000FF	L ; Water
+27	#D5D5E5	28	#D5D5E5	L ; Non Observed
+28	white	29	white	L
+29	#FF8C00	30	#FF8C00	L ; Rocky Outcrop
+30	#af2a2a	31	#af2a2a	L ; Mining
+31	#29EEE4	32	#29EEE4	L ; Aquaculture
+32	#968c46	33	#968c46	L ; Salt Flat
+33	#0000FF	34	#0000FF	L ; River, Lake and Ocean
+34	white	35	white	L
+35	white	36	white	L
+36	#f3b4f1	37	#f3b4f1	L ; Perennial Crop
+37	white	38	white	L
+38	white	39	white	L
+39	#C59ff4	40	#C59ff4	L ; Soy bean
+40	white	41	white	L
+41	#E787f8	42	#E787f8	B ; Other Temporary Crops
+B	0/0/0
+F	255/0/0
+N	white
