@@ -20,18 +20,18 @@ img_dir=~/Data/LandCover_LandUse_Change/LCLUC_MapBiomas_Gabriel
 #ymax=6849079
 
 
-# for dam1_surrounding
-xmin=-3756
-xmax=18132
-ymin=6713740
-ymax=6731993
+## for dam1_surrounding
+#xmin=-3756
+#xmax=18132
+#ymin=6713740
+#ymax=6731993
 
 
-## for dam2_surrounding
-#xmin=-25190
-#xmax=-126
-#ymin=6634467
-#ymax=6654893
+# for dam2_surrounding
+xmin=-25190
+xmax=-126
+ymin=6634467
+ymax=6654893
 
 
 function crop_img(){
@@ -86,8 +86,8 @@ for year in $(seq 1985 2019); do
   map_tif=${img_dir}/COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj_crop.tif
 
 #  plot_LCLU_map ${map_tif} $year area1
-  plot_LCLU_map ${map_tif} $year dam1_surr
-#  plot_LCLU_map ${map_tif} $year dam2_surr
+#  plot_LCLU_map ${map_tif} $year dam1_surr
+  plot_LCLU_map ${map_tif} $year dam2_surr
 
 
 done
