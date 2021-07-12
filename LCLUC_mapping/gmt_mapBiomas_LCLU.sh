@@ -74,27 +74,28 @@ function plot_LCLU_map(){
 #    gmt legend -Dn0.9/0.12  #${year}.nc
 
     # draw colorbar
-    gmt colorbar -CcolorMapBiomas.cpt -B
+    # -D set color location, J: outsie map, j: inside map, MR: map right, +v: be vertical
+    gmt colorbar -CcolorMapBiomas.cpt -DJMR+v  -Li  #-B #--MAP_ANNOT_ORTHO=90
 
 
-  gmt end #show
+  gmt end show
 
 }
 
-for year in $(seq 1985 2019); do
-  echo $year
-  map_tif=${img_dir}/COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj_crop.tif
+#for year in $(seq 1985 2019); do
+#  echo $year
+#  map_tif=${img_dir}/COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj_crop.tif
+#
+##  plot_LCLU_map ${map_tif} $year area1
+##  plot_LCLU_map ${map_tif} $year dam1_surr
+#  plot_LCLU_map ${map_tif} $year dam2_surr
+#
+#
+#done
 
-#  plot_LCLU_map ${map_tif} $year area1
-#  plot_LCLU_map ${map_tif} $year dam1_surr
-  plot_LCLU_map ${map_tif} $year dam2_surr
-
-
-done
-
-#year=2019
-#map_tif=${img_dir}/COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj_crop.tif
-#plot_LCLU_map ${map_tif} $year area1
+year=2019
+map_tif=${img_dir}/COLECAO_5_DOWNLOADS_COLECOES_ANUAL_${year}_merge_prj_crop.tif
+plot_LCLU_map ${map_tif} $year area1
 
 
 rm *.nc
