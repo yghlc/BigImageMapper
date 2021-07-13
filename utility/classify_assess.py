@@ -53,6 +53,11 @@ def pixel_accuracy_assessment(label_image,classified_results, no_data=255):
     label_1d = np.delete(label_1d,back_ground_index)
     classified_results_1d = np.delete(classified_results_1d, back_ground_index)
 
+    # also remove nodata pixel in classified_results
+    no_data_loc_index = np.where(classified_results_1d==no_data)
+    label_1d = np.delete(label_1d,no_data_loc_index)
+    classified_results_1d = np.delete(classified_results_1d, no_data_loc_index)
+
     accuracy = metrics.accuracy_score(label_1d,classified_results_1d,normalize=True)*100
 
     print("accuracy: %.2f %%"%accuracy)
