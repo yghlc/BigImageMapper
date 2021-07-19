@@ -42,6 +42,7 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         res  = os.system(command_string)
         if res != 0:
             # sys.exit(1)
+            os.chdir(curr_dir)
             return None, None
 
     # to shapefile
