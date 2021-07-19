@@ -41,7 +41,8 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         command_string = 'gdal_merge.py  -init 0 -n 0 -a_nodata 0 -o ' + merged_tif + ' I0_*.tif'
         res  = os.system(command_string)
         if res != 0:
-            sys.exit(1)
+            # sys.exit(1)
+            return None, None
 
     # to shapefile
     out_shp = 'I%d'%img_idx + '_' + out_name + '.shp'
@@ -184,6 +185,8 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
                 map_raster_list = []
                 for img_idx, img_path in enumerate(inf_img_list):
                     out_shp, out_raster = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
+                    if out_shp is None or out_raster is None:
+                        continue
                     result_shp_list.append(os.path.join(WORK_DIR,out_shp))
                     map_raster_list.append(out_raster)
                 # merge shapefiles
