@@ -311,30 +311,33 @@ def inf_remoteSensing_image(model,image_path=None):
             multi_images = np.stack(multi_image_data, axis=0)
 
             # inference them
-            a_batch_seg_map = model.run_rsImg_multi_patches(multi_images)
+            try:
+                a_batch_seg_map = model.run_rsImg_multi_patches(multi_images)
 
-            #save
-            for num,(seg_map,img_patch) in enumerate(zip(a_batch_seg_map,a_batch_of_patches)):
+                #save
+                for num,(seg_map,img_patch) in enumerate(zip(a_batch_seg_map,a_batch_of_patches)):
 
-                # ignore the duplicated ones
-                if num >= org_patch_num:
-                    break
+                    # ignore the duplicated ones
+                    if num >= org_patch_num:
+                        break
 
-                print('Save segmentation result of Image:%d patch:%5d (total:%d), shape:(%d,%d)' %
-                      (img_idx, idx, patch_num, seg_map.shape[0], seg_map.shape[1]))
+                    print('Save segmentation result of Image:%d patch:%5d (total:%d), shape:(%d,%d)' %
+                          (img_idx, idx, patch_num, seg_map.shape[0], seg_map.shape[1]))
 
-                # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
-                file_name = "I%d_%d" % (img_idx, idx)
+                    # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
+                    file_name = "I%d_%d" % (img_idx, idx)
 
-                save_path = os.path.join(FLAGS.inf_output_dir, file_name + '.tif')
-                # if os.path.isfile(save_path):
-                #     print('already exist, skip')
-                #     idx += 1
-                #     continue
-                if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
-                    return False
+                    save_path = os.path.join(FLAGS.inf_output_dir, file_name + '.tif')
+                    # if os.path.isfile(save_path):
+                    #     print('already exist, skip')
+                    #     idx += 1
+                    #     continue
+                    if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
+                        return False
 
-                idx += 1
+                    idx += 1
+            except:
+                print('\nPrediction Error for multi_images with shape:%s \n\n'% str(multi_images.shape))
 
         # # inference patches one by one, but it is too slow
         # # Oct 30,2018
