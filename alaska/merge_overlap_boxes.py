@@ -58,16 +58,23 @@ def merge_based_gdal_rasterize(in_shp):
     os.system(command_str)
 
     # polygons
-    out_shp = io_function.get_name_by_adding_tail(in_shp,'merged_2')
+    out_shp = os.path.basename(io_function.get_name_by_adding_tail(in_shp,'merged_2'))
     command_string = 'gdal_polygonize.py -8 %s -b 1 -f "ESRI Shapefile" %s' % (out_tif, out_shp)
     print(command_string)
     os.system(command_str)
 
 
 def main():
-    dir = os.path.expanduser('~/Data/Arctic/alaska/autoMapping/alaskaNS_yolov4_2/result_backup/alaska_north_slope_hillshade_2010to2017_alaskaNS_yolov4_2_exp2_1')
-    in_shp = os.path.join(dir,'alaska_north_slope_hillshade_2010to2017_alaskaNS_yolov4_2_exp2_post_1.shp')
+    # result of exp2
+    # dir = os.path.expanduser('~/Data/Arctic/alaska/autoMapping/alaskaNS_yolov4_2/result_backup/alaska_north_slope_hillshade_2010to2017_alaskaNS_yolov4_2_exp2_1')
+    # in_shp = os.path.join(dir,'alaska_north_slope_hillshade_2010to2017_alaskaNS_yolov4_2_exp2_post_1.shp')
+
     # merge_based_on_adjacent_matrix(in_shp)
+
+    # result of exp1
+    dir = os.path.expanduser('~/Data/Arctic/alaska/autoMapping/alaskaNS_yolov4_1/result_backup/alaska_north_slope_hillshade_2010to2017_alaskaNS_yolov4_1_exp1_1')
+    in_shp = os.path.join(dir,'alaska_north_slope_hillshade_2010to2017_alaskaNS_yolov4_1_exp1_post_1.shp')
+
 
     merge_based_gdal_rasterize(in_shp)
 
