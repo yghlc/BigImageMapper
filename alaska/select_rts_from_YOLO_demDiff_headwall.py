@@ -100,25 +100,20 @@ def merge_polygon_for_demDiff_headwall_grids(dem_subsidence_shp, headwall_shp_li
     tree = STRtree(headwall_all_list)
 
     subsidence_buff_list = [item.buffer(buffer_size) for item in subsidence_list]
-    select_subsidence = []
-    for subsi, subsi_buff in zip(subsidence_list,subsidence_buff_list):
+    select_idx = []
+    for idx, subsi_buff in enumerate(subsidence_buff_list):
 
         adjacent_polygons = [item for item in tree.query(subsi_buff) if
                              item.intersects(subsi_buff) or item.touches(subsi_buff)]
         if len(adjacent_polygons) > 0:
-            select_subsidence.append(subsi)
+            select_idx.append(idx)
 
-    # save to file
-    save_polyons_attributes = {}
-    save_polyons_attributes["Polygons"] = select_subsidence
-    polygon_df = pd.DataFrame(save_polyons_attributes)
 
-    basic.outputlogMessage('Select %d polygons from % ones'%(len(select_subsidence), len(subsidence_list)))
 
-    wkt_string = map_projection.get_raster_or_vector_srs_info_wkt(dem_subsidence_shp)
+    basic.outputlogMessage('Select %d polygons from % ones'%(len(select_idx), len(subsidence_list)))
 
-    basic.outputlogMessage('saved to %s' % output)
-    if vector_gpd.save_polygons_to_files(polygon_df, 'Polygons', wkt_string, output) is True:
+    # save to subset of shaepfile
+    if vector_gpd.save_shapefile_subset_as(select_idx,dem_subsidence_shp,output) is True:
         return output
 
 
