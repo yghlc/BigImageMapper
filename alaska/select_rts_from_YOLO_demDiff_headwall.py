@@ -184,7 +184,7 @@ def main(options, args):
     grid_polys, grid_ids = get_grid_20(extent_shp_or_ids_txt, all_grid_polys, all_ids)
 
     # check dem difference existence
-    grid_rts_shps, grid_id_no_rts_shp = get_existing_select_grid_rts(grid_dem_headwall_shp_dir,grid_base_name, grid_ids)
+    grid_rts_shps, grid_id_no_rts_shp = get_existing_select_grid_rts(grid_rts_shp_dir,grid_base_name, grid_ids)
 
     if len(grid_id_no_rts_shp) > 0:
         # refine grid_polys
