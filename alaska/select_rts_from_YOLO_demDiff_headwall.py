@@ -55,9 +55,9 @@ def get_existing_select_grid_rts(rts_shp_dir, grid_base_name, grid_ids):
 
         grid_id_no_rts_shp.append(id)
     if len(existing_grid_rts_shp) > 0:
-        basic.outputlogMessage('%d existing grid headwall shps for the input grid_ids or extent'%len(existing_grid_rts_shp))
+        basic.outputlogMessage('%d existing grid select RTS shps for the input grid_ids or extent'%len(existing_grid_rts_shp))
     else:
-        basic.outputlogMessage('no existing grid headwall shps')
+        basic.outputlogMessage('no existing grid select RTS shps')
     return existing_grid_rts_shp, grid_id_no_rts_shp
 
 
