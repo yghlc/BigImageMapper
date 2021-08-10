@@ -33,7 +33,7 @@ from dem_common import grid_20_shp, grid_dem_diffs_segment_dir, grid_dem_headwal
 
 from produce_DEM_diff_ArcticDEM import get_grid_20
 
-
+from multiprocessing import Pool
 
 def get_existing_select_grid_rts(rts_shp_dir, grid_base_name, grid_ids):
 
@@ -117,34 +117,50 @@ def merge_polygon_for_demDiff_headwall_grids(dem_subsidence_shp, headwall_shp_li
         return output
 
 
+def select_rts_one_grid(mapping_res_dir, dem_subsidence_dir, grid_headwall_dir,grid_id,grid_poly):
+    # find subsidence results
+    dem_subsidence_shp = find_results_for_one_grid_id(dem_subsidence_dir, 'segment_result_grid%d' % grid_id,
+                                                      '*_post.shp',
+                                                      grid_id, grid_poly, description='dem_subsidence')
+    if dem_subsidence_shp is None:
+        return None
+
+    # find headwall results
+    headwall_shp_list = find_results_for_one_grid_id(grid_headwall_dir, 'headwall_shps_grid%d' % grid_id, '*.shp',
+                                                     grid_id, grid_poly, description='headwall')
+    if headwall_shp_list is None:
+        return None
+
+    # merge the results of these two
+    output_dir = os.path.join(grid_dem_subsidence_select, 'subsidence_grid%d' % grid_id)
+    if os.path.isdir(output_dir) is False:
+        io_function.mkdir(output_dir)
+    subsidence_poly_select_shp = merge_polygon_for_demDiff_headwall_grids(dem_subsidence_shp, headwall_shp_list,
+                                                                          output_dir)
+    # find the mapping results
+
+
+    return subsidence_poly_select_shp
+
 
 def select_rts_map_demDiff_headwall_grids(mapping_res_dir, dem_subsidence_dir, grid_headwall_dir, grid_polys, grid_ids, pre_name, process_num=1):
     ''' to select RTS from mapping results, dem subsidence, and headwall '''
 
-    # select rts polygons one by oen
-    for grid_id, grid_poly in zip(grid_ids, grid_polys):
+    if process_num==1:
+        # select rts polygons one by oen
+        for grid_id, grid_poly in zip(grid_ids, grid_polys):
+            select_poly_shp = select_rts_one_grid(mapping_res_dir, dem_subsidence_dir, grid_headwall_dir, grid_id, grid_poly)
+            if select_poly_shp is None:
+                continue
 
-        # find subsidence results
-        dem_subsidence_shp = find_results_for_one_grid_id(dem_subsidence_dir,'segment_result_grid%d'%grid_id,'*_post.shp',
-                                                          grid_id, grid_poly,description='dem_subsidence')
-        if dem_subsidence_shp is None:
-            continue
+    elif process_num > 1:
+        theadPool = Pool(process_num)
+        parameters_list = [(mapping_res_dir, dem_subsidence_dir, grid_headwall_dir, grid_id, grid_poly)
+                           for grid_id, grid_poly in zip(grid_ids, grid_polys)]
+        results = theadPool.starmap(select_rts_one_grid, parameters_list)
+    else:
+        raise ValueError('wrong process_num: %s'%str(process_num))
 
-        # find headwall results
-        headwall_shp_list = find_results_for_one_grid_id(grid_headwall_dir, 'headwall_shps_grid%d'%grid_id,'*.shp',
-                                                     grid_id, grid_poly,description='headwall')
-        if headwall_shp_list is None:
-            continue
-
-        # merge the results of these two
-        output_dir = os.path.join(grid_dem_subsidence_select, 'subsidence_grid%d'%grid_id)
-        if os.path.isdir(output_dir) is False:
-            io_function.mkdir(output_dir)
-        subsidence_poly_select_shp = merge_polygon_for_demDiff_headwall_grids(dem_subsidence_shp,headwall_shp_list,output_dir)
-
-
-
-    # find the mapping results
 
     pass
 
