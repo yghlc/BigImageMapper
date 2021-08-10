@@ -110,7 +110,10 @@ def merge_polygon_for_demDiff_headwall_grids(dem_subsidence_shp, headwall_shp_li
 
 
 
-    basic.outputlogMessage('Select %d polygons from % ones'%(len(select_idx), len(subsidence_list)))
+    basic.outputlogMessage('Select %d polygons from %d ones'%(len(select_idx), len(subsidence_list)))
+
+    if len(select_idx) < 1:
+        return None
 
     # save to subset of shaepfile
     if vector_gpd.save_shapefile_subset_as(select_idx,dem_subsidence_shp,output) is True:
@@ -137,6 +140,8 @@ def select_rts_one_grid(mapping_res_dir, dem_subsidence_dir, grid_headwall_dir,g
         io_function.mkdir(output_dir)
     subsidence_poly_select_shp = merge_polygon_for_demDiff_headwall_grids(dem_subsidence_shp, headwall_shp_list,
                                                                           output_dir)
+    if subsidence_poly_select_shp is None:
+        return None
     # find the mapping results
 
 
