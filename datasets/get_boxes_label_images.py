@@ -92,8 +92,10 @@ def get_boxes_from_label_image(label_path,nodata=None):
 
 
 def test_get_boxes_from_label_image():
-    dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/multiArea_yolov4_1/split_labels')
-    label_path = os.path.join(dir, 'Banks_Island_mosaic_8bit_rgb_261_class_1_p_0.tif')
+    # dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/multiArea_yolov4_1/split_labels')
+    # label_path = os.path.join(dir, 'Banks_Island_mosaic_8bit_rgb_261_class_1_p_0.tif')
+    dir = os.path.expanduser('~/Data/temp/alaskaNS_yolov4_4/split_labels')
+    label_path = os.path.join(dir, 'hillshade_HDLine_grid10000_521_class_1_p_8.png')
     get_boxes_from_label_image(label_path)
 
 
