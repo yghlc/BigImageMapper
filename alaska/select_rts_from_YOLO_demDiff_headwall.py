@@ -302,6 +302,8 @@ def main(options, args):
         # processing the selection for two input shapefile
         yolo_box_shp = args[0]
         dem_subsidence_shp = args[1]
+        print('polygon group 1:',yolo_box_shp)
+        print('polygon group 2:',dem_subsidence_shp)
 
         if options.save_path is not None:
             save_path = options.save_path
@@ -340,6 +342,6 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(2)
 
-    print(options.b_grid)
+    print('process grid by grid?',options.b_grid)
 
     main(options, args)
