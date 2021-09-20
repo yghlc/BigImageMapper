@@ -286,6 +286,8 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
                 for img_idx, img_path in enumerate(inf_img_list):
                     out_shp = yolo_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, nms_overlap_thr, test_id)
                     if out_shp is not None:
+                        #TODO: remove some boxes based on DEM difference?
+
                         result_shp_list.append(os.path.join(WORK_DIR,out_shp))
                 # merge shapefiles
                 merge_shape_files(result_shp_list,merged_shp)
