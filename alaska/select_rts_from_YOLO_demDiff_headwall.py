@@ -80,12 +80,22 @@ def find_results_for_one_grid_id(root_dir, folder, pattern, grid_id, grid_poly, 
     if description == 'headwall':
         return shps
 
-def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path,save_path, buffer_size=0):
+def find_overlap_one_polygon(idx, poly, tree, count_group1):
+    if idx % 1000 == 0:
+        print(datetime.now(), '%d th / %d polygons' % (idx, count_group1))
+    adjacent_polygons = [item for item in tree.query(poly) if
+                         item.intersects(poly) or item.touches(poly)]
+    if len(adjacent_polygons) > 0:
+        return idx
+    return None
+
+def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path,save_path, buffer_size=0,process_num=1):
     '''
     select polygons in group 1 that that any polygons in group 2
     :param polys_group1_path:
     :param polys_group2_path:
     :param buffer_size:
+    :param process_num: it will take a lot of memory when using multiple processs
     :return:
     '''
     if os.path.isfile(save_path):
@@ -112,15 +122,25 @@ def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path
     # https://shapely.readthedocs.io/en/stable/manual.html#str-packed-r-tree
     tree = STRtree(polys_group2)
     select_idx = []
-    for idx, subsi_buff in enumerate(polys_group1):
-        # output progress
-        if idx%1000 == 0:
-            print(datetime.now(),'%d th / %d polygons'%(idx,count_group1))
+    if process_num == 1:
+        for idx, subsi_buff in enumerate(polys_group1):
+            # output progress
+            if idx%1000 == 0:
+                print(datetime.now(),'%d th / %d polygons'%(idx,count_group1))
 
-        adjacent_polygons = [item for item in tree.query(subsi_buff) if
-                             item.intersects(subsi_buff) or item.touches(subsi_buff)]
-        if len(adjacent_polygons) > 0:
-            select_idx.append(idx)
+            adjacent_polygons = [item for item in tree.query(subsi_buff) if
+                                 item.intersects(subsi_buff) or item.touches(subsi_buff)]
+            if len(adjacent_polygons) > 0:
+                select_idx.append(idx)
+    elif process_num > 1:
+        theadPool = Pool(process_num)
+        parameters_list = [(idx, poly, tree, count_group1) for idx, poly in enumerate(polys_group1)]
+        results = theadPool.starmap(find_overlap_one_polygon, parameters_list)
+        select_idx = [item for item in results if item is not None]
+        theadPool.close()
+    else:
+        raise ValueError('wrong process number: %s'%str(process_num))
+
 
     basic.outputlogMessage('Select %d polygons from %d ones' % (len(select_idx), count_group1))
 
@@ -227,7 +247,7 @@ def test_select_polygons_overlap_each_other():
 
 
     save_path = io_function.get_name_by_adding_tail(yolo_box_shp,'select')
-    select_polygons_overlap_others_in_group2(yolo_box_shp,dem_subsidence_shp,save_path)
+    select_polygons_overlap_others_in_group2(yolo_box_shp,dem_subsidence_shp,save_path, process_num=4)
 
 
 def test_merge_polygon_for_demDiff_headwall_grids():
@@ -244,51 +264,70 @@ def test_merge_polygon_for_demDiff_headwall_grids():
 
 def main(options, args):
 
-    extent_shp_or_ids_txt = args[0]
     process_num = options.process_num
-
-    yolo_result_dir = os.path.expanduser('~/Data/Arctic/alaska/autoMapping/alaskaNS_yolov4_1')
-    dem_subsidence_dir = grid_dem_diffs_segment_dir
-    grid_headwall_dir = grid_dem_headwall_shp_dir
-
     # perform the selection grid by grid
     basic.setlogfile('select_RTS_YOLO_demDiff_headwall_%s.txt' % timeTools.get_now_time_str())
 
 
-    # read grids and ids
-    time0 = time.time()
-    all_grid_polys, all_ids = vector_gpd.read_polygons_attributes_list(grid_20_shp, 'id')
-    print('time cost of read polygons and attributes', time.time() - time0)
 
-    # get grid ids based on input extent
-    grid_base_name = os.path.splitext(os.path.basename(extent_shp_or_ids_txt))[0]
-    grid_polys, grid_ids = get_grid_20(extent_shp_or_ids_txt, all_grid_polys, all_ids)
+    b_grid = options.b_grid
+    if b_grid:
+        # process the selection grid by grid
+        extent_shp_or_ids_txt = args[0]
+        yolo_result_dir = os.path.expanduser('~/Data/Arctic/alaska/autoMapping/alaskaNS_yolov4_1')
+        dem_subsidence_dir = grid_dem_diffs_segment_dir
+        grid_headwall_dir = grid_dem_headwall_shp_dir
 
-    # check dem difference existence
-    grid_rts_shps, grid_id_no_rts_shp = get_existing_select_grid_rts(grid_rts_shp_dir,grid_base_name, grid_ids)
+        # read grids and ids
+        time0 = time.time()
+        all_grid_polys, all_ids = vector_gpd.read_polygons_attributes_list(grid_20_shp, 'id')
+        print('time cost of read polygons and attributes', time.time() - time0)
 
-    if len(grid_id_no_rts_shp) > 0:
-        # refine grid_polys
-        if len(grid_ids) > len(grid_id_no_rts_shp):
-            id_index = [grid_ids.index(id) for id in grid_id_no_rts_shp]
-            grid_polys = [grid_polys[idx] for idx in id_index]
-        #
-        rts_shp_folders = select_rts_map_demDiff_headwall_grids(yolo_result_dir,dem_subsidence_dir,grid_headwall_dir,
-                                            grid_polys, grid_id_no_rts_shp, grid_base_name, process_num=process_num)
+        # get grid ids based on input extent
+        grid_base_name = os.path.splitext(os.path.basename(extent_shp_or_ids_txt))[0]
+        grid_polys, grid_ids = get_grid_20(extent_shp_or_ids_txt, all_grid_polys, all_ids)
 
+        # check dem difference existence
+        grid_rts_shps, grid_id_no_rts_shp = get_existing_select_grid_rts(grid_rts_shp_dir,grid_base_name, grid_ids)
 
+        if len(grid_id_no_rts_shp) > 0:
+            # refine grid_polys
+            if len(grid_ids) > len(grid_id_no_rts_shp):
+                id_index = [grid_ids.index(id) for id in grid_id_no_rts_shp]
+                grid_polys = [grid_polys[idx] for idx in id_index]
+            #
+            rts_shp_folders = select_rts_map_demDiff_headwall_grids(yolo_result_dir,dem_subsidence_dir,grid_headwall_dir,
+                                                grid_polys, grid_id_no_rts_shp, grid_base_name, process_num=process_num)
+    else:
+        # processing the selection for two input shapefile
+        yolo_box_shp = args[0]
+        dem_subsidence_shp = args[1]
 
+        if options.save_path is not None:
+            save_path = options.save_path
+        else:
+            save_path = io_function.get_name_by_adding_tail(yolo_box_shp, 'select')
+
+        select_polygons_overlap_others_in_group2(yolo_box_shp, dem_subsidence_shp, save_path, process_num=process_num)
 
     pass
 
 
 
 if __name__ == '__main__':
-    test_select_polygons_overlap_each_other()
-    sys.exit(0)
-    usage = "usage: %prog [options] extent_shp or grid_id_list.txt "
+    # test_select_polygons_overlap_each_other()
+    # sys.exit(0)
+    usage = "usage: %prog [options] extent_shp or grid_id_list.txt OR poly_path1 poly_path2 "
     parser = OptionParser(usage=usage, version="1.0 2021-3-6")
-    parser.description = 'Introduction: produce DEM difference from multiple temporal ArcticDEM  '
+    parser.description = 'Introduction: select mapping polygons by checking if it overlap with any polygons in another groups  '
+
+    parser.add_option("-g", "--b_grid",
+                      action="store_true", dest="b_grid", default=False,
+                      help="if True, then we will process the selection grid by grids")
+
+    parser.add_option("", "--save_path",
+                      action="store", dest="save_path",
+                      help="the path for saving file")
 
     parser.add_option("", "--process_num",
                       action="store", dest="process_num", type=int, default=4,
@@ -300,5 +339,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 2 or len(args) < 1:
         parser.print_help()
         sys.exit(2)
+
+    print(options.b_grid)
 
     main(options, args)
