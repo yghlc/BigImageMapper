@@ -133,11 +133,17 @@ def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path
             if len(adjacent_polygons) > 0:
                 select_idx.append(idx)
     elif process_num > 1:
-        theadPool = Pool(process_num)
-        parameters_list = [(idx, poly, tree, count_group1) for idx, poly in enumerate(polys_group1)]
-        results = theadPool.starmap(find_overlap_one_polygon, parameters_list)
-        select_idx = [item for item in results if item is not None]
-        theadPool.close()
+        # end in error:
+        # struct.error: 'i' format requires -2147483648 <= number <= 2147483647
+        # could be caused by too many polygons
+        raise ValueError("has error of struct.error: 'i' format requires -2147483648 <= number <= 2147483647, "
+                         "please use process=1")
+
+        # theadPool = Pool(process_num)
+        # parameters_list = [(idx, poly, tree, count_group1) for idx, poly in enumerate(polys_group1)]
+        # results = theadPool.starmap(find_overlap_one_polygon, parameters_list)
+        # select_idx = [item for item in results if item is not None]
+        # theadPool.close()
     else:
         raise ValueError('wrong process number: %s'%str(process_num))
 
