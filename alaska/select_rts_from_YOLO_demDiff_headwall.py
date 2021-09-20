@@ -15,6 +15,7 @@ from optparse import OptionParser
 machine_name = os.uname()[1]
 
 import time
+from datetime import datetime
 
 import pandas as pd
 
@@ -79,11 +80,60 @@ def find_results_for_one_grid_id(root_dir, folder, pattern, grid_id, grid_poly, 
     if description == 'headwall':
         return shps
 
+def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path,save_path, buffer_size=0):
+    '''
+    select polygons in group 1 that that any polygons in group 2
+    :param polys_group1_path:
+    :param polys_group2_path:
+    :param buffer_size:
+    :return:
+    '''
+    if os.path.isfile(save_path):
+        print('Warning, %s exists, skip'%(save_path))
+        return True
+
+    # check projections
+    shp1_prj = map_projection.get_raster_or_vector_srs_info_proj4(polys_group1_path)
+    shp2_prj = map_projection.get_raster_or_vector_srs_info_proj4(polys_group2_path)
+    if shp1_prj is False or shp2_prj is False:
+        return False
+    if shp1_prj != shp2_prj:
+        raise ValueError('%s and %s dont have the same projection'%(polys_group1_path,polys_group2_path))
+
+
+    polys_group1 = vector_gpd.read_polygons_gpd(polys_group1_path,b_fix_invalid_polygon=False)
+    if buffer_size > 0:
+        polys_group1 = [item.buffer(buffer_size) for item in polys_group1]
+    print(datetime.now(),'read %d polygons in group 1'%len(polys_group1))
+    polys_group2 = vector_gpd.read_polygons_gpd(polys_group2_path,b_fix_invalid_polygon=False)
+    print(datetime.now(), 'read %d polygons in group 2' % len(polys_group2))
+
+    count_group1 = len(polys_group1)
+    # https://shapely.readthedocs.io/en/stable/manual.html#str-packed-r-tree
+    tree = STRtree(polys_group2)
+    select_idx = []
+    for idx, subsi_buff in enumerate(polys_group1):
+        # output progress
+        if idx%1000 == 0:
+            print(datetime.now(),'%d th / %d polygons'%(idx,count_group1))
+
+        adjacent_polygons = [item for item in tree.query(subsi_buff) if
+                             item.intersects(subsi_buff) or item.touches(subsi_buff)]
+        if len(adjacent_polygons) > 0:
+            select_idx.append(idx)
+
+    basic.outputlogMessage('Select %d polygons from %d ones' % (len(select_idx), count_group1))
+
+    if len(select_idx) < 1:
+        return None
+
+    # save to subset of shaepfile
+    return vector_gpd.save_shapefile_subset_as(select_idx, polys_group1_path, save_path)
 
 
 def merge_polygon_for_demDiff_headwall_grids(dem_subsidence_shp, headwall_shp_list, output_dir, buffer_size=50):
 
-    output = os.path.join(output_dir, os.path.basename(io_function.get_name_by_adding_tail(dem_subsidence_shp,'HD_select')))
+    output = os.path.join(output_dir, os.path.basename(io_function.get_name_by_adding_tail(dem_subsidence_shp,'HW_select')))
     if os.path.isfile(output):
         print('warning, %s already exists'%output)
         return output
@@ -170,6 +220,16 @@ def select_rts_map_demDiff_headwall_grids(mapping_res_dir, dem_subsidence_dir, g
     pass
 
 
+def test_select_polygons_overlap_each_other():
+    yolo_box_shp= os.path.expanduser('~/Data/Arctic/alaska/autoMapping/alaskaNS_yolov4_4/result_backup/'
+                                     'alaNS_hillshadeHWline_2008to2017_alaskaNS_yolov4_4_exp4_1/alaNS_hillshadeHWline_2008to2017_alaskaNS_yolov4_4_exp4_post_1.shp')
+    dem_subsidence_shp = os.path.expanduser('~/Data/dem_processing/grid_dem_diffs_segment_subsidence.gpkg')
+
+
+    save_path = io_function.get_name_by_adding_tail(yolo_box_shp,'select')
+    select_polygons_overlap_others_in_group2(yolo_box_shp,dem_subsidence_shp,save_path)
+
+
 def test_merge_polygon_for_demDiff_headwall_grids():
     dem_subsidence_shp = os.path.expanduser('~/Data/tmp_data/segment_result_grid9999/ala_north_slo_extent_latlon_grid_ids_DEM_diff_grid9999_8bit_post_final.shp')
     headwall_shp_list = io_function.get_file_list_by_pattern(os.path.expanduser('~/Data/tmp_data/headwall_shps_grid9999'),
@@ -224,6 +284,8 @@ def main(options, args):
 
 
 if __name__ == '__main__':
+    test_select_polygons_overlap_each_other()
+    sys.exit(0)
     usage = "usage: %prog [options] extent_shp or grid_id_list.txt "
     parser = OptionParser(usage=usage, version="1.0 2021-3-6")
     parser.description = 'Introduction: produce DEM difference from multiple temporal ArcticDEM  '
