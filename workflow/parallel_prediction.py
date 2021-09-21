@@ -107,6 +107,15 @@ def b_all_task_finish(all_tasks):
             return False
     return True
 
+def close_remove_completed_task(all_tasks):
+    # close process to release resource, avoid error of "open too many files"
+    # will modify the list: all_tasks
+    for task in all_tasks:
+        if task.is_alive() is False:
+            task.close()
+            all_tasks.remove(task)
+
+
 def main(options, args):
 
     print("%s : prediction using the trained model (run parallel if use multiple GPUs) " % os.path.basename(sys.argv[0]))
@@ -230,6 +239,7 @@ def main(options, args):
             if sub_process.exitcode is not None and sub_process.exitcode !=0:
                 sys.exit(1)
 
+            close_remove_completed_task(sub_tasks)
             # if 'chpc' in machine_name:
             #     time.sleep(60)  # wait 60 second on ITSC services
             # else:
@@ -239,7 +249,7 @@ def main(options, args):
     while b_all_task_finish(sub_tasks) is False:
         basic.outputlogMessage('wait all tasks to finish')
         time.sleep(60)
-
+    close_remove_completed_task(sub_tasks)
 
     end_time = datetime.datetime.now()
 
