@@ -62,6 +62,14 @@ def b_all_task_finish(all_tasks):
             return False
     return True
 
+def close_remove_completed_task(all_tasks):
+    # close process to release resource, avoid error of "open too many files"
+    # will modify the list: all_tasks
+    for task in all_tasks:
+        if task.is_alive() is False:
+            task.close()
+            all_tasks.remove(task)
+
 def split_an_image(para_file, image_path,save_dir, patch_w, patch_h, overlay_x, overlay_y):
 
     split_format = parameters.get_string_parameters(para_file, 'split_image_format')
@@ -749,6 +757,7 @@ def parallel_prediction_main(para_file, trained_model):
             if sub_process.exitcode is not None and sub_process.exitcode != 0:
                 sys.exit(1)
 
+            close_remove_completed_task(sub_tasks)
             # if 'chpc' in machine_name:
             #     time.sleep(60)  # wait 60 second on ITSC services
             # else:
@@ -762,6 +771,7 @@ def parallel_prediction_main(para_file, trained_model):
         time.sleep(1)
         wait_all_finish += 1
 
+    close_remove_completed_task(sub_tasks)
     end_time = datetime.now()
 
     diff_time = end_time - start_time
