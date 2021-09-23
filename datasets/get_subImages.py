@@ -56,11 +56,12 @@ def get_image_tile_bound_boxes(image_tile_list):
 
     return boxes
 
-def get_overlap_image_index(polygons,image_boxes):
+def get_overlap_image_index(polygons,image_boxes,min_overlap_area=1):
     '''
     get the index of images that the polygons overlap
     :param polygons: a list of polygons
     :param image_boxes: the extent of the all the images
+    :param min_overlap_area: minumum areas for checking the overlap, ignore the image if it's too small
     :return:
     '''
 
@@ -78,7 +79,7 @@ def get_overlap_image_index(polygons,image_boxes):
     # check overlap
     for idx in img_idx:
         box_poly =  convert_image_bound_to_shapely_polygon(image_boxes[idx])
-        poly_index = get_poly_index_within_extent(polygons,box_poly)
+        poly_index = get_poly_index_within_extent(polygons,box_poly,min_overlap_area=min_overlap_area)
         # if no overlap, remove index
         if len(poly_index) < 1:
             img_idx.remove(idx)
@@ -216,9 +217,9 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
     :param brectangle: if brectangle is True, crop the raster using bounds, else, use the polygon
     :return: True is successful, False otherwise
     '''
-
+    img_resx, img_resy = raster_io.get_xres_yres_file(image_tile_list[0])
     # find the images which the center polygon overlap (one or two images)
-    img_index = get_overlap_image_index([selected_polygon], image_tile_bounds)
+    img_index = get_overlap_image_index([selected_polygon], image_tile_bounds,min_overlap_area=abs(img_resx*img_resy))
     if len(img_index) < 1:
         basic.outputlogMessage(
             'Warning, %dth polygon do not overlap any image tile, please check ' #and its buffer area
@@ -388,7 +389,8 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
     basic.outputlogMessage('get a sub image covering %d training polygons'%len(adj_polygons))
 
     # find the images which the center polygon overlap (one or two images)
-    img_index = get_overlap_image_index(adj_polygons, img_tile_boxes)
+    img_resx, img_resy = raster_io.get_xres_yres_file(image_tile_list[0])
+    img_index = get_overlap_image_index(adj_polygons, img_tile_boxes,min_overlap_area=abs(img_resx*img_resy))
     if len(img_index) < 1:
         basic.outputlogMessage('Warning, %dth polygon and the adjacent ones do not overlap any image tile, please check '
                                '(1) the shape file and raster have the same projection'
