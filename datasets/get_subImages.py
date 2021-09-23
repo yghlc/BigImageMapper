@@ -38,6 +38,9 @@ import raster_io
 import multiprocessing
 from multiprocessing import Pool
 
+from vector_gpd import convert_image_bound_to_shapely_polygon
+from vector_gpd import get_poly_index_within_extent
+
 def get_image_tile_bound_boxes(image_tile_list):
     '''
     get extent of all the images
@@ -71,6 +74,15 @@ def get_overlap_image_index(polygons,image_boxes):
         if rasterio.coords.disjoint_bounds(img_box, polygon_box) is False:
             if idx not in img_idx:
                 img_idx.append(idx)
+
+    # check overlap
+    for idx in img_idx:
+        box_poly =  convert_image_bound_to_shapely_polygon(image_boxes[idx])
+        poly_index = get_poly_index_within_extent(polygons,box_poly)
+        # if no overlap, remove index
+        if len(poly_index) < 1:
+            img_idx.remove(idx)
+
     return img_idx
 
 def check_polygons_invalidity(polygons, shp_path):
