@@ -290,7 +290,7 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
 
                         result_shp_list.append(os.path.join(WORK_DIR,out_shp))
                 # merge shapefiles
-                merge_shape_files(result_shp_list,merged_shp)
+                merge_shape_files(result_shp_list,merged_shp,b_create_id=True)
 
             merged_shp_list.append(merged_shp)
 
