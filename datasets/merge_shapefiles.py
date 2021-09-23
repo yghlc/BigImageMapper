@@ -23,7 +23,7 @@ import basic_src.basic as basic
 from basic_src.map_projection import get_raster_or_vector_srs_info_proj4
 import vector_gpd
 
-def merge_shape_files(file_list, save_path):
+def merge_shape_files(file_list, save_path,b_create_id=False):
 
     if os.path.isfile(save_path):
         print('%s already exists'%save_path)
@@ -80,6 +80,13 @@ def merge_shape_files(file_list, save_path):
         save_polyons_attributes[attribute] = values
 
     save_polyons_attributes["Polygons"] = polygons_list
+    # added id to shapefile
+    if b_create_id:
+        id_list = [idx for idx in range(len(polygons_list))]
+        if 'id' in save_polyons_attributes.keys():
+            basic.outputlogMessage('warning, original "id" will be replaced by new id in the merged shapefile' )
+        save_polyons_attributes['id'] = id_list
+
     polygon_df = pd.DataFrame(save_polyons_attributes)
 
 
