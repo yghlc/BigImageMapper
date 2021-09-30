@@ -299,8 +299,8 @@ def inf_remoteSensing_image(model,image_path=None):
             for img_patch in a_batch_of_patches:
                 img_data = build_RS_data.read_patch(img_patch)
                 ## ignore image patch are all black or white
-                if np.std(img_data) < 0.0001:
-                    print('Image:%d patch:%4d is black or white, ignore' %(img_idx, idx))
+                if np.std(img_data[0]) < 0.0001:
+                    print('Image (1st band):%d patch:%4d is black or white, ignore' %(img_idx, idx))
                     idx += 1
                     continue
 
