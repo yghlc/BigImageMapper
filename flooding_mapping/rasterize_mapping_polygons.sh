@@ -25,6 +25,7 @@ function rasterize_map() {
     echo $shp
     save_dir=${out_dir}/$folder
     name=$(basename $shp)
+    name_noext="${name%.*}"
     date_str=$(echo $name | cut -d "_"  -f ${date_pos})
 
     ref_raster=$(ls ${ref_tif_dir}/*${date_str}*.tif)
@@ -35,6 +36,12 @@ function rasterize_map() {
     fi
     mkdir -p  ${save_dir}
     ${py} -r ${ref_raster} -o ${save_dir} -b 1 ${shp}
+
+    # compress the raster
+    gdal_translate -co "compress=lzw" ${save_dir}/${name_noext}_label.tif ${save_dir}/tmp.tif
+    rm ${save_dir}/${name_noext}_label.tif
+    mv ${save_dir}/tmp.tif ${save_dir}/${name_noext}_label.tif
+
   done
 }
 #area_exp=exp1_grd_Goalpara
@@ -50,6 +57,11 @@ function rasterize_map() {
 #area_exp=exp1_grd_Houston
 #ref_tif_dir=~/Data/flooding_area/Houston/Houston_mosaic
 #rasterize_map ${area_exp} ${ref_tif_dir} 3
+
+
+area_exp=exp4_3band_Houston
+ref_tif_dir=~/Data/flooding_area/Houston/Houston_mosaic
+rasterize_map ${area_exp} ${ref_tif_dir} 4
 
 
 
