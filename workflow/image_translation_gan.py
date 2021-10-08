@@ -37,10 +37,7 @@ def image_translate_tran_generate(para_file, gpu_num):
     if os.path.isfile(sub_img_label_txt) is False:
         raise IOError('%s not in the current folder, please get subImages first' % sub_img_label_txt)
 
-    with open(sub_img_label_txt) as txt_obj:
-        line_list = [name.strip() for name in txt_obj.readlines()]
-        # stop here
-        pass
+    #
 
     # read target images, that will consider as target domains
 
