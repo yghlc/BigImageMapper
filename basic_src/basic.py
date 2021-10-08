@@ -204,6 +204,15 @@ def alive_process_count(processes):
     return count
 
 
+def close_remove_completed_process(processes):
+    # close process to release resource, avoid error of "open too many files"
+    # will modify the list: processes
+    for task in processes:
+        if task.is_alive() is False:
+            task.close()
+            processes.remove(task)
+
+
 def get_curr_process_openfiles():
     # the the open files by current process
     # if want to check all the open files in a system, need go through psutil.process_iter()
