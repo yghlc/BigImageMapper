@@ -138,7 +138,7 @@ def exec_command_string(command_str):
     Returns:(status, result)
 
     """
-    outputlogMessage(command_str)
+    print(command_str)
     (status, result) = getstatusoutput(command_str)
     return status, result
 
@@ -161,7 +161,7 @@ def exec_command_string_one_file(command_str,output):
     Returns:the output file path if successful, False otherwise
 
     """
-    outputlogMessage(command_str)
+    print(command_str)
     # (status, result) = subprocess.check_output(command_str, universal_newlines=True, stderr=sys.stdout)  #available in both Python 2.x and 3.x
 
     (status, result) = getstatusoutput(command_str)
@@ -182,7 +182,7 @@ def exec_command_string_output_string(command_str):
     Returns:the result string
 
     """
-    outputlogMessage(command_str)
+    print(command_str)
     (status, result) = getstatusoutput(command_str)
     # outputlogMessage(result)
     # if result.find('failed')>=0:
