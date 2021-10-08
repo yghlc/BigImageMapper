@@ -33,6 +33,9 @@ ${eo_dir}/workflow/remove_previous_data.py ${para_file}
 ${eo_dir}/workflow/get_sub_images_multi_regions.py ${para_file}
 
 
+# apply image translation using GAN 
+${eo_dir}/workflow/image_translation_gan.py ${para_file} ${gpu_num}
+
 ################################################
 ## preparing training images.
 # there is another script ("build_RS_data.py"), but seem have not finished.
