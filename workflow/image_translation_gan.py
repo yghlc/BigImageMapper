@@ -43,6 +43,7 @@ def train_CUT_gan(python_path, train_script,gan_para_file,gpu_ids):
     train_overlay_y = parameters.get_digit_parameters(gan_para_file,'train_overlay_y','int')
 
     folder=os.path.basename(os.getcwd())
+    train_models = io_function.get_file_list_by_pattern(os.path.join('checkpoints',folder),'latest*.pth')
 
     command_string = python_path + ' '  +  train_script \
                 + ' --dataset_mode '+'satelliteimage' \
@@ -53,8 +54,13 @@ def train_CUT_gan(python_path, train_script,gan_para_file,gpu_ids):
                 + ' --overlay_x ' + str(train_overlay_x) \
                 + ' --overlay_y ' + str(train_overlay_y)  \
                 + ' --display_env ' + folder  \
-                + ' --continue_train '  \
+                + ' --name ' + folder  \
                 + ' --gpu_ids ' + '.'.join([str(item) for item in gpu_ids]) 
+
+    # if trained model exist, continue train
+    if len(train_models) > 0:
+        command_string += ' --continue_train ' 
+
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
     res = os.system(command_string)  # this work
@@ -92,6 +98,7 @@ def generate_image_CUT(python_path, generate_script, gan_para_file, gpu_ids, ima
                 + ' --tile_height ' + str(generate_tile_height) \
                 + ' --overlay_x ' + str(generate_overlay_x) \
                 + ' --overlay_y ' + str(generate_overlay_y)  \
+                + ' --name ' + folder  \
                 + ' --results_dir ' + save_folder  \
                 + ' --gpu_ids ' + '.'.join([str(item) for item in gpu_ids]) 
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
