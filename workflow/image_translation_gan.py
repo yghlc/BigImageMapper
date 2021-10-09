@@ -8,6 +8,7 @@ email:huanglingcao@gmail.com
 add time: 07 October, 2021
 """
 
+import io
 import os,sys
 import time
 from datetime import datetime
@@ -24,25 +25,91 @@ import basic_src.io_function as io_function
 
 
 def CUT_gan_is_ready_to_train(working_folder):
-    if os.path.isfile(os.path.join(working_folder,'read_to_train.txt')):
+    if os.path.isfile(os.path.join(working_folder,'ready_to_train.txt')):
         return True
     return False
 
-def image_translate_train_generate_one_domain(working_dir, gan_para_file, area_ini, gpu_ids):
+
+def train_CUT_gan(python_path, train_script,gan_para_file,gpu_ids):
+
+    
+
+    command_string = python_path + ' '  +  train_script \
+                + ' os.chdir(current_dir)='+para_file \
+                + ' --inf_list_file='+inf_list_file \
+                + ' --inf_batch_size='+str(inf_batch_size) \
+                + ' --inf_output_dir='+save_dir \
+                + ' --frozen_graph_path='+frozen_graph_path
+    # status, result = basic.exec_command_string(command_string)  # this will wait command finished
+    # os.system(command_string + "&")  # don't know when it finished
+    res = os.system(command_string)  # this work
+    # print('command_string deeplab_inf_script: res',res)
+    if res != 0:
+        sys.exit(1)
+
+    duration = time.time() - time0
+    os.system('echo "$(date): time cost of inference for image in %s: %.2f seconds">>"time_cost.txt"' % (inf_list_file, duration))
+    # write a file to indicate that the prediction has done.
+    os.system('echo %s > %s_done'%(inf_list_file,inf_list_file))
+
+    
+    pass
+
+def generate_image_CUT(python_path, generate_script):
+
+    pass
+
+def image_translate_train_generate_one_domain(gan_working_dir, gan_para_file, area_ini, gpu_ids, domainB_imgList):
+
+    current_dir = os.getcwd()
 
     # get existing sub-images
-    sub_img_label_txt = 'sub_images_labels_list.txt'
+    sub_img_label_txt = os.path.join(current_dir,'sub_images_labels_list.txt')
     if os.path.isfile(sub_img_label_txt) is False:
         raise IOError('%s not in the current folder, please get subImages first' % sub_img_label_txt)
 
-    # read target images, that will consider as target domains
+    
+    os.chdir(gan_working_dir)
+    # prepare image list of domain A
+    # what if the size of some images are not fit with CUT input?
+    domain_A_images = []
+    domain_A_labels = []
+    with open(sub_img_label_txt) as txt_obj:
+        line_list = [name.strip() for name in txt_obj.readlines()]
+        for line in line_list:
+            sub_image, sub_label = line.split(':')
+            domain_A_images.append(sub_image)
+            domain_A_labels.append(sub_label)
+    io_function.save_list_to_txt(domain_A_images,'image_A_list.txt')
 
+    # read target images, that will consider as target domains
+    # what if there are too many images in domain B?
+    io_function.save_list_to_txt(domainB_imgList,'image_B_list.txt')
+
+    
+    gan_python = parameters.get_file_path_parameters(gan_para_file,'python')
+    cut_dir = parameters.get_directory(gan_para_file,'gan_script_dir')
+    train_script = os.path.join(cut_dir, 'train.py')
+    generate_script = os.path.join(cut_dir,'generate_image.py')
+    # training of CUT 
+    if train_CUT_gan(gan_python,train_script) is False:
+        os.chdir(current_dir)
+        return False
+
+    # genenerate image using CUT
+
+
+
+
+
+    # change working directory back
+    os.chdir(current_dir)
     pass
 
 
 def image_translate_train_generate_main(para_file, gpu_num):
     '''
-    # apply GAN to translate image from source domain to target domain
+     apply GAN to translate image from source domain to target domain
 
     existing sub-images (with sub-labels), these are image in source domain
     depend images for inference but no training data, each image for inference can be considered as on target domain
@@ -97,8 +164,8 @@ def image_translate_train_generate_main(para_file, gpu_num):
             CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
 
         # get an valid GPU
-        gpuid = None
-        while gpuid is None:
+        gpuids = []
+        while len(gpuids) < 1:
             # get available GPUs  # https://github.com/anderskm/gputil
             deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
                                             maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
@@ -115,13 +182,13 @@ def image_translate_train_generate_main(para_file, gpu_num):
                 time.sleep(60)  # wait one minute, then check the available GPUs again
                 continue
             # set only the first available visible
-            gpuid = deviceIDs[0]
+            gpuids.append(deviceIDs[0])
             basic.outputlogMessage('%d:image translation for  %s on GPU %d of %s' % (area_idx, area_ini, gpuid, machine_name))
 
         # run image translation
 
         sub_process = Process(target=image_translate_train_generate_one_domain,
-                              args=(gan_project_save_dir,gan_para_file, area_ini, gpuid))
+                              args=(gan_project_save_dir,gan_para_file, area_ini, gpuids,inf_img_list))
 
         sub_process.start()
         sub_tasks.append(sub_process)
@@ -136,10 +203,10 @@ def image_translate_train_generate_main(para_file, gpu_num):
             else:
                 time.sleep(5)
 
+        time.sleep(5)   # wait, allowing time for the GAN process to start.
+
         if sub_process.exitcode is not None and sub_process.exitcode != 0:
             sys.exit(1)
-
-        time.sleep(5)   # wait, allowing time for the GAN process to start.
 
         basic.close_remove_completed_process(sub_tasks)
 
