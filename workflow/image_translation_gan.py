@@ -93,6 +93,7 @@ def generate_image_CUT(python_path, generate_script, gan_para_file, gpu_ids, ima
 
     command_string = python_path + ' '  +  generate_script \
                 + ' --dataset_mode '+'satelliteimage' \
+                + ' --model '+ 'generate' \
                 + ' --image_A_dir_txt ' + img_list_txt \
                 + ' --tile_width ' + str(generate_tile_width) \
                 + ' --tile_height ' + str(generate_tile_height) \
