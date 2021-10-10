@@ -359,6 +359,10 @@ def image_translate_train_generate_main(para_file, gpu_num):
         time.sleep(60)
     basic.close_remove_completed_process(sub_tasks)
 
+    save_image_dir = parameters.get_string_parameters(para_file,'input_train_dir')
+    save_label_dir = parameters.get_string_parameters(para_file,'input_label_dir')
+    merge_subImages_from_gan(multi_gan_regions, gan_working_dir, gan_dir_pre_name, save_image_dir, save_label_dir)
+
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of tranlsate sub images to target domains: %.2f seconds">>time_cost.txt'%duration)
