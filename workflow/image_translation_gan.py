@@ -22,7 +22,7 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.basic as basic
 import basic_src.io_function as io_function
-import raster_io
+import datasets.raster_io as raster_io
 
 
 def CUT_gan_is_ready_to_train(working_folder):
