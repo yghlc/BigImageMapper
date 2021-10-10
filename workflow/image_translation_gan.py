@@ -157,7 +157,7 @@ def image_translate_train_generate_one_domain(gan_working_dir, gan_para_file, ar
         return False
 
     # genenerate image using CUT, convert images in domain A to domain B
-    save_tran_img_folder = os.path.join(gan_working_dir,'subImages_translate')
+    save_tran_img_folder = 'subImages_translate'
     if generate_image_CUT(gan_python, generate_script,gan_para_file,gpu_ids, domain_A_images, save_tran_img_folder) is False:
         os.chdir(current_dir)
         return False
