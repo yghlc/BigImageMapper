@@ -8,7 +8,7 @@ email:huanglingcao@gmail.com
 add time: 07 October, 2021
 """
 
-import io
+
 import os,sys
 import time
 from datetime import datetime
@@ -22,6 +22,7 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.basic as basic
 import basic_src.io_function as io_function
+import raster_io
 
 
 def CUT_gan_is_ready_to_train(working_folder):
@@ -29,6 +30,10 @@ def CUT_gan_is_ready_to_train(working_folder):
         return True
     return False
 
+def generate_image_exists(working_folder):
+    if os.path.isfile(os.path.join(working_folder,'generate.txt_done')):
+        return True
+    return False
 
 def train_CUT_gan(python_path, train_script,gan_para_file,gpu_ids):
 
@@ -121,21 +126,22 @@ def image_translate_train_generate_one_domain(gan_working_dir, gan_para_file, ar
 
     current_dir = os.getcwd()
 
-    # get existing sub-images
-    sub_img_label_txt = os.path.join(current_dir,'sub_images_labels_list.txt')
+    # get orignal sub-images
+    sub_img_label_txt_noGAN, _ =original_sub_images_labels_list_before_gan()
+    sub_img_label_txt = os.path.join(current_dir,sub_img_label_txt_noGAN)
     if os.path.isfile(sub_img_label_txt) is False:
         raise IOError('%s not in the current folder, please get subImages first' % sub_img_label_txt)
 
     # prepare image list of domain A
     # what if the size of some images are not fit with CUT input?
     domain_A_images = []
-    domain_A_labels = []
+    # domain_A_labels = []
     with open(sub_img_label_txt) as txt_obj:
         line_list = [name.strip() for name in txt_obj.readlines()]
         for line in line_list:
             sub_image, sub_label = line.split(':')
             domain_A_images.append(os.path.join(current_dir,sub_image))
-            domain_A_labels.append(os.path.join(current_dir,sub_label))
+            # domain_A_labels.append(os.path.join(current_dir,sub_label))
 
     
     os.chdir(gan_working_dir)
@@ -166,6 +172,78 @@ def image_translate_train_generate_one_domain(gan_working_dir, gan_para_file, ar
     # change working directory back
     os.chdir(current_dir)
     pass
+
+def original_sub_images_labels_list_before_gan():
+
+    # backup original sub_images list
+    sub_img_label_txt = 'sub_images_labels_list.txt'
+    sub_img_label_txt_noGAN = 'sub_images_labels_list_noGAN.txt'
+    if os.path.isfile(sub_img_label_txt_noGAN) is False:
+        io_function.copy_file_to_dst(sub_img_label_txt,sub_img_label_txt_noGAN,overwrite=False)
+
+    return sub_img_label_txt_noGAN, sub_img_label_txt
+
+
+def merge_subImages_from_gan(multi_gan_regions,gan_working_dir,gan_dir_pre_name,save_image_dir, save_label_dir):
+    '''
+    merge translate subimages from GAN to orginal sub_images
+    :param multi_gan_regions:
+    :param gan_working_dir:
+    :param gan_dir_pre_name:
+    :return:
+    '''
+
+    current_dir = os.getcwd()
+    sub_img_label_txt_noGAN, sub_img_label_txt = original_sub_images_labels_list_before_gan()
+
+    # get original sub-images and labels
+    org_sub_images = []
+    org_sub_labels = []
+    with open(sub_img_label_txt_noGAN) as txt_obj:
+        line_list = [name.strip() for name in txt_obj.readlines()]
+        for line in line_list:
+            sub_image, sub_label = line.split(':')
+            org_sub_images.append(os.path.join(current_dir,sub_image))
+            org_sub_labels.append(os.path.join(current_dir,sub_label))
+
+    # merge new sub images, and copy sub labels if necessary.
+    new_sub_images = org_sub_images.copy()
+    new_sub_labels = org_sub_labels.copy()
+
+
+    for area_idx, area_ini in enumerate(multi_gan_regions):
+        area_name = parameters.get_string_parameters(area_ini, 'area_name')
+        area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
+        area_time = parameters.get_string_parameters(area_ini, 'area_time')
+        gan_project_save_dir = os.path.join(gan_working_dir, gan_dir_pre_name + '_' + area_name + '_' + area_remark + '_' + area_time)
+
+        # the new images, keep the same order of original images
+        for idx, (org_img, org_label) in enumerate(zip(org_sub_images,org_sub_labels)):
+            new_img = os.path.join(gan_project_save_dir,'subImages_translate', 'I%d.tif' % idx)
+
+            # check height, width, band count, datatype
+            height, width, count, dtype = raster_io.get_height_width_bandnum_dtype(new_img)
+            o_height, o_width, o_count, o_dtype = raster_io.get_height_width_bandnum_dtype(org_img)
+            if height!=o_height or width!=o_width or count != o_count or dtype!=o_dtype:
+                raise ValueError('inconsistence between new GAN image and original images: %s vs %s'%
+                                 (str([height, width, count, dtype]), str([o_height, o_width, o_count, o_dtype])))
+
+            # copy subimage and sublabel
+            new_file_name_no_ext = io_function.get_name_no_ext(org_img)+ '_'  + os.path.basename(gan_project_save_dir)
+            save_img_path = os.path.join(save_image_dir, new_file_name_no_ext  +'_gan.tif' )
+            save_label_path = os.path.join(save_label_dir, new_file_name_no_ext + '_label.tif')
+            io_function.copy_file_to_dst(new_img,save_img_path,overwrite=False)
+            io_function.copy_file_to_dst(org_label,save_label_path,overwrite=False)
+
+            new_sub_images.append(save_img_path)
+            new_sub_labels.append(save_label_path)
+
+    # save new images_labels_list.txt, overwrite the original one
+    with open(sub_img_label_txt,'w') as f_obj:
+        lines = [ img + ':' + label + '\n' for img, label in zip(new_sub_images,new_sub_labels)]
+        f_obj.writelines(lines)
+
+    return True
 
 
 def image_translate_train_generate_main(para_file, gpu_num):
@@ -217,8 +295,9 @@ def image_translate_train_generate_main(para_file, gpu_num):
         gan_project_save_dir = os.path.join(gan_working_dir, gan_dir_pre_name + '_' + area_name + '_' + area_remark + '_' + area_time)
 
         if os.path.isdir(gan_project_save_dir):
-            # check if results already exist
-            pass
+            if generate_image_exists(gan_project_save_dir) is True:
+                basic.outputlogMessage('generated new images (generate.txt_done) exist for %s exist, skip'%gan_project_save_dir)
+                continue
         else:
             io_function.mkdir(gan_project_save_dir)
 
