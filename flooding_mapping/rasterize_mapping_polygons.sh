@@ -53,15 +53,18 @@ function rasterize_map() {
 #ref_tif_dir=~/Data/flooding_area/Goalpara/Goalpara_power_transform_prj_8bit
 #rasterize_map ${area_exp} ${ref_tif_dir} 4
 
+area_exp=exp2_binary_Houston
+ref_tif_dir=~/Data/flooding_area/Houston/Houston_mosaic
+rasterize_map ${area_exp} ${ref_tif_dir} 3
 
 #area_exp=exp1_grd_Houston
 #ref_tif_dir=~/Data/flooding_area/Houston/Houston_mosaic
 #rasterize_map ${area_exp} ${ref_tif_dir} 3
 
 
-area_exp=exp4_3band_Houston
-ref_tif_dir=~/Data/flooding_area/Houston/Houston_mosaic
-rasterize_map ${area_exp} ${ref_tif_dir} 4
+#area_exp=exp4_3band_Houston
+#ref_tif_dir=~/Data/flooding_area/Houston/Houston_mosaic
+#rasterize_map ${area_exp} ${ref_tif_dir} 4
 
 
 
