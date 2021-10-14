@@ -260,10 +260,10 @@ def image_translate_train_generate_main(para_file, gpu_num):
         raise IOError('File %s not exists in current folder: %s'%(para_file, os.getcwd()))
 
     gan_para_file = parameters.get_string_parameters_None_if_absence(para_file, 'regions_n_setting_image_translation_ini')
-    gan_para_file = os.path.abspath(gan_para_file)  # change to absolute path, because later, we change folder
     if gan_para_file is None:
         print('regions_n_setting_image_translation_ini is not set, skip image translation using GAN')
         return None
+    gan_para_file = os.path.abspath(gan_para_file)  # change to absolute path, because later, we change folder
 
     machine_name = os.uname()[1]
     SECONDS = time.time()
