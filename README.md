@@ -41,6 +41,11 @@ Please let me know or pull a request if you spot any bug or typo. Thanks!
 Any enhancement or new functions are also welcome!
 
 ## updates
+
+Ocotber 2021:
+    Add [CUT](https://github.com/yghlc/contrastive-unpaired-translation) to the workflow, which uses the power of generative adversarial networks 
+    to translate images from target domain to source domain. 
+
 January 2021:
     Clean or re-organize the scripts; re-define the input parameter files, separate them into main ini, network defined ini, 
     and regions defined ini, making it easy to different regions or networks for training and inference; 
