@@ -329,6 +329,9 @@ def image_translate_train_generate_main(para_file, gpu_num):
             basic.outputlogMessage('%d:image translation for  %s on GPU %s of %s' % (area_idx, area_ini, str(gpuids), machine_name))
 
         # run image translation
+        # pytorch consider first GPUs in CUDA_VISIBLE_DEVICES as zero, so need to re-index gpu ids
+        if len(CUDA_VISIBLE_DEVICES) > 0:
+            gpuids = [CUDA_VISIBLE_DEVICES.index(id) for id in gpuids]
 
         sub_process = Process(target=image_translate_train_generate_one_domain,
                               args=(gan_project_save_dir,gan_para_file, area_ini, gpuids,inf_img_list))
