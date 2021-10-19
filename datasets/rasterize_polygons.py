@@ -205,17 +205,27 @@ def rasterize_polygons(poly_path, burn_value, attribute_name, xres,yres, save_pa
     :param datatype:
     :return:
     '''
+    import raster_io
+    import vector_gpd
+    import basic_src.map_projection as map_projection
+    if attribute_name is not None:
+        polygons, values = vector_gpd.read_polygons_attributes_list(poly_path,attribute_name,b_fix_invalid_polygon=False)
+        burn_value = values
+    else:
+        polygons  = vector_gpd.read_polygons_gpd(poly_path,b_fix_invalid_polygon=False)
 
-    # not finish
-    # ref to:  ../../DeeplabforRS/prepare_raster.py
+    if datatype == 'Byte':
+        dtype = 'uint8'
+    elif datatype == 'UInt16':
+        dtype = 'uint16'
+    else:
+        dtype = 'int32'
 
-    # layername =  os.path.splitext(os.path.basename(shp_path))[0]
-    # args_list = ['gdal_rasterize', '-a', class_int_field, '-ot', 'Byte', \
-    #              '-tr',str(res),str(res),'-l',layername,shp_path,raster_path]
-    # result = basic.exec_command_args_list_one_file(args_list,raster_path)
-    # if os.path.getsize(result) < 1:
-    #     return False
-    pass
+    extent = vector_gpd.get_vector_file_bounding_box(poly_path)
+    wkt_string = map_projection.get_raster_or_vector_srs_info_proj4(poly_path)
+
+    return raster_io.burn_polygons_to_a_raster(None,polygons,burn_value, save_path,dtype,xres=xres,yres=yres,extent=extent,
+                                               ref_prj=wkt_string)
 
 
 def test_rasterize_polygons_to_ref_raster():
@@ -279,10 +289,10 @@ if __name__ == "__main__":
                       action="store", dest="burn_value",default=1, type=int,
                       help="the burn value will be used if attribute is not assigned")
     parser.add_option("-x", "--pixel_size_x",
-                      action="store", dest="pixel_size_x",
+                      action="store", dest="pixel_size_x", type=int,
                       help="the x resolution of output raster, it will be ignored if reference_raster is set")
     parser.add_option("-y", "--pixel_size_y",
-                      action="store", dest="pixel_size_y",
+                      action="store", dest="pixel_size_y", type=int,
                       help="the y resolution of output raster, it will be ignored if reference_raster is set")
 
 
