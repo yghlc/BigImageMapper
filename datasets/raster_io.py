@@ -12,9 +12,12 @@ import os, sys
 from optparse import OptionParser
 import rasterio
 import numpy as np
+import math
 
 from rasterio.coords import BoundingBox
 from rasterio.mask import mask
+from rasterio.features import rasterize
+from rasterio.features import shapes
 
 import skimage.measure
 import time
@@ -58,6 +61,10 @@ def get_xres_yres_file(file_path):
 def get_height_width_bandnum_dtype(file_path):
     with rasterio.open(file_path) as src:
         return src.height, src.width, src.count, src.dtypes[0]
+
+def get_transform_from_file(file_path):
+    with rasterio.open(file_path) as src:
+        return src.transform
 
 def get_nodata(file_path):
     with rasterio.open(file_path) as src:
@@ -168,10 +175,12 @@ def get_valid_pixel_percentage(image_path,total_pixel_num=None, progress=None):
         print(progress, 'Done')
     return valid_per
 
-def get_valid_percent_shannon_entropy(image_path,log_base=10):
+def get_valid_percent_shannon_entropy(image_path,log_base=10,nodata_input=0):
     oneband_data, nodata = read_raster_one_band_np(image_path, band=1)
     if nodata is None:
-        raise ValueError('nodata is not set in %s, cannot tell valid pixel'%image_path)
+        # raise ValueError('nodata is not set in %s, cannot tell valid pixel'%image_path)
+        print('warning, nodata is not set in %s, will use %s'%(image_path, str(nodata_input)))
+        nodata = nodata_input
 
     valid_loc = np.where(oneband_data != nodata)
     valid_pixel_count = valid_loc[0].size
@@ -232,6 +241,16 @@ def get_max_min_histogram_percent_oneband(data, bin_count, min_percent=0.01, max
 def set_nodata_to_raster_metadata(raster_path, nodata):
     # modifiy the nodata value in the metadata
     cmd_str = 'gdal_edit.py -a_nodata %s  %s' % (str(nodata), raster_path)
+    print(cmd_str)
+    res = os.system(cmd_str)
+    if res == 0:
+        return True
+    else:
+        return False
+
+def remove_nodata_from_raster_metadata(raster_path):
+    # modifiy the nodata value in the metadata
+    cmd_str = 'gdal_edit.py -unsetnodata %s' % ( raster_path)
     print(cmd_str)
     res = os.system(cmd_str)
     if res == 0:
@@ -488,7 +507,10 @@ def image_numpy_allBands_to_8bit(img_np_allbands, scales, src_nodata=None, dst_n
     '''
     nodata_loc = None
     if src_nodata is not None:
-        nodata_loc = np.where(img_np_allbands==src_nodata)
+        if isinstance(src_nodata,float):
+            nodata_loc = np.where(np.abs(img_np_allbands - src_nodata) < 0.00001)
+        else:
+            nodata_loc = np.where(img_np_allbands==src_nodata)
     band_count, height, width = img_np_allbands.shape
     print(band_count, height, width)
     # if we input multiple scales, it should has the same size the band count
@@ -586,6 +608,7 @@ def pixel_xy_to_geo_xy(x0,y0, transform):
     y0_geo = transform[3] * x0 + transform[4] * y0 + transform[5]
     return x0_geo, y0_geo
 
+
 def geo_xy_to_pixel_xy(x_list, y_list, transform, op=round, precision=None):
 
     # rows (list of ints) – list of row indices
@@ -610,6 +633,142 @@ def burn_polygon_to_raster_oneband(raster_path, polygon_shp, burn_value):
         return raster_path
     else:
         return False
+
+
+def burn_polygons_to_a_raster(ref_raster, polygons, burn_values, save_path, date_type='uint8',
+                              xres=None,yres=None, extent=None, ref_prj=None, nodata=None):
+    # if save_path is None, it will return the array, not saving to disk
+    # burn polygons to a new raster
+    # if ref_raster is None, we must set xres and yres, and extent (read from polygons) and ref_prj (from shapefile)
+    # extent: (minx, miny, maxx, maxy)
+
+    if save_path is not None and os.path.isfile(save_path):
+        print('%s exist, skip burn_polygons_to_a_raster'%save_path)
+        return save_path
+
+    if isinstance(burn_values,int):
+        values = [burn_values]*len(polygons)
+    elif isinstance(burn_values,list):
+        values = burn_values
+        if len(burn_values) != len(polygons):
+            raise ValueError('polygons and burn_values do not have the same size')
+    else:
+        raise ValueError('unkonw type of burn_values')
+
+
+    if date_type=='uint8':
+        save_dtype = rasterio.uint8
+        np_dtype = np.uint8
+    elif date_type=='uint16':
+        save_dtype = rasterio.uint16
+        np_dtype = np.uint16
+    elif date_type == 'int32':
+        save_dtype = rasterio.int32
+        np_dtype = np.int32
+    else:
+        raise ValueError('not yet support')
+
+    if ref_raster is None:
+        # exent (minx, miny, maxx, maxy)
+        height, width = math.ceil((extent[3]-extent[1])/yres), math.ceil((extent[2]-extent[0])/xres)
+        burn_out = np.zeros((height, width), dtype=np_dtype)
+        if nodata is not None:
+            burn_out[:] = nodata
+        # rasterize the shapes
+        burn_shapes = [(item_shape, item_int) for (item_shape, item_int) in
+                       zip(polygons, values)]
+        ## new_transform = (burn_boxes[0], resX, 0, burn_boxes[3], 0, -resY )  # (X_min, resX, 0, Y_max, 0, -resY)  # GDAL-style transforms, have been deprecated after raster 1.0
+        # affine.Affine() vs. GDAL-style geotransforms: https://rasterio.readthedocs.io/en/stable/topics/migrating-to-v1.html
+        transform = (xres ,0, extent[0] , 0, -yres, extent[3])  # (resX, 0, X_min, 0, -resY, Y_max)
+        out_label = rasterize(burn_shapes, out=burn_out, transform=transform,
+                              fill=0, all_touched=False, dtype=save_dtype)
+
+        if save_path is None:
+            return out_label
+
+        with rasterio.open(save_path, 'w', driver='GTiff',
+                            height=height,
+                            width=width,
+                            count=1,
+                            dtype=save_dtype,
+                            crs=ref_prj,
+                            transform=transform,
+                            nodata=nodata) as dst:
+            dst.write_band(1, out_label.astype(save_dtype))
+
+
+    else:
+        with rasterio.open(ref_raster) as src:
+            transform = src.transform
+            burn_out = np.zeros((src.height, src.width),dtype=np_dtype)
+            if nodata is not None:
+                burn_out[:] = nodata
+            # rasterize the shapes
+            burn_shapes = [(item_shape, item_int) for (item_shape, item_int) in
+                           zip(polygons, values)]
+            #
+            out_label = rasterize(burn_shapes, out=burn_out, transform=transform,
+                                  fill=0, all_touched=False, dtype=save_dtype)
+            if save_path is None:
+                return out_label
+
+            # test: save it to disk
+            kwargs = src.meta
+            kwargs.update(
+                dtype=save_dtype,
+                count=1,
+                nodata=nodata)
+
+            # # remove nodta in the output
+            # if 'nodata' in kwargs.keys():
+            #     del kwargs['nodata']
+
+            with rasterio.open(save_path, 'w', **kwargs) as dst:
+                dst.write_band(1, out_label.astype(save_dtype))
+
+
+def raster2shapefile(in_raster, out_shp=None, driver='ESRI Shapefile', nodata=None,connect8=True):
+    # convert raster to shapefile, similar to: vector_gpd.raster2shapefile but using rasterio
+    import fiona
+
+    if out_shp is None:
+        out_shp = os.path.splitext(in_raster)[0] + '.shp'
+    if os.path.isfile(out_shp):
+        print('%s exists, skip'%out_shp)
+        return out_shp
+
+    with rasterio.open(in_raster) as src:
+        image = src.read(1)
+
+    if nodata is not None:
+        mask = image != nodata
+    else:
+        mask = None
+
+    connet=4
+    if connect8:
+        connet=8
+
+    results = ( {'properties': {'raster_val': v}, 'geometry': s}
+        for i, (s, v) in enumerate(shapes(image, mask=mask, connectivity=connet, transform=src.transform)))
+
+    # for i, (s, v) in enumerate(shapes(image, mask=mask,connectivity=8, transform=src.transform)):
+    #     if i%100==0 and v==255:
+    #         print(i,s,v)
+
+    # print(results)
+    # print(src.crs.to_wkt() )
+
+    with fiona.open(
+            out_shp, 'w',
+            driver=driver,
+            crs=src.crs.to_wkt(),
+            schema={'properties': [('raster_val', 'int')],
+                    'geometry': 'Polygon'}) as dst:
+        dst.writerecords(results)
+    return out_shp
+
+
 
 def main():
     pass
