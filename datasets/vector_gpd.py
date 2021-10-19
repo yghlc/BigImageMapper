@@ -286,6 +286,11 @@ def is_two_bound_disjoint(box1, box2):
         return True
     return False
 
+def get_vector_file_bounding_box(file_path):
+    # return bounding box of all geometryies ((minx, miny, maxx, maxy))
+    shapefile = gpd.read_file(file_path)
+    return shapefile.total_bounds
+
 def get_polygon_bounding_box(polygon):
     # return the bounding box of a shapely polygon (minx, miny, maxx, maxy)
     return polygon.bounds
