@@ -122,7 +122,7 @@ def generate_image_CUT(python_path, generate_script, gan_para_file, gpu_ids, ima
     return True
 
 
-def image_translate_train_generate_one_domain(gan_working_dir, gan_para_file, area_ini, gpu_ids, domainB_imgList):
+def image_translate_train_generate_one_domain(gan_working_dir, gan_para_file, area_src_ini, area_gan_ini, gpu_ids, domainB_imgList):
 
     current_dir = os.getcwd()
 
@@ -136,9 +136,15 @@ def image_translate_train_generate_one_domain(gan_working_dir, gan_para_file, ar
     # what if the size of some images are not fit with CUT input?
     domain_A_images = []
     # domain_A_labels = []
-    with open(sub_img_label_txt) as txt_obj:
-        line_list = [name.strip() for name in txt_obj.readlines()]
-        for line in line_list:
+    # with open(sub_img_label_txt) as txt_obj:
+    #     line_list = [name.strip() for name in txt_obj.readlines()]
+    #     for line in line_list:
+    #         sub_image, sub_label = line.split(':')
+    #         domain_A_images.append(os.path.join(current_dir,sub_image))
+    #         # domain_A_labels.append(os.path.join(current_dir,sub_label))
+
+    area_ini_sub_images_labels = io_function.read_dict_from_txt_json('area_ini_sub_images_labels.txt')
+    for line in area_ini_sub_images_labels[area_src_ini]:
             sub_image, sub_label = line.split(':')
             domain_A_images.append(os.path.join(current_dir,sub_image))
             # domain_A_labels.append(os.path.join(current_dir,sub_label))
@@ -264,20 +270,31 @@ def image_translate_train_generate_main(para_file, gpu_num):
         print('regions_n_setting_image_translation_ini is not set, skip image translation using GAN')
         return None
     gan_para_file = os.path.abspath(gan_para_file)  # change to absolute path, because later, we change folder
+    training_regions = parameters.get_string_list_parameters(para_file, 'training_regions')
 
     machine_name = os.uname()[1]
     SECONDS = time.time()
 
     # get regions (equal to or subset of inference regions) need apply image translation
     multi_gan_regions = parameters.get_string_list_parameters(gan_para_file, 'regions_need_image_translation')
+    multi_gan_source_regions = parameters.get_string_list_parameters(gan_para_file, 'source_domain_regions')
+    # check target domain
+    if len(multi_gan_source_regions) != len(multi_gan_regions):
+        raise ValueError('the number of source domain and target domain is different')
+    if set(multi_gan_source_regions).issubset(training_regions) is False:
+        raise ValueError('the source domain regions are not the subset of training regions')
+    for area_idx, (area_gan_ini, area_src_ini) in enumerate(zip(multi_gan_regions,multi_gan_source_regions)):
+        basic.outputlogMessage('%d: source and target area: %s vs %s'%(area_idx,area_src_ini,area_gan_ini))
+
     gan_working_dir = parameters.get_string_parameters(gan_para_file, 'working_root')
     gan_dir_pre_name = parameters.get_string_parameters(gan_para_file, 'gan_dir_pre_name')
 
     # loop each regions need image translation
     sub_tasks = []
-    for area_idx, area_ini in enumerate(multi_gan_regions):
+    for area_idx, (area_gan_ini, area_src_ini) in enumerate(zip(multi_gan_regions,multi_gan_source_regions)):
 
-        area_ini = os.path.abspath(area_ini)
+        area_ini = os.path.abspath(area_gan_ini)
+        area_src_ini = os.path.abspath(area_src_ini)
         area_name = parameters.get_string_parameters(area_ini, 'area_name')
         area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
         area_time = parameters.get_string_parameters(area_ini, 'area_time')
@@ -334,7 +351,7 @@ def image_translate_train_generate_main(para_file, gpu_num):
             gpuids = [CUDA_VISIBLE_DEVICES.index(id) for id in gpuids]
 
         sub_process = Process(target=image_translate_train_generate_one_domain,
-                              args=(gan_project_save_dir,gan_para_file, area_ini, gpuids,inf_img_list))
+                              args=(gan_project_save_dir,gan_para_file, area_src_ini, area_ini, gpuids,inf_img_list))
 
         sub_process.start()
         sub_tasks.append(sub_process)
@@ -368,7 +385,7 @@ def image_translate_train_generate_main(para_file, gpu_num):
 
 
     duration= time.time() - SECONDS
-    os.system('echo "$(date): time cost of tranlsate sub images to target domains: %.2f seconds">>time_cost.txt'%duration)
+    os.system('echo "$(date): time cost of translating sub images to target domains: %.2f seconds">>time_cost.txt'%duration)
 
 
 def main(options, args):

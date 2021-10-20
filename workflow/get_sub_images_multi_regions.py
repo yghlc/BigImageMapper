@@ -137,6 +137,10 @@ def get_sub_images_multi_regions(para_file):
     subImage_dir = parameters.get_string_parameters_None_if_absence(para_file,'input_train_dir')
     subLabel_dir = parameters.get_string_parameters_None_if_absence(para_file,'input_label_dir')
 
+    # record sub_images_labels from each area_ini
+    area_ini_sub_images_labels = {}
+    sub_image_label_list_before = []    # the list before getting sub-images
+
     # loop each training regions
     for idx, area_ini in enumerate(multi_training_regions):
 
@@ -180,6 +184,10 @@ def get_sub_images_multi_regions(para_file):
                 get_subImage_subLabel_one_shp(get_subImage_script,all_train_shp, buffersize, dstnodata, rectangle_ext, train_shp,
                                           input_image_dir, file_pattern=input_image_or_pattern, process_num=process_num)
 
+        sub_image_label_list_after = io_function.read_list_from_txt('sub_images_labels_list.txt')
+        area_ini_sub_images_labels[area_ini] = sub_image_label_list_after[len(sub_image_label_list_before):]
+        # update list
+        sub_image_label_list_before = sub_image_label_list_after
 
     # check black sub-images or most part of the sub-images is black (nodata)
     new_sub_image_label_list = []
@@ -213,6 +221,13 @@ def get_sub_images_multi_regions(para_file):
         with open('sub_images_labels_list.txt', 'w') as f_obj:
             for line in new_sub_image_label_list:
                 f_obj.writelines(line)
+
+    for del_line in delete_sub_image_label_list:
+        for idx, area_ini in enumerate(multi_training_regions):
+            if del_line in area_ini_sub_images_labels[area_ini]:
+                area_ini_sub_images_labels[area_ini].remove(del_line)
+
+    io_function.save_dict_to_txt_json('area_ini_sub_images_labels.txt', area_ini_sub_images_labels)
 
     # check weather they have the same subImage and subLabel
     if b_no_label_image is None or b_no_label_image is False:
