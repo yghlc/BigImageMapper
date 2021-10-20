@@ -59,6 +59,12 @@ def remove_previous_data(para_file):
         io_function.delete_file_or_dir('tfrecord')
         print('remove %s ' % 'tfrecord')
 
+    if os.path.isfile('sub_images_labels_list.txt'):
+        io_function.delete_file_or_dir('sub_images_labels_list.txt')
+
+    if os.path.isfile('sub_images_labels_list_noGAN.txt'):
+        io_function.delete_file_or_dir('sub_images_labels_list_noGAN.txt')
+
 if __name__ == '__main__':
     para_file = sys.argv[1]
     remove_previous_data(para_file)
