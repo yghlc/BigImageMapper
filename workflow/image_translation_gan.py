@@ -60,7 +60,7 @@ def train_CUT_gan(python_path, train_script,gan_para_file,gpu_ids):
                 + ' --overlay_y ' + str(train_overlay_y)  \
                 + ' --display_env ' + folder  \
                 + ' --name ' + folder  \
-                + ' --gpu_ids ' + '.'.join([str(item) for item in gpu_ids]) 
+                + ' --gpu_ids ' + ','.join([str(item) for item in gpu_ids])
 
     # if trained model exist, continue train
     if len(train_models) > 0:
@@ -106,7 +106,7 @@ def generate_image_CUT(python_path, generate_script, gan_para_file, gpu_ids, ima
                 + ' --overlay_y ' + str(generate_overlay_y)  \
                 + ' --name ' + folder  \
                 + ' --results_dir ' + save_folder  \
-                + ' --gpu_ids ' + '.'.join([str(item) for item in gpu_ids]) 
+                + ' --gpu_ids ' + ','.join([str(item) for item in gpu_ids])
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
     res = os.system(command_string)  # this work
