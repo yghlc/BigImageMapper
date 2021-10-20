@@ -127,9 +127,9 @@ def image_translate_train_generate_one_domain(gan_working_dir, gan_para_file, ar
     current_dir = os.getcwd()
 
     # get orignal sub-images
-    sub_img_label_txt_noGAN, _ =original_sub_images_labels_list_before_gan()
-    sub_img_label_txt = os.path.join(current_dir,sub_img_label_txt_noGAN)
-    if os.path.isfile(sub_img_label_txt) is False:
+    _, _,area_ini_sub_images_labels_dict = original_sub_images_labels_list_before_gan()
+    sub_img_label_txt = os.path.join(current_dir,area_ini_sub_images_labels_dict)
+    if os.path.isfile(area_ini_sub_images_labels_dict) is False:
         raise IOError('%s not in the current folder, please get subImages first' % sub_img_label_txt)
 
     # prepare image list of domain A
@@ -184,10 +184,11 @@ def original_sub_images_labels_list_before_gan():
     # backup original sub_images list
     sub_img_label_txt = 'sub_images_labels_list.txt'
     sub_img_label_txt_noGAN = 'sub_images_labels_list_noGAN.txt'
+    area_ini_sub_images_labels_dict = 'area_ini_sub_images_labels.txt'
     if os.path.isfile(sub_img_label_txt_noGAN) is False:
         io_function.copy_file_to_dst(sub_img_label_txt,sub_img_label_txt_noGAN,overwrite=False)
 
-    return sub_img_label_txt_noGAN, sub_img_label_txt
+    return sub_img_label_txt_noGAN, sub_img_label_txt,area_ini_sub_images_labels_dict
 
 
 def merge_subImages_from_gan(multi_gan_regions,gan_working_dir,gan_dir_pre_name,save_image_dir, save_label_dir):
@@ -200,7 +201,7 @@ def merge_subImages_from_gan(multi_gan_regions,gan_working_dir,gan_dir_pre_name,
     '''
 
     current_dir = os.getcwd()
-    sub_img_label_txt_noGAN, sub_img_label_txt = original_sub_images_labels_list_before_gan()
+    sub_img_label_txt_noGAN, sub_img_label_txt,area_ini_sub_images_labels_dict = original_sub_images_labels_list_before_gan()
 
     # get original sub-images and labels
     org_sub_images = []
