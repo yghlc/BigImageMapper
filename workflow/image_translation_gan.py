@@ -144,7 +144,7 @@ def image_translate_train_generate_one_domain(gan_working_dir, gan_para_file, ar
     #         # domain_A_labels.append(os.path.join(current_dir,sub_label))
 
     area_ini_sub_images_labels = io_function.read_dict_from_txt_json('area_ini_sub_images_labels.txt')
-    for line in area_ini_sub_images_labels[area_src_ini]:
+    for line in area_ini_sub_images_labels[os.path.basename(area_src_ini)]:
             sub_image, sub_label = line.split(':')
             domain_A_images.append(os.path.join(current_dir,sub_image))
             # domain_A_labels.append(os.path.join(current_dir,sub_label))
