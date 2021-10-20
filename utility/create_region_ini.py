@@ -58,7 +58,7 @@ def create_region_parafile_for_one_image(template_para_file, img_path, area_name
         new_para_file = io_function.get_name_by_adding_tail(new_para_file, area_time)
 
     # if os.path.isfile(new_para_file):
-    #     raise IOError('%s already exists, please check or remove first')
+    #     raise IOError('%s already exists, please check or remove first'%new_para_file)
     count = 1
     bak_new_para_file = new_para_file
     while os.path.isfile(new_para_file):
@@ -108,7 +108,7 @@ def create_new_region_defined_parafile(template_para_file, img_dir, area_remark=
     new_para_file = io_function.get_name_by_adding_tail(template_para_file,date +'_'+ area_remark)
     new_para_file = os.path.basename(new_para_file) # save to current folder
     if os.path.isfile(new_para_file):
-        raise IOError('%s already exists, please check or remove first')
+        raise IOError('%s already exists, please check or remove first'%new_para_file)
 
     # copy the file
     io_function.copy_file_to_dst(template_para_file,new_para_file)
