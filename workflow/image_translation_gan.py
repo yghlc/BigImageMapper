@@ -321,7 +321,7 @@ def image_translate_train_generate_main(para_file, gpu_num):
                 basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
 
             if len(deviceIDs) < 1:
-                print('No available GPUs, will check again in 60 seconds')
+                print(datetime.now(),'No available GPUs, will check again in 60 seconds')
                 time.sleep(60)  # wait one minute, then check the available GPUs again
                 continue
             # set only the first available visible
