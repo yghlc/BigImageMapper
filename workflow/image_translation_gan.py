@@ -191,7 +191,7 @@ def original_sub_images_labels_list_before_gan():
     return sub_img_label_txt_noGAN, sub_img_label_txt,area_ini_sub_images_labels_dict
 
 
-def merge_subImages_from_gan(multi_gan_regions,gan_working_dir,gan_dir_pre_name,save_image_dir, save_label_dir):
+def merge_subImages_from_gan(multi_gan_source_regions,multi_gan_regions,gan_working_dir,gan_dir_pre_name,save_image_dir, save_label_dir):
     '''
     merge translate subimages from GAN to orginal sub_images
     :param multi_gan_regions:
@@ -203,26 +203,37 @@ def merge_subImages_from_gan(multi_gan_regions,gan_working_dir,gan_dir_pre_name,
     current_dir = os.getcwd()
     sub_img_label_txt_noGAN, sub_img_label_txt,area_ini_sub_images_labels_dict = original_sub_images_labels_list_before_gan()
 
-    # get original sub-images and labels
-    org_sub_images = []
-    org_sub_labels = []
-    with open(sub_img_label_txt_noGAN) as txt_obj:
-        line_list = [name.strip() for name in txt_obj.readlines()]
-        for line in line_list:
-            sub_image, sub_label = line.split(':')
-            org_sub_images.append(os.path.join(current_dir,sub_image))
-            org_sub_labels.append(os.path.join(current_dir,sub_label))
+    # # get original sub-images and labels
+    # org_sub_images = []
+    # org_sub_labels = []
+    # with open(sub_img_label_txt_noGAN) as txt_obj:
+    #     line_list = [name.strip() for name in txt_obj.readlines()]
+    #     for line in line_list:
+    #         sub_image, sub_label = line.split(':')
+    #         org_sub_images.append(os.path.join(current_dir,sub_image))
+    #         org_sub_labels.append(os.path.join(current_dir,sub_label))
+    #
+    # # merge new sub images, and copy sub labels if necessary.
+    new_sub_images = []
+    new_sub_labels = []
 
-    # merge new sub images, and copy sub labels if necessary.
-    new_sub_images = org_sub_images.copy()
-    new_sub_labels = org_sub_labels.copy()
+    area_ini_sub_images_labels = io_function.read_dict_from_txt_json(area_ini_sub_images_labels_dict)
 
-
-    for area_idx, area_ini in enumerate(multi_gan_regions):
+    for area_idx, (area_ini, area_src_ini) in enumerate(zip(multi_gan_regions,multi_gan_source_regions)):
         area_name = parameters.get_string_parameters(area_ini, 'area_name')
         area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
         area_time = parameters.get_string_parameters(area_ini, 'area_time')
         gan_project_save_dir = os.path.join(gan_working_dir, gan_dir_pre_name + '_' + area_name + '_' + area_remark + '_' + area_time)
+
+        org_sub_images = []
+        org_sub_labels = []
+        for line in area_ini_sub_images_labels[os.path.basename(area_src_ini)]:
+            sub_image, sub_label = line.split(':')
+            org_sub_images.append(os.path.join(current_dir, sub_image))
+            org_sub_labels.append(os.path.join(current_dir, sub_label))
+
+        new_sub_images.extend(org_sub_images)
+        new_sub_labels.extend(org_sub_labels)
 
         # the new images, keep the same order of original images
         for idx, (org_img, org_label) in enumerate(zip(org_sub_images,org_sub_labels)):
@@ -382,7 +393,7 @@ def image_translate_train_generate_main(para_file, gpu_num):
 
     save_image_dir = parameters.get_string_parameters(para_file,'input_train_dir')
     save_label_dir = parameters.get_string_parameters(para_file,'input_label_dir')
-    merge_subImages_from_gan(multi_gan_regions, gan_working_dir, gan_dir_pre_name, save_image_dir, save_label_dir)
+    merge_subImages_from_gan(multi_gan_source_regions,multi_gan_regions, gan_working_dir, gan_dir_pre_name, save_image_dir, save_label_dir)
 
 
     duration= time.time() - SECONDS
