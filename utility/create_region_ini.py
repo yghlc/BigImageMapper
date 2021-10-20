@@ -115,6 +115,9 @@ def create_new_region_defined_parafile(template_para_file, img_dir, area_remark=
 
     if area_remark is not None:
         modify_parameter(new_para_file,'area_remark',area_remark)
+    if date != 'unknown':
+        modify_parameter(new_para_file, 'area_time', date)
+
     modify_parameter(new_para_file, 'input_image_dir', img_dir)
     modify_parameter(new_para_file, 'inf_image_dir', img_dir)
 
