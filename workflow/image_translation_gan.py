@@ -70,6 +70,10 @@ def train_CUT_gan(python_path, train_script,gan_para_file,gpu_ids):
     n_epochs_decay = parameters.get_digit_parameters(gan_para_file,'n_epochs_decay','int')
     command_string += ' --n_epochs ' + str(n_epochs) + ' --n_epochs_decay ' + str(n_epochs_decay)
 
+    train_max_dataset_size = parameters.get_digit_parameters_None_if_absence(gan_para_file,'train_max_dataset_size','int')
+    if train_max_dataset_size is not None:
+        command_string += ' --max_dataset_size ' + str(train_max_dataset_size)
+
 
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
