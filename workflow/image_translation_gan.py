@@ -64,7 +64,12 @@ def train_CUT_gan(python_path, train_script,gan_para_file,gpu_ids):
 
     # if trained model exist, continue train
     if len(train_models) > 0:
-        command_string += ' --continue_train ' 
+        command_string += ' --continue_train '
+
+    n_epochs = parameters.get_digit_parameters(gan_para_file,'n_epochs','int')
+    n_epochs_decay = parameters.get_digit_parameters(gan_para_file,'n_epochs_decay','int')
+    command_string += ' --n_epochs ' + str(n_epochs) + ' --n_epochs_decay ' + str(n_epochs_decay)
+
 
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
