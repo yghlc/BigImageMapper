@@ -47,10 +47,13 @@ def train_CUT_gan(python_path, train_script,gan_para_file,gpu_ids):
     train_overlay_x = parameters.get_digit_parameters(gan_para_file,'train_overlay_x','int')
     train_overlay_y = parameters.get_digit_parameters(gan_para_file,'train_overlay_y','int')
 
+    gan_model = parameters.get_string_parameters(gan_para_file, 'gan_model')
+
     folder=os.path.basename(os.getcwd())
     train_models = io_function.get_file_list_by_pattern(os.path.join('checkpoints',folder),'latest*.pth')
 
     command_string = python_path + ' '  +  train_script \
+                + ' --model ' + str(gan_model) \
                 + ' --dataset_mode '+'satelliteimage' \
                 + ' --image_A_dir_txt ' + 'image_A_list.txt' \
                 + ' --image_B_dir_txt ' + 'image_B_list.txt' \
@@ -116,6 +119,11 @@ def generate_image_CUT(python_path, generate_script, gan_para_file, gpu_ids, ima
                 + ' --name ' + folder  \
                 + ' --results_dir ' + save_folder  \
                 + ' --gpu_ids ' + ','.join([str(item) for item in gpu_ids])
+
+    train_max_dataset_size = parameters.get_digit_parameters_None_if_absence(gan_para_file,'gen_max_dataset_size','int')
+    if train_max_dataset_size is not None:
+        command_string += ' --max_dataset_size ' + str(train_max_dataset_size)
+
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
     res = os.system(command_string)  # this work
