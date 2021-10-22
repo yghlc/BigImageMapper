@@ -227,6 +227,12 @@ def merge_subImages_from_gan(multi_gan_source_regions,multi_gan_regions,gan_work
     new_sub_labels = []
 
     area_ini_sub_images_labels = io_function.read_dict_from_txt_json(area_ini_sub_images_labels_dict)
+    # copy the original sub images and labels before GAN
+    for key in area_ini_sub_images_labels.keys():
+        for line in area_ini_sub_images_labels[key]:
+            sub_image, sub_label = line.split(':')
+            new_sub_images.append(sub_image)
+            new_sub_labels.append(sub_label)
 
     for area_idx, (area_ini, area_src_ini) in enumerate(zip(multi_gan_regions,multi_gan_source_regions)):
         area_name = parameters.get_string_parameters(area_ini, 'area_name')
@@ -240,9 +246,6 @@ def merge_subImages_from_gan(multi_gan_source_regions,multi_gan_regions,gan_work
             sub_image, sub_label = line.split(':')
             org_sub_images.append(os.path.join(current_dir, sub_image))
             org_sub_labels.append(os.path.join(current_dir, sub_label))
-
-        new_sub_images.extend(org_sub_images)
-        new_sub_labels.extend(org_sub_labels)
 
         # the new images, keep the same order of original images
         for idx, (org_img, org_label) in enumerate(zip(org_sub_images,org_sub_labels)):
