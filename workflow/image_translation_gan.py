@@ -259,6 +259,11 @@ def merge_subImages_from_gan(multi_gan_source_regions,multi_gan_regions,gan_work
         for idx, (org_img, org_label) in enumerate(zip(org_sub_images,org_sub_labels)):
             new_img = os.path.join(gan_project_save_dir,'subImages_translate', 'I%d.tif' % idx)
 
+            if os.path.isfile(new_img) is False:
+                basic.outputlogMessage('warning, %d th image does not exists, '
+                                       'may exceed gen_max_dataset_size, skip the following images ')
+                break
+
             # check height, width, band count, datatype
             height, width, count, dtype = raster_io.get_height_width_bandnum_dtype(new_img)
             o_height, o_width, o_count, o_dtype = raster_io.get_height_width_bandnum_dtype(org_img)
