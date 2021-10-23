@@ -260,8 +260,8 @@ def merge_subImages_from_gan(multi_gan_source_regions,multi_gan_regions,gan_work
             new_img = os.path.join(gan_project_save_dir,'subImages_translate', 'I%d.tif' % idx)
 
             if os.path.isfile(new_img) is False:
-                basic.outputlogMessage('warning, %d th image does not exists, '
-                                       'may exceed gen_max_dataset_size, skip the following images ')
+                basic.outputlogMessage('warning, %d th image does not exist, '
+                                       'may exceed gen_max_dataset_size, skip the following images '%idx)
                 break
 
             # check height, width, band count, datatype
