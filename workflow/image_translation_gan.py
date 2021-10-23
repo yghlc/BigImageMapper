@@ -414,6 +414,7 @@ def image_translate_train_generate_main(para_file, gpu_num):
     while basic.b_all_process_finish(sub_tasks) is False:
         basic.outputlogMessage('wait all tasks to finish')
         time.sleep(60)
+    basic.check_exitcode_of_process(sub_tasks)
     basic.close_remove_completed_process(sub_tasks)
 
     save_image_dir = parameters.get_string_parameters(para_file,'input_train_dir')

@@ -212,6 +212,12 @@ def close_remove_completed_process(processes):
             task.close()
             processes.remove(task)
 
+def check_exitcode_of_process(processes):
+    # check exitcode, if not 0, the quit
+    for task in processes:
+        if task.exitcode is not None and task.exitcode != 0:
+            sys.exit(task.exitcode)
+
 
 def get_curr_process_openfiles():
     # the the open files by current process
