@@ -403,7 +403,7 @@ def image_translate_train_generate_main(para_file, gpu_num):
             else:
                 time.sleep(5)
 
-        time.sleep(5)   # wait, allowing time for the GAN process to start.
+        time.sleep(10)   # wait, allowing time for the GAN process to start, and run into problem
 
         if sub_process.exitcode is not None and sub_process.exitcode != 0:
             sys.exit(1)
