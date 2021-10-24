@@ -309,6 +309,7 @@ def inf_remoteSensing_image(model,image_path=None):
         # split to many batches (groups)
         idx = 0     #index of all patches on this image
         patch_batches = build_RS_data.split_patches_into_batches(aImage_patches,FLAGS.inf_batch_size)
+        save_one_patch_to_disk = False
 
         for a_batch_of_patches in patch_batches:
 
@@ -362,6 +363,10 @@ def inf_remoteSensing_image(model,image_path=None):
                         save_img_patch_list.append(img_patch)
                         save_segmap_list.append(seg_map)
                         save_path_list.append(save_path)
+                        # save one patch to disk, indicate the prediction has started and GPUs is occupied.
+                        if save_one_patch_to_disk is False:
+                            build_RS_data.save_patch_oneband_8bit(img_patch, seg_map.astype(np.uint8), save_path)
+                            save_one_patch_to_disk = True
                     else:
                         if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
                             return False
