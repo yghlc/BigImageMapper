@@ -193,6 +193,16 @@ class DeepLabModel(object):
 
         return True
 
+def copy_one_patch_image_data(patch, entire_img_data):
+    #(xoff,yoff ,xsize, ysize)
+    row_s = patch[1]
+    row_e = patch[1] + patch[3]
+    col_s = patch[0]
+    col_e = patch[0] + patch[2]
+    # patch_data = entire_img_data[row_s:row_e, col_s:col_e, :]   # opencv format #
+    patch_data = entire_img_data[:, row_s:row_e, col_s:col_e]     #  band_num, height, width,
+    return patch_data
+
 
 def inference_one_patch(img_idx,idx,org_img_path,boundary,model):
     """
@@ -246,6 +256,8 @@ def inf_remoteSensing_image(model,image_path=None):
     overlay_x = parameters.get_digit_parameters(FLAGS.inf_para_file, "inf_pixel_overlay_x", 'int')
     overlay_y = parameters.get_digit_parameters(FLAGS.inf_para_file, "inf_pixel_overlay_y", 'int')
 
+    b_use_memory = parameters.get_bool_parameters_None_if_absence(FLAGS.inf_para_file,'b_inf_memory_buffer')
+
     if image_path is not None:
         with open('saved_inf_list.txt','w') as f_obj:
             f_obj.writelines(image_path)
@@ -268,6 +280,17 @@ def inf_remoteSensing_image(model,image_path=None):
 
         print('start inference on Image  %d' % img_idx)
         patch_num = len(aImage_patches)
+
+        entire_img_data = None
+        save_img_patch_list = []
+        save_path_list = []
+        save_segmap_list = []
+
+        if b_use_memory:
+            # read the entire image
+            entire_img_data = build_RS_data.read_image(aImage_patches[0].org_img)  # , nodata
+            entire_height, entire_width, band_num = entire_img_data.shape
+            print("entire_height, entire_width, band_num", entire_height, entire_width, band_num)
 
         # ## parallel inference patches
         # # but it turns out not work due to the Pickle.PicklingError
@@ -297,7 +320,10 @@ def inf_remoteSensing_image(model,image_path=None):
             # read image data and stack at 0 dimension
             multi_image_data = []
             for img_patch in a_batch_of_patches:
-                img_data = build_RS_data.read_patch(img_patch)
+                if b_use_memory:
+                    img_data = copy_one_patch_image_data(img_patch.boundary,entire_img_data)
+                else:
+                    img_data = build_RS_data.read_patch(img_patch)
                 ## ignore image patch are all black or white
                 if np.std(img_data[0]) < 0.0001:
                     print('Image (1st band):%d patch:%4d is black or white, ignore' %(img_idx, idx))
@@ -332,12 +358,24 @@ def inf_remoteSensing_image(model,image_path=None):
                     #     print('already exist, skip')
                     #     idx += 1
                     #     continue
-                    if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
-                        return False
+                    if b_use_memory:
+                        save_img_patch_list.append(img_patch)
+                        save_segmap_list.append(seg_map)
+                        save_path_list.append(save_path)
+                    else:
+                        if build_RS_data.save_patch_oneband_8bit(img_patch,seg_map.astype(np.uint8),save_path) is False:
+                            return False
 
                     idx += 1
             except:
                 print('\nPrediction Error for multi_images with shape:%s \n\n'% str(multi_images.shape))
+
+        if b_use_memory:
+            # save predict patches to disk
+            for idx, (img_patch,seg_map,save_path) in enumerate(zip(save_img_patch_list,save_segmap_list,save_path_list)):
+                print('Saving %d patch to disk, %d in total'%(idx, len(save_img_patch_list)))
+                if build_RS_data.save_patch_oneband_8bit(img_patch, seg_map.astype(np.uint8), save_path) is False:
+                    return False
 
         # # inference patches one by one, but it is too slow
         # # Oct 30,2018
