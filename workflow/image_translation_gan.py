@@ -77,11 +77,6 @@ def train_CUT_gan(python_path, train_script,gan_para_file,gpu_ids):
     if train_max_dataset_size is not None:
         command_string += ' --max_dataset_size ' + str(train_max_dataset_size)
 
-    # if it's cycleGAN, need to assign A generator
-    gan_model = parameters.get_string_parameters(gan_para_file, 'gan_model')
-    if gan_model == 'cycle_gan':
-        command_string += '--model_suffix _A'       # from A to B
-
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
     res = os.system(command_string)  # this work
@@ -127,6 +122,11 @@ def generate_image_CUT(python_path, generate_script, gan_para_file, gpu_ids, ima
     train_max_dataset_size = parameters.get_digit_parameters_None_if_absence(gan_para_file,'gen_max_dataset_size','int')
     if train_max_dataset_size is not None:
         command_string += ' --max_dataset_size ' + str(train_max_dataset_size)
+
+    # if it's cycleGAN, need to assign A generator
+    gan_model = parameters.get_string_parameters(gan_para_file, 'gan_model')
+    if gan_model == 'cycle_gan':
+        command_string += '--model_suffix _A'       # from A to B
 
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
