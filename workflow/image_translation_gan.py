@@ -126,7 +126,7 @@ def generate_image_CUT(python_path, generate_script, gan_para_file, gpu_ids, ima
     # if it's cycleGAN, need to assign A generator
     gan_model = parameters.get_string_parameters(gan_para_file, 'gan_model')
     if gan_model == 'cycle_gan':
-        command_string += '--model_suffix _A'       # from A to B
+        command_string += ' --model_suffix _A '       # from A to B
 
     # status, result = basic.exec_command_string(command_string)  # this will wait command finished
     # os.system(command_string + "&")  # don't know when it finished
