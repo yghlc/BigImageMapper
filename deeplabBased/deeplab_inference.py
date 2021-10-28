@@ -18,6 +18,7 @@
 # * Pillow
 # * numpy
 
+from datetime import datetime
 import os
 import sys
 
@@ -348,7 +349,7 @@ def inf_remoteSensing_image(model,image_path=None):
                     if num >= org_patch_num:
                         break
 
-                    print('Save segmentation result of Image:%d patch:%5d (total:%d), shape:(%d,%d)' %
+                    print(datetime.now(),'Save segmentation result of Image:%d patch:%5d (total:%d), shape:(%d,%d)' %
                           (img_idx, idx, patch_num, seg_map.shape[0], seg_map.shape[1]))
 
                     # short the file name to avoid  error of " Argument list too long", hlc 2018-Oct-29
