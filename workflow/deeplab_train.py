@@ -24,6 +24,7 @@ import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 import utility.plot_miou_loss_curve as plot_miou_loss_curve
+import GPUtil
 
 # pre-trained model with 21 classes
 pre_trained_tar_21_classes = ['xception_65_coco_pretrained_2018_10_02.tar.gz',
@@ -624,6 +625,11 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
 
             # run evaluation and wait until it finished
             gpuid = ""  # set gpuid to empty string, making evaluation run on CPU
+            # if there is avaiable GPUs, then use GPU to run the evaluation
+            deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
+                                            maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
+            if len(deviceIDs) > 0:
+                gpuid = str(deviceIDs[0])
             evl_script = os.path.join(deeplab_dir, 'eval.py')
             evl_split = os.path.splitext(parameters.get_string_parameters(para_file, 'validation_sample_list_txt'))[0]
             # max_eva_number = -1  # run as many evaluation as possible, --eval_interval_secs (default is 300 seconds)
