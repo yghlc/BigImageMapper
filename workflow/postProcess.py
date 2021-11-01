@@ -139,6 +139,7 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
     network_setting_ini = parameters.get_string_parameters(para_file,'network_setting_ini')
+    gan_setting_ini = parameters.get_string_parameters(para_file,'regions_n_setting_image_translation_ini')
 
 
     inf_dir = parameters.get_directory(para_file, 'inf_output_dir')
@@ -268,13 +269,17 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
     if len(test_note) > 0:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id,'para',test_note]) + '.ini' )
         bak_network_ini = os.path.join(backup_dir, '_'.join([test_id,'network',test_note]) + '.ini' )
+        bak_gan_ini = os.path.join(backup_dir, '_'.join([test_id,'gan',test_note]) + '.ini' )
         bak_time_cost = os.path.join(backup_dir, '_'.join([test_id,'time_cost',test_note]) + '.txt' )
     else:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id, 'para']) + '.ini')
         bak_network_ini = os.path.join(backup_dir, '_'.join([test_id, 'network']) + '.ini')
+        bak_gan_ini = os.path.join(backup_dir, '_'.join([test_id, 'gan']) + '.ini')
         bak_time_cost = os.path.join(backup_dir, '_'.join([test_id, 'time_cost']) + '.txt')
     io_function.copy_file_to_dst(para_file, bak_para_ini)
     io_function.copy_file_to_dst(network_setting_ini, bak_network_ini)
+    if gan_setting_ini is not None:
+        io_function.copy_file_to_dst(gan_setting_ini, bak_gan_ini)
     if os.path.isfile('time_cost.txt'):
         io_function.copy_file_to_dst('time_cost.txt', bak_time_cost)
 
