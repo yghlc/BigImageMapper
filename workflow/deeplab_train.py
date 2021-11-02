@@ -506,12 +506,14 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
     EVAL_LOGDIR = os.path.join(WORK_DIR,EXP_FOLDER,'eval')
     VIS_LOGDIR = os.path.join(WORK_DIR,EXP_FOLDER,'vis')
     EXPORT_DIR = os.path.join(WORK_DIR,EXP_FOLDER,'export')
+    EVAL_TRAIN_LOGDIR = os.path.join(WORK_DIR,EXP_FOLDER,'eval_train')
 
     io_function.mkdir(INIT_FOLDER)
     io_function.mkdir(TRAIN_LOGDIR)
     io_function.mkdir(EVAL_LOGDIR)
     io_function.mkdir(VIS_LOGDIR)
     io_function.mkdir(EXPORT_DIR)
+    io_function.mkdir(EVAL_TRAIN_LOGDIR)
 
     # prepare the tensorflow check point (pretrained model) for training
     pre_trained_dir = parameters.get_directory_None_if_absence(network_setting_ini, 'pre_trained_model_folder')
@@ -645,10 +647,27 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
             while eval_process.is_alive():
                 time.sleep(5)
 
+            # evaluate performance on training examples
+            miou_train_dict = get_miou_list_class_all(EVAL_TRAIN_LOGDIR, num_of_classes)
+            evl_train_split = os.path.splitext(parameters.get_string_parameters(para_file, 'training_sample_list_txt'))[0]
+            eval_training_process = Process(target=evaluation_deeplab,
+                            args=(evl_script, dataset, evl_train_split, num_of_classes, model_variant,
+                                    inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,
+                                    TRAIN_LOGDIR, EVAL_TRAIN_LOGDIR,
+                                    dataset_dir, crop_size_str, max_eva_number, depth_multiplier,
+                                    decoder_output_stride, aspp_convs_filters,
+                                    gpuid, eval_interval_secs))
+            eval_training_process.start()  # put Process inside while loop to avoid error: AssertionError: cannot start a process twice
+            while eval_training_process.is_alive():
+                time.sleep(5)
+            miou_train_dict = get_miou_list_class_all(EVAL_TRAIN_LOGDIR, num_of_classes)
+
+
         # check if need early stopping
         if b_early_stopping:
             print(datetime.now(), 'check early stopping')
             miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
+            miou_train_dict = get_miou_list_class_all(EVAL_TRAIN_LOGDIR, num_of_classes)
             if 'overall' in miou_dict.keys() and  len(miou_dict['overall']) >= 5:
                 # if the last five miou did not improve, then stop training
                 if np.all(np.diff(miou_dict['overall'][-5:]) < 0.005): # 0.0001 (%0.01)  # 0.5 %
@@ -669,11 +688,12 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
                         os.system('kill ' + str(train_pid))
                         basic.outputlogMessage('kill training processing with id: %d' % train_pid)
 
-                    break # this breaks the while loop, making that it may not evaluate on some new saved model.
+                    break
 
         # if the evaluation step is less than saved model iteration, run another iteration again immediately
         already_trained_iteration = get_trained_iteration(TRAIN_LOGDIR)
         miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
+        miou_train_dict = get_miou_list_class_all(EVAL_TRAIN_LOGDIR, num_of_classes)
         if already_trained_iteration > miou_dict['step'][-1]:
             continue
 
@@ -690,6 +710,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
     get_loss_learning_rate_list(TRAIN_LOGDIR)
     # get miou again
     miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
+    miou_train_dict = get_miou_list_class_all(EVAL_TRAIN_LOGDIR, num_of_classes)
 
     # eval_process did not exit as expected, kill it again.
     # os.system('kill ' + str(eval_process.pid))
@@ -697,6 +718,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
 
     # get iou and backup
     iou_path = os.path.join(EVAL_LOGDIR, 'miou.txt')
+    iou_train_path = os.path.join(EVAL_TRAIN_LOGDIR, 'miou.txt')
     loss_path = os.path.join(TRAIN_LOGDIR, 'loss_learning_rate.txt')
     patch_info = os.path.join(WORK_DIR, 'sub_images_patches_info.txt')
 
@@ -705,8 +727,10 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
     backup_dir = os.path.join(WORK_DIR, 'result_backup')
     if os.path.isdir(backup_dir) is False:
         io_function.mkdir(backup_dir)
-    new_iou_name = os.path.join(backup_dir, test_id+ '_'+os.path.basename(iou_path))
+    new_iou_name = os.path.join(backup_dir, test_id+ '_val_'+os.path.basename(iou_path))
+    new_iou_training_name = os.path.join(backup_dir, test_id + '_train_' + os.path.basename(iou_train_path))
     io_function.copy_file_to_dst(iou_path, new_iou_name, overwrite=True)
+    io_function.copy_file_to_dst(iou_train_path, new_iou_training_name, overwrite=True)
 
     loss_new_name = os.path.join(backup_dir,test_id+ '_'+os.path.basename(loss_path))
     io_function.copy_file_to_dst(loss_path, loss_new_name, overwrite=True)
@@ -716,9 +740,12 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
 
     # plot mIOU, loss, and learnint rate curves, and backup
     miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
+    miou_training_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_train_path, train_count=train_count, val_count=train_count,batch_size=batch_size)
     loss_curve_path = plot_miou_loss_curve.plot_miou_loss_main(loss_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
-    miou_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(miou_curve_path))
+    miou_curve_bakname = os.path.join(backup_dir, test_id+ '_val_'+os.path.basename(miou_curve_path))
+    miou_training_curve_bakname = os.path.join(backup_dir, test_id + '_train_' + os.path.basename(miou_training_curve_path))
     io_function.copy_file_to_dst(miou_curve_path, miou_curve_bakname, overwrite=True)
+    io_function.copy_file_to_dst(miou_training_curve_path, miou_training_curve_bakname, overwrite=True)
     loss_curve_bakname = os.path.join(backup_dir, test_id+ '_'+os.path.basename(loss_curve_path))
     io_function.copy_file_to_dst(loss_curve_path, loss_curve_bakname, overwrite=True)
 
