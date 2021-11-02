@@ -68,13 +68,13 @@ def get_iteration_num(WORK_DIR,para_file,network_setting_ini):
     train_epoch_num = parameters.get_digit_parameters_None_if_absence(network_setting_ini, 'train_epoch_num', 'int')
     if train_epoch_num is None:
         iteration_num = parameters.get_digit_parameters(network_setting_ini,'iteration_num','int')
-        with open('iteration_num.txt') as f_obj:
+        with open('iteration_num.txt','w') as f_obj:
             f_obj.writelines('iteration num is read from setting: %d\n'%iteration_num)
     else:
         train_count, val_count = get_train_val_sample_count(WORK_DIR, para_file)
         batch_size = parameters.get_digit_parameters(network_setting_ini, 'batch_size', 'int')
         iteration_num = math.ceil(train_epoch_num*train_count/batch_size)
-        with open('iteration_num.txt') as f_obj:
+        with open('iteration_num.txt','w') as f_obj:
             f_obj.writelines('iteration num (%d) is calculated from train_epoch_num: %d, training_sample_count: %d, '
                              'batch_size: %d\n'%(iteration_num,train_epoch_num,train_count,batch_size))
     return iteration_num
