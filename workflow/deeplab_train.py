@@ -765,7 +765,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
 
     # plot mIOU, loss, and learnint rate curves, and backup
     miou_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
-    miou_training_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_train_path, train_count=train_count, val_count=train_count,batch_size=batch_size)
+    miou_training_curve_path = plot_miou_loss_curve.plot_miou_loss_main(iou_train_path, train_count=train_count, val_count=val_count,batch_size=batch_size)
     loss_curve_path = plot_miou_loss_curve.plot_miou_loss_main(loss_path,train_count=train_count, val_count=val_count,batch_size=batch_size)
     miou_curve_bakname = os.path.join(backup_dir, test_id+ '_val_'+os.path.basename(miou_curve_path))
     miou_training_curve_bakname = os.path.join(backup_dir, test_id + '_train_' + os.path.basename(miou_training_curve_path))
