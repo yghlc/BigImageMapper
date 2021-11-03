@@ -33,8 +33,8 @@ Please check out the [RSE2020paper](https://github.com/yghlc/Landuse_DL/tree/RES
 }
 ```
 
-## How to use
-See the script: working_dir/exe.sh
+## How to install  use
+See [tutorial](https://github.com/yghlc/Landuse_DL/tree/master/tutorial) and the script: working_dir/exe.sh
 
 ## Contributions
 Please let me know or pull a request if you spot any bug or typo. Thanks!
