@@ -157,6 +157,8 @@ def main(options, args):
         area_ini_list = io_function.get_file_list_by_ext('.ini',data_ini_dir,bsub_folder=False)
     else:
         area_ini_list = io_function.read_list_from_txt(data_ini_dir)
+        # change to abslute path, since later, directory will be changed
+        area_ini_list = [ os.path.abspath(item) for item in area_ini_list ]
 
     for idx,area_ini in enumerate(area_ini_list):
         basic.outputlogMessage('%d/%d evaluation on %d areas'%(idx, len(area_ini_list), idx))
