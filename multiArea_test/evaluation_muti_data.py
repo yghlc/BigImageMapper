@@ -41,7 +41,7 @@ def run_exe_eval():
     return res
 
 
-def run_evaluation_one_dataset(idx, area_ini):
+def run_evaluation_one_dataset(idx, area_ini,training_root_dir,template_dir):
 
     curr_dir = os.getcwd()
 
@@ -136,17 +136,7 @@ def run_evaluation_one_dataset(idx, area_ini):
 
     os.chdir(curr_dir)
 
-def main():
-
-    # get data list
-    area_ini_list = io_function.get_file_list_by_ext('.ini',data_ini_dir,bsub_folder=False)
-    for idx,area_ini in enumerate(area_ini_list):
-        basic.outputlogMessage('%d/%d evaluation on %d areas'%(idx, len(area_ini_list), idx))
-        run_evaluation_one_dataset(idx,area_ini)
-
-
-if __name__ == '__main__':
-
+def main(options, args):
     # data_ini_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/WR_multiDate_inis')
     # training_root_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/ray_results/tune_dataAug_para_tesia')
     # template_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/eval_new_data')
@@ -155,7 +145,43 @@ if __name__ == '__main__':
     training_root_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/multiArea_deeplabV3+_8')
     template_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/multiArea_deeplabV3+_8')
 
+    if options.data_ini_dir_or_list is not None:
+        data_ini_dir = options.data_ini_dir_or_list
+    if options.training_root_dir is not None:
+        training_root_dir = options.training_root_dir
+    if options.template_dir is not None:
+        template_dir  = options.template_dir
+
+    # get data list
+    if os.path.isdir(data_ini_dir):
+        area_ini_list = io_function.get_file_list_by_ext('.ini',data_ini_dir,bsub_folder=False)
+    else:
+        area_ini_list = io_function.read_list_from_txt(data_ini_dir)
+
+    for idx,area_ini in enumerate(area_ini_list):
+        basic.outputlogMessage('%d/%d evaluation on %d areas'%(idx, len(area_ini_list), idx))
+        run_evaluation_one_dataset(idx,area_ini,training_root_dir,template_dir)
+
+
+if __name__ == '__main__':
+    usage = "usage: %prog [options] training_root_dir "
+    parser = OptionParser(usage=usage, version="1.0 2021-03-17")
+    parser.description = 'Introduction: collect parameters and training results (miou) '
+
+    parser.add_option("-i", "--data_ini_dir_or_list",
+                      action="store", dest="data_ini_dir_or_list",
+                      help="the list for area ini file, if is folder, will get list from the folder")
+
+    parser.add_option("-t", "--training_root_dir",
+                      action="store", dest="training_root_dir",
+                      help="the root directory of training, where the trained model is")
+
+    parser.add_option("-m", "--template_dir",
+                      action="store", dest="template_dir",  #default='multiArea_deeplabv3P_?????',
+                      help="the folder where template are localted")
+
+    (options, args) = parser.parse_args()
     max_run_jobs = 5
     curc_username = 'lihu9680'
 
-    main()
+    main(options, args)
