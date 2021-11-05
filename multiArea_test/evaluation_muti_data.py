@@ -96,7 +96,7 @@ def run_evaluation_one_dataset(idx, area_ini,training_root_dir,template_dir):
         while True:
             # get available GPUs  # https://github.com/anderskm/gputil
             deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
-                                            maxMemory=0.1, includeNan=False, excludeID=[], excludeUUID=[])
+                                            maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
             print('deviceIDs:',deviceIDs)
             if len(deviceIDs) < 1:
                 time.sleep(60)  # wait one minute, then check the available GPUs again
