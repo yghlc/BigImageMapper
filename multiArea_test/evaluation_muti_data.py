@@ -130,7 +130,11 @@ def run_evaluation_one_dataset(idx, area_ini,training_root_dir,template_dir):
         sub_process = Process(target=run_exe_eval)
         sub_process.start()
         local_tasks.append(sub_process)
-
+        
+        # wait 10 seconds
+        time.sleep(10)
+        if sub_process.exitcode is not None and sub_process.exitcode !=0:
+            sys.exit(1)
 
 
 
