@@ -95,9 +95,9 @@ def run_evaluation_one_dataset(idx, area_ini,training_root_dir,template_dir):
         deviceIDs = []
         while True:
             # get available GPUs  # https://github.com/anderskm/gputil
-            deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
+            deviceIDs = GPUtil.getAvailable(order='memory', limit=100, maxLoad=0.5,
                                             maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
-            print('deviceIDs:',deviceIDs)
+            basic.outputlogMessage('deviceIDs: %s'%str(deviceIDs))
             if len(deviceIDs) < 1:
                 time.sleep(60)  # wait one minute, then check the available GPUs again
                 continue
@@ -131,8 +131,17 @@ def run_evaluation_one_dataset(idx, area_ini,training_root_dir,template_dir):
         sub_process.start()
         local_tasks.append(sub_process)
         
-        # wait 10 seconds
-        time.sleep(10)
+        # wait until the assigned is used or exceed 100 seconds
+        t0=time.time()
+        while (t1-t0) < 100:
+            gpu_ids = GPUtil.getAvailable(order='memory', limit=100, maxLoad=0.5,
+                                            maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
+            if gpu_ids[0] == gpuid:
+                time.sleep(0.5)
+            else:
+                break
+            t1 = time.time()
+        
         if sub_process.exitcode is not None and sub_process.exitcode !=0:
             sys.exit(1)
 
