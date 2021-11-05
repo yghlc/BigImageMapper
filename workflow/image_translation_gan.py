@@ -336,6 +336,7 @@ def image_translate_train_generate_main(para_file, gpu_num):
 
         area_ini = os.path.abspath(area_gan_ini)
         area_src_ini = os.path.abspath(area_src_ini)
+        area_src_name = os.path.split(os.path.basename(area_src_ini))[0]
         area_name = parameters.get_string_parameters(area_ini, 'area_name')
         area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
         area_time = parameters.get_string_parameters(area_ini, 'area_time')
@@ -350,7 +351,7 @@ def image_translate_train_generate_main(para_file, gpu_num):
         if img_count < 1:
             raise ValueError('No image for image translation, please check inf_image_dir and inf_image_or_pattern in %s' % area_ini)
 
-        gan_project_save_dir = os.path.join(gan_working_dir, gan_dir_pre_name + '_' + area_name + '_' + area_remark + '_' + area_time)
+        gan_project_save_dir = os.path.join(gan_working_dir, gan_dir_pre_name + '_' + area_name + '_' + area_remark + '_' + area_time+'_SRC%s'%area_src_name)
 
         if os.path.isdir(gan_project_save_dir):
             if generate_image_exists(gan_project_save_dir) is True:
