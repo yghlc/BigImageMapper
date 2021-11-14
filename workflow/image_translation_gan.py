@@ -338,10 +338,10 @@ def image_translate_train_generate_main(para_file, gpu_num):
         basic.outputlogMessage('%d: source and target area: %s vs %s'%(area_idx,area_src_ini,area_gan_ini))
 
     gan_working_dir = parameters.get_string_parameters(gan_para_file, 'working_root')
-    gan_dir_pre_name = parameters.get_string_parameters(gan_para_file, 'gan_dir_pre_name')
-    # add GAN model name into the folder name
+    # gan_dir_pre_name = parameters.get_string_parameters(gan_para_file, 'gan_dir_pre_name')
+    # use GAN model name as the gan_dir_pre_name
     gan_model = parameters.get_string_parameters(gan_para_file, 'gan_model')
-    gan_dir_pre_name += '_' + gan_model
+    gan_dir_pre_name =  gan_model # '_' +
 
     # loop each regions need image translation
     sub_tasks = []
