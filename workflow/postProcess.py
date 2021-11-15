@@ -139,7 +139,7 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
     network_setting_ini = parameters.get_string_parameters(para_file,'network_setting_ini')
-    gan_setting_ini = parameters.get_string_parameters(para_file,'regions_n_setting_image_translation_ini')
+    gan_setting_ini = parameters.get_string_parameters_None_if_absence (para_file,'regions_n_setting_image_translation_ini')
 
 
     inf_dir = parameters.get_directory(para_file, 'inf_output_dir')
