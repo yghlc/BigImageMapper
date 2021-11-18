@@ -41,6 +41,31 @@ else:
     sur_water_dir = os.path.expanduser('~/Data/global_surface_water')
 
 
+def resample_crop_raster_using_shp(ref_shp, input_raster, output_raster=None, resample_method='near'):
+    if output_raster is None:
+        output_raster = io_function.get_name_by_adding_tail(os.path.basename(input_raster),'res_sub')
+
+    # check projection
+    prj4_ref = map_projection.get_raster_or_vector_srs_info_proj4(ref_shp)
+    prj4_input = map_projection.get_raster_or_vector_srs_info_proj4(input_raster)
+    if prj4_ref != prj4_input:
+        raise ValueError('projection inconsistent: %s and %s'%(ref_shp, input_raster))
+
+    if os.path.isfile(output_raster):
+        print('Warning, %s exists'%output_raster)
+        return output_raster
+
+    # crop
+    out_res = 10
+    # RSImageProcess.subset_image_baseimage(output_raster, input_raster, ref_raster, same_res=True,resample_m=resample_method)
+    RSImageProcess.subset_image_by_shapefile(input_raster,ref_shp,save_path=output_raster, dst_nondata=128,resample_m=resample_method,
+                                             xres=out_res, yres=out_res,compress='lzw', tiled='yes', bigtiff='IF_SAFER')
+    if os.path.isfile(output_raster):
+        return output_raster
+    else:
+        return False
+
+
 def resample_crop_raster(ref_raster, input_raster, output_raster=None, resample_method='near'):
 
     if output_raster is None:

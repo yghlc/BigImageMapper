@@ -39,6 +39,7 @@ else:
 
 
 from flooding_proc_accuracy import resample_crop_raster
+from flooding_proc_accuracy import resample_crop_raster_using_shp
 
 
 def mask_nodata_regions_surface_water(ref_raster, in_raster, out_raster, ref_nodata=0, out_nodata=0):
@@ -68,6 +69,46 @@ def mask_nodata_regions_surface_water(ref_raster, in_raster, out_raster, ref_nod
 
     return True
 
+def surface_water_Houston_use_shapefile():
+
+    # notes that: these is a tiny gap between ref_raster_up and ref_raster_down, around 30 m width,
+    # end in a line in the figure of surface water.
+    # think about using another way to crop surface water, get shapefile of these two, then edit the shapefile and use the shapefile for cropping
+
+    ref_raster_up = os.path.join(data_dir,
+    'Houston/Houston_SAR_GRD_FLOAT_gee/S1_Houston_prj_8bit_select/S1A_IW_GRDH_1SDV_20170829T002645_20170829T002710_018131_01E74D_3220_prj_8bit.tif')
+
+    ref_raster_down = os.path.join(data_dir,
+    'Houston/Houston_SAR_GRD_FLOAT_gee/S1_Houston_prj_8bit_select/S1A_IW_GRDH_1SDV_20170829T002620_20170829T002645_018131_01E74D_D734_prj_8bit.tif')
+
+
+    # # get shapefile
+    # py = os.path.expanduser('~/codes/PycharmProjects/rs_data_proc/tools/get_image_valid_extent.py')
+    # command_str = py + '  ' + ref_raster_up
+    # res = os.system(command_str)
+    # if res != 0:
+    #     sys.exit(1)
+    #
+    # command_str = py + '  ' + ref_raster_down
+    # res = os.system(command_str)
+    # if res != 0:
+    #     sys.exit(1)
+
+    # based the merge and edit the shapefile got above
+
+    # after get the shapefile, they have many Jagged polygons edges. and hard to edit.
+    # so, easy way is to manually draw of polygon indicate the valid regon of image in Houson, then use it to crop surface water.
+
+    valid_shp = os.path.expanduser('~/Data/flooding_area/Houston/extent_image_valid/houston_valid_image_extent.shp')
+
+    # global surface water
+    surface_water=os.path.join(sur_water_dir,'extent_epsg2163_houston/extent_100W_30_40N_v1_3_2020.tif')
+    output_raster_nodata_mask = io_function.get_name_by_adding_tail(os.path.basename(surface_water), 'res_sub_nodata')
+
+    resample_crop_raster_using_shp(valid_shp,surface_water,output_raster_nodata_mask)
+
+
+
 def surface_water_Houston():
 
     ref_raster_up = os.path.join(data_dir,
@@ -75,6 +116,10 @@ def surface_water_Houston():
 
     ref_raster_down = os.path.join(data_dir,
     'Houston/Houston_SAR_GRD_FLOAT_gee/S1_Houston_prj_8bit_select/S1A_IW_GRDH_1SDV_20170829T002620_20170829T002645_018131_01E74D_D734_prj_8bit.tif')
+
+    # notes that: these is a tiny gap between ref_raster_up and ref_raster_down, around 30 m width,
+    # end in a line in the figure of surface water.
+    # think about using another way to crop surface water, get shapefile of these two, then edit the shapefile and use the shapefile for cropping
 
     # global surface water
     surface_water=os.path.join(sur_water_dir,'extent_epsg2163_houston/extent_100W_30_40N_v1_3_2020.tif')
@@ -110,7 +155,9 @@ def surface_water_Houston():
     return True
 
 def main():
-    surface_water_Houston()
+    # surface_water_Houston()
+
+    surface_water_Houston_use_shapefile()
 
     pass
 
