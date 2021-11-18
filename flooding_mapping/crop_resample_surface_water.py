@@ -84,8 +84,9 @@ def surface_water_Houston():
     surface_water_crop = resample_crop_raster(ref_raster_up, surface_water,output_raster=output_raster_up)
 
     # mask nodata regions
+    out_nodata = 128        # because 255 is used to indicate ocean, so set 128 as nodata
     out_nodata_raster_up = io_function.get_name_by_adding_tail(output_raster_up,'nodataMask')
-    mask_nodata_regions_surface_water(ref_raster_up, surface_water_crop, out_nodata_raster_up, ref_nodata=0, out_nodata=255)
+    mask_nodata_regions_surface_water(ref_raster_up, surface_water_crop, out_nodata_raster_up, ref_nodata=0, out_nodata=out_nodata)
 
     # resample and crop to the same resolution and extent
     output_raster_down = io_function.get_name_by_adding_tail(os.path.basename(surface_water),'res_sub_down')
@@ -93,14 +94,18 @@ def surface_water_Houston():
 
     # mask nodata regions
     out_nodata_raster_down = io_function.get_name_by_adding_tail(output_raster_down,'nodataMask')
-    mask_nodata_regions_surface_water(ref_raster_down, surface_water_crop, out_nodata_raster_down, ref_nodata=0, out_nodata=255)
+    mask_nodata_regions_surface_water(ref_raster_down, surface_water_crop, out_nodata_raster_down, ref_nodata=0, out_nodata=out_nodata)
 
     # merge these two?
     output_raster_nodata_mask = io_function.get_name_by_adding_tail(os.path.basename(surface_water), 'res_sub_nodata')
-    command_str = 'gdal_merge.py -o %s -n 255 -a_nodata 255 -co compress=lzw %s %s'%(output_raster_nodata_mask,out_nodata_raster_up,out_nodata_raster_down)
+    command_str = 'gdal_merge.py -o %s -n %d -a_nodata %d -co compress=lzw %s %s'%(output_raster_nodata_mask,out_nodata,out_nodata,
+                                                                    out_nodata_raster_up,out_nodata_raster_down)
     res = os.system(command_str)
     if res != 0:
         sys.exit(1)
+
+    # remove the nodata, allow QGIS to custermize
+    # raster_io.remove_nodata_from_raster_metadata(output_raster_nodata_mask)
 
     return True
 
