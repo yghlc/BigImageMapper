@@ -97,10 +97,11 @@ def resample_crop_raster(ref_raster, input_raster, output_raster=None, resample_
     else:
         return False
 
-def mask_by_surface_water(map_raster, surface_water_crop):
+def mask_by_surface_water(map_raster, surface_water_crop, save_dir='./'):
 
     # save mask result to current folder
     save_mask_result = io_function.get_name_by_adding_tail(os.path.basename(map_raster),'WaterMask')
+    save_mask_result = os.path.join(save_dir,save_mask_result)
     if os.path.isfile(save_mask_result):
         print('warning, %s exists'%save_mask_result)
         return save_mask_result
@@ -162,12 +163,31 @@ def post_processing_Houston():
     # dem_crop = resample_crop_raster(dl_map_20170829,dem_path)
 
     # mask by using the global surface water
-    dl_map_20170829_watermask = mask_by_surface_water(dl_map_20170829,surface_water_crop)
+    save_dir = os.path.dirname(dl_map_20170829)
+    dl_map_20170829_watermask = mask_by_surface_water(dl_map_20170829,surface_water_crop,save_dir=save_dir)
 
     modis_map_20170829_watermask = mask_by_surface_water(modis_map_20170829,surface_water_crop)
 
     # condauct accuracy assesement
-    classify_assess.pixel_accuracy_assessment(modis_map_20170829_watermask,dl_map_20170829_watermask)
+    # classify_assess.pixel_accuracy_assessment(modis_map_20170829_watermask,dl_map_20170829_watermask)
+
+
+def apply_water_mask_to_mapping_result_Houston():
+
+    #  these three mapping results have the same extent
+    dl_map_results = ['mapping_polygons_rasters/exp1_grd_Houston/Houston_SAR_20170829_houston_deeplabV3+_1_exp1_post_1_label.tif',
+                      'mapping_polygons_rasters/exp2_binary_Houston/Houston_SAR_20170829_houston_deeplabV3+_1_exp2_post_1_label.tif',
+                      'mapping_polygons_rasters/exp4_3band_Houston/Houston_SAR_polar_20170829_houston_deeplabV3+_1_exp4_post_2_label.tif']
+
+    dl_map_results = [os.path.join(data_dir,item) for item in dl_map_results]
+    # global surface water
+    surface_water = os.path.join(sur_water_dir, 'extent_epsg2163_houston/extent_100W_30_40N_v1_3_2020.tif')
+
+    # resample and crop to the same resolution and extent
+    surface_water_crop = resample_crop_raster(dl_map_results[0],surface_water)
+    for dl_map_res in dl_map_results:
+        save_dir = os.path.dirname(dl_map_res)
+        dl_map_res_watermask = mask_by_surface_water(dl_map_res, surface_water_crop, save_dir=save_dir)
 
 
     pass
@@ -225,7 +245,9 @@ def main():
 
     # post_processing_Houston()
 
-    post_processing_Goapara()
+    apply_water_mask_to_mapping_result_Houston()
+
+    # post_processing_Goapara()
 
 
     pass
