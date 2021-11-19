@@ -41,9 +41,10 @@ else:
     sur_water_dir = os.path.expanduser('~/Data/global_surface_water')
 
 
-def resample_crop_raster_using_shp(ref_shp, input_raster, output_raster=None, resample_method='near'):
+def resample_crop_raster_using_shp(ref_shp, input_raster, output_raster=None, resample_method='near',save_dir='./'):
     if output_raster is None:
         output_raster = io_function.get_name_by_adding_tail(os.path.basename(input_raster),'res_sub')
+        output_raster = os.path.join(save_dir,output_raster)
 
     # check projection
     prj4_ref = map_projection.get_raster_or_vector_srs_info_proj4(ref_shp)
@@ -180,6 +181,22 @@ def apply_water_mask_to_mapping_result_Houston():
                       'mapping_polygons_rasters/exp4_3band_Houston/Houston_SAR_polar_20170829_houston_deeplabV3+_1_exp4_post_2_label.tif']
 
     dl_map_results = [os.path.join(data_dir,item) for item in dl_map_results]
+
+    other_data_dir = os.path.expanduser('~/Data/flooding_area/flooding_rasters_other_results/Houston')
+    other_map_results = ['2017082920170805_cleaned_region_prj_label.tif',        # S1 results from DFO
+                        'TwoweekMODIS20170904_region_prj_label.tif']            # Modis results from DFO
+    other_map_results = [ os.path.join(other_data_dir,item)  for item in other_map_results]
+
+    dl_map_results.extend(other_map_results)
+
+    # binary results
+    bin_res_dir = os.path.expanduser('~/Data/flooding_area/Houston/Houston_binary/Harvey_8_29_255')
+    bin_results = ['S1A_IW_GRDH_1SDV_20170829T002620_20170829T002645_018131_01E74D_Sigma0_VH_Ptf_binaryLM_prj_255_merged.tif']
+    bin_results = [ os.path.join(bin_res_dir,item) for item in bin_results ]
+    dl_map_results.extend(bin_results)
+
+
+    valid_image_shp = os.path.expanduser('~/Data/flooding_area/Houston/extent_image_valid/houston_valid_image_extent.shp')
     # global surface water
     surface_water = os.path.join(sur_water_dir, 'extent_epsg2163_houston/extent_100W_30_40N_v1_3_2020.tif')
 
@@ -188,6 +205,11 @@ def apply_water_mask_to_mapping_result_Houston():
     for dl_map_res in dl_map_results:
         save_dir = os.path.dirname(dl_map_res)
         dl_map_res_watermask = mask_by_surface_water(dl_map_res, surface_water_crop, save_dir=save_dir)
+
+        # crop the mapping raster to extent of valid image area
+        resample_crop_raster_using_shp(valid_image_shp,dl_map_res_watermask,save_dir=save_dir)
+
+
 
 
     pass
