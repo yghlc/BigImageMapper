@@ -769,6 +769,49 @@ def raster2shapefile(in_raster, out_shp=None, driver='ESRI Shapefile', nodata=No
     return out_shp
 
 
+def read_colormaps_band1(raster_path):
+    # https://rasterio.readthedocs.io/en/latest/topics/color.html
+    with rasterio.open(raster_path) as src:
+        band_count = src.count
+        if band_count > 1:
+            print('warning, there are more than one band, but only read colormap for the first band')
+        # print(src.colorinterp)
+        colormap = None
+        try:
+            colormap = src.colormap(1)
+        except:
+            print('get colormap failed, could be: NULL color table')
+
+        if colormap is not None:
+            print('colormap for band 1 is:')
+            print(colormap)
+
+        return colormap
+
+
+def write_colormaps(raster_path, color_map_dict):
+
+    # update the raster file
+    with rasterio.open(raster_path,mode='r+') as src:
+
+        band_count = src.count
+        if band_count > 1:
+            print('warning, there are more than one band, but only update colormap for the first band')
+
+        src.write_colormap(
+            1, color_map_dict)
+
+        print('Write color map to %s'%raster_path)
+
+        # read and check
+        # cmap = src.colormap(1)
+        # # True
+        # assert cmap[0] == (255, 0, 0, 255)
+        # # True
+        # assert cmap[1] == (0, 0, 255, 255)
+
+    return True
+
 
 def main():
     pass

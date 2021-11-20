@@ -98,6 +98,15 @@ def resample_crop_raster(ref_raster, input_raster, output_raster=None, resample_
     else:
         return False
 
+
+def set_color_map(input_raster):
+    color_map_dict = {0: (230,230,230,255),
+                 1:(31,120,180, 255), # light blue for water
+                 128:(255,255,255,255), # nodata
+                 255:(31,120,180, 255)} # light blue for water, in some file, 255 is water
+
+    raster_io.write_colormaps(input_raster,color_map_dict)
+
 def mask_by_surface_water(map_raster, surface_water_crop, save_dir='./'):
 
     # save mask result to current folder
@@ -207,8 +216,10 @@ def apply_water_mask_to_mapping_result_Houston():
         dl_map_res_watermask = mask_by_surface_water(dl_map_res, surface_water_crop, save_dir=save_dir)
 
         # crop the mapping raster to extent of valid image area
-        resample_crop_raster_using_shp(valid_image_shp,dl_map_res_watermask,save_dir=save_dir)
+        raster_crop = resample_crop_raster_using_shp(valid_image_shp,dl_map_res_watermask,save_dir=save_dir)
 
+        # set colormap for the raster
+        set_color_map(raster_crop)
 
 
 
