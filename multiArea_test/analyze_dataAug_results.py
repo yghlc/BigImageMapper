@@ -97,13 +97,13 @@ def output_mean_max_miou_all_test_data(test_xlsx_list, train_val_table):
     for xlsx in test_xlsx_list:
         print(xlsx)
         test_pd_table = pd.read_excel(xlsx)
-        miou_c1_list = test_pd_table['class_1'].tolist()
-        train_dir_list = test_pd_table['train_dir'].tolist()
-        key = os.path.splitext(os.path.basename(xlsx))[0]
-        mean_miou_c1_each_test[key] = sum(miou_c1_list)/len(miou_c1_list)
-        max_miou_c1_each_test[key] = max(miou_c1_list)
+        miou_c1_list = test_pd_table['class_1'].tolist()        # miou of different model
+        train_dir_list = test_pd_table['train_dir'].tolist()    # training dir for different model
+        key = os.path.splitext(os.path.basename(xlsx))[0]       # image_folder
+        mean_miou_c1_each_test[key] = sum(miou_c1_list)/len(miou_c1_list)   # the mean value across different models
+        max_miou_c1_each_test[key] = max(miou_c1_list)          # the maximum value across different models.
 
-        # get trianing_dir
+        # get trianing_dir and data aug options for the max miou
         max_idx = miou_c1_list.index(max_miou_c1_each_test[key])
         train_dir = train_dir_list[max_idx]
         data_aug_options = find_info_realted_to_train_dir(train_val_table,train_dir,'data_augmentation')
@@ -145,8 +145,8 @@ def output_mean_max_miou_all_test_data(test_xlsx_list, train_val_table):
 def main():
     # miou for the validation data (10%)
     dataAug_table = pd.read_excel(dataAug_res_WR)
-    # output_max_min_miou(dataAug_table)
-    # output_miou_for_each_dataAug_options(dataAug_table)
+    output_max_min_miou(dataAug_table)
+    output_miou_for_each_dataAug_options(dataAug_table)
 
     # miou for test data (different dates)
     output_mean_max_miou_all_test_data(test_dataAug_res_WR_list,dataAug_table)
