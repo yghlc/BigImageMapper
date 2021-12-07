@@ -50,11 +50,11 @@ def trial_name_string(trial):
     print('\n\n trial_name_string:\n',trial,'\n\n')
     return str(trial)
 
-def trial_dir_string(trial_id,experiment_tag):
+def trial_dir_string(trial_id):
     # print('\n\n trial_dir_string:\n',trial,'\n\n')
     # return str(trial)   # should able to have more control on the dirname
     basic.outputlogMessage('trial_id: %s'%trial_id)
-    basic.outputlogMessage('experiment_tag: %s'%experiment_tag)
+    # basic.outputlogMessage('experiment_tag: %s'%experiment_tag)
     return 'multiArea_deeplabv3P' + str(trial_id)[-6:]  # should not write as [-6:-1], use the last 5 digits + '_'.
 
 def get_overall_miou(miou_path):
