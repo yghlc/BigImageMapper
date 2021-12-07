@@ -208,7 +208,8 @@ def main():
 
     analysis = tune.run(
         training_function,
-        resources_per_trial={"gpu": 3}, # use three GPUs, 12 CPUs on tesia  # "cpu": 14, don't limit cpu, eval.py will not use all
+        # set gpu as 2 (can divide batch size), cpu 24, making it one run one trial each time.
+        resources_per_trial={"gpu": 2, "cpu": 24}, # use three GPUs, 12 CPUs on tesia  # "cpu": 14, don't limit cpu, eval.py will not use all
         local_dir=loc_dir,
         name=tune_name,
         # fail_fast=True,     # Stopping after the first failure
