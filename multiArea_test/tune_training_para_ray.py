@@ -19,6 +19,7 @@ import pandas as pd
 
 sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
+import basic_src.basic as basic
 
 backbones = ['deeplabv3plus_xception65.ini','deeplabv3plus_xception41.ini','deeplabv3plus_xception71.ini',
             'deeplabv3plus_resnet_v1_50_beta.ini','deeplabv3plus_resnet_v1_101_beta.ini',
@@ -49,9 +50,11 @@ def trial_name_string(trial):
     print('\n\n trial_name_string:\n',trial,'\n\n')
     return str(trial)
 
-def trial_dir_string(trial_id):
+def trial_dir_string(trial_id,experiment_tag):
     # print('\n\n trial_dir_string:\n',trial,'\n\n')
     # return str(trial)   # should able to have more control on the dirname
+    basic.outputlogMessage('trial_id: %s'%trial_id)
+    basic.outputlogMessage('experiment_tag: %s'%experiment_tag)
     return 'multiArea_deeplabv3P' + str(trial_id)[-6:]  # should not write as [-6:-1], use the last 5 digits + '_'.
 
 def get_overall_miou(miou_path):
@@ -185,7 +188,8 @@ def main():
     loc_dir = "./ray_results"
     # tune_name = "tune_traning_para_tesia"
     # tune_name = "tune_backbone_para_tesia"
-    tune_name = "tune_backbone_largeBatchS_tesia"
+    # tune_name = "tune_backbone_largeBatchS_tesia"
+    tune_name = "tune_backbone_para_tesia_v2"
     file_folders = io_function.get_file_list_by_pattern(os.path.join(loc_dir, tune_name),'*')
     # if len(file_folders) > 1:
     #     b_resume = True
@@ -194,13 +198,17 @@ def main():
 
     # try to resume after when through all (some failed), they always complain:
     # "Trials did not complete", incomplete_trials, so don't resume.
-    b_resume = False
+    file_folders = io_function.get_file_list_by_pattern(os.path.join(loc_dir, tune_name),'*')
+    if len(file_folders) > 1:
+        b_resume = True
+    else:
+        b_resume = False
     # max_failures = 2,
     # stop = tune.function(stop_function),
 
     analysis = tune.run(
         training_function,
-        resources_per_trial={"gpu": 2}, # use two GPUs, 12 CPUs on tesia  # "cpu": 14, don't limit cpu, eval.py will not use all
+        resources_per_trial={"gpu": 3}, # use three GPUs, 12 CPUs on tesia  # "cpu": 14, don't limit cpu, eval.py will not use all
         local_dir=loc_dir,
         name=tune_name,
         # fail_fast=True,     # Stopping after the first failure
@@ -209,9 +217,9 @@ def main():
         trial_dirname_creator=tune.function(trial_dir_string),
         resume=b_resume,
         config={
-            "lr": tune.grid_search([0.007, 0.014, 0.28]),   # ,0.007, 0.014, 0.028,0.056
+            "lr": tune.grid_search([0.0001, 0.007, 0.014, 0.021, 0.28]),   # ,0.007, 0.014, 0.028,0.056
             "iter_num": tune.grid_search([30000]), # , 60000,90000,
-            "batch_size": tune.grid_search([48, 64, 96]), # 8,16,32 16, 32, 64, 128
+            "batch_size": tune.grid_search([8, 16, 32, 48, 64, 96]), # 8,16,32 16, 32, 64, 128
             "backbone": tune.grid_search(backbones),
             "buffer_size": tune.grid_search([300]),     # 600
             "training_data_per": tune.grid_search([0.9]),   #, 0.8
