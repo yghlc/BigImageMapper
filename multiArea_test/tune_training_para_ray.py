@@ -218,9 +218,9 @@ def main():
         trial_dirname_creator=tune.function(trial_dir_string),
         resume=b_resume,
         config={
-            "lr": tune.grid_search([0.0001, 0.007, 0.014, 0.021, 0.28]),   # ,0.007, 0.014, 0.028,0.056
+            "lr": tune.grid_search([0.007, 0.014, 0.021, 0.28]),   # ,0.007, 0.014, 0.028,0.056
             "iter_num": tune.grid_search([30000]), # , 60000,90000,
-            "batch_size": tune.grid_search([8, 16, 32, 48, 64, 96]), # 8,16,32 16, 32, 64, 128
+            "batch_size": tune.grid_search([8, 16, 32, 48, 96]), # 8,16,32 16, 32, 64, 128
             "backbone": tune.grid_search(backbones),
             "buffer_size": tune.grid_search([300]),     # 600
             "training_data_per": tune.grid_search([0.9]),   #, 0.8
