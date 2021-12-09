@@ -47,6 +47,7 @@ def run_evaluation_multi_trained_models(train_root_dir,train_dir_pattern,para_fi
     eval_output['class_1'] = []
     eval_output['overall'] = []
     eval_output['step'] = []
+    eval_output['expr_name'] = []
     eval_output['train_dir'] = []
     eval_output['train_dir_path'] = []
 
@@ -69,6 +70,7 @@ def run_evaluation_multi_trained_models(train_root_dir,train_dir_pattern,para_fi
         # read
         eval_output['train_dir'].append(os.path.basename(train_folder))
         eval_output['train_dir_path'].append(train_folder)
+        eval_output['expr_name'].append(exp_name)
 
         # get miou
         get_miou_of_overall_and_class_1_step(working_dir, para_file, eval_output, eval_folder=os.path.basename(bak_miou_dir))
