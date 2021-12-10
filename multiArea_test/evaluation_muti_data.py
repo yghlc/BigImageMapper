@@ -138,7 +138,7 @@ def run_evaluation_one_dataset(idx, area_ini,training_root_dir,template_dir):
                                             maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
             t1 = time.time()
             # print(gpu_ids, t1-t0)
-            if gpu_ids[0] != gpuid or (t1-t0) > 100:
+            if len(gpu_ids) < 1 or gpu_ids[0] != gpuid or (t1-t0) > 100:
                 break 
             else:
                 time.sleep(0.5)
