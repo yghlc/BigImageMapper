@@ -197,8 +197,16 @@ if __name__ == '__main__':
                       action="store", dest="template_dir",  #default='multiArea_deeplabv3P_?????',
                       help="the folder where template are localted")
 
+    parser.add_option("-j", "--max_run_jobs",
+                      action="store", dest="max_run_jobs",type=int, default=5,
+                      help="the maximum run jobs ")
+
     (options, args) = parser.parse_args()
-    max_run_jobs = 5
+    max_run_jobs = options.max_run_jobs
     curc_username = 'lihu9680'
+
+    # parser.print_help()
+    # # print(max_run_jobs)
+    # sys.exit(1)
 
     main(options, args)
