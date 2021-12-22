@@ -110,12 +110,6 @@ def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training
         overall_miou = get_overall_miou(iou_path)
         return overall_miou
 
-    # for the cases, we have same parameter for preparing data, then just copy the data to save time.
-    copy_training_datas(training_data_dir,work_dir)
-
-
-
-
     # don't initialize the last layer when using these backbones
     if 'mobilenetv2' in backbone or 'mobilenetv3' in backbone or 'EdgeTPU' in backbone:
         modify_parameter(os.path.join(work_dir, para_file), 'b_initialize_last_layer', 'No')
@@ -130,6 +124,9 @@ def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training
     modify_parameter(os.path.join(work_dir, para_file),'training_data_per',training_data_per)
     modify_parameter(os.path.join(work_dir, para_file),'data_augmentation',data_augmentation)
     modify_parameter(os.path.join(work_dir, para_file),'data_aug_ignore_classes',data_aug_ignore_classes)
+
+    # for the cases, we have same parameter for preparing data, then just copy the data to save time.
+    copy_training_datas(training_data_dir,work_dir)
 
     # run training
     whole_procedure.run_whole_procedure(para_file, b_train_only=True)
