@@ -40,6 +40,7 @@ def main():
         os.chdir(word_dir)
         # copy and modify main_para.ini
         io_function.copyfiletodir(os.path.join(cur_dir,'main_para.ini'),'./',overwrite=True)
+        io_function.copyfiletodir(os.path.join(cur_dir,'exe.sh'),'./',overwrite=True)
 
         parameters.write_Parameters_file('main_para.ini','training_regions',area_ini)
 
