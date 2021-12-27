@@ -19,7 +19,7 @@ import basic_src.io_function as io_function
 
 def main():
     # run in ~/Data/Arctic/canada_arctic/autoMapping/multiArea_sub_images on tesia
-    ini_list = io_function.get_file_list_by_ext('.ini','./',bsub_folder=False)
+    ini_list = io_function.get_file_list_by_pattern('./','area*.ini')
     txt_list = io_function.get_file_list_by_pattern('./','area*.txt')
     for txt in txt_list:
         ini_s = io_function.read_list_from_txt(txt)
