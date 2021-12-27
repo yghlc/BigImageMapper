@@ -35,7 +35,7 @@ def main():
     time.sleep(3)
 
     for name, area_ini in zip(file_names,ini_list):
-        word_dir = os.path.join(cur_dir,'name')
+        word_dir = os.path.join(cur_dir,name)
         io_function.mkdir(word_dir)
         os.chdir(word_dir)
         # copy and modify main_para.ini
