@@ -19,16 +19,15 @@ import basic_src.basic as basic
 
 import matplotlib
 # must be before importing matplotlib.pyplot or pylab!
-if os.name == 'posix' and "DISPLAY" not in os.environ:
-    matplotlib.use('Agg')
+
+# if os.name == 'posix' and "DISPLAY" not in os.environ:
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
 # wall_time_to_relative time
 def wall_time_to_relative_time(wall_time_list):
-    if len(wall_time_list) < 2:
-        return 0, 0
-    diff_hours = [ (wall_time_list[idx+1] - wall_time_list[idx])/3600 for idx in range(len(wall_time_list) - 1) ]
+    diff_hours = [(wall_time_list[idx+1] - wall_time_list[idx])/3600 for idx in range(len(wall_time_list) - 1)]
     mean_diff = sum(diff_hours)/len(diff_hours)
 
     relative_time = [0,mean_diff]

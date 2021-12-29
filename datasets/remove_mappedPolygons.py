@@ -109,24 +109,12 @@ def remove_polygons_main(polygons_shp, output, para_file):
     b_smaller = True
     if dem_small_thr is not None:
         rm_dem_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmDEM')
-        if remove_polygons(polygons_shp, 'dem_mean', dem_small_thr, b_smaller, rm_dem_save_shp) is False:
-            basic.outputlogMessage("error, removing polygons based on dem_mean failed")
+        if remove_polygons(polygons_shp, 'dem_min', dem_small_thr, b_smaller, rm_dem_save_shp) is False:
+            basic.outputlogMessage("error, removing polygons based on dem_min failed")
         else:
             polygons_shp = rm_dem_save_shp
     else:
         basic.outputlogMessage('warning, minimum_elevation is absent in the para file, skip removing polygons based on minimum elevation')
-
-    ratio_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_ratio_width_height','float')
-    b_smaller = True
-    if ratio_thr is not None:
-        rm_ratio_w_h_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmRwh')
-        if remove_polygons(polygons_shp, 'ratio_w_h', ratio_thr, b_smaller, rm_ratio_w_h_save_shp) is False:
-            basic.outputlogMessage("error, removing polygons based on ratio_w_h failed")
-        else:
-            polygons_shp = rm_ratio_w_h_save_shp
-    else:
-        basic.outputlogMessage('warning, minimum_ratio_width_height is absent in the para file, skip removing polygons based on minimum ratio of width and height')
-
 
     # remove polygons based elevation reduction
     minimum_dem_reduction_area_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_dem_reduction_area','float')
@@ -163,6 +151,17 @@ def remove_polygons_main(polygons_shp, output, para_file):
     else:
         basic.outputlogMessage('warning, target_outline_shp is absent in the para file, skip removing polygons based on outlines')
 
+    # remove super narrow polygons based on ratio_w_h
+    ratio_w_h_thr = parameters.get_digit_parameters_None_if_absence(para_file,'minimum_ratio_width_height','float')
+    b_smaller = True
+    if ratio_w_h_thr is not None:
+        rm_ratio_w_h_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmRWH')
+        if remove_polygons(polygons_shp, 'ratio_w_h', ratio_w_h_thr, b_smaller, rm_ratio_w_h_save_shp) is False:
+            basic.outputlogMessage("error, removing polygons based on ratio_w_h failed")
+        else:
+            polygons_shp = rm_ratio_w_h_save_shp
+    else:
+        basic.outputlogMessage('warning, minimum_ratio_w_h is absent in the para file, skip removing polygons based on minimum ratio_w_h')
 
     # copy to final output
     copy_shape_file(polygons_shp,output)

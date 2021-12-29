@@ -16,14 +16,11 @@ import pandas as pd
 import geopandas as gpd
 from optparse import OptionParser
 
-code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-sys.path.insert(0, code_dir)
-
 import basic_src.basic as basic
 from basic_src.map_projection import get_raster_or_vector_srs_info_proj4
 import vector_gpd
 
-def merge_shape_files(file_list, save_path,b_create_id=False):
+def merge_shape_files(file_list, save_path):
 
     if os.path.isfile(save_path):
         print('%s already exists'%save_path)
@@ -32,8 +29,6 @@ def merge_shape_files(file_list, save_path,b_create_id=False):
         raise IOError("no input shapefiles")
 
     ref_prj = get_raster_or_vector_srs_info_proj4(file_list[0])
-    if ref_prj is False:
-        raise ValueError('Failed to get projection of %s'%file_list[0])
 
     # read polygons as shapely objects
     attribute_names = None
@@ -70,9 +65,6 @@ def merge_shape_files(file_list, save_path,b_create_id=False):
             polygon_attributes_list.append(polygon_attributes)
 
     # save results
-    if attribute_names is None:
-        basic.outputlogMessage('warning, NO geomerties will be saved to %s' % save_path)
-        return False
     save_polyons_attributes = {}
     for idx, attribute in enumerate(attribute_names):
         # print(idx, attribute)
@@ -80,13 +72,6 @@ def merge_shape_files(file_list, save_path,b_create_id=False):
         save_polyons_attributes[attribute] = values
 
     save_polyons_attributes["Polygons"] = polygons_list
-    # added id to shapefile
-    if b_create_id:
-        id_list = [idx for idx in range(len(polygons_list))]
-        if 'id' in save_polyons_attributes.keys():
-            basic.outputlogMessage('warning, original "id" will be replaced by new id in the merged shapefile' )
-        save_polyons_attributes['id'] = id_list
-
     polygon_df = pd.DataFrame(save_polyons_attributes)
 
 
@@ -95,29 +80,18 @@ def merge_shape_files(file_list, save_path,b_create_id=False):
 
 def main(options, args):
 
-    if len(args) == 1:
-        folder = args[0]
-        shp_list = io_function.get_file_list_by_ext('.shp',folder,bsub_folder=False)
+    folder = args[0]
+    shp_list = io_function.get_file_list_by_ext('.shp',folder,bsub_folder=False)
 
-        # remove I*
-        out_name_list = [ '_'.join(os.path.basename(shp).split('_')[1:]) for shp in shp_list ]
-        # remove duplicated ones
-        out_name_list = [ item for item in set(out_name_list) ]
+    # remove I*
+    out_name_list = [ '_'.join(os.path.basename(shp).split('_')[1:]) for shp in shp_list ]
+    # remove duplicated ones
+    out_name_list = [ item for item in set(out_name_list) ]
 
-        for out_name in out_name_list:
-            file_list = [ item for item in shp_list if out_name in item ]
-            # no need to remove "out_name" if it exist, it will be overwrite
-            merge_shape_files(file_list, out_name)
-    else:
-        file_list = [ item for item in  args]
-        print('Input shp files:')
-        for shp in file_list:
-            print(shp)
-        save_path = options.output
-        if save_path is None:
-            raise ValueError('output is None')
-
-        merge_shape_files(file_list, save_path)
+    for out_name in out_name_list:
+        file_list = [ item for item in shp_list if out_name in item ]
+        # no need to remove "out_name" if it exist, it will be overwrite
+        merge_shape_files(file_list, out_name)
 
     pass
 
@@ -140,9 +114,9 @@ if __name__ == "__main__":
     #                   action="store", dest="para_file",
     #                   help="the parameters file")
 
-    parser.add_option('-o', '--output',
-                      action="store", dest = 'output',
-                      help='the path to save the merged results')
+    # parser.add_option('-o', '--output',
+    #                   action="store", dest = 'output',
+    #                   help='the path to save the change detection results')
 
     (options, args) = parser.parse_args()
     # if len(sys.argv) < 2:

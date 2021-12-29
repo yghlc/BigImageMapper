@@ -156,7 +156,7 @@ def blurer(image_np, save_dir, input_filename,is_groud_true,sigma=[1,2]):
             # just copy the groud true
             images_b = image_np
         else:
-            blurer = iaa.GaussianBlur(value)
+            blurer = iaa.blur.GaussianBlur(value)
             images_b = blurer.augment_image(image_np)
         io.imsave(save_path, images_b)
 
@@ -181,7 +181,7 @@ def brightness(image_np, save_dir, input_filename,is_groud_true, out_count=1):
             # just copy the groud true
             images_b = image_np
         else:
-            brightness = iaa.MultiplyAndAddToBrightness(mul=(0.5, 1.5), add=(-30, 30))  # a random value between the range
+            brightness = iaa.color.MultiplyAndAddToBrightness(mul=(0.5, 1.5), add=(-30, 30))  # a random value between the range
             images_b = brightness.augment_image(image_np)
         io.imsave(save_path, images_b)
 
@@ -207,7 +207,7 @@ def contrast(image_np, save_dir, input_filename,is_groud_true, out_count=1):
             # just copy the groud true
             images_con = image_np
         else:
-            contrast = iaa.GammaContrast((0.5, 1.5))  # a random gamma value between the range, a large gamma make image darker
+            contrast = iaa.contrast.GammaContrast((0.5, 1.5))  # a random gamma value between the range, a large gamma make image darker
             images_con = contrast.augment_image(image_np)
         io.imsave(save_path, images_con)
 
@@ -233,7 +233,7 @@ def noise(image_np, save_dir, input_filename,is_groud_true, out_count=1):
             # just copy the groud true
             images_noise = image_np
         else:
-            noise = iaa.AdditiveGaussianNoise(scale=(0, 0.2*255))  # a random gamma value between the range
+            noise = iaa.arithmetic.AdditiveGaussianNoise(scale=(0, 0.2*255))  # a random gamma value between the range
             images_noise = noise.augment_image(image_np)
         io.imsave(save_path, images_noise)
 

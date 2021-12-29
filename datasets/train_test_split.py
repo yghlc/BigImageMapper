@@ -32,6 +32,25 @@ def train_test_split_main(input_file,train_per,Do_shuffle,train_sample_txt,val_s
         with open(val_list_txt, 'w') as v_obj:
             v_obj.writelines(val_list)
             print('saved validation samples to %s' % val_list_txt)
+            
+def train_test_split_new(positive_sub_list,negative_sub_list,train_per,Do_shuffle,train_sample_txt,val_sample_txt):
+
+   
+    train_list, val_list = train_test_split(positive_sub_list, train_size=train_per, shuffle=Do_shuffle)
+
+    # add negative list to val list
+    for line in negative_sub_list:
+        
+        train_list.append(line)
+        
+    # save train and val list                        
+    with open(train_sample_txt, 'w') as t_obj:
+        t_obj.writelines(train_list)
+        print('saved training samples to %s'%train_sample_txt)
+
+    with open(val_sample_txt, 'w') as v_obj:
+        v_obj.writelines(val_list)
+        print('saved validation samples to %s' % val_sample_txt)
 
 def main(options, args):
 

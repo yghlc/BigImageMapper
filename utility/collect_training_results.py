@@ -28,13 +28,10 @@ para_ini_list = ['base_learning_rate', 'iteration_num', 'batch_size', 'network_s
              'buffer_size', 'training_data_per', 'data_augmentation', 'data_aug_ignore_classes']
 
 
-def get_miou_of_overall_and_class_1_step(work_dir,para_file,train_output, eval_folder=None):
+def get_miou_of_overall_and_class_1_step(work_dir,para_file,train_output):
 
     exp_name = parameters.get_string_parameters(os.path.join(work_dir,para_file), 'expr_name')
-    if eval_folder is None:
-        miou_path = os.path.join(work_dir,exp_name,'eval','miou.txt')
-    else:
-        miou_path = os.path.join(work_dir, exp_name, eval_folder, 'miou.txt')
+    miou_path = os.path.join(work_dir,exp_name,'eval','miou.txt')
     if os.path.isfile(miou_path) is False:
         print("warning, no miou.txt in %s"%work_dir)
         train_output['class_1'].append(0)
@@ -137,14 +134,6 @@ def get_training_image_patch_count(work_dir,train_output):
 
     return True
 
-def get_time_other_info_from_tune(work_dir,train_output):
-    res_json = os.path.join(work_dir,'result.json')
-    if os.path.isfile(res_json) and os.stat(res_json).st_size > 0:
-        tune_res_dict = io_function.read_dict_from_txt_json(res_json)
-        train_output['time_total_h'].append(tune_res_dict['time_total_s']/3600.0)
-    else:
-        train_output['time_total_h'].append(0)
-
 def main(options, args):
     root_dir = args[0]
     if os.path.isdir(root_dir) is False:
@@ -182,8 +171,6 @@ def main(options, args):
     train_output['early_stopping'] = []
     train_output['model_train_iter'] = []
 
-    train_output['time_total_h'] = []
-
     for folder in folder_list:
         print('read parameter and results for %s'%folder)
         train_output['folder'].append(os.path.basename(folder))
@@ -191,7 +178,6 @@ def main(options, args):
         get_training_image_patch_count(folder,train_output)
         get_miou_of_overall_and_class_1_step(folder, para_file, train_output)
         get_early_stopping_trained_iteration(folder, para_file, train_output)
-        get_time_other_info_from_tune(folder,train_output)
 
     # save to excel file
     train_out_table_pd = pd.DataFrame(train_output)

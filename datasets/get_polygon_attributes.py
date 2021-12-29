@@ -114,18 +114,20 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
     # #DEM
     if dem_files is not None:
         stats_list = ['min', 'max','mean','median','std']            #['min', 'max', 'mean', 'count','median','std']
-        # if operation_obj.add_fields_from_raster(polygons_shp, dem_file, "dem", band=1,stats_list=stats_list,all_touched=all_touched) is False:
-        #     return False
-        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='dem',band=1,all_touched=all_touched, process_num=process_num) is False:
-            return False
+        if operation_obj.add_fields_from_raster(polygons_shp, dem_files, "dem", band=1,stats_list=stats_list,all_touched=all_touched) is False:
+             return False
+        #if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='dem',band=1,all_touched=all_touched, process_num=process_num) is False:
+        #    return False
     else:
         basic.outputlogMessage("warning, DEM file not exist, skip the calculation of DEM information")
 
     # #slope
     if slope_files is not None:
         stats_list = ['min', 'max','mean', 'median', 'std']
-        if zonal_stats_multiRasters(polygons_shp,slope_files,stats=stats_list,prefix='slo',band=1,all_touched=all_touched, process_num=process_num) is False:
+        if operation_obj.add_fields_from_raster(polygons_shp, slope_files, "slo", band=1, stats_list=stats_list,all_touched=all_touched) is False:
             return False
+        #if zonal_stats_multiRasters(polygons_shp,slope_files,stats=stats_list,prefix='slo',band=1,all_touched=all_touched, process_num=process_num) is False:
+        #    return False
     else:
         basic.outputlogMessage("warning, slope file not exist, skip the calculation of slope information")
 
@@ -347,39 +349,6 @@ def add_polygon_attributes(input, output, para_file, data_para_file):
 
 
     return True
-
-def add_boxes_attributes(input, output):
-    if io_function.is_file_exist(input) is False:
-        return False
-
-    # copy output
-    if io_function.copy_shape_file(input, output) is False:
-        raise IOError('copy shape file %s failed'%input)
-
-    # calculate area, perimeter of polygons
-    if cal_add_area_length_of_polygon(output) is False:
-        return False
-
-    # calculate the width, height, and width_height ratio
-    boxes = vector_gpd.read_polygons_gpd(input)
-    bounding_boxes = [ vector_gpd.get_polygon_bounding_box(item) for item in boxes ]
-    # bounding box  (minx, miny, maxx, maxy)
-    width_list = [ bound[2] - bound[0] for bound in  bounding_boxes]
-    height_list = [ bound[3] - bound[1] for bound in  bounding_boxes]
-
-    ratio_w_h_list = []
-    for w, h in zip(width_list, height_list):
-        if w > h:
-            ratio = h / w
-        else:
-            ratio = w / h
-        ratio_w_h_list.append(ratio)
-
-    add_attributes = {'WIDTH':width_list,'HEIGHT':height_list, 'ratio_w_h':ratio_w_h_list}
-    vector_gpd.add_attributes_to_shp(output,add_attributes)
-
-    return output
-
 
 
 def main(options, args):

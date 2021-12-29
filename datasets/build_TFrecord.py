@@ -70,14 +70,24 @@ import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('image_folder',
-                           './split_images',
-                           'Folder containing images.')
+tf.app.flags.DEFINE_string('train_image_folder',
+                           './train_split_images',
+                           'Folder containing train images.')
 
 tf.app.flags.DEFINE_string(
-    'semantic_segmentation_folder',
-    './split_labels',
-    'Folder containing semantic segmentation annotations.')
+    'semantic_segmentation_train_folder',
+    './train_split_labels',
+    'Folder containing semantic segmentation train annotations.')
+    
+    
+tf.app.flags.DEFINE_string('val_image_folder',
+                           './val_split_images',
+                           'Folder containing validation images.')
+
+tf.app.flags.DEFINE_string(
+    'semantic_segmentation_val_folder',
+    './val_split_labels',
+    'Folder containing semantic segmentation validation annotations.')
 
 tf.app.flags.DEFINE_string(
     'list_folder',
@@ -101,7 +111,7 @@ sys.path.insert(0, code_dir)
 import parameters
 
 
-def _convert_dataset(dataset_split):
+def _convert_train_dataset(train_list):
     """Converts the specified dataset split to TFRecord format.
 
     Args:
@@ -110,17 +120,15 @@ def _convert_dataset(dataset_split):
     Raises:
     RuntimeError: If loaded image and label have different shape.
     """
-    dataset = os.path.basename(dataset_split)[:-4]
+    dataset = os.path.basename(train_list)[:-4]
     sys.stdout.write('Processing ' + dataset)
-    filenames = [x.strip('\n') for x in open(dataset_split, 'r')]
+    filenames = [x.strip('\n') for x in open(train_list, 'r')]
     num_images = len(filenames)
     num_per_shard = int(math.ceil(num_images / _NUM_SHARDS))
 
     # image_reader = build_data.ImageReader('jpeg', channels=3)
     image_reader = build_data.ImageReader('png', channels=3)
     label_reader = build_data.ImageReader('png', channels=1)
-
-    os.system("mkdir -p " + FLAGS.output_dir)
 
     for shard_id in range(_NUM_SHARDS):
         output_filename = os.path.join(
@@ -135,12 +143,63 @@ def _convert_dataset(dataset_split):
             sys.stdout.flush()
             # Read the image.
             image_filename = os.path.join(
-                FLAGS.image_folder, filenames[i] + '.' + FLAGS.image_format)
+                FLAGS.train_image_folder, filenames[i] + '.' + FLAGS.image_format)
             image_data = tf.gfile.GFile(image_filename, 'rb').read()
             height, width = image_reader.read_image_dims(image_data)
             # Read the semantic segmentation annotation.
             seg_filename = os.path.join(
-                FLAGS.semantic_segmentation_folder,
+                FLAGS.semantic_segmentation_train_folder,
+                filenames[i] + '.' + FLAGS.label_format)
+            seg_data = tf.gfile.GFile(seg_filename, 'rb').read()
+            seg_height, seg_width = label_reader.read_image_dims(seg_data)
+            if height != seg_height or width != seg_width:
+              raise RuntimeError('Shape mismatched between image and label.')
+            # Convert to tf example.
+            example = build_data.image_seg_to_tfexample(
+                image_data, filenames[i], height, width, seg_data)
+            tfrecord_writer.write(example.SerializeToString())
+    sys.stdout.write('\n')
+    sys.stdout.flush()
+    
+    
+def _convert_val_dataset(val_list):
+    """Converts the specified dataset split to TFRecord format.
+
+    Args:
+    dataset_split: The dataset split (e.g., train, test).
+
+    Raises:
+    RuntimeError: If loaded image and label have different shape.
+    """
+    dataset = os.path.basename(val_list)[:-4]
+    sys.stdout.write('Processing ' + dataset)
+    filenames = [x.strip('\n') for x in open(val_list, 'r')]
+    num_images = len(filenames)
+    num_per_shard = int(math.ceil(num_images / _NUM_SHARDS))
+
+    # image_reader = build_data.ImageReader('jpeg', channels=3)
+    image_reader = build_data.ImageReader('png', channels=3)
+    label_reader = build_data.ImageReader('png', channels=1)
+
+    for shard_id in range(_NUM_SHARDS):
+        output_filename = os.path.join(
+            FLAGS.output_dir,
+            '%s-%05d-of-%05d.tfrecord' % (dataset, shard_id, _NUM_SHARDS))
+        with tf.python_io.TFRecordWriter(output_filename) as tfrecord_writer:
+          start_idx = shard_id * num_per_shard
+          end_idx = min((shard_id + 1) * num_per_shard, num_images)
+          for i in range(start_idx, end_idx):
+            sys.stdout.write('\r>> Converting image %d/%d shard %d' % (
+                i + 1, len(filenames), shard_id))
+            sys.stdout.flush()
+            # Read the image.
+            image_filename = os.path.join(
+                FLAGS.val_image_folder, filenames[i] + '.' + FLAGS.image_format)
+            image_data = tf.gfile.GFile(image_filename, 'rb').read()
+            height, width = image_reader.read_image_dims(image_data)
+            # Read the semantic segmentation annotation.
+            seg_filename = os.path.join(
+                FLAGS.semantic_segmentation_val_folder,
                 filenames[i] + '.' + FLAGS.label_format)
             seg_data = tf.gfile.GFile(seg_filename, 'rb').read()
             seg_height, seg_width = label_reader.read_image_dims(seg_data)
@@ -155,32 +214,25 @@ def _convert_dataset(dataset_split):
 
 
 def main(unused_argv):
-    dataset_splits = []
-
     train_sample_txt = parameters.get_string_parameters_None_if_absence(para_file,'training_sample_list_txt')
-    if train_sample_txt is not None:
+    val_sample_txt = parameters.get_string_parameters_None_if_absence(para_file,'validation_sample_list_txt')
+    if train_sample_txt is not None and val_sample_txt is not None:
         train_sample_txt = os.path.join(FLAGS.list_folder, train_sample_txt)
-        if os.path.isfile(train_sample_txt) is False:
-            raise IOError('%s does not exist' % train_sample_txt)
-        dataset_splits.append(train_sample_txt)
-
-    val_sample_txt = parameters.get_string_parameters_None_if_absence(para_file, 'validation_sample_list_txt')
-    if val_sample_txt is not None:
         val_sample_txt = os.path.join(FLAGS.list_folder, val_sample_txt)
-        if os.path.isfile(val_sample_txt) is False:
-            raise IOError('%s does not exist' % val_sample_txt)
-        dataset_splits.append(val_sample_txt)
-    # else:
-    #     raise ValueError('training_sample_list_txt or validation_sample_list_txt are not in %s'%para_file)
+    else:
+        raise ValueError('training_sample_list_txt or validation_sample_list_txt are not in %s'%para_file)
 
+    if os.path.isfile(train_sample_txt) is False:
+        raise IOError('%s does not exist'%train_sample_txt)
+    if os.path.isfile(val_sample_txt) is False:
+        raise IOError('%s does not exist'%val_sample_txt)
 
-    # dataset_splits = [train_sample_txt,val_sample_txt]
-    # dataset_splits = tf.gfile.Glob(os.path.join(FLAGS.list_folder, '*val.txt'))
-    print(dataset_splits)
-
-
-    for dataset_split in dataset_splits:
-        _convert_dataset(dataset_split)
+    if os.path.isfile(FLAGS.output_dir):
+        io_function.delete_file_or_dir(FLAGS.output_dir)
+    os.system("mkdir -p " + FLAGS.output_dir)
+    
+    _convert_train_dataset(train_sample_txt)
+    _convert_val_dataset(val_sample_txt)
 
 
 if __name__ == '__main__':

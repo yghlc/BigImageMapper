@@ -20,10 +20,56 @@ import basic_src.io_function as io_function
 sys.path.insert(0, os.path.join(code_dir, 'datasets'))
 from merge_shapefiles import merge_shape_files
 import utility.eva_report_to_tables as eva_report_to_tables
-
+import basic
 from datasets.get_polygon_attributes import add_polygon_attributes
 from datasets.remove_mappedPolygons import remove_polygons_main
 from datasets.evaluation_result import evaluation_polygons
+import geopandas as gpd
+# need for calculating the occurrence.
+cd_dir = os.path.expanduser('~/codes/PycharmProjects/ChangeDet_DL/thawSlumpChangeDet')
+sys.path.insert(0, cd_dir)
+import polygons_change_analyze
+
+
+def area_based_evaluation(val_path,shp_post,evaluation_txt=None):
+
+    df1 = gpd.read_file(val_path)
+    df2 = gpd.read_file(shp_post)
+    
+    # calculate the area for validatino and inference shapefiles
+    val_area = df1.area.sum()
+    inf_area = df2.area.sum()
+    
+    # calculate areas for TP, FN, and FP regions: intersection, union, difference
+    tp = gpd.overlay(df1,df2,how='intersection')
+    fn = gpd.overlay(df1,df2,how='difference')
+    fp = gpd.overlay(df2,df1,how='difference')
+
+    # compute the areas for TP, FN, and FP
+    TP = tp.area.sum()
+    FN = fn.area.sum()
+    FP = fp.area.sum()
+
+    # compute the area-based metrics: precision, recall, F1_score, IoU
+    precision = TP/(TP + FP)
+    recall = TP/(TP + FN)
+    F1_score = 2*precision*recall/(precision+recall)
+    IoU = TP/(TP + FP + FN)
+    
+    #output evaluation reslult
+    if evaluation_txt is None:
+        evaluation_txt = "evaluation_report.txt"
+    f_obj = open(evaluation_txt,'w')
+    f_obj.writelines('Areas of validation polygons: %.6f\n'%val_area)
+    f_obj.writelines('Areas of inference polygons: %.6f\n'%inf_area)
+    f_obj.writelines('Areas of TP regions: %.6f\n'%TP)
+    f_obj.writelines('Areas of FP regions: %.6f\n'%FP)
+    f_obj.writelines('Areas of FN regions: %.6f\n'%FN)
+    f_obj.writelines('Precision: %.6f\n'%precision)
+    f_obj.writelines('Recall: %.6f\n'%recall)
+    f_obj.writelines('F1 score: %.6f\n'%F1_score)
+    f_obj.writelines('IoU: %.6f\n'%IoU)
+    f_obj.close()
 
 
 def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
@@ -41,9 +87,7 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         command_string = 'gdal_merge.py  -init 0 -n 0 -a_nodata 0 -o ' + merged_tif + ' I0_*.tif'
         res  = os.system(command_string)
         if res != 0:
-            # sys.exit(1)
-            os.chdir(curr_dir)
-            return None, None
+            sys.exit(1)
 
     # to shapefile
     out_shp = 'I%d'%img_idx + '_' + out_name + '.shp'
@@ -57,8 +101,7 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
     os.chdir(curr_dir)
     out_shp_path = os.path.join(img_save_dir,out_shp)
-    out_raster = os.path.join(img_save_dir,merged_tif)
-    return out_shp_path, out_raster
+    return out_shp_path
 
 # def add_polygon_attributes(script, in_shp_path, save_shp_path, para_file, data_para_file):
 #
@@ -107,13 +150,8 @@ def get_observation_save_dir_shp_pre(inf_dir, area_name, area_time, area_remark,
 
 
 def get_occurence_for_multi_observation(shp_list):
-    if len(shp_list) < 2:
+    if len(shp_list) < 1:
         return False
-
-    # need for calculating the occurrence.
-    cd_dir = os.path.expanduser('~/codes/PycharmProjects/ChangeDet_DL/thawSlumpChangeDet')
-    sys.path.insert(0, cd_dir)
-    import polygons_change_analyze
 
     # check projection of the shape file, should be the same
     new_shp_proj4 = map_projection.get_raster_or_vector_srs_info_proj4(shp_list[0])
@@ -139,7 +177,6 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
     network_setting_ini = parameters.get_string_parameters(para_file,'network_setting_ini')
-    gan_setting_ini = parameters.get_string_parameters_None_if_absence (para_file,'regions_n_setting_image_translation_ini')
 
 
     inf_dir = parameters.get_directory(para_file, 'inf_output_dir')
@@ -159,12 +196,12 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
     sub_tasks = []
     same_area_time_inis =  group_same_area_time_observations(multi_inf_regions)
     region_eva_reports = {}
+    region_eva_reports_new = {}
     for key in same_area_time_inis.keys():
         multi_observations = same_area_time_inis[key]
         area_name = parameters.get_string_parameters(multi_observations[0], 'area_name')  # they have the same name and time
         area_time = parameters.get_string_parameters(multi_observations[0], 'area_time')
         merged_shp_list = []
-        map_raster_list_2d = [None] * len(multi_observations)
         for area_idx, area_ini in enumerate(multi_observations):
             area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
             area_save_dir, shp_pre,_ = get_observation_save_dir_shp_pre(inf_dir,area_name,area_time,area_remark,test_id)
@@ -184,17 +221,11 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
             else:
                 # post image one by one
                 result_shp_list = []
-                map_raster_list = []
                 for img_idx, img_path in enumerate(inf_img_list):
-                    out_shp, out_raster = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
-                    if out_shp is None or out_raster is None:
-                        continue
+                    out_shp = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
                     result_shp_list.append(os.path.join(WORK_DIR,out_shp))
-                    map_raster_list.append(out_raster)
                 # merge shapefiles
-                if merge_shape_files(result_shp_list,merged_shp) is False:
-                    continue
-                map_raster_list_2d[area_idx] = map_raster_list
+                merge_shape_files(result_shp_list,merged_shp)
 
             merged_shp_list.append(merged_shp)
 
@@ -207,9 +238,6 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
             area_save_dir, shp_pre, area_remark_time  = get_observation_save_dir_shp_pre(inf_dir, area_name, area_time, area_remark,test_id)
 
             merged_shp = os.path.join(WORK_DIR, area_save_dir, shp_pre + '.shp')
-            if os.path.isfile(merged_shp) is False:
-                print('Warning, %s not exist, skip'%merged_shp)
-                continue
 
             # add attributes to shapefile
             # add_attributes_script = os.path.join(code_dir,'datasets', 'get_polygon_attributes.py')
@@ -225,8 +253,17 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
 
             # evaluate the mapping results
             # eval_shp_script = os.path.join(code_dir,'datasets', 'evaluation_result.py')
+            
+            # evaluation result
             out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_evaluation_report.txt')
+            area_based_out_report = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_area_based_evaluation_report.txt')
             # evaluation_polygons(eval_shp_script, shp_post, para_file, area_ini,out_report)
+            val_path = parameters.get_file_path_parameters_None_if_absence(area_ini,'validation_shape')
+
+            basic.outputlogMessage('Start evaluation, input: %s, validation file: %s'%(shp_post, val_path))
+                
+            area_based_evaluation(val_path,shp_post,area_based_out_report)
+        
             evaluation_polygons(shp_post,para_file,area_ini,out_report)
 
 
@@ -242,62 +279,59 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
                 bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre,'post',test_note]) + '.shp')
                 bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre,'eva_report',test_note]) + '.txt')
                 bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre,'region',test_note]) + '.ini')
+                bak_eva_report_new = os.path.join(backup_dir_area, '_'.join([shp_pre,'eva_report_new',test_note]) + '.txt')
             else:
                 bak_merged_shp = os.path.join(backup_dir_area, '_'.join([shp_pre]) + '.shp')
                 bak_post_shp = os.path.join(backup_dir_area, '_'.join([shp_pre, 'post']) + '.shp')
                 bak_eva_report = os.path.join(backup_dir_area, '_'.join([shp_pre, 'eva_report']) + '.txt')
                 bak_area_ini = os.path.join(backup_dir_area, '_'.join([shp_pre, 'region']) + '.ini')
+                bak_eva_report_new = os.path.join(backup_dir_area, '_'.join([shp_pre, 'eva_report_new']) + '.txt')
 
             io_function.copy_shape_file(merged_shp,bak_merged_shp)
             io_function.copy_shape_file(shp_post, bak_post_shp)
-            if os.path.isfile(out_report):
-                io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
+            io_function.copy_file_to_dst(out_report, bak_eva_report, overwrite=True)
             io_function.copy_file_to_dst(area_ini, bak_area_ini, overwrite=True)
-
-            # copy map raster
-            b_backup_map_raster = parameters.get_bool_parameters_None_if_absence(area_ini,'b_backup_map_raster')
-            if b_backup_map_raster is True:
-                if map_raster_list_2d[area_idx] is not None:
-                    for map_tif in map_raster_list_2d[area_idx]:
-                        bak_map_tif = os.path.join(backup_dir_area,os.path.basename(map_tif))
-                        io_function.copy_file_to_dst(map_tif,bak_map_tif,overwrite=True)
+            io_function.copy_file_to_dst(area_based_out_report, bak_eva_report_new, overwrite=True)
 
             region_eva_reports[shp_pre] = bak_eva_report
+            
+            region_eva_reports_new[shp_pre] = bak_eva_report_new
 
 
 
     if len(test_note) > 0:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id,'para',test_note]) + '.ini' )
         bak_network_ini = os.path.join(backup_dir, '_'.join([test_id,'network',test_note]) + '.ini' )
-        bak_gan_ini = os.path.join(backup_dir, '_'.join([test_id,'gan',test_note]) + '.ini' )
         bak_time_cost = os.path.join(backup_dir, '_'.join([test_id,'time_cost',test_note]) + '.txt' )
     else:
         bak_para_ini = os.path.join(backup_dir, '_'.join([test_id, 'para']) + '.ini')
         bak_network_ini = os.path.join(backup_dir, '_'.join([test_id, 'network']) + '.ini')
-        bak_gan_ini = os.path.join(backup_dir, '_'.join([test_id, 'gan']) + '.ini')
         bak_time_cost = os.path.join(backup_dir, '_'.join([test_id, 'time_cost']) + '.txt')
-    io_function.copy_file_to_dst(para_file, bak_para_ini,overwrite=True)
-    io_function.copy_file_to_dst(network_setting_ini, bak_network_ini,overwrite=True)
-    if gan_setting_ini is not None:
-        io_function.copy_file_to_dst(gan_setting_ini, bak_gan_ini,overwrite=True)
+    io_function.copy_file_to_dst(para_file, bak_para_ini)
+    io_function.copy_file_to_dst(network_setting_ini, bak_network_ini)
     if os.path.isfile('time_cost.txt'):
-        io_function.copy_file_to_dst('time_cost.txt', bak_time_cost,overwrite=True)
+        io_function.copy_file_to_dst('time_cost.txt', bak_time_cost)
 
     # output the evaluation report to screen
     for key in region_eva_reports.keys():
         report = region_eva_reports[key]
-        if os.path.isfile(report) is False:
-            continue
         print('evaluation report for %s:'%key)
         os.system('head -n 7 %s'%report)
+        
+    # output the evaluation report to screen
+    for key in region_eva_reports_new.keys():
+        report = region_eva_reports_new[key]
+        print('evaluation report for %s:'%key)
+        os.system('head -n 10 %s'%report)
+
 
     # output evaluation report to table
     if len(test_note) > 0:
         out_table = os.path.join(backup_dir, '_'.join([test_id,'accuracy_table',test_note]) + '.xlsx' )
     else:
         out_table = os.path.join(backup_dir, '_'.join([test_id, 'accuracy_table']) + '.xlsx')
-    eva_reports = [ region_eva_reports[key] for key in region_eva_reports if os.path.isfile(region_eva_reports[key])]
-    eva_report_to_tables.eva_reports_to_table(eva_reports, out_table)
+    eva_reports = [ region_eva_reports[key] for key in region_eva_reports]
+    #eva_report_to_tables.eva_reports_to_table(eva_reports, out_table)
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of post-procesing: %.2f seconds">>time_cost.txt'%duration)

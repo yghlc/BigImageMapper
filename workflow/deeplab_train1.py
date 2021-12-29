@@ -57,7 +57,7 @@ def get_train_val_sample_count(work_dir, para_file):
 
 def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_rate,model_variant, init_checkpoint,train_logdir,dataset_dir, gpu_num,
                   atrous_rates1,atrous_rates2,atrous_rates3,output_stride,crop_size_str,batch_size,iteration_num,depth_multiplier,
-                  decoder_output_stride,aspp_convs_filters,b_initialize_last_layer):
+                  decoder_output_stride,aspp_convs_filters,b_initialize_last_layer,save_interval_secs,save_summaries_secs):
 
 
     # for more information, run: "python deeplab/train.py --help" or "python deeplab/train.py --helpfull"
@@ -77,7 +77,9 @@ def train_deeplab(train_script,dataset,train_split,num_of_classes,base_learning_
         + ' --tf_initial_checkpoint=' +init_checkpoint \
         + ' --train_logdir='+train_logdir \
         + ' --dataset_dir='+dataset_dir \
-        + ' --num_clones=' + str(gpu_num)
+        + ' --num_clones=' + str(gpu_num) \
+        + ' --save_interval_secs='+str(save_interval_secs) \
+        + ' --save_summaries_secs'+str(save_summaries_secs)
 
     # do not initialize the last layer, to trained on custom dataset, other classes.
     if b_initialize_last_layer is False:
@@ -130,7 +132,7 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
 # --eval_interval_secs: How often (in seconds) to run evaluation.
     #     (default: '300')
     #     (an integer)
-
+  #                   + ' --eval_crop_size='+crop_size_str \
     command_string = tf1x_python + ' ' \
                      + evl_script \
                      + ' --logtostderr' \
@@ -138,7 +140,8 @@ def evaluation_deeplab(evl_script,dataset, evl_split,num_of_classes, model_varia
                      + ' --num_classes='+str(num_of_classes) \
                      + ' --eval_split=%s ' % evl_split \
                      + ' --model_variant=' + model_variant \
-                     + ' --eval_crop_size='+crop_size_str \
+                     + ' --eval_crop_size=' + str(480) \
+                     + ' --eval_crop_size=' + str(480) \
                      + ' --checkpoint_dir=' + train_logdir \
                      + ' --eval_logdir=' + evl_logdir \
                      + ' --dataset_dir=' + dataset_dir \
@@ -405,13 +408,14 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
     if already_trained_iteration >= iteration_num:
         basic.outputlogMessage('Training already run %d iterations, skip'%already_trained_iteration)
         return True
+        
+    save_interval_secs = 120   # default is 1200 second for saving model
+    save_summaries_secs = 60   # default is 600 second for saving summaries
     if validation_interval is None:
         basic.outputlogMessage('No input validation_interval, so training to %d, then evaluating in the end'%iteration_num)
         # run training
         train_deeplab(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
-                      dataset_dir, gpu_num,
-                      train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num,
-                      depth_multiplier,decoder_output_stride,aspp_convs_filters,b_initialize_last_layer)
+                      dataset_dir, gpu_num,train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num,depth_multiplier,decoder_output_stride,aspp_convs_filters,b_initialize_last_layer,save_interval_secs,save_summaries_secs)
 
         # run evaluation
         evaluation_deeplab(evl_script,dataset, evl_split, num_of_classes,model_variant,
@@ -420,7 +424,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
         miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
         get_loss_learning_rate_list(TRAIN_LOGDIR)
     else:
-        basic.outputlogMessage('training to the maximum iteration of %d, and evaluating very %d epoch(es)' % (iteration_num,validation_interval))
+        basic.outputlogMessage('training to the maximum iteration of %d, and evaluating every %d epoch (es)' % (iteration_num,validation_interval))
         for epoch in range(validation_interval, iteration_num + validation_interval, validation_interval):
 
             to_iter_num = min(epoch, iteration_num)
@@ -433,7 +437,7 @@ def train_evaluation_deeplab(WORK_DIR,deeplab_dir,expr_name, para_file, network_
                           init_checkpoint, TRAIN_LOGDIR,
                           dataset_dir, gpu_num,
                           train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str,
-                          batch_size, to_iter_num,depth_multiplier,decoder_output_stride,aspp_convs_filters,b_initialize_last_layer)
+                          batch_size, to_iter_num,depth_multiplier,decoder_output_stride,aspp_convs_filters,b_initialize_last_layer,save_interval_secs,save_summaries_secs)
 
             # run evaluation
             evaluation_deeplab(evl_script, dataset, evl_split, num_of_classes, model_variant,
@@ -580,17 +584,17 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
         basic.outputlogMessage('Training already run %d iterations, skip'%already_trained_iteration)
         return True
 
-    save_interval_secs = 1200   # default is 1200 second for saving model
-    save_summaries_secs = 600   # default is 600 second for saving summaries
-    eval_interval_secs =  300    # default is 300 second for running evaluation, if no new saved model, no need to run evaluation?
+    save_interval_secs = 300   # default is 1200 second for saving model
+    save_summaries_secs = 300   # default is 600 second for saving summaries
+    eval_interval_secs =  60    # default is 300 second for running evaluation, if no new saved model, no need to run evaluation?
 
     train_process = Process(target=train_deeplab,
                           args=(train_script,dataset, train_split,num_of_classes, base_learning_rate, model_variant, init_checkpoint, TRAIN_LOGDIR,
                       dataset_dir, gpu_num,
                       train_atrous_rates1, train_atrous_rates2, train_atrous_rates3, train_output_stride,crop_size_str, batch_size,iteration_num,
-                      depth_multiplier,decoder_output_stride,aspp_convs_filters,b_initialize_last_layer))
+                      depth_multiplier,decoder_output_stride,aspp_convs_filters,b_initialize_last_layer,save_interval_secs,save_summaries_secs))
     train_process.start()
-    time.sleep(10)  # wait
+    time.sleep(60)  # wait
     if train_process.exitcode is not None and train_process.exitcode != 0:
         sys.exit(1)
 
@@ -605,7 +609,7 @@ def train_evaluation_deeplab_separate(WORK_DIR,deeplab_dir,expr_name, para_file,
         already_trained_iteration = get_trained_iteration(TRAIN_LOGDIR)
         miou_dict = get_miou_list_class_all(EVAL_LOGDIR, num_of_classes)
         # evaluate performance on training examples
-        # miou_training_dict = get_miou_list_class_all(EVAL_TRAIN_LOGDIR, num_of_classes)
+        miou_training_dict = get_miou_list_class_all(EVAL_TRAIN_LOGDIR, num_of_classes)
         basic.outputlogMessage('Already trained iteration: %d, latest evaluation at %d step'%(already_trained_iteration, miou_dict['step'][-1]))
         if already_trained_iteration > miou_dict['step'][-1]:
 

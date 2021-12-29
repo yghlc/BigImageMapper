@@ -17,24 +17,16 @@ import shapely
 from shapely.geometry import mapping # transform to GeJSON format
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
-from shapely.geometry import LineString
-from shapely.geometry import MultiLineString
-from shapely import ops
-from shapely.strtree import STRtree
 import geopandas as gpd
 from shapely.geometry import Point
 import pandas as pd
 
 import math
 import numpy as np
-import time
 
 import basic_src.basic as basic
 
 import basic_src.map_projection as map_projection
-
-from datetime import datetime
-from multiprocessing import Pool
 
 def read_polygons_json(polygon_shp, no_json=False):
     '''
@@ -228,20 +220,6 @@ def read_attribute_values_list(polygon_shp, field_name):
         basic.outputlogMessage('Warning: %s not in the shape file, will return None'%field_name)
         return None
 
-def is_field_name_in_shp(polygon_shp, field_name):
-    '''
-    check a attribute name is in the shapefile
-    :param polygon_shp:
-    :param field_name:
-    :return:
-    '''
-    shapefile = gpd.read_file(polygon_shp)
-    if field_name in shapefile.keys():
-        return True
-    else:
-        return False
-
-
 def read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygon = True):
     '''
     read polygons and attribute value (list)
@@ -276,32 +254,6 @@ def read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygo
     else:
         raise ValueError('unknown type of %s'%str(field_nameS))
 
-def is_two_bound_disjoint(box1, box2):
-    # same to the one in raster_io by calling rasterio.coords.disjoint_bounds(box1,box2)
-    # but just do not want to import rater_io
-    # box: (minx, miny, maxx, maxy)
-
-    # left 1 > right 2 or  right 1 < left 2 or bottom 1 > top 2 or top 1 < bottom 2
-    if box1[0] > box2[2] or box1[2] < box2[0] or box1[1] > box2[3] or box1[3] < box2[1]:
-        return True
-    return False
-
-def get_vector_file_bounding_box(file_path):
-    # return bounding box of all geometryies ((minx, miny, maxx, maxy))
-    shapefile = gpd.read_file(file_path)
-    return shapefile.total_bounds
-
-def get_polygon_bounding_box(polygon):
-    # return the bounding box of a shapely polygon (minx, miny, maxx, maxy)
-    return polygon.bounds
-
-def get_polygon_envelope_xy(polygon):
-    # get polygon envelope x,y coordinates
-    # polygon, shapely polygon
-    # output: x: a list of x0 to x4  y: a list of y0 to y4      # the last one is the same as the first one.
-    polygon_env = polygon.envelope
-    x, y = polygon_env.exterior.coords.xy
-    return x,y
 
 def remove_polygon_equal(shapefile,field_name, expect_value, b_equal, output):
     '''
@@ -530,27 +482,9 @@ def calculate_polygon_shape_info(polygon_shapely):
         shape_info['ratio_w_h'] = width / height
 
     #added number of holes
-    if polygon_shapely.geom_type == 'Polygon':
-        shape_info['hole_count'] = len(list(polygon_shapely.interiors))
-    else:
-        polygons = MultiPolygon_to_polygons(0, polygon_shapely)
-        hole_count = 0
-        for poly in polygons:
-            hole_count += len(list(poly.interiors))
-        shape_info['hole_count'] = hole_count
+    shape_info['hole_count'] = len(list(polygon_shapely.interiors))
 
     return shape_info
-
-# convert the list from calculate_polygon_shape_info to a dict for saving to shapefile.
-def list_to_dict(list_dict):
-    out_dict = {}
-    for dict_obj in list_dict:
-        for key in dict_obj.keys():
-            if key in out_dict.keys():
-                out_dict[key].append(dict_obj[key])
-            else:
-                out_dict[key] = [dict_obj[key]]
-    return out_dict
 
 def save_shapefile_subset_as(data_poly_indices, org_shp, save_path):
     '''
@@ -577,24 +511,20 @@ def save_shapefile_subset_as(data_poly_indices, org_shp, save_path):
 
     return True
 
-def save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path,format='ESRI Shapefile'):
+def save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path):
     '''
     :param data_frame: include polygon list and the corresponding attributes
     :param geometry_name: dict key for the polgyon in the DataFrame
     :param wkt_string: wkt string (projection)
     :param save_path: save path
-    :param format: use ESRI Shapefile or "GPKG" (GeoPackage)
     :return:
     '''
     # data_frame[geometry_name] = data_frame[geometry_name].apply(wkt.loads)
     poly_df = gpd.GeoDataFrame(data_frame, geometry=geometry_name)
     poly_df.crs = wkt_string # or poly_df.crs = {'init' :'epsg:4326'}
-    poly_df.to_file(save_path, driver=format)
+    poly_df.to_file(save_path, driver='ESRI Shapefile')
 
     return True
-
-def save_lines_to_files(data_frame, geometry_name, wkt_string, save_path):
-    return save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path)
 
 def remove_narrow_parts_of_a_polygon(shapely_polygon, rm_narrow_thr):
     '''
@@ -758,100 +688,32 @@ def MultiPolygon_to_polygons(idx, multiPolygon, attributes=None):
 
     return polygons
 
-def fill_holes_in_polygons_shp(in_shp, out_shp):
-    '''
-    fill all holes in polygons in a shape file
-    :param in_shp:
-    :param out_shp:
-    :return:
-    '''
-
-    # read polygons as shapely objects
-    shapefile = gpd.read_file(in_shp)
-
-    for idx, row in shapefile.iterrows():
-
-        poly = row['geometry']
-        if poly.type == 'MultiPolygon':
-            out_polygons = MultiPolygon_to_polygons(idx, poly)
-            basic.outputlogMessage('Warning, %d geometry is "MultiPolygon", convert it to Polygons and copy attributes' % idx)
-            for ii, new_poly in enumerate(out_polygons):
-                new_poly = fill_holes_in_a_polygon(new_poly)
-                row['geometry'] = new_poly
-                # replace the first one, appends others
-                if ii == 0:
-                    shapefile.iloc[idx] = row
-                else:
-                    shapefile = shapefile.append(row)
-
-        else:
-            new_poly = fill_holes_in_a_polygon(poly)
-            row['geometry'] = new_poly
-            # replace the row
-            shapefile.iloc[idx] = row
-
-    # save results
-    shapefile.to_file(out_shp, driver='ESRI Shapefile')
-
-    return True
-
 def fill_holes_in_a_polygon(polygon):
     '''
     fill holes in a polygon
     :param polygon: a polygon object (shapely)
     :return:
     '''
-    # about MultiPolygon https://stackoverflow.com/questions/48082553/convert-multipolygon-to-polygon-in-python
     if polygon.interiors:
         return Polygon(list(polygon.exterior.coords))
     else:
         return polygon
 
-def get_poly_index_within_extent(polygon_list, extent_poly, min_overlap_area=None):
+def get_poly_index_within_extent(polygon_list, extent_poly):
     '''
     get id of polygons intersecting with an extent
     (may also consider using ogr2ogr to crop the shapefile, also can use remove functions)
     :param polygon_list: polygons list (polygon is in shapely format)
     :param extent_poly: extent polygon (shapely format)
-    :param min_overlap_area: if the overlap area is too smaller, than ignore it
     :return: id list
     '''
     idx_list = []
     for idx, poly in enumerate(polygon_list):
         inter = extent_poly.intersection(poly)
         if inter.is_empty is False:
-            if min_overlap_area is not None:
-                if inter.area < min_overlap_area:
-                    continue
             idx_list.append(idx)
 
     return idx_list
-
-def get_poly_within_extent(polygon_list, extent_poly, min_overlap_area=None, polygon_boxes=None):
-    '''
-    get polygons intersecting with an extent
-    (may also consider using ogr2ogr to crop the shapefile, also can use remove functions)
-    :param polygon_list: polygons list (polygon is in shapely format)
-    :param extent_poly: extent polygon (shapely format)
-    :param min_overlap_area: if the overlap area is too smaller, than ignore it
-    :param polygon_boxes: a list of polygon bound (minx, miny, maxx, maxy), to avoid unnecessary intersection calculation
-    :return: id list
-    '''
-    out_polygon_list = []
-    if polygon_boxes is not None:
-        # update polygons list
-        ext_box = get_polygon_bounding_box(extent_poly)
-        polygon_list = [poly for poly, box in zip(polygon_list,polygon_boxes) if is_two_bound_disjoint(box,ext_box) is False]
-
-    for idx, poly in enumerate(polygon_list):
-        inter = extent_poly.intersection(poly)
-        if inter.is_empty is False:
-            if min_overlap_area is not None:
-                if inter.area < min_overlap_area:
-                    continue
-            out_polygon_list.append(poly)
-
-    return out_polygon_list
 
 def convert_image_bound_to_shapely_polygon(img_bound_box):
     # convert bounding box  to shapely polygon
@@ -896,281 +758,6 @@ def get_overlap_area_two_boxes(box1, box2, buffer=None):
         return inter.area
     else:
         raise ValueError('need more support of the type: %s'% str(inter.geom_type))
-
-def is_two_polygons_connected(polygon1, polygon2):
-    intersection = polygon1.intersection(polygon2)
-    if intersection.is_empty:
-        return False
-    return True
-
-def find_adjacent_polygons(in_polygon, polygon_list, buffer_size=None, Rtree=None):
-    # find adjacent polygons
-    # in_polygon is the center polygon
-    # polygon_list is a polygon list without in_polygon
-
-    if buffer_size is not None:
-        center_poly =  in_polygon.buffer(buffer_size)
-    else:
-        center_poly = in_polygon
-
-    if len(polygon_list) < 1:
-        return []
-
-    # https://shapely.readthedocs.io/en/stable/manual.html#str-packed-r-tree
-    if Rtree is None:
-        tree = STRtree(polygon_list)
-    else:
-        tree = Rtree
-    # query: Returns a list of all geometries in the strtree whose extents intersect the extent of geom.
-    # This means that a subsequent search through the returned subset using the desired binary predicate
-    # (eg. intersects, crosses, contains, overlaps) may be necessary to further filter the results according
-    # to their specific spatial relationships.
-
-    # https://www.geeksforgeeks.org/introduction-to-r-tree/
-    # R-trees are faster than Quad-trees for Nearest Neighbour queries while for window queries, Quad-trees are faster than R-trees
-
-
-    # quicker than check one by one
-    # adjacent_polygons = [item for item in tree.query(center_poly) if item.intersection(center_poly) ]
-    # t0= time.time()
-    adjacent_polygons = [item for item in tree.query(center_poly) if item.intersects(center_poly) or item.touches(center_poly) ]
-    # adjacent_poly_idx = [polygon_list.index(item) for item in adjacent_polygons ]
-    # print('cost %f seconds'%(time.time() - t0))
-
-    # adjacent_polygons = []
-    # adjacent_poly_idx = []
-    # for idx, poly in enumerate(polygon_list):
-    #     if is_two_polygons_connected(poly, center_poly):
-    #         adjacent_polygons.append(poly)
-    #         adjacent_poly_idx.append(idx)
-
-    # print(datetime.now(), 'find %d adjacent polygons' % len(adjacent_polygons))
-
-    return adjacent_polygons
-
-def find_adjacent_polygons_from_sub(c_polygon_idx, polygon_list,polygon_boxes,  start_idx, end_idx):
-
-    check_polygons = [polygon_list[j] for j in range(start_idx, end_idx)
-                      if is_two_bound_disjoint(polygon_boxes[c_polygon_idx],polygon_boxes[j]) is False ]
-    adj_polygons = find_adjacent_polygons(polygon_list[c_polygon_idx], check_polygons)
-    # change polygon index to the entire polygons list
-    adj_poly_idxs = [polygon_list.index(item) for item in adj_polygons]
-    return c_polygon_idx, adj_polygons, adj_poly_idxs
-
-
-def build_adjacent_map_of_polygons(polygons_list, process_num = 1):
-    """
-    build an adjacent matrix of the tou
-    :param polygons_list: a list contains all the shapely (not pyshp) polygons
-    :return: a matrix storing the adjacent (shared points) for all polygons
-    """
-
-    # another implement is in the vector_features.py,
-    # here, we implement the calculation parallel to improve the efficiency.
-
-    # the input polgyons are all valid.
-
-    polygons_list = [item for item in polygons_list]  # GeometryArray to list
-    polygon_count = len(polygons_list)
-    if polygon_count < 2:
-        basic.outputlogMessage('error, the count of polygon is less than 2')
-        return False
-
-    # # https://shapely.readthedocs.io/en/stable/manual.html#str-packed-r-tree
-    # tree = STRtree(polygons_list)
-    polygon_boxes = [ get_polygon_bounding_box(item) for item in polygons_list]
-
-    # this would take a lot of memory if they are many polyton, such as more than 10 000
-    ad_matrix = np.zeros((polygon_count, polygon_count),dtype=np.int8)
-
-    if process_num == 1:
-        for i in range(0,polygon_count):
-            t0 = time.time()
-            # if i%100 == 0:
-            #     start_idx = i+1
-            #     check_polygons = [polygons_list[j] for j in range(start_idx, polygon_count)]
-            #     tree = STRtree(check_polygons)
-            start_idx = i + 1
-            check_polygons = [ polygons_list[j] for j in range(i+1, polygon_count)
-                               if is_two_bound_disjoint(polygon_boxes[i],polygon_boxes[j]) is False]
-            adj_polygons = find_adjacent_polygons(polygons_list[i], check_polygons)
-            # change polygon index to the entire polygons list
-            adj_poly_idxs = [polygons_list.index(item) for item in adj_polygons ]
-
-            # find index from the entire polygon list
-            # adj_polygons, adj_poly_idxs = find_adjacent_polygons(polygons_list[i], polygons_list, Rtree=tree)
-
-            # adj_polygons, adj_poly_idxs = find_adjacent_polygons(polygons_list[i], check_polygons, Rtree=tree)
-
-            # find adjacent from entire list using tree, but slower
-            # adjacent_polygons = [item for item in tree.query(polygons_list[i]) if item.intersection(polygons_list[i])]
-            # adjacent_poly_idx = [polygons_list.index(item) for item in adjacent_polygons]
-            # remove itself
-            # adjacent_poly_idx.remove(i)
-            # for idx in adjacent_poly_idx:
-            #     ad_matrix[i, idx] = 1
-            #     ad_matrix[idx, i] = 1  # also need the low part of matrix, or later polygon can not find previous neighbours
-
-            # print(datetime.now(), '%d/%d'%(i, polygon_count),'cost', time.time() - t0)
-
-            for j in adj_poly_idxs:
-                ad_matrix[i, j] = 1
-                ad_matrix[j, i] = 1  # also need the low part of matrix, or later polygon can not find previous neighbours
-    elif process_num > 1:
-        theadPool = Pool(process_num)
-        parameters_list = [(i, polygons_list, polygon_boxes, i+1, polygon_count) for i in range(0,polygon_count)]
-        results = theadPool.starmap(find_adjacent_polygons_from_sub, parameters_list)
-        print(datetime.now(), 'finish parallel runing')
-        for i, adj_polygons, adj_poly_idxs in results:
-            # print(adj_poly_idxs)
-            for j in adj_poly_idxs:
-                ad_matrix[i, j] = 1
-                ad_matrix[j, i] = 1  # also need the low part of matrix, or later polygon can not find previous neighbours
-        # close it, to avoid error: OSError: [Errno 24] Too many open files
-        theadPool.close()
-    else:
-        raise ValueError('wrong process_num: %d'%process_num)
-
-    # print(ad_matrix)
-    return ad_matrix
-
-
-def get_surrounding_polygons(in_polygons,buffer_size):
-    '''
-    get polygons surround the input polygons
-    similar to the one: "get_buffer_polygons" in "vector_features.py"
-    Args:
-        in_polygons:
-        buffer_size:
-
-    Returns: a list of expanding polygons
-
-    '''
-    # remove holes
-    polygons = [ fill_holes_in_a_polygon(poly) for poly in  in_polygons]
-    # buffer the polygons
-    expansion_polygons = [ item.buffer(buffer_size) for item in polygons]
-    # difference
-    surround_polys = [exp_poly.difference(poly) for exp_poly, poly in zip(expansion_polygons,polygons)]
-
-    return surround_polys
-
-
-def merge_shape_files(file_list, save_path):
-
-    if os.path.isfile(save_path):
-        print('%s already exists'%save_path)
-        return True
-    if len(file_list) < 1:
-        raise IOError("no input shapefiles")
-
-    ref_prj = map_projection.get_raster_or_vector_srs_info_proj4(file_list[0])
-
-    # read polygons as shapely objects
-    attribute_names = None
-    polygons_list = []
-    polygon_attributes_list = []
-
-    b_get_field_name = False
-
-    for idx, shp_path in enumerate(file_list):
-
-        # check projection
-        prj = map_projection.get_raster_or_vector_srs_info_proj4(file_list[idx])
-        if prj != ref_prj:
-            raise ValueError('Projection inconsistent: %s is different with the first one'%shp_path)
-
-        shapefile = gpd.read_file(shp_path)
-        if len(shapefile.geometry.values) < 1:
-            basic.outputlogMessage('warning, %s is empty, skip'%shp_path)
-            continue
-
-        # go through each geometry
-        for ri, row in shapefile.iterrows():
-            # if idx == 0 and ri==0:
-            if b_get_field_name is False:
-                attribute_names = row.keys().to_list()
-                attribute_names = attribute_names[:len(attribute_names) - 1]
-                # basic.outputlogMessage("attribute names: "+ str(row.keys().to_list()))
-                b_get_field_name = True
-
-            polygons_list.append(row['geometry'])
-            polygon_attributes = row[:len(row) - 1].to_list()
-            if len(polygon_attributes) < len(attribute_names):
-                polygon_attributes.extend([None]* (len(attribute_names) - len(polygon_attributes)))
-            polygon_attributes_list.append(polygon_attributes)
-
-    # save results
-    save_polyons_attributes = {}
-    for idx, attribute in enumerate(attribute_names):
-        # print(idx, attribute)
-        values = [item[idx] for item in polygon_attributes_list]
-        save_polyons_attributes[attribute] = values
-
-    save_polyons_attributes["Polygons"] = polygons_list
-    polygon_df = pd.DataFrame(save_polyons_attributes)
-
-
-    return save_polygons_to_files(polygon_df, 'Polygons', ref_prj, save_path)
-
-def raster2shapefile(in_raster, out_shp=None,connect8=True, format='ESRI Shapefile'):
-    # some time "ESRI Shapefile" may be failed is the raster is large and complex, it good to use "GPKG" (GeoPackage)
-    if out_shp is None:
-        if format.upper()=='GPKG':
-            out_shp = os.path.splitext(in_raster)[0] + '.gpkg'
-        else:
-            out_shp = os.path.splitext(in_raster)[0] + '.shp'
-
-    if os.path.isfile(out_shp):
-        print('%s exists, skip'%out_shp)
-        return out_shp
-
-    commond_str = 'gdal_polygonize.py '
-    # is Default is 4 connectedness.
-    if connect8:
-        commond_str += ' -8 '
-    commond_str += in_raster + ' -b 1 '
-    commond_str += ' -f  "%s" '%format + out_shp  # +  [layer] [fieldname]
-
-    print(commond_str)
-    res = os.system(commond_str)
-    if res == 0:
-        return out_shp
-    else:
-        return None
-
-
-def points_to_LineString(point_list):
-    # input a point in order, then output a line
-    # for point in point_list:
-    return LineString(point_list)
-
-
-def line_segments_to_LineString(segment_list):
-    # input a list of line segment: ((x1, y1), (x2, y2)),
-    # then convert to LineString or (multi-linestring)
-
-    line_2points_list = []
-    for line in segment_list:
-        p1, p2 = line
-        line_2points_list.append(LineString([ [p1[0], p1[1]], [p2[0], p2[1]] ]))
-
-    # combine them into a multi-linestring
-    multi_line = MultiLineString(line_2points_list)
-    # print(multi_line)  # prints MULTILINESTRING
-
-    # now merge the lines
-    # note that it will now merge only the contiguous portions into a component of a new multi-linestring
-    merged_line = ops.linemerge(multi_line)
-    # print(merged_line)
-    # print(merged_line.geom_type)
-    # line_list = list(merged_line)
-    # print('line count:',len(line_list))
-    # lenth_list = [ item.length for item in line_list]
-    # print('max line length:', max(lenth_list) )
-
-    return merged_line
-
 
 
 def main(options, args):

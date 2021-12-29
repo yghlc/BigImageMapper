@@ -38,9 +38,6 @@ import raster_io
 import multiprocessing
 from multiprocessing import Pool
 
-from vector_gpd import convert_image_bound_to_shapely_polygon
-from vector_gpd import get_poly_index_within_extent
-
 def get_image_tile_bound_boxes(image_tile_list):
     '''
     get extent of all the images
@@ -56,12 +53,11 @@ def get_image_tile_bound_boxes(image_tile_list):
 
     return boxes
 
-def get_overlap_image_index(polygons,image_boxes,min_overlap_area=1):
+def get_overlap_image_index(polygons,image_boxes):
     '''
     get the index of images that the polygons overlap
     :param polygons: a list of polygons
     :param image_boxes: the extent of the all the images
-    :param min_overlap_area: minumum areas for checking the overlap, ignore the image if it's too small
     :return:
     '''
 
@@ -75,15 +71,6 @@ def get_overlap_image_index(polygons,image_boxes,min_overlap_area=1):
         if rasterio.coords.disjoint_bounds(img_box, polygon_box) is False:
             if idx not in img_idx:
                 img_idx.append(idx)
-
-    # check overlap
-    for idx in img_idx:
-        box_poly =  convert_image_bound_to_shapely_polygon(image_boxes[idx])
-        poly_index = get_poly_index_within_extent(polygons,box_poly,min_overlap_area=min_overlap_area)
-        # if no overlap, remove index
-        if len(poly_index) < 1:
-            img_idx.remove(idx)
-
     return img_idx
 
 def check_polygons_invalidity(polygons, shp_path):
@@ -119,7 +106,7 @@ def check_projection_rasters(image_path_list):
             raise ValueError('error, %s have different projection with the first raster'%image_path_list[idx])
     return True
 
-def check_1or3band_8bit(image_path_list):
+def check_3band_8bit(image_path_list):
     '''
     check the raster is 3-band and 8-bit
     :param image_path_list: a list containing all the images
@@ -128,11 +115,8 @@ def check_1or3band_8bit(image_path_list):
     for img_path in image_path_list:
         _, _, band_count, dtype = raster_io.get_height_width_bandnum_dtype(img_path)
         print(band_count, dtype)
-        if band_count not in [1,3]:
-            raise ValueError('Currenty, only support images with 1 or 3-band, input %s is %d bands'
-                             % (img_path, band_count))
-        if dtype!='uint8':
-            raise ValueError('Currenty, only support images with uint8 type, input %s is %d bands and %s'
+        if band_count!=3 or dtype!='uint8':
+            raise ValueError('Currenty, only support images with 3-band and uint8 type, input %s is %d bands and %s'
                              %(img_path,band_count,dtype))
 
 def meters_to_degress_onEarth(distance):
@@ -152,10 +136,7 @@ def get_projection_proj4(geo_file):
     #     raise ValueError('error, get projection information of %s failed'%geo_file)
     # return prj4_str.decode().strip()
     import basic_src.map_projection as map_projection
-    proj4 = map_projection.get_raster_or_vector_srs_info_proj4(geo_file)
-    if proj4 is False:
-        raise ValueError('Failed to get the projection of %s'%geo_file)
-    return proj4
+    return map_projection.get_raster_or_vector_srs_info_proj4(geo_file)
 
 def get_bounds_of_polygons(polygons):
     '''
@@ -217,9 +198,9 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
     :param brectangle: if brectangle is True, crop the raster using bounds, else, use the polygon
     :return: True is successful, False otherwise
     '''
-    img_resx, img_resy = raster_io.get_xres_yres_file(image_tile_list[0])
+
     # find the images which the center polygon overlap (one or two images)
-    img_index = get_overlap_image_index([selected_polygon], image_tile_bounds,min_overlap_area=abs(img_resx*img_resy))
+    img_index = get_overlap_image_index([selected_polygon], image_tile_bounds)
     if len(img_index) < 1:
         basic.outputlogMessage(
             'Warning, %dth polygon do not overlap any image tile, please check ' #and its buffer area
@@ -269,10 +250,6 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
 
                 # crop image and saved to disk
                 out_image, out_transform = mask(src, [polygon_json], nodata=dstnodata, all_touched=True, crop=True)
-                non_nodata_loc = np.where(out_image != dstnodata)
-                if non_nodata_loc[0].size < 1 or np.std(out_image[non_nodata_loc]) < 0.0001:
-                    basic.outputlogMessage('out_image is total black or white, ignore, %s: %d' % (save_path, k_img))
-                    continue
 
                 tmp_saved = os.path.splitext(save_path)[0] +'_%d'%k_img + os.path.splitext(save_path)[1]
                 # test: save it to disk
@@ -285,18 +262,12 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
                 with rasterio.open(tmp_saved, "w", **out_meta) as dest:
                     dest.write(out_image)
                 tmp_saved_files.append(tmp_saved)
-        if len(tmp_saved_files) < 1:
-            basic.outputlogMessage('Warning, %dth polygon overlap multiple image tiles, but all are black or white, please check ' % idx)
-            return False
-        elif len(tmp_saved_files) == 1:
-            io_function.move_file_to_dst(tmp_saved_files[0],save_path)
-            del tmp_saved_files[0]
-        else:
-            # mosaic files in tmp_saved_files
-            mosaic_args_list = ['gdal_merge.py', '-o', save_path,'-n',str(dstnodata),'-a_nodata',str(dstnodata)]
-            mosaic_args_list.extend(tmp_saved_files)
-            if basic.exec_command_args_list_one_file(mosaic_args_list,save_path) is False:
-                raise IOError('error, obtain a mosaic (%s) failed'%save_path)
+
+        # mosaic files in tmp_saved_files
+        mosaic_args_list = ['gdal_merge.py', '-o', save_path,'-n',str(dstnodata),'-a_nodata',str(dstnodata)]
+        mosaic_args_list.extend(tmp_saved_files)
+        if basic.exec_command_args_list_one_file(mosaic_args_list,save_path) is False:
+            raise IOError('error, obtain a mosaic (%s) failed'%save_path)
 
         # # for test
         # if idx==13:
@@ -389,8 +360,7 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
     basic.outputlogMessage('get a sub image covering %d training polygons'%len(adj_polygons))
 
     # find the images which the center polygon overlap (one or two images)
-    img_resx, img_resy = raster_io.get_xres_yres_file(image_tile_list[0])
-    img_index = get_overlap_image_index(adj_polygons, img_tile_boxes,min_overlap_area=abs(img_resx*img_resy))
+    img_index = get_overlap_image_index(adj_polygons, img_tile_boxes)
     if len(img_index) < 1:
         basic.outputlogMessage('Warning, %dth polygon and the adjacent ones do not overlap any image tile, please check '
                                '(1) the shape file and raster have the same projection'
@@ -475,13 +445,9 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
     sub_image_label_str = None
     # get buffer area
     expansion_polygon = c_polygon.buffer(bufferSize)
-    if b_label:
-        tail_name = '_%d_class_%d.tif' % (idx, c_class_int)
-    else:
-        tail_name = '_%d.tif' % (idx)
 
     # get one sub-image based on the buffer areas
-    subimg_shortName = os.path.join('subImages', pre_name + tail_name)
+    subimg_shortName = os.path.join('subImages', pre_name + '_%d_class_%d.tif' % (idx, c_class_int))
     subimg_saved_path = os.path.join(saved_dir, subimg_shortName)
     if get_sub_image(idx, expansion_polygon, image_tile_list, img_tile_boxes, subimg_saved_path, dstnodata,
                      brectangle) is False:
@@ -489,7 +455,7 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
         return None
 
     # based on the sub-image, create the corresponding vectors
-    sublabel_shortName = os.path.join('subLabels', pre_name_for_label + tail_name)
+    sublabel_shortName = os.path.join('subLabels', pre_name_for_label + '_%d_class_%d.tif' % (idx, c_class_int))
     sublabel_saved_path = os.path.join(saved_dir, sublabel_shortName)
     if b_label:
         if get_sub_label(idx, subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize,
@@ -540,29 +506,46 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
     pre_name_for_label = pre_name+'_'+os.path.splitext(os.path.basename(t_polygons_shp))[0]
 
     list_txt_obj = open('sub_images_labels_list.txt','a')
-    # go through each polygon
-    if proc_num == 1:
-        for idx, (c_polygon, c_class_int)  in enumerate(zip(center_polygons,class_labels)):
+    # # go through each polygon
+    # for idx, (c_polygon, c_class_int)  in enumerate(zip(center_polygons,class_labels)):
+    #
+    #     # output message
+    #     basic.outputlogMessage('obtaining %dth sub-image and the corresponding label raster'%idx)
+    #
+    #     ## get an image and the corresponding label raster (has errors)
+    #     ## image_array, label_array = get_one_sub_image_label(idx,c_polygon, class_labels[idx], polygons_all, class_labels_all, bufferSize, img_tile_boxes,image_tile_list)
+    #
+    #     # get buffer area
+    #     expansion_polygon = c_polygon.buffer(bufferSize)
+    #
+    #     # get one sub-image based on the buffer areas
+    #     subimg_shortName = os.path.join('subImages' , pre_name+'_%d_class_%d.tif'%(idx,c_class_int))
+    #     subimg_saved_path = os.path.join(saved_dir, subimg_shortName)
+    #     if get_sub_image(idx,expansion_polygon,image_tile_list,img_tile_boxes, subimg_saved_path, dstnodata, brectangle) is False:
+    #         basic.outputlogMessage('Warning, skip the %dth polygon'%idx)
+    #         continue
+    #
+    #     # based on the sub-image, create the corresponding vectors
+    #     sublabel_shortName = os.path.join('subLabels', pre_name_for_label + '_%d_class_%d.tif' % (idx, c_class_int))
+    #     sublabel_saved_path = os.path.join(saved_dir, sublabel_shortName)
+    #     if b_label:
+    #         if get_sub_label(idx,subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize, brectangle, sublabel_saved_path) is False:
+    #             basic.outputlogMessage('Warning, get the label raster for %dth polygon failed' % idx)
+    #             continue
+    #
+    #     list_txt_obj.writelines(subimg_shortName + ":"+sublabel_shortName+'\n')
+    #     pass
 
-            sub_image_label_str = get_one_sub_image_label_parallel(idx, c_polygon, bufferSize, pre_name, pre_name_for_label, c_class_int,
-                                             saved_dir, image_tile_list,
-                                             img_tile_boxes, dstnodata, brectangle, b_label, polygons_all, class_labels_all)
 
-            if sub_image_label_str is not None:
-                list_txt_obj.writelines(sub_image_label_str)
-    elif proc_num > 1:
-
-        parameters_list = [
-            (idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
-                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all)
-            for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons, class_labels))]
-        theadPool = Pool(proc_num)  # multi processes
-        results = theadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
-        for res in results:
-            if res is not None:
-                list_txt_obj.writelines(res)
-    else:
-        raise ValueError('Wrong process number: %s'%(proc_num))
+    parameters_list = [
+        (idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
+                        img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all)
+        for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons, class_labels))]
+    theadPool = Pool(proc_num)  # multi processes
+    results = theadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
+    for res in results:
+        if res is not None:
+            list_txt_obj.writelines(res)
 
 
     list_txt_obj.close()
@@ -613,8 +596,7 @@ def main(options, args):
 
     check_projection_rasters(image_tile_list)   # it will raise errors if found problems
 
-    # comment out on June 18, 2021,
-    # check_1or3band_8bit(image_tile_list)  # it will raise errors if found problems
+    check_3band_8bit(image_tile_list)   # it will raise errors if found problems
 
     #need to check: the shape file and raster should have the same projection.
     if get_projection_proj4(t_polygons_shp) != get_projection_proj4(image_tile_list[0]):

@@ -40,7 +40,7 @@ def training_img_augment(para_file):
     # res = os.system(command_string)
     # if res!=0:
     #     sys.exit(1)
-    image_augment_main(para_file,'list/trainval.txt',img_list_aug_txt,'split_images','split_images',img_ext,False,proc_num)
+    image_augment_main(para_file,'list/train_list.txt',img_list_aug_txt,'train_split_images','train_split_images',img_ext,False,proc_num)
 
     #augment training lables
     print("image augmentation on label patches")
@@ -51,11 +51,10 @@ def training_img_augment(para_file):
     # if res!=0:
     #     sys.exit(1)
     # save the result to the same file (redundant, they have the same filename)
-    image_augment_main(para_file, 'list/trainval.txt', img_list_aug_txt, 'split_labels', 'split_labels', img_ext, True,proc_num)
+    image_augment_main(para_file, 'list/train_list.txt', img_list_aug_txt, 'train_split_labels', 'train_split_labels', img_ext, True,proc_num)
 
     if os.path.isfile(img_list_aug_txt):
-        os.system(' cp %s list/trainval.txt'%img_list_aug_txt)
-        os.system(' cp %s list/val.txt'%img_list_aug_txt)
+        os.system(' cp %s list/train_list.txt'%img_list_aug_txt)
     else:
         print('list/images_including_aug.txt does not exist because no data augmentation strings')
 

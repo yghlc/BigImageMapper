@@ -11,6 +11,7 @@ add time: 21 January, 2021
 import os, sys
 from optparse import OptionParser
 
+## git test
 # code_dir = os.path.join(os.path.dirname(sys.argv[0]), '..')
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
@@ -25,7 +26,7 @@ from deeplab_train import pre_trained_tar_19_classes
 tf1x_python = 'python'
 
 def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classes,atrous_rates1,atrous_rates2,atrous_rates3,output_stride,
-                 crop_size_height, crop_size_width,band_count,multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters):
+                 crop_size_height, crop_size_width,multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters):
     command_string = tf1x_python + ' ' \
                      + export_script \
                      + ' --logtostderr' \
@@ -34,8 +35,7 @@ def export_graph(export_script,CKPT_PATH,EXPORT_PATH,model_variant,num_of_classe
                      + ' --model_variant=' + model_variant \
                      + ' --num_classes=' + str(num_of_classes) \
                      + ' --crop_size='+crop_size_height \
-                     + ' --crop_size='+crop_size_width \
-                     + ' --band_count='+str(band_count)
+                     + ' --crop_size='+crop_size_width
 
     if output_stride is not None:
         command_string += ' --output_stride='+ str(output_stride)
@@ -130,7 +130,7 @@ def main(options, args):
     num_classes_noBG = parameters.get_digit_parameters_None_if_absence(para_file, 'NUM_CLASSES_noBG', 'int')
     assert num_classes_noBG != None
     b_initialize_last_layer = parameters.get_bool_parameters(para_file, 'b_initialize_last_layer')
-    if b_initialize_last_layer is True:
+    if b_initialize_last_layer is False:
         pre_trained_tar = parameters.get_string_parameters(network_setting_ini, 'TF_INIT_CKPT')
         if pre_trained_tar in pre_trained_tar_21_classes:
             print('warning, pretrained model %s is trained with 21 classes, set num_of_classes to 21'%pre_trained_tar)
@@ -143,10 +143,6 @@ def main(options, args):
     image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
     if len(image_crop_size) != 2 and image_crop_size[0].isdigit() and image_crop_size[1].isdigit():
         raise ValueError('image_crop_size should be height,width')
-
-    image_band_count = parameters.get_digit_parameters_None_if_absence(para_file, 'image_band_count','int')
-    if image_band_count is None:
-        image_band_count = 3
 
     iteration_num = get_trained_iteration(TRAIN_LOGDIR)
 
@@ -161,7 +157,7 @@ def main(options, args):
         return
     export_graph(export_script, CKPT_PATH, EXPORT_PATH, model_variant, num_of_classes,
                  inf_atrous_rates1, inf_atrous_rates2, inf_atrous_rates3, inf_output_stride,image_crop_size[0], image_crop_size[1],
-                 image_band_count,multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters)
+                 multi_scale,depth_multiplier,decoder_output_stride,aspp_convs_filters)
 
 
 if __name__ == '__main__':

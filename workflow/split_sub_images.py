@@ -33,20 +33,18 @@ def split_to_patches(image_path, out_dir, patch_width, patch_height, overlay_x, 
 
     if out_format == '.png': out_format = 'PNG'
     if out_format == '.tif': out_format = 'GTIFF'
-    if out_format == '.jpg': out_format = 'JPEG'
 
     split_image.split_image(image_path, out_dir, patch_width, patch_height, overlay_x, overlay_y, out_format, pre_name=file_pre_name)
 
-def split_a_pair_sub_image_label(line, patch_w, patch_h, overlay_x, overlay_y, split_image_format):
+def split_a_pair_sub_image_label(image_txt, label_txt, line, patch_w, patch_h, overlay_x, overlay_y, split_image_format):
 
     sub_image, sub_label = line.split(':')
     # split sub image
-    split_to_patches(sub_image, 'split_images', patch_w, patch_h, overlay_x, overlay_y, split_image_format)
+    split_to_patches(sub_image, image_txt, patch_w, patch_h, overlay_x, overlay_y, split_image_format)
 
     # split sub label (change the file name to be the same as sub_image name)
-    if os.path.isfile(sub_label):
-        pre_name = os.path.splitext(os.path.basename(sub_image))[0]
-        split_to_patches(sub_label, 'split_labels', patch_w, patch_h, overlay_x, overlay_y, split_image_format, file_pre_name=pre_name)
+    pre_name = os.path.splitext(os.path.basename(sub_image))[0]
+    split_to_patches(sub_label, label_txt, patch_w, patch_h, overlay_x, overlay_y, split_image_format, file_pre_name=pre_name)
 
 def split_sub_images(para_file):
     print("split sub-images and sub-labels")
@@ -55,12 +53,28 @@ def split_sub_images(para_file):
         raise IOError('File %s not exists in current folder: %s'%(para_file, os.getcwd()))
 
     SECONDS = time.time()
-    if os.path.isdir('split_images'):
-        io_function.delete_file_or_dir('split_images')
-    if os.path.isdir('split_labels'):
-        io_function.delete_file_or_dir('split_labels')
+    
+    if os.path.isdir('train_split_images'):
+        io_function.delete_file_or_dir('train_split_images')
+    if os.path.isdir('train_split_labels'):
+        io_function.delete_file_or_dir('train_split_labels')
 
-    io_function.mkdir('split_images')
+    io_function.mkdir('train_split_images')
+    io_function.mkdir('train_split_labels')
+    
+    
+    if os.path.isdir('val_split_images'):
+        io_function.delete_file_or_dir('val_split_images')
+    if os.path.isdir('val_split_labels'):
+        io_function.delete_file_or_dir('val_split_labels')
+
+    io_function.mkdir('val_split_images')
+    io_function.mkdir('val_split_labels')
+    
+    train_split_image_txt = 'train_split_images'
+    train_split_label_txt = 'train_split_labels'
+    val_split_image_txt = 'val_split_images'
+    val_split_label_txt = 'val_split_labels'
 
     ### split the training image to many small patch (480*480)
     patch_w=parameters.get_string_parameters(para_file,'train_patch_width')
@@ -72,47 +86,51 @@ def split_sub_images(para_file):
     trainImg_dir=parameters.get_string_parameters(para_file,'input_train_dir')
     labelImg_dir=parameters.get_string_parameters(para_file,'input_label_dir')
     proc_num = parameters.get_digit_parameters(para_file,'process_num','int')
+    
+    train_sample_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
+    val_sample_txt = parameters.get_string_parameters(para_file, 'validation_sample_list_txt')
 
     if os.path.isdir(trainImg_dir) is False:
         raise IOError('%s not in the current folder, please get subImages first'%trainImg_dir)
     if os.path.isdir(labelImg_dir) is False:
-        print('warning, %s not in the current folder'%labelImg_dir)
-    else:
-        io_function.mkdir('split_labels')
+        raise IOError('%s not in the current folder, please get subImages first'%labelImg_dir)
+        
+        
+    train_sub_img_label_txt = os.path.join('list','training_sub_images_labels.txt')
+    val_sub_img_label_txt = os.path.join('list','validation_sub_images_labels.txt')
+    
+    if os.path.isfile(train_sub_img_label_txt) is False:
+        raise IOError('%s not in the current folder, please get subImages first' % train_sub_img_label_txt)
+    if os.path.isfile(val_sub_img_label_txt) is False:
+        raise IOError('%s not in the current folder, please get subImages first' % val_sub_img_label_txt)
 
-    sub_img_label_txt = 'sub_images_labels_list.txt'
-    if os.path.isfile(sub_img_label_txt) is False:
-        raise IOError('%s not in the current folder, please get subImages first' % sub_img_label_txt)
-
-    with open(sub_img_label_txt) as txt_obj:
+    with open(train_sub_img_label_txt) as txt_obj:
         line_list = [name.strip() for name in txt_obj.readlines()]
-        # for line in line_list:
-        #     sub_image, sub_label = line.split(':')
-        #
-        #     # split sub image
-        #     split_to_patches(sub_image, 'split_images', patch_w, patch_h, overlay, overlay, split_image_format)
-        #
-        #     # split sub label (change the file name to be the same as sub_image name)
-        #     pre_name = os.path.splitext(os.path.basename(sub_image))[0]
-        #     split_to_patches(sub_label, 'split_labels', patch_w, patch_h, overlay, overlay, split_image_format, file_pre_name=pre_name)
-
-        parameters_list = [(line, patch_w, patch_h, overlay_x, overlay_y, split_image_format) for line in line_list]
+        
+        parameters_list = [(train_split_image_txt, train_split_label_txt, line, patch_w, patch_h, overlay_x, overlay_y, split_image_format) for line in line_list]
         theadPool = Pool(proc_num)  # multi processes
         results = theadPool.starmap(split_a_pair_sub_image_label, parameters_list)  # need python3
 
         # output trainval.txt and val.txt file
-        files_list = io_function.get_file_list_by_ext(split_image_format, 'split_images',bsub_folder=False)
-        io_function.mkdir('list')
-        trainval = os.path.join('list','trainval.txt')
-        val = os.path.join('list','val.txt')
-        with open(trainval,'w') as w_obj:
+        files_list = io_function.get_file_list_by_ext(split_image_format, train_split_image_txt,bsub_folder=False)
+        train = os.path.join('list',train_sample_txt)
+        with open(train,'w') as w_obj:
             for file_name in files_list:
                 w_obj.writelines(os.path.splitext(os.path.basename(file_name))[0] + '\n')
 
-        io_function.copy_file_to_dst(trainval,val,overwrite=True)
+    with open(val_sub_img_label_txt) as txt_obj:
+        line_list = [name.strip() for name in txt_obj.readlines()]
+        
+        parameters_list = [(val_split_image_txt, val_split_label_txt, line, patch_w, patch_h, overlay_x, overlay_y, split_image_format) for line in line_list]
+        theadPool = Pool(proc_num)  # multi processes
+        results = theadPool.starmap(split_a_pair_sub_image_label, parameters_list)  # need python3
 
-        split_train_val.get_image_with_height_list(trainval, split_image_format, info_type='(no data augmentation)')
-
+        # output trainval.txt and val.txt file
+        files_list = io_function.get_file_list_by_ext(split_image_format, val_split_image_txt,bsub_folder=False)
+        val = os.path.join('list',val_sample_txt)
+        with open(val,'w') as w_obj:
+            for file_name in files_list:
+                w_obj.writelines(os.path.splitext(os.path.basename(file_name))[0] + '\n')
 
     duration= time.time() - SECONDS
     os.system('echo "$(date): time cost of splitting sub images and labels: %.2f seconds">>time_cost.txt'%duration)
