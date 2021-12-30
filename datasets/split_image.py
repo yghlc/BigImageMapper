@@ -11,71 +11,46 @@ import sys,os,subprocess
 from optparse import OptionParser
 
 def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj_overlay_y=0):
-    """
-    get the subset windows of each patch
+    """get the subset windows of each patch
     Args:
         image_width: width of input image
         image_height: height of input image
         patch_w: the width of the expected patch
         patch_h: the height of the expected patch
-        adj_overlay_x: the extended distance (in pixel of x direction) to adjacent patch, make each patch has overlay with adjacent patch
-        adj_overlay_y: the extended distance (in pixel of y direction) to adjacent patch, make each patch has overlay with ad
+        adj_overlay_x: the extended distance (in pixel of x direction) to adjacent patch,
+            make each patch has overlay with adjacent patch
+        adj_overlay_y: the extended distance (in pixel of y direction) to adjacent patch,
+            make each patch has overlay with adjacent patch
     Returns: The list of boundary of each patch
-
     """
-
-    count_x = int(image_width/patch_w)
-    count_y = int(image_height/patch_h)
-
-    leftW = int(image_width)%int(patch_w)
-    leftH = int(image_height)%int(patch_h)
-    if leftW < patch_w/3 and count_x > 0:
-        # count_x = count_x - 1
-        leftW = patch_w + leftW
-    else:
-        count_x = count_x + 1
-    if leftH < patch_h/3 and count_y > 0:
-        # count_y = count_y - 1
-        leftH = patch_h + leftH
-    else:
-        count_y = count_y + 1
-
     # output split information
-    # f_obj = open('split_image_info.txt','w')
-    # f_obj.writelines('### This file is created by split_image.py. mosaic_patches.py need it. Do not edit it\n')
-    # f_obj.writelines('image_width:%d\n' % image_width)
-    # f_obj.writelines('image_height:%d\n' % image_height)
-    # f_obj.writelines('expected patch_w:%d\n' % patch_w)
-    # f_obj.writelines('expected patch_h:%d\n'%patch_h)
-    # f_obj.writelines('adj_overlay_x:%d\n' % adj_overlay_x)
-    # f_obj.writelines('adj_overlay_y:%d\n' % adj_overlay_y)
-
+    f_obj = open('split_image_info.txt','w')
+    f_obj.writelines('### This file is created by split_image.py. mosaic_patches.py need it. Do not edit it\n')
+    f_obj.writelines('image_width: %d\n' % image_width)
+    f_obj.writelines('image_height: %d\n' % image_height)
+    f_obj.writelines('expected patch_w: %d\n' % patch_w)
+    f_obj.writelines('expected patch_h: %d\n' % patch_h)
+    f_obj.writelines('adj_overlay_x: %d\n' % adj_overlay_x)
+    f_obj.writelines('adj_overlay_y: %d\n' % adj_overlay_y)
+    
+    count_x = (image_width - 2*adj_overlay_x) // patch_w
+    count_y = (image_height - 2*adj_overlay_y) // patch_h
     patch_boundary = []
-    for i in range(0,count_x):
-        # f_obj.write('column %d:'%i)
-        for j in range(0,count_y):
-            w = patch_w
-            h = patch_h
-            if i==count_x -1:
-                w = leftW
-            if j == count_y - 1:
-                h = leftH
-
-            # f_obj.write('%d ' % (i*count_y + j))
-
+    for i in range(0, count_x):
+        f_obj.write('column %d:' % i)
+        for j in range(0, count_y):
+            f_obj.write(' %d' % (i*count_y + j))
             # extend the patch
-            xoff = max(i*patch_w - adj_overlay_x,0)  # i*patch_w
-            yoff = max(j*patch_h - adj_overlay_y, 0) # j*patch_h
-            xsize = min(i*patch_w + w + adj_overlay_x,image_width) - xoff   #w
-            ysize = min(j*patch_h + h + adj_overlay_y, image_height) - yoff #h
-
-            new_patch = (xoff,yoff ,xsize, ysize)
+            xoff = i * patch_w + (image_width - count_x*patch_w - 2*adj_overlay_x)//2
+            yoff = j * patch_h + (image_height - count_y*patch_h - 2*adj_overlay_y)//2
+            xsize = patch_w + 2*adj_overlay_x
+            ysize = patch_h + 2*adj_overlay_y
+            new_patch = (xoff, yoff, xsize, ysize)
             patch_boundary.append(new_patch)
-
-        # f_obj.write('\n')
-
-    # f_obj.close()
+        f_obj.write('\n')
+    f_obj.close()
     return patch_boundary
+
 
 
 
