@@ -307,7 +307,7 @@ def yolo_postProcess(para_file,inf_post_note,b_skip_getshp=False,test_id=None):
             # add attributes to shapefile (no other attribute to add)
             shp_attributes = os.path.join(WORK_DIR,area_save_dir, shp_pre+'_post_NOrm.shp')
             # shp_attributes = merged_shp
-            add_boxes_attributes(merged_shp, shp_attributes) # para_file, area_ini
+            add_boxes_attributes(merged_shp, shp_attributes,para_file=para_file,data_para_file=area_ini) # para_file, area_ini
 
             # remove polygons
             shp_post = os.path.join(WORK_DIR, area_save_dir, shp_pre+'_post.shp')

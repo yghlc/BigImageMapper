@@ -348,7 +348,7 @@ def add_polygon_attributes(input, output, para_file, data_para_file):
 
     return True
 
-def add_boxes_attributes(input, output):
+def add_boxes_attributes(input, output, para_file=None,data_para_file=None):
     if io_function.is_file_exist(input) is False:
         return False
 
@@ -377,6 +377,16 @@ def add_boxes_attributes(input, output):
 
     add_attributes = {'WIDTH':width_list,'HEIGHT':height_list, 'ratio_w_h':ratio_w_h_list}
     vector_gpd.add_attributes_to_shp(output,add_attributes)
+
+    # add topography of each box (consider the box as a polygon)
+    if data_para_file is not None and para_file is not None:
+        io_function.is_file_exist(data_para_file)
+        io_function.is_file_exist(para_file)
+        dem_files, slope_files, aspect_files, dem_diff_files = get_topographic_files(data_para_file)
+        if calculate_polygon_topography(output,para_file,dem_files,slope_files,aspect_files=aspect_files,dem_diffs=dem_diff_files) is False:
+            basic.outputlogMessage('Warning: calculate information of topography failed')
+            # return False   #  don't return
+
 
     return output
 
