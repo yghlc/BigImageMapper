@@ -770,6 +770,7 @@ def raster2shapefile(in_raster, out_shp=None, driver='ESRI Shapefile', nodata=No
 
 
 def read_colormaps_band1(raster_path):
+    '''read color map for the first band'''
     # https://rasterio.readthedocs.io/en/latest/topics/color.html
     with rasterio.open(raster_path) as src:
         band_count = src.count
@@ -790,6 +791,13 @@ def read_colormaps_band1(raster_path):
 
 
 def write_colormaps(raster_path, color_map_dict):
+    '''write or update color map for the first band
+    raster_path: raster image path
+    color_map_dict: a dict, like:
+        color_map_dict = {0: (230,230,230,255),
+                 1:(31,120,180, 255), # light blue for water
+                 128:(255,255,255,255)} # nodata
+    '''
 
     # update the raster file
     with rasterio.open(raster_path,mode='r+') as src:
