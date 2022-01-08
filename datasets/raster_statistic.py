@@ -104,7 +104,8 @@ def zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats,
 
     else:
         basic.outputlogMessage('warning, cannot find raster for %d (start=0) polygon'%idx)
-        return None
+        # return None           # dont return None, we cause error, let array_stats handle the empty array
+        out_image = np.array([])
 
     # do calculation
     return array_stats(out_image, stats, nodata,range=range)
