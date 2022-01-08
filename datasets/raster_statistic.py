@@ -18,7 +18,7 @@ import basic_src.io_function as io_function
 import basic_src.map_projection as map_projection
 import basic_src.basic as basic
 import numpy as np
-basic.setlogfile('raster_statistic.log')
+
 
 from multiprocessing import Pool
 
@@ -52,7 +52,7 @@ def array_stats(in_array, stats, nodata,range=None):
         if item == 'mean':
             value = np.mean(data_1d)
         elif item == 'max':
-            value = np.mean(data_1d)
+            value = np.max(data_1d)
         elif item == 'min':
             value = np.min(data_1d)
         elif item == 'median':
@@ -160,16 +160,21 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, tile_min_overlap=None
         polygons = [ poly.buffer(buffer) for poly in polygons]
 
     # process polygons one by one polygons and the corresponding image tiles (parallel and save memory)
-    stats_res_list = []
-    for idx, polygon in enumerate(polygons):
-        out_stats = zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=nodata, range=range,
-                                band=band, all_touched=all_touched,tile_min_overlap=tile_min_overlap)
-        stats_res_list.append(out_stats)
+    # also to avoid error: daemonic processes are not allowed to have children
+    if process_num == 1:
+        stats_res_list = []
+        for idx, polygon in enumerate(polygons):
+            out_stats = zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=nodata, range=range,
+                                    band=band, all_touched=all_touched)
+            stats_res_list.append(out_stats)
 
-    # threadpool = Pool(process_num)
-    # para_list = [ (idx, polygon, image_tiles, img_tile_polygons, stats, nodata, range,band, all_touched)
-    #               for idx, polygon in enumerate(polygons)]
-    # stats_res_list = threadpool.starmap(zonal_stats_one_polygon,para_list)
+    elif process_num > 1:
+        threadpool = Pool(process_num)
+        para_list = [ (idx, polygon, image_tiles, img_tile_polygons, stats, nodata, range,band, all_touched)
+                      for idx, polygon in enumerate(polygons)]
+        stats_res_list = threadpool.starmap(zonal_stats_one_polygon,para_list)
+    else:
+        raise ValueError('Wrong process number: %s '%str(process_num))
 
 
 
@@ -211,7 +216,7 @@ def test_zonal_stats_multiRasters():
 
     io_function.copy_shape_file(shp, save_shp)
     zonal_stats_multiRasters(save_shp, dem_list, nodata=None, band=1, stats=None, prefix='dem',
-                             ignore_range=None, all_touched=True, process_num=4)
+                             range=None, all_touched=True, process_num=4)
 
 
 
@@ -220,4 +225,5 @@ def main():
     pass
 
 if __name__=='__main__':
+    basic.setlogfile('raster_statistic.log')
     main()
