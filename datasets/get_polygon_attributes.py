@@ -64,7 +64,7 @@ def cal_add_area_length_of_polygon(input_shp):
     """
     return vector_features.cal_area_length_of_polygon(input_shp )
 
-def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,aspect_files=None, dem_diffs=None):
+def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,aspect_files=None, dem_diffs=None,process_num = 4):
     """
     calculate the topography information such elevation and slope of each polygon
     Args:
@@ -72,6 +72,7 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
         dem_files: DEM raster file or tiles, should have the same projection of shapefile
         slope_files: slope raster file or tiles  (can be drived from dem file by using QGIS or ArcGIS)
         aspect_files: aspect raster file or tiles (can be drived from dem file by using QGIS or ArcGIS)
+        process_num: the process number
 
     Returns: True if successful, False Otherwise
     """
@@ -110,7 +111,6 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
     #     defaults to `False`
     #   Since the dem usually is coarser, so we set all_touched = True
     all_touched = True
-    process_num = 4
     tile_min_overlap = 1  # if a raster tiles overlap the polygon less than one pixel, ignore it (will calculated by res later)
 
     # #DEM
@@ -392,7 +392,9 @@ def add_boxes_attributes(input, output, para_file=None,data_para_file=None):
         io_function.is_file_exist(data_para_file)
         io_function.is_file_exist(para_file)
         dem_files, slope_files, aspect_files, dem_diff_files = get_topographic_files(data_para_file)
-        if calculate_polygon_topography(output,para_file,dem_files,slope_files,aspect_files=aspect_files,dem_diffs=dem_diff_files) is False:
+        process_num = parameters.get_digit_parameters(para_file,'process_num','int')
+        if calculate_polygon_topography(output,para_file,dem_files,slope_files,aspect_files=aspect_files,dem_diffs=dem_diff_files,
+                                        process_num=process_num) is False:
             basic.outputlogMessage('Warning: calculate information of topography failed')
             # return False   #  don't return
 
