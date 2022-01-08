@@ -69,9 +69,9 @@ def array_stats(in_array, stats, nodata,range=None):
 
 
 def zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=None,range=None,
-                            band = 1,all_touched=True):
+                            band = 1,all_touched=True, tile_min_overlap=None):
 
-    overlap_index = vector_gpd.get_poly_index_within_extent(img_tile_polygons, polygon)
+    overlap_index = vector_gpd.get_poly_index_within_extent(img_tile_polygons, polygon,min_overlap_area=tile_min_overlap)
     image_list = [image_tiles[item] for item in overlap_index]
 
     if len(image_list) == 1:
@@ -109,7 +109,7 @@ def zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats,
     # do calculation
     return array_stats(out_image, stats, nodata,range=range)
 
-def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1, stats = None, prefix='',
+def zonal_stats_multiRasters(in_shp, raster_file_or_files, tile_min_overlap=None, nodata=None, band = 1, stats = None, prefix='',
                              range=None,buffer=None, all_touched=True, process_num=1):
     '''
     zonal statistic based on vectors, along multiple rasters (image tiles)
@@ -162,7 +162,7 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, nodata=None, band = 1
     stats_res_list = []
     for idx, polygon in enumerate(polygons):
         out_stats = zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=nodata, range=range,
-                                band=band, all_touched=all_touched)
+                                band=band, all_touched=all_touched,tile_min_overlap=tile_min_overlap)
         stats_res_list.append(out_stats)
 
     # threadpool = Pool(process_num)

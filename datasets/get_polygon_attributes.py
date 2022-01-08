@@ -146,8 +146,8 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
 
         # expand the polygon when doing dem difference statistics
         buffer_size_dem_diff = parameters.get_digit_parameters(para_file, 'buffer_size_dem_diff','float')
-
-        if zonal_stats_multiRasters(polygons_shp,dem_diffs,stats=stats_list,prefix='demD',band=1,all_touched=all_touched, process_num=process_num,
+        tile_min_overlap = 4    # if a raster tiles overlap the polygon less than 4 m^2, ignore it
+        if zonal_stats_multiRasters(polygons_shp,dem_diffs,stats=stats_list,tile_min_overlap=tile_min_overlap, prefix='demD',band=1,all_touched=all_touched, process_num=process_num,
                                     range=range, buffer=buffer_size_dem_diff) is False:
             return False
     else:
