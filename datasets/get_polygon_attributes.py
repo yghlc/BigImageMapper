@@ -28,6 +28,7 @@ import vector_gpd
 from vector_features import shape_opeation
 import parameters
 from raster_statistic import zonal_stats_multiRasters
+import raster_io
 
 
 def remove_nonclass_polygon(input_shp,output_shp, field_name='svmclass'):
@@ -110,13 +111,16 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
     #   Since the dem usually is coarser, so we set all_touched = True
     all_touched = True
     process_num = 4
+    tile_min_overlap = 1  # if a raster tiles overlap the polygon less than one pixel, ignore it (will calculated by res later)
 
     # #DEM
     if dem_files is not None:
         stats_list = ['min', 'max','mean','median','std']            #['min', 'max', 'mean', 'count','median','std']
         # if operation_obj.add_fields_from_raster(polygons_shp, dem_file, "dem", band=1,stats_list=stats_list,all_touched=all_touched) is False:
         #     return False
-        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,prefix='dem',band=1,all_touched=all_touched, process_num=process_num) is False:
+        xres, yres = raster_io.get_xres_yres_file(dem_files[0])
+        tile_min_overlap = abs(xres * yres)
+        if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,tile_min_overlap=tile_min_overlap,prefix='dem',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
         basic.outputlogMessage("warning, DEM file not exist, skip the calculation of DEM information")
@@ -124,7 +128,9 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
     # #slope
     if slope_files is not None:
         stats_list = ['min', 'max','mean', 'median', 'std']
-        if zonal_stats_multiRasters(polygons_shp,slope_files,stats=stats_list,prefix='slo',band=1,all_touched=all_touched, process_num=process_num) is False:
+        xres, yres = raster_io.get_xres_yres_file(slope_files[0])
+        tile_min_overlap = abs(xres * yres)
+        if zonal_stats_multiRasters(polygons_shp,slope_files,stats=stats_list,tile_min_overlap=tile_min_overlap,prefix='slo',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
         basic.outputlogMessage("warning, slope file not exist, skip the calculation of slope information")
@@ -132,7 +138,9 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
     # #aspect
     if aspect_files is not None:
         stats_list = ['min', 'max','mean', 'std']
-        if zonal_stats_multiRasters(polygons_shp,aspect_files,stats=stats_list,prefix='asp',band=1,all_touched=all_touched, process_num=process_num) is False:
+        xres, yres = raster_io.get_xres_yres_file(aspect_files[0])
+        tile_min_overlap = abs(xres * yres)
+        if zonal_stats_multiRasters(polygons_shp,aspect_files,stats=stats_list,tile_min_overlap=tile_min_overlap,prefix='asp',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
         basic.outputlogMessage('warning, aspect file not exist, ignore adding aspect information')
@@ -146,7 +154,8 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
 
         # expand the polygon when doing dem difference statistics
         buffer_size_dem_diff = parameters.get_digit_parameters(para_file, 'buffer_size_dem_diff','float')
-        tile_min_overlap = 4    # if a raster tiles overlap the polygon less than 4 m^2, ignore it
+        xres, yres = raster_io.get_xres_yres_file(dem_diffs[0])
+        tile_min_overlap =  abs(xres*yres)
         if zonal_stats_multiRasters(polygons_shp,dem_diffs,stats=stats_list,tile_min_overlap=tile_min_overlap, prefix='demD',band=1,all_touched=all_touched, process_num=process_num,
                                     range=range, buffer=buffer_size_dem_diff) is False:
             return False
