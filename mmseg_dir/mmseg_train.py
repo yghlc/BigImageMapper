@@ -14,12 +14,13 @@ from optparse import OptionParser
 from datetime import datetime
 import time
 
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
 import parameters
-# the poython with mmseg and pytorch installed
-open_mmlab_python = 'python'
-
 import basic_src.io_function as io_function
 
+# the poython with mmseg and pytorch installed
+open_mmlab_python = 'python'
 
 # open-mmlab models
 from mmcv.utils import Config
