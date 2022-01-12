@@ -7,3 +7,4 @@ GPUtil
 geopandas
 openpyxl
 xlsxwriter
+psutil
