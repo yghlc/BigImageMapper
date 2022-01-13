@@ -51,8 +51,8 @@ def updated_config_file(WORK_DIR, expr_name,base_config_file,save_path,para_file
     :param network_setting_ini:
     :return:
     '''
-    io_function.copy_file_to_dst(base_config_file,save_path,overwrite=False)
-    cfg = Config.fromfile(args.config)
+    # read the config, then modifi some, them dump to disk
+    cfg = Config.fromfile(base_config_file)
     # 4 basic component: dataset, model, schedule, default_runtime
     # change model (no need): when we choose a base_config_file, we already choose a model, including backbone)
 
@@ -82,7 +82,7 @@ def mmseg_train_main(para_file,gpu_num):
     if os.path.isdir(mmseg_config_dir) is False:
         raise ValueError('%s does not exist' % mmseg_config_dir)
 
-    base_config_file = parameters.get_string_parameters(para_file, 'base_config')
+    base_config_file = parameters.get_string_parameters(network_setting_ini, 'base_config')
     base_config_file = os.path.join(mmseg_config_dir,base_config_file)
     if os.path.isfile(base_config_file) is False:
         raise IOError('%s does not exist'%base_config_file)
@@ -94,7 +94,7 @@ def mmseg_train_main(para_file,gpu_num):
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
 
     # copy the base_config_file, then save to to a new one
-    config_file = io_function.get_name_by_adding_tail(base_config_file,expr_name)
+    config_file = osp.join(WORK_DIR,osp.basename(io_function.get_name_by_adding_tail(base_config_file,expr_name))) 
     if updated_config_file(WORK_DIR, expr_name,base_config_file,config_file,para_file,network_setting_ini) is False:
         raise ValueError('Getting the config file failed')
 
