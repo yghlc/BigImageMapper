@@ -27,6 +27,8 @@ open_mmlab_python = 'python'
 # open-mmlab models
 from mmcv.utils import Config
 
+from RSImageMMSeg import RSImagePatches # register the dataset
+
 # to fix: Error: mkl-service + Intel(R) MKL: MKL_THREADING_LAYER=INTEL is incompatible with libgomp.so.1 library.
 #        Try to import numpy first or set the threading layer accordingly. Set MKL_SERVICE_FORCE_INTEL to force it.
 os.environ['MKL_THREADING_LAYER'] = 'GNU'
