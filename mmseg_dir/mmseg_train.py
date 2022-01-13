@@ -19,6 +19,8 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.io_function as io_function
 
+from workflow.deeplab_train import get_iteration_num
+
 # the poython with mmseg and pytorch installed
 open_mmlab_python = 'python'
 
@@ -40,7 +42,44 @@ def train_evaluation_mmseg(WORK_DIR,config_file, expr_name, para_file, network_s
 
     pass
 
-def updated_config_file(WORK_DIR, expr_name,base_config_file,save_path,para_file,network_setting_ini):
+
+def modify_dataset(cfg,para_file,network_setting_ini,gpu_num):
+    datetype = 'RSImagePatches'
+    cfg.dataset_type = datetype
+    cfg.data_root = './'
+
+    image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
+    if len(image_crop_size) != 2 and image_crop_size[0].isdigit() and image_crop_size[1].isdigit():
+        raise ValueError('image_crop_size should be height,width')
+    cfg.crop_size = '(%d,%d)'%(image_crop_size[0],image_crop_size[1])
+
+    training_sample_list_txt = parameters.get_string_parameters(para_file,'training_sample_list_txt')
+    validation_sample_list_txt = parameters.get_string_parameters(para_file,'validation_sample_list_txt')
+
+    split_list = ['train','val','test']
+    for split in split_list:
+        # dataset in train
+        cfg.data[split]['type'] = datetype
+        cfg.data[split]['data_root'] = './'
+        cfg.data[split]['img_dir'] = 'split_images'
+        cfg.data[split]['ann_dir'] = 'split_labels'
+        if split=='train':
+            cfg.data[split]['split'] = osp.join('list',training_sample_list_txt)
+        else:
+            # set val and test to validation, when run real test (prediction) for entire RS images, we will set test again.
+            cfg.data[split]['split'] = osp.join('list', validation_sample_list_txt)
+
+    # setting based on batch size
+    batch_size = parameters.get_digit_parameters(network_setting_ini,'batch_size','int')
+    if batch_size % gpu_num != 0:
+        raise ValueError('Batch size (%d) cannot be divided by gpu num (%d)'%(batch_size,gpu_num))
+
+    cfg.data['samples_per_gpu'] = batch_size/gpu_num
+    cfg.data['workers_per_gpu'] = batch_size/gpu_num + 2 # set worker a litter higher to utilize CPU
+
+    return True
+
+def updated_config_file(WORK_DIR, expr_name,base_config_file,save_path,para_file,network_setting_ini,gpu_num):
     '''
     update mmseg config file and save to a new file in local working folder
     :param WORK_DIR:
@@ -57,9 +96,11 @@ def updated_config_file(WORK_DIR, expr_name,base_config_file,save_path,para_file
     # change model (no need): when we choose a base_config_file, we already choose a model, including backbone)
 
     # change dataset
-    cfg.dataset_type = 'RSImagePatches'
+    modify_dataset(cfg,para_file,network_setting_ini,gpu_num)
 
     # change schedule
+    iteration_num = get_iteration_num(WORK_DIR,para_file,network_setting_ini)
+    cfg.runner['max_iters'] = iteration_num
 
     # change runtime (log level, resume_from or load_from)
     cfg.work_dir = os.path.join(WORK_DIR,expr_name)
@@ -95,7 +136,7 @@ def mmseg_train_main(para_file,gpu_num):
 
     # copy the base_config_file, then save to to a new one
     config_file = osp.join(WORK_DIR,osp.basename(io_function.get_name_by_adding_tail(base_config_file,expr_name))) 
-    if updated_config_file(WORK_DIR, expr_name,base_config_file,config_file,para_file,network_setting_ini) is False:
+    if updated_config_file(WORK_DIR, expr_name,base_config_file,config_file,para_file,network_setting_ini,gpu_num) is False:
         raise ValueError('Getting the config file failed')
 
     train_evaluation_mmseg(WORK_DIR,config_file, expr_name, para_file, network_setting_ini, gpu_num)
