@@ -59,9 +59,10 @@ def modify_dataset(cfg,para_file,network_setting_ini,gpu_num):
     cfg.data_root = './'
 
     image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
+    image_crop_size = [ int(item) for item in image_crop_size]
     if len(image_crop_size) != 2 and image_crop_size[0].isdigit() and image_crop_size[1].isdigit():
         raise ValueError('image_crop_size should be height,width')
-    cfg.crop_size = '(%d,%d)'%(image_crop_size[0],image_crop_size[1])
+    cfg.crop_size = (image_crop_size[0],image_crop_size[1])
 
     training_sample_list_txt = parameters.get_string_parameters(para_file,'training_sample_list_txt')
     validation_sample_list_txt = parameters.get_string_parameters(para_file,'validation_sample_list_txt')
@@ -74,18 +75,18 @@ def modify_dataset(cfg,para_file,network_setting_ini,gpu_num):
         cfg.data[split]['img_dir'] = 'split_images'
         cfg.data[split]['ann_dir'] = 'split_labels'
         if split=='train':
-            cfg.data[split]['split'] = osp.join('list',training_sample_list_txt)
+            cfg.data[split]['split'] = [osp.join('list',training_sample_list_txt)]
         else:
             # set val and test to validation, when run real test (prediction) for entire RS images, we will set test again.
-            cfg.data[split]['split'] = osp.join('list', validation_sample_list_txt)
+            cfg.data[split]['split'] = [osp.join('list', validation_sample_list_txt)]
 
     # setting based on batch size
     batch_size = parameters.get_digit_parameters(network_setting_ini,'batch_size','int')
     if batch_size % gpu_num != 0:
         raise ValueError('Batch size (%d) cannot be divided by gpu num (%d)'%(batch_size,gpu_num))
 
-    cfg.data['samples_per_gpu'] = batch_size/gpu_num
-    cfg.data['workers_per_gpu'] = batch_size/gpu_num + 2 # set worker a litter higher to utilize CPU
+    cfg.data['samples_per_gpu'] = int(batch_size/gpu_num)
+    cfg.data['workers_per_gpu'] = int(batch_size/gpu_num) + 2 # set worker a litter higher to utilize CPU
 
     return True
 
