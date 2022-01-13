@@ -28,10 +28,11 @@ open_mmlab_python = 'python'
 from mmcv.utils import Config
 
 
-def train_evaluation_mmseg(WORK_DIR,config_file, expr_name, para_file, network_setting_ini, gpu_num):
+def train_evaluation_mmseg(WORK_DIR,mmseg_repo_dir,config_file, expr_name, para_file, network_setting_ini, gpu_num):
     '''
     run the training process of MMSegmentation
     :param WORK_DIR:
+    :param mmseg_repo_dir:
     :param config_file:
     :param expr_name:
     :param para_file:
@@ -39,8 +40,17 @@ def train_evaluation_mmseg(WORK_DIR,config_file, expr_name, para_file, network_s
     :param gpu_num:
     :return:
     '''
+    dist_train_sh = osp.join(mmseg_repo_dir,'tools','dist_train.sh')
 
-    pass
+    command_string = dist_train_sh + ' ' \
+                    + config_file + ' ' \
+                    + str(gpu_num)
+
+    res = os.system(command_string)
+    if res != 0:
+        sys.exit(1) # sometime the res is 256 and bash cannot recognize that, then continue run.
+
+    return True
 
 
 def modify_dataset(cfg,para_file,network_setting_ini,gpu_num):
@@ -119,7 +129,8 @@ def mmseg_train_main(para_file,gpu_num):
         raise IOError('File %s not exists in the current folder: %s' % (para_file, os.getcwd()))
 
     network_setting_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
-    mmseg_config_dir = parameters.get_directory(network_setting_ini, 'mmseg_config_dir')
+    mmseg_repo_dir = parameters.get_directory(network_setting_ini, 'mmseg_repo_dir')
+    mmseg_config_dir = osp.join(mmseg_repo_dir,'configs')
     if os.path.isdir(mmseg_config_dir) is False:
         raise ValueError('%s does not exist' % mmseg_config_dir)
 
@@ -139,7 +150,7 @@ def mmseg_train_main(para_file,gpu_num):
     if updated_config_file(WORK_DIR, expr_name,base_config_file,config_file,para_file,network_setting_ini,gpu_num) is False:
         raise ValueError('Getting the config file failed')
 
-    train_evaluation_mmseg(WORK_DIR,config_file, expr_name, para_file, network_setting_ini, gpu_num)
+    train_evaluation_mmseg(WORK_DIR,mmseg_repo_dir,config_file, expr_name, para_file, network_setting_ini, gpu_num)
 
     duration = time.time() - SECONDS
     os.system('echo "$(date): time cost of training: %.2f seconds">>time_cost.txt' % duration)
