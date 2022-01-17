@@ -55,8 +55,8 @@ class RSImagePatches(CustomDataset):
             **kwargs:
         """
         if test_mode:
-            # super(RSImagePatches, self).__init__(
-            #     img_suffix='.png', seg_map_suffix='.png', split=split, test_mode=test_mode, **kwargs)
+            super(RSImagePatches, self).__init__(
+                img_suffix='.png', seg_map_suffix='.png', split=None, test_mode=test_mode, **kwargs)
 
             # initialize the images
             assert len(rsimage) > 1 and osp.exists(rsimage)
