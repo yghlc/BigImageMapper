@@ -64,7 +64,7 @@ class RSImagePatches(CustomDataset):
             # initialize the images
             assert len(rsimage) > 1 and osp.exists(rsimage)
             patches_of_a_image = self.get_an_image_patches(rsimage, tile_width, tile_height, overlay_x, overlay_y)
-            self.img_infos = [ {'img_id':rsImg_id, 'patch_idx':idx, 'patch_obj':patch }
+            self.img_infos = [ {'img_id':rsImg_id, 'patch_idx':idx, 'org_img':patch.org_img, 'boundary':patch.boundary() }
                                for idx, patch in enumerate(patches_of_a_image)]
 
         else:
@@ -148,8 +148,8 @@ class LoadRSImagePatch(object):
 
         # if self.file_client is None:
         #     self.file_client = mmcv.FileClient(**self.file_client_args)
-        img_id, patch_obj, patch_idx = results['img_id'], results['patch_obj'], results['patch_idx']
-        img, nodata = raster_io.read_raster_all_bands_np(patch_obj.org_img, boundary=patch_obj.boundary)
+        img_id, org_img,boundary, patch_idx = results['img_id'], results['org_img'],results['boundary'], results['patch_idx']
+        img, nodata = raster_io.read_raster_all_bands_np(org_img, boundary=boundary)
         if nodata is not None:
             img[np.where(img == nodata)] = 0  # replace nodata as 0
 
@@ -157,9 +157,9 @@ class LoadRSImagePatch(object):
             img = img.astype(np.float32)
 
         results['out_file'] = 'I%d_%d.tif' % (img_id, patch_idx) # # save file name?
-        results['boundary'] = patch_obj.boundary
+        results['boundary'] = boundary
         results['filename'] = osp.join('I%d'%img_id,'I%d_%d.tif'%(img_id,patch_idx))
-        results['ori_filename'] = patch_obj.org_img # results['img_info']['filename']
+        results['ori_filename'] = org_img # results['img_info']['filename']
         results['img'] = img
         results['img_shape'] = img.shape
         results['ori_shape'] = img.shape
