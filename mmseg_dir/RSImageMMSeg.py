@@ -64,7 +64,7 @@ class RSImagePatches(CustomDataset):
             # initialize the images
             assert len(rsimage) > 1 and osp.exists(rsimage)
             patches_of_a_image = self.get_an_image_patches(rsimage, tile_width, tile_height, overlay_x, overlay_y)
-            self.img_infos = [ {'img_id':rsImg_id, 'patch_idx':idx, 'org_img':patch.org_img, 'boundary':patch.boundary() }
+            self.img_infos = [ {'img_id':rsImg_id, 'patch_idx':idx, 'org_img':patch.org_img, 'boundary':patch.boundary }
                                for idx, patch in enumerate(patches_of_a_image)]
 
         else:
