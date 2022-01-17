@@ -64,11 +64,13 @@ def modify_dataset(cfg,para_file,network_setting_ini,gpu_num):
     cfg.dataset_type = datetype
     cfg.data_root = './'
 
-    image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
-    image_crop_size = [ int(item) for item in image_crop_size]
-    if len(image_crop_size) != 2 and image_crop_size[0].isdigit() and image_crop_size[1].isdigit():
-        raise ValueError('image_crop_size should be height,width')
-    cfg.crop_size = (image_crop_size[0],image_crop_size[1])
+    ## There are still two more crop_size in pipleline, after choosing the base_config_file, we already choose the crop size
+
+    # image_crop_size = parameters.get_string_list_parameters(para_file, 'image_crop_size')
+    # image_crop_size = [ int(item) for item in image_crop_size]
+    # if len(image_crop_size) != 2 and image_crop_size[0].isdigit() and image_crop_size[1].isdigit():
+    #     raise ValueError('image_crop_size should be height,width')
+    # cfg.crop_size = (image_crop_size[0],image_crop_size[1])
 
     training_sample_list_txt = parameters.get_string_parameters(para_file,'training_sample_list_txt')
     validation_sample_list_txt = parameters.get_string_parameters(para_file,'validation_sample_list_txt')
