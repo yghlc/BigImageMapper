@@ -14,7 +14,7 @@ from optparse import OptionParser
 from datetime import datetime
 import time
 import GPUtil
-from multiprocessing import Process
+# from multiprocessing import Process
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
@@ -25,6 +25,12 @@ import datasets.raster_io as raster_io
 
 import mmcv
 import torch
+from torch.multiprocessing import Process,set_start_method
+try:
+     set_start_method('spawn')
+except RuntimeError:
+    pass
+
 from mmcv.parallel import MMDataParallel
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
