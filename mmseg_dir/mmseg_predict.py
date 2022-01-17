@@ -42,7 +42,8 @@ from mmcv.image import tensor2imgs
 
 # open-mmlab models
 from mmcv.utils import Config
-from RSImageMMSeg import RSImagePatches # register the dataset
+from RSImageMMSeg import RSImagePatches     # register the dataset, also added to mmseg/datasets/__init__.py
+from RSImageMMSeg import LoadRSImagePatch   # register the dataset, also added to mmseg/datasets/pipelines/__init__.py
 
 
 def is_file_exist_in_folder(folder):
