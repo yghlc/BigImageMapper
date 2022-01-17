@@ -87,6 +87,12 @@ def modify_dataset(cfg,para_file,network_setting_ini,gpu_num):
             # set val and test to validation, when run real test (prediction) for entire RS images, we will set test again.
             cfg.data[split]['split'] = [osp.join('list', validation_sample_list_txt)]
 
+    # set None for test
+    cfg.data['test']['img_dir'] = None
+    cfg.data['test']['ann_dir'] = None
+    cfg.data['test']['split'] = None
+
+
     # setting based on batch size
     batch_size = parameters.get_digit_parameters(network_setting_ini,'batch_size','int')
     if batch_size % gpu_num != 0:
