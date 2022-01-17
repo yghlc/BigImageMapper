@@ -124,10 +124,18 @@ def updated_config_file(WORK_DIR, expr_name,base_config_file,save_path,para_file
     # change runtime (log level, resume_from or load_from)
     cfg.work_dir = os.path.join(WORK_DIR,expr_name)
 
+    # update parameters for testing (used in later step of prediction)
+    updated_config_file_for_test(cfg)
+
     # dump config
     cfg.dump(save_path)
     return True
 
+
+def updated_config_file_for_test(cfg):
+    loadimg = 'LoadRSImagePatch'
+    cfg.test_pipeline[0] = dict(type=loadimg)
+    cfg.data['test']['pipeline'][0] = dict(type=loadimg)
 
 
 def mmseg_train_main(para_file,gpu_num):
