@@ -425,7 +425,12 @@ def remove_polygons_not_in_range(shapefile,field_name, min_value, max_value,outp
             shapefile.drop(idx, inplace=True)
             remove_count += 1
 
-    basic.outputlogMessage('remove %d polygons based on %s, remain %d ones saving to %s' %
+    if len(shapefile.geometry.values) < 1:
+        basic.outputlogMessage('remove %d polygons based on %s, remain %d ones, no saved files' %
+                               (remove_count, field_name, len(shapefile.geometry.values)))
+        return False
+    else:
+        basic.outputlogMessage('remove %d polygons based on %s, remain %d ones saving to %s' %
                            (remove_count, field_name, len(shapefile.geometry.values), output))
     # save results
     shapefile.to_file(output, driver='ESRI Shapefile')
@@ -454,7 +459,12 @@ def remove_polygons_based_values(shapefile,value_list, threshold, bsmaller,outpu
                 shapefile.drop(idx, inplace=True)
                 remove_count += 1
 
-    basic.outputlogMessage('remove %d polygons, remain %d ones saving to %s' %
+    if len(shapefile.geometry.values) < 1:
+        basic.outputlogMessage('remove %d polygons based on a list of values, remain %d ones, no saved files' %
+                               (remove_count, len(shapefile.geometry.values)))
+        return False
+    else:
+        basic.outputlogMessage('remove %d polygons, remain %d ones saving to %s' %
                            (remove_count, len(shapefile.geometry.values), output))
     # save results
     shapefile.to_file(output, driver='ESRI Shapefile')
@@ -493,7 +503,12 @@ def remove_polygons(shapefile,field_name, threshold, bsmaller,output):
                 shapefile.drop(idx, inplace=True)
                 remove_count += 1
 
-    basic.outputlogMessage('remove %d polygons based on %s, remain %d ones saving to %s' %
+    if len(shapefile.geometry.values) < 1:
+        basic.outputlogMessage('remove %d polygons based on %s, remain %d ones, no saved files' %
+                               (remove_count, field_name, len(shapefile.geometry.values)))
+        return False
+    else:
+        basic.outputlogMessage('remove %d polygons based on %s, remain %d ones saving to %s' %
                            (remove_count, field_name, len(shapefile.geometry.values), output))
     # save results
     shapefile.to_file(output, driver='ESRI Shapefile')
