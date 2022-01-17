@@ -21,7 +21,7 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
-import raster_io
+import datasets.raster_io as raster_io
 
 import mmcv
 import torch
@@ -36,6 +36,7 @@ from mmcv.image import tensor2imgs
 
 # open-mmlab models
 from mmcv.utils import Config
+from RSImageMMSeg import RSImagePatches # register the dataset
 
 
 def is_file_exist_in_folder(folder):
@@ -181,6 +182,20 @@ def mmseg_parallel_predict_main(para_file,trained_model):
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    # network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+    # mmseg_repo_dir = parameters.get_directory(network_ini, 'mmseg_repo_dir')
+    # mmseg_code_dir = osp.join(mmseg_repo_dir,'mmseg')
+
+    # if os.path.isdir(mmseg_code_dir) is False:
+    #     raise ValueError('%s does not exist' % mmseg_code_dir)
+
+    # # set PYTHONPATH to use my modified version of mmseg
+    # if os.getenv('PYTHONPATH'):
+    #     os.environ['PYTHONPATH'] = os.getenv('PYTHONPATH') + ':' + mmseg_code_dir
+    # else:
+    #     os.environ['PYTHONPATH'] = mmseg_code_dir
+    # print('\nPYTHONPATH is: ',os.getenv('PYTHONPATH'))
+
 
     if trained_model is None:
         trained_model = os.path.join(expr_name, 'latest.pth')
