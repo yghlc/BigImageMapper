@@ -176,6 +176,8 @@ def predict_one_image_mmseg(para_file, image_path, img_save_dir, inf_list_file, 
     if os.path.isfile(done_indicator):
         basic.outputlogMessage('warning, %s exist, skip prediction'%done_indicator)
         return
+    if os.path.isdir(img_save_dir) is False:
+        io_function.mkdir(img_save_dir)
     # use a specific GPU for prediction, only inference one image
     time0 = time.time()
     if gpuid is not None:
