@@ -35,15 +35,22 @@ from mmcv.parallel import MMDataParallel
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
 
+code_dir2 = os.path.expanduser('~/codes/PycharmProjects/yghlc_mmsegmentation')
+sys.path.insert(0, code_dir2)
+
+import mmseg
+print('mmseg_path:',mmseg.__path__)
 from mmseg.apis import multi_gpu_test, single_gpu_test
 from mmseg.datasets import build_dataloader, build_dataset
 from mmseg.models import build_segmentor
 from mmcv.image import tensor2imgs
 
 # open-mmlab models
-from mmcv.utils import Config
-from RSImageMMSeg import RSImagePatches     # register the dataset, also added to mmseg/datasets/__init__.py
-from RSImageMMSeg import LoadRSImagePatch   # register the dataset, also added to mmseg/datasets/pipelines/__init__.py
+# from mmcv.utils import Config
+
+# if we use mmseg in yghlc_mmsegmentation, then don't need to import these two
+# from RSImageMMSeg import RSImagePatches    # register the dataset, also added to mmseg/datasets/__init__.py
+# from loadRSImage import LoadRSImagePatch   # register the dataset, also added to mmseg/datasets/pipelines/__init__.py
 
 
 def is_file_exist_in_folder(folder):
@@ -58,7 +65,7 @@ def single_gpu_prediction_rsImage(model,data_loader,out_dir=None):
     model.eval()
     results = []
     dataset = data_loader.dataset
-    prog_bar = mmcv.ProgressBar(len(dataset))
+    # prog_bar = mmcv.ProgressBar(len(dataset))
     # The pipeline about how the data_loader retrieval samples from dataset:
     # sampler -> batch_sampler -> indices
     # The indices are passed to dataset_fetcher to get data from dataset.
@@ -90,9 +97,9 @@ def single_gpu_prediction_rsImage(model,data_loader,out_dir=None):
 
             results.extend(result)
 
-        batch_size = len(result)
-        for _ in range(batch_size):
-            prog_bar.update()
+        # batch_size = len(result)
+        # for _ in range(batch_size):
+        #     prog_bar.update()
 
     return results
 
@@ -107,7 +114,7 @@ def predict_rsImage_mmseg(config_file,trained_model,image_path, img_save_dir,bat
     # test_mode=False,rsimage='',rsImg_id=0,tile_width=480,tile_height=480,
     #                  overlay_x=160,overlay_y=160
 
-    data_args ={'test_mode':False,'rsimage':image_path,'tile_width':tile_width,'tile_height':tile_height,
+    data_args ={'rsImg_predict':True,'rsimage':image_path,'tile_width':tile_width,'tile_height':tile_height,
                 'overlay_x':overlay_x,'overlay_y':overlay_y}
     dataset = build_dataset(cfg.data.test,default_args=data_args)
     data_loader = build_dataloader(
