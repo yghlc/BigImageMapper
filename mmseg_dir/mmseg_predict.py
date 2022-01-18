@@ -89,7 +89,7 @@ def single_gpu_prediction_rsImage(model,data_loader,out_dir=None):
             # ori_h, ori_w = img_meta['ori_shape'][:-1]
             # img_show = mmcv.imresize(img_show, (ori_w, ori_h))
 
-            save_path = img_meta['out_file']
+            save_path = img_meta['filename']
             org_img = img_meta['ori_filename']
             boundary = img_meta['boundary']
             # save the patch
