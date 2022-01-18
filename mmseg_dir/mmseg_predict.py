@@ -272,7 +272,7 @@ def mmseg_parallel_predict_main(para_file,trained_model):
                     basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
 
                 if len(deviceIDs) < 1:
-                    time.sleep(5)  # wait 5 seconds, then check the available GPUs again
+                    time.sleep(60)  # wait 60 seconds (mmseg need longer time to load models) , then check the available GPUs again
                     continue
                 # set only the first available visible
                 gpuid = deviceIDs[0]
