@@ -109,7 +109,7 @@ def single_gpu_prediction_rsImage(model,data_loader,out_dir=None):
     # return results
     return True
 
-def predict_rsImage_mmseg(config_file,trained_model,image_path, img_save_dir,batch_size=1,
+def predict_rsImage_mmseg(config_file,trained_model,image_path, img_save_dir,batch_size=1,gpuid=0,
                           tile_width=480, tile_height=480, overlay_x=160, overlay_y=160):
     cfg = mmcv.Config.fromfile(config_file)
     if cfg.get('cudnn_benchmark', False):
@@ -151,7 +151,7 @@ def predict_rsImage_mmseg(config_file,trained_model,image_path, img_save_dir,bat
     torch.cuda.empty_cache()
 
     # no distributed
-    model = MMDataParallel(model, device_ids=[0])
+    model = MMDataParallel(model, device_ids=[gpuid])
     single_gpu_prediction_rsImage(model,data_loader, img_save_dir)
 
 
@@ -180,10 +180,10 @@ def predict_one_image_mmseg(para_file, image_path, img_save_dir, inf_list_file, 
         io_function.mkdir(img_save_dir)
     # use a specific GPU for prediction, only inference one image
     time0 = time.time()
-    if gpuid is not None:
-        os.environ['CUDA_VISIBLE_DEVICES'] = str(gpuid)
+    if gpuid is None:
+        gpuid = 0
 
-    predict_rsImage_mmseg(config_file, trained_model, image_path, img_save_dir, batch_size=inf_batch_size,
+    predict_rsImage_mmseg(config_file, trained_model, image_path, img_save_dir, batch_size=inf_batch_size,gpuid=gpuid,
                           tile_width=patch_width, tile_height=patch_height, overlay_x=adj_overlay_x, overlay_y=adj_overlay_y)
 
     duration = time.time() - time0
