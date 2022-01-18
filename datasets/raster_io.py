@@ -374,7 +374,7 @@ def read_raster_one_band_np(raster_path,band=1,boundary=None):
         return data, src.nodata
 
 def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='GTiff', nodata=None,
-                                   compress=None, tiled=None, bigtiff=None,boundary=None ):
+                                   compress=None, tiled=None, bigtiff=None,boundary=None,verbose=True ):
     '''
     save a numpy to file, the numpy has the same projection and extent with ref_raster
     Args:
@@ -399,10 +399,11 @@ def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='G
 
     dt = np.dtype(numpy_array.dtype)
 
-    print('dtype:', dt.name)
-    print(numpy_array.dtype)
-    print('band_count,height,width',band_count,height,width)
-    # print('saved numpy_array.shape',numpy_array.shape)
+    if verbose:
+        print('dtype:', dt.name)
+        print(numpy_array.dtype)
+        print('band_count,height,width',band_count,height,width)
+        # print('saved numpy_array.shape',numpy_array.shape)
 
     with rasterio.open(ref_raster) as src:
         # [print(src.colorinterp[idx]) for idx in range(src.count)]
@@ -442,7 +443,8 @@ def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='G
             else:
                 dest.colorinterp = [ColorInterp.undefined] * band_count
 
-    print('save to %s'%save_path)
+    if verbose:
+        print('save to %s'%save_path)
 
     return True
 
