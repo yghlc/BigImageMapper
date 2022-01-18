@@ -10,6 +10,10 @@ add time: 17 January, 2022
 
 import os,sys
 import os.path as osp
+
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+
 import basic_src.io_function as io_function
 import parameters
 from mmseg_predict import predict_one_image_mmseg
