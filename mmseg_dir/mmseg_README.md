@@ -20,6 +20,11 @@ pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.1
 pip install mmsegmentation
 ```
 
+Clone the modified version of MMSegmentation
+```commandline
+git clone https://github.com/yghlc/mmsegmentation ~/codes/PycharmProjects/yghlc_mmsegmentation
+```
+
 ### Setting
 
 
