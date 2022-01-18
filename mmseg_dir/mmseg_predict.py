@@ -45,6 +45,8 @@ from mmseg.datasets import build_dataloader, build_dataset
 from mmseg.models import build_segmentor
 from mmcv.image import tensor2imgs
 
+import numpy as np
+
 # open-mmlab models
 # from mmcv.utils import Config
 
@@ -63,7 +65,7 @@ def is_file_exist_in_folder(folder):
 
 def single_gpu_prediction_rsImage(model,data_loader,out_dir=None):
     model.eval()
-    results = []
+    # results = []
     dataset = data_loader.dataset
     # prog_bar = mmcv.ProgressBar(len(dataset))
     # The pipeline about how the data_loader retrieval samples from dataset:
@@ -72,6 +74,7 @@ def single_gpu_prediction_rsImage(model,data_loader,out_dir=None):
     # data_fetcher -> collate_fn(dataset[index]) -> data_sample
     # we use batch_sampler to get correct data idx
     loader_indices = data_loader.batch_sampler
+    patch_count = len(dataset)
 
     for batch_indices, data in zip(loader_indices, data_loader):
         with torch.no_grad():
@@ -89,19 +92,22 @@ def single_gpu_prediction_rsImage(model,data_loader,out_dir=None):
             # ori_h, ori_w = img_meta['ori_shape'][:-1]
             # img_show = mmcv.imresize(img_show, (ori_w, ori_h))
 
-            save_path = img_meta['filename']
+            save_path = osp.join(out_dir,img_meta['filename'])
             org_img = img_meta['ori_filename']
             boundary = img_meta['boundary']
             # save the patch
-            raster_io.save_numpy_array_to_rasterfile(res,save_path,org_img,boundary=boundary)
+            print('saving patch:%s results of %s, total: %d'%(img_meta['filename'],osp.basename(org_img),patch_count))
+            res_8bit = res.astype(dtype=np.uint8)
+            raster_io.save_numpy_array_to_rasterfile(res_8bit,save_path,org_img,boundary=boundary,verbose=False)
 
-            results.extend(result)
+        # results.extend(result)
 
         # batch_size = len(result)
         # for _ in range(batch_size):
         #     prog_bar.update()
 
-    return results
+    # return results
+    return True
 
 def predict_rsImage_mmseg(config_file,trained_model,image_path, img_save_dir,batch_size=1,
                           tile_width=480, tile_height=480, overlay_x=160, overlay_y=160):
@@ -146,7 +152,7 @@ def predict_rsImage_mmseg(config_file,trained_model,image_path, img_save_dir,bat
 
     # no distributed
     model = MMDataParallel(model, device_ids=[0])
-    results = single_gpu_prediction_rsImage(model,data_loader, img_save_dir)
+    single_gpu_prediction_rsImage(model,data_loader, img_save_dir)
 
 
 
