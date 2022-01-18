@@ -125,7 +125,7 @@ def predict_rsImage_mmseg(config_file,trained_model,image_path, img_save_dir,bat
     dataset = build_dataset(cfg.data.test,default_args=data_args)
     data_loader = build_dataloader(
         dataset,
-        samples_per_gpu=1,
+        samples_per_gpu=batch_size,
         workers_per_gpu=cfg.data.workers_per_gpu,
         dist=distributed,
         shuffle=False)
