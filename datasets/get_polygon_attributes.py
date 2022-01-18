@@ -64,6 +64,19 @@ def cal_add_area_length_of_polygon(input_shp):
     """
     return vector_features.cal_area_length_of_polygon(input_shp )
 
+def get_tile_min_overlap(raster_file_or_files):
+    if isinstance(raster_file_or_files,str):
+        io_function.is_file_exist(raster_file_or_files)
+        image_tiles = [raster_file_or_files]
+    elif isinstance(raster_file_or_files,list):
+        image_tiles = raster_file_or_files
+    else:
+        raise ValueError('unsupport type for %s'%str(raster_file_or_files))
+
+    xres, yres = raster_io.get_xres_yres_file(image_tiles[0])
+    tile_min_overlap = abs(xres * yres)
+    return tile_min_overlap
+
 def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,aspect_files=None, dem_diffs=None,process_num = 4):
     """
     calculate the topography information such elevation and slope of each polygon
@@ -118,8 +131,7 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
         stats_list = ['min', 'max','mean','median','std']            #['min', 'max', 'mean', 'count','median','std']
         # if operation_obj.add_fields_from_raster(polygons_shp, dem_file, "dem", band=1,stats_list=stats_list,all_touched=all_touched) is False:
         #     return False
-        xres, yres = raster_io.get_xres_yres_file(dem_files[0])
-        tile_min_overlap = abs(xres * yres)
+        tile_min_overlap = get_tile_min_overlap(dem_files)
         if zonal_stats_multiRasters(polygons_shp,dem_files,stats=stats_list,tile_min_overlap=tile_min_overlap,prefix='dem',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
@@ -128,8 +140,7 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
     # #slope
     if slope_files is not None:
         stats_list = ['min', 'max','mean', 'median', 'std']
-        xres, yres = raster_io.get_xres_yres_file(slope_files[0])
-        tile_min_overlap = abs(xres * yres)
+        tile_min_overlap = get_tile_min_overlap(slope_files)
         if zonal_stats_multiRasters(polygons_shp,slope_files,stats=stats_list,tile_min_overlap=tile_min_overlap,prefix='slo',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
@@ -138,8 +149,7 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
     # #aspect
     if aspect_files is not None:
         stats_list = ['min', 'max','mean', 'std']
-        xres, yres = raster_io.get_xres_yres_file(aspect_files[0])
-        tile_min_overlap = abs(xres * yres)
+        tile_min_overlap = get_tile_min_overlap(aspect_files)
         if zonal_stats_multiRasters(polygons_shp,aspect_files,stats=stats_list,tile_min_overlap=tile_min_overlap,prefix='asp',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
     else:
@@ -154,8 +164,7 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
 
         # expand the polygon when doing dem difference statistics
         buffer_size_dem_diff = parameters.get_digit_parameters(para_file, 'buffer_size_dem_diff','float')
-        xres, yres = raster_io.get_xres_yres_file(dem_diffs[0])
-        tile_min_overlap =  abs(xres*yres)
+        tile_min_overlap =  get_tile_min_overlap(dem_diffs)
         if zonal_stats_multiRasters(polygons_shp,dem_diffs,stats=stats_list,tile_min_overlap=tile_min_overlap, prefix='demD',band=1,all_touched=all_touched, process_num=process_num,
                                     range=range, buffer=buffer_size_dem_diff) is False:
             return False
