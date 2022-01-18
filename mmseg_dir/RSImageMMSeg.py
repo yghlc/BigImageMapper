@@ -6,16 +6,14 @@ import os.path as osp
 from mmseg.datasets.builder import DATASETS
 from mmseg.datasets.custom import CustomDataset
 
-from mmseg.datasets.builder import PIPELINES
+from mmseg.datasets.pipelines import Compose
 
 import os,sys
 
 deeplabforRS =  os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
 sys.path.insert(0, deeplabforRS)
-import basic_src.io_function as io_function
 import split_image
 import raster_io
-import numpy as np
 
 # copy from build_RS_data.py
 class patchclass(object):
@@ -40,15 +38,15 @@ class RSImagePatches(CustomDataset):
 
     PALETTE = [[0, 0, 0], [0, 0, 128]]
 
-    def __init__(self, split,test_mode=False,rsimage='',rsImg_id=0,tile_width=480,tile_height=480,
-                 overlay_x=160,overlay_y=160, **kwargs):
+    def __init__(self,split,pipeline=None,test_mode=False,rsImg_predict=False,rsimage='',rsImg_id=0,tile_width=480,tile_height=480,
+                 overlay_x=160,overlay_y=160,classes=None,palette=None, **kwargs):
         """
         get patches of a remote sensing images for predictions, in the training part, still using the MMSeg default loader
         Only handle one remote sensing images
 
         Args:
             split: split
-            test_mode: test or not
+            rsImg_predict: if prediction of remote sensing images
             rsimage: a list containing the path of a remote sensing image
             rsImg_id: the id (int) of the input rsimage
             tile_width: width of the patch
@@ -57,18 +55,46 @@ class RSImagePatches(CustomDataset):
             overlay_y: adjacent overlap in Y directory
             **kwargs:
         """
-        if test_mode:
-            super(RSImagePatches, self).__init__(
-                img_suffix='.png', seg_map_suffix='.png', split=None, test_mode=test_mode, **kwargs)
+        self.rsImg_predict = False
+        if rsImg_predict:
+            print('\n self defined parameters:',split,rsimage,rsImg_id,tile_width,tile_height,overlay_x,overlay_y)
+            print('\n kwargs:',kwargs)
+
+
+            # super(RSImagePatches, self).__init__(
+            #     img_suffix='.png', seg_map_suffix='.png', split=None, test_mode=test_mode, **kwargs)
+            self.pipeline = Compose(pipeline)
+            # self.img_dir = img_dir
+            # self.img_suffix = img_suffix
+            # self.ann_dir = ann_dir
+            # self.seg_map_suffix = seg_map_suffix
+            self.split = split
+            self.data_root = None
+            self.rsImg_predict = rsImg_predict
+            # self.test_mode = test_mode
+            # self.ignore_index = ignore_index
+            # self.reduce_zero_label = reduce_zero_label
+            # self.label_map = None
+            self.CLASSES, self.PALETTE = self.get_classes_and_palette(
+                classes, palette)
+            # self.gt_seg_map_loader = LoadAnnotations(
+            # ) if gt_seg_map_loader_cfg is None else LoadAnnotations(
+            #     **gt_seg_map_loader_cfg)
+
+
+            assert self.CLASSES is not None, \
+                    '`cls.CLASSES` or `classes` should be specified when testing'
+
 
             # initialize the images
             assert len(rsimage) > 1 and osp.exists(rsimage)
             patches_of_a_image = self.get_an_image_patches(rsimage, tile_width, tile_height, overlay_x, overlay_y)
-            self.img_infos = [ {'img_id':rsImg_id, 'patch_idx':idx, 'org_img':patch.org_img, 'boundary':patch.boundary }
+            self.img_patches = [ {'img_id':rsImg_id, 'patch_idx':idx, 'org_img':patch.org_img, 'boundary':patch.boundary }
                                for idx, patch in enumerate(patches_of_a_image)]
+            print('total patches for %s is: %d'%(rsimage, len(self.img_patches)))
 
         else:
-            super(RSImagePatches, self).__init__(
+            super(RSImagePatches, self).__init__(pipeline,
                 img_suffix='.png', seg_map_suffix='.png', split=split, test_mode=test_mode, **kwargs)
             # check image dir's existence
             assert osp.exists(self.img_dir) and self.split is not None
@@ -84,11 +110,20 @@ class RSImagePatches(CustomDataset):
                 False).
         """
 
-        if self.test_mode:
+        if self.rsImg_predict:
             # need something else
-            return self.img_infos[idx]
+            print('get %d patch'%idx)
+            return self.img_patches[idx]
         else:
             return self.prepare_train_img(idx)
+
+    def __len__(self):
+        """Total number of samples of data."""
+        if self.rsImg_predict:
+            return len(self.img_patches)
+        else:
+            return len(self.img_infos)
+
 
     def get_an_image_patches(self,image_path,tile_width,tile_height,overlay_x,overlay_y):
 
@@ -102,83 +137,6 @@ class RSImagePatches(CustomDataset):
             patches_of_a_image.append(img_patch)
         return patches_of_a_image
 
-
-@PIPELINES.register_module()
-class LoadRSImagePatch(object):
-    """Load an sub-image from file of a remote sensing image.
-
-    Required keys are "img_prefix" and "img_info" (a dict that must contain the
-    key "filename"). Added or updated keys are "filename", "img", "img_shape",
-    "ori_shape" (same as `img_shape`), "pad_shape" (same as `img_shape`),
-    "scale_factor" (1.0) and "img_norm_cfg" (means=0 and stds=1).
-
-    Args:
-        to_float32 (bool): Whether to convert the loaded image to a float32
-            numpy array. If set to False, the loaded image is an uint8 array.
-            Defaults to False.
-        color_type (str): The flag argument for :func:`mmcv.imfrombytes`.
-            Defaults to 'color'.
-        file_client_args (dict): Arguments to instantiate a FileClient.
-            See :class:`mmcv.fileio.FileClient` for details.
-            Defaults to ``dict(backend='disk')``.
-        imdecode_backend (str): Backend for :func:`mmcv.imdecode`. Default:
-            'cv2'
-    """
-
-    def __init__(self,
-                 to_float32=False,
-                 color_type='color',
-                 file_client_args=dict(backend='disk'),
-                 imdecode_backend='cv2'):
-        self.to_float32 = to_float32
-        # self.color_type = color_type
-        # self.file_client_args = file_client_args.copy()
-        # self.file_client = None
-        # self.imdecode_backend = imdecode_backend
-
-    def __call__(self, results):
-        """Call functions to load image and get image meta information.
-
-        Args:
-            results (dict): Result dict from :obj:`mmseg.CustomDataset`.
-
-        Returns:
-            dict: The dict contains loaded image and meta information.
-        """
-
-        # if self.file_client is None:
-        #     self.file_client = mmcv.FileClient(**self.file_client_args)
-        img_id, org_img,boundary, patch_idx = results['img_id'], results['org_img'],results['boundary'], results['patch_idx']
-        img, nodata = raster_io.read_raster_all_bands_np(org_img, boundary=boundary)
-        if nodata is not None:
-            img[np.where(img == nodata)] = 0  # replace nodata as 0
-
-        if self.to_float32:
-            img = img.astype(np.float32)
-
-        results['out_file'] = 'I%d_%d.tif' % (img_id, patch_idx) # # save file name?
-        results['boundary'] = boundary
-        results['filename'] = osp.join('I%d'%img_id,'I%d_%d.tif'%(img_id,patch_idx))
-        results['ori_filename'] = org_img # results['img_info']['filename']
-        results['img'] = img
-        results['img_shape'] = img.shape
-        results['ori_shape'] = img.shape
-        # Set initial values for default meta_keys
-        results['pad_shape'] = img.shape
-        results['scale_factor'] = 1.0
-        num_channels = 1 if len(img.shape) < 3 else img.shape[2]
-        results['img_norm_cfg'] = dict(
-            mean=np.zeros(num_channels, dtype=np.float32),
-            std=np.ones(num_channels, dtype=np.float32),
-            to_rgb=False)
-        return results
-
-    def __repr__(self):
-        repr_str = self.__class__.__name__
-        repr_str += f'(to_float32={self.to_float32},'
-        repr_str += f"color_type='{self.color_type}',"
-        repr_str += f"imdecode_backend='{self.imdecode_backend}')"
-        return repr_str
 
 
 
