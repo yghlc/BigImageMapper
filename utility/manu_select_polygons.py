@@ -12,12 +12,23 @@ import os,sys
 from optparse import OptionParser
 
 import pandas as pd
+import re
 
 deeplabforRS =  os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
 sys.path.insert(0, deeplabforRS)
 import vector_gpd
 import basic_src.io_function as io_function
 import basic_src.basic as basic
+
+
+def check_duplicated_ids(manu_sel_ids):
+    print('manu_sel_ids length', len(manu_sel_ids))
+    unique_ids = list(set(manu_sel_ids))
+    print('unique manu_sel_ids length', len(unique_ids))
+    manu_sel_ids_copy = manu_sel_ids.copy()
+    for item in unique_ids:
+        manu_sel_ids_copy.remove(item)
+    print('duplicated ids:',str(manu_sel_ids_copy))
 
 def select_polygons_by_ids_in_excel(in_shp, table_path, save_path,id_name='id'):
     if os.path.isfile(save_path):
@@ -29,17 +40,32 @@ def select_polygons_by_ids_in_excel(in_shp, table_path, save_path,id_name='id'):
     manu_sel_ids = ids_table[id_name].tolist()        # miou of different model
 
     ## check if there are duplicated ones
-    print('manu_sel_ids length', len(manu_sel_ids))
-    unique_ids = list(set(manu_sel_ids))
-    print('unique manu_sel_ids length', len(unique_ids))
-    manu_sel_ids_copy = manu_sel_ids.copy()
-    for item in unique_ids:
-        manu_sel_ids_copy.remove(item)
-    print('duplicated ids:',str(manu_sel_ids_copy))
+    check_duplicated_ids(manu_sel_ids)
 
     # find match index
     select_idx = [ pol_ids.index(sel_id) for sel_id in manu_sel_ids ]
 
+    return vector_gpd.save_shapefile_subset_as(select_idx,in_shp,save_path)
+
+def get_id_from_filepath(filepath):
+    id_str = re.findall('_\d+_', os.path.basename(filepath))[0]
+    return int(id_str[1:-1])
+
+def select_polygons_by_ids_in_filenames(in_shp, folder, save_path,id_name='id'):
+    '''get ids from files name, then select polygons from the shapefile '''
+    if os.path.isfile(save_path):
+        basic.outputlogMessage('warning, %s exists, skip'%save_path)
+        return True
+
+    files = io_function.get_file_list_by_pattern(folder,'*')
+    manu_sel_ids = [get_id_from_filepath(item) for item in files]
+
+    ## check if there are duplicated ones
+    check_duplicated_ids(manu_sel_ids)
+
+    pol_ids = vector_gpd.read_attribute_values_list(in_shp, id_name)
+    # find match index
+    select_idx = [ pol_ids.index(sel_id) for sel_id in manu_sel_ids ]
     return vector_gpd.save_shapefile_subset_as(select_idx,in_shp,save_path)
 
 
@@ -56,8 +82,7 @@ def main(options, args):
     if manual_sel.endswith('.xlsx'):
         select_polygons_by_ids_in_excel(input_shp,manual_sel,save_path)
     elif os.path.isdir(manual_sel):
-        # not support yet.
-        pass
+        select_polygons_by_ids_in_filenames(input_shp,manual_sel,save_path)
     else:
         print('unknown input of manual selection')
 
