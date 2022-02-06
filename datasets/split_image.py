@@ -76,7 +76,11 @@ def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj
 
         # f_obj.write('\n')
 
-    # f_obj.close()
+    # remove duplicated patches
+    patch_boundary_unique = set(patch_boundary)
+    if len(patch_boundary_unique) != len(patch_boundary):
+        patch_boundary = patch_boundary_unique
+
     return patch_boundary
 
 def get_one_patch(input, index, patch,output_dir,out_format,extension,pre_name):
