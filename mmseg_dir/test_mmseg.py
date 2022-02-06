@@ -42,9 +42,24 @@ def test_dataloader():
     # test, run in ~/Data/tmp_data/test_mmsegmentation/test_landuse_dl
     para_file = 'main_para.ini'
     set_pythonpath(para_file)
-    img_idx = 0
 
-    image_path = os.path.expanduser('~/Data/Arctic/canada_arctic/Willow_River/Planet2020/20200818_mosaic_8bit_rgb.tif')
+    # test rgb, using rgb in Willow River
+    # img_idx = 0
+    # image_path = os.path.expanduser('~/Data/Arctic/canada_arctic/Willow_River/Planet2020/20200818_mosaic_8bit_rgb.tif')
+    # img_save_dir = os.path.join('predict_output','I%d' % img_idx)
+    # io_function.mkdir(img_save_dir)
+    # inf_list_file = os.path.join('predict_output','%d.txt'%img_idx)
+    # gpuid = None
+    # trained_model = 'exp18/latest.pth'
+    # predict_one_image_mmseg(para_file, image_path, img_save_dir, inf_list_file, gpuid, trained_model)
+    #
+    # # curr_dir,img_idx, area_save_dir, test_id
+    # curr_dir = os.getcwd()
+    # inf_results_to_shapefile(curr_dir,img_idx,'predict_output','1')
+
+    ############ test nirGB, using rgb in Willow River
+    img_idx = 1
+    image_path = os.path.expanduser('~/Data/Arctic/canada_arctic/Willow_River/Planet2020/20200818_mosaic_8bit_nirGB.tif')
     img_save_dir = os.path.join('predict_output','I%d' % img_idx)
     io_function.mkdir(img_save_dir)
     inf_list_file = os.path.join('predict_output','%d.txt'%img_idx)
@@ -54,7 +69,8 @@ def test_dataloader():
 
     # curr_dir,img_idx, area_save_dir, test_id
     curr_dir = os.getcwd()
-    inf_results_to_shapefile(curr_dir,img_idx,'predict_output',1)
+    inf_results_to_shapefile(curr_dir,img_idx,'predict_output','1')
+
 
 
 def main():
