@@ -45,32 +45,45 @@ def test_dataloader():
     trained_model = '%s/latest.pth'%expr_name
 
     # test rgb, using rgb in Willow River
-    img_idx = 0
-    image_path = os.path.expanduser('~/Data/Arctic/canada_arctic/Willow_River/Planet2020/20200818_mosaic_8bit_rgb.tif')
-    img_save_dir = os.path.join('predict_output','I%d' % img_idx)
-    io_function.mkdir(img_save_dir)
-    inf_list_file = os.path.join('predict_output','%d.txt'%img_idx)
-    gpuid = None
-    predict_one_image_mmseg(para_file, image_path, img_save_dir, inf_list_file, gpuid, trained_model)
-
-    # curr_dir,img_idx, area_save_dir, test_id
-    curr_dir = os.getcwd()
-    inf_results_to_shapefile(curr_dir,img_idx,'predict_output','1')
+    # img_idx = 0
+    # image_path = os.path.expanduser('~/Data/Arctic/canada_arctic/Willow_River/Planet2020/20200818_mosaic_8bit_rgb.tif')
+    # img_save_dir = os.path.join('predict_output','I%d' % img_idx)
+    # io_function.mkdir(img_save_dir)
+    # inf_list_file = os.path.join('predict_output','%d.txt'%img_idx)
+    # gpuid = None
+    # predict_one_image_mmseg(para_file, image_path, img_save_dir, inf_list_file, gpuid, trained_model)
+    #
+    # # curr_dir,img_idx, area_save_dir, test_id
+    # curr_dir = os.getcwd()
+    # inf_results_to_shapefile(curr_dir,img_idx,'predict_output','1')
 
     ############ test nirGB, using rgb in Willow River
-    img_idx = 1
-    image_path = os.path.expanduser('~/Data/Arctic/canada_arctic/Willow_River/Planet2020/20200818_mosaic_8bit_nirGB.tif')
+    # img_idx = 1
+    # image_path = os.path.expanduser('~/Data/Arctic/canada_arctic/Willow_River/Planet2020/20200818_mosaic_8bit_nirGB.tif')
+    # img_save_dir = os.path.join('predict_output','I%d' % img_idx)
+    # io_function.mkdir(img_save_dir)
+    # inf_list_file = os.path.join('predict_output','%d.txt'%img_idx)
+    # gpuid = None
+    #
+    # predict_one_image_mmseg(para_file, image_path, img_save_dir, inf_list_file, gpuid, trained_model)
+    #
+    # # curr_dir,img_idx, area_save_dir, test_id
+    # curr_dir = os.getcwd()
+    # inf_results_to_shapefile(curr_dir,img_idx,'predict_output','1')
+
+
+    ######### try a tiny images
+    img_idx = 2
+    image_path = os.path.expanduser('~/Data/test_mmsegmentation/test_landuse_dl/WR_nirGB_sub_images/20200818_mosaic_8bit_nirGB_0_class_1.tif')
     img_save_dir = os.path.join('predict_output','I%d' % img_idx)
     io_function.mkdir(img_save_dir)
     inf_list_file = os.path.join('predict_output','%d.txt'%img_idx)
     gpuid = None
-
     predict_one_image_mmseg(para_file, image_path, img_save_dir, inf_list_file, gpuid, trained_model)
 
     # curr_dir,img_idx, area_save_dir, test_id
     curr_dir = os.getcwd()
     inf_results_to_shapefile(curr_dir,img_idx,'predict_output','1')
-
 
 
 def main():
