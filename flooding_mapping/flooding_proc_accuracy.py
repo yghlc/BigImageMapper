@@ -41,7 +41,8 @@ else:
     sur_water_dir = os.path.expanduser('~/Data/global_surface_water')
 
 
-def resample_crop_raster_using_shp(ref_shp, input_raster, output_raster=None, resample_method='near',save_dir='./'):
+def resample_crop_raster_using_shp(ref_shp, input_raster, output_raster=None, resample_method='near',save_dir='./',
+                                   out_res = 10, dst_nondata=128):
     if output_raster is None:
         output_raster = io_function.get_name_by_adding_tail(os.path.basename(input_raster),'res_sub')
         output_raster = os.path.join(save_dir,output_raster)
@@ -57,9 +58,8 @@ def resample_crop_raster_using_shp(ref_shp, input_raster, output_raster=None, re
         return output_raster
 
     # crop
-    out_res = 10
     # RSImageProcess.subset_image_baseimage(output_raster, input_raster, ref_raster, same_res=True,resample_m=resample_method)
-    RSImageProcess.subset_image_by_shapefile(input_raster,ref_shp,save_path=output_raster, dst_nondata=128,resample_m=resample_method,
+    RSImageProcess.subset_image_by_shapefile(input_raster,ref_shp,save_path=output_raster, dst_nondata=dst_nondata,resample_m=resample_method,
                                              xres=out_res, yres=out_res,compress='lzw', tiled='yes', bigtiff='IF_SAFER')
     if os.path.isfile(output_raster):
         return output_raster
