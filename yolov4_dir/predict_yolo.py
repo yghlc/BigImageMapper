@@ -292,8 +292,8 @@ def darknet_batch_detection_rs_images(network, image_path,save_dir, patch_groups
     # read the entire image
     entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
     entire_img_data = entire_img_data.transpose(1, 2, 0)    # to opencv format
-    # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
-    entire_img_data = entire_img_data[..., ::-1].copy()
+    # # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
+    # entire_img_data = entire_img_data[..., ::-1].copy()       # cancel RGB to BGR, since it make results worse, (maybe darknet already read images as RGB during training)
     entire_height, entire_width, band_num = entire_img_data.shape
     print("entire_height, entire_width, band_num",entire_height, entire_width, band_num)
     if band_num not in [1, 3]:
@@ -519,8 +519,8 @@ def predict_rs_image_yolo_poythonAPI(image_path, save_dir, model, config_file, y
     # read the entire image
     entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
     entire_img_data = entire_img_data.transpose(1, 2, 0)    # to opencv format
-    # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
-    entire_img_data = entire_img_data[..., ::-1].copy()
+    # # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
+    # entire_img_data = entire_img_data[..., ::-1].copy() # cancel RGB to BGR, since it make results worse, (maybe darknet already read images as RGB during training)
     entire_height, entire_width, band_num = entire_img_data.shape
     print("entire_height, entire_width, band_num",entire_height, entire_width, band_num)
     if band_num not in [1, 3]:
