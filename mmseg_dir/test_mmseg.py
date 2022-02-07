@@ -17,7 +17,7 @@ sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
 import parameters
 from mmseg_predict import predict_one_image_mmseg
-from workflow.postProcess import inf_results_to_shapefile
+# from workflow.postProcess import inf_results_to_shapefile
 
 # sys.setrecursionlimit(100)
 
@@ -81,9 +81,9 @@ def test_dataloader():
     gpuid = None
     predict_one_image_mmseg(para_file, image_path, img_save_dir, inf_list_file, gpuid, trained_model)
 
-    # curr_dir,img_idx, area_save_dir, test_id
-    curr_dir = os.getcwd()
-    inf_results_to_shapefile(curr_dir,img_idx,'predict_output','1')
+    # # curr_dir,img_idx, area_save_dir, test_id
+    # curr_dir = os.getcwd()
+    # inf_results_to_shapefile(curr_dir,img_idx,'predict_output','1')
 
 
 def main():
