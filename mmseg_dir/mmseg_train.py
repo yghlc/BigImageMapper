@@ -126,6 +126,12 @@ def updated_config_file(WORK_DIR, expr_name,base_config_file,save_path,para_file
     iteration_num = get_iteration_num(WORK_DIR,para_file,network_setting_ini)
     cfg.runner['max_iters'] = iteration_num
 
+    checkpoint_interval = parameters.get_digit_parameters(network_setting_ini,'checkpoint_interval','int')
+    cfg.checkpoint_config['interval'] = checkpoint_interval
+    evaluation_interval = parameters.get_digit_parameters(network_setting_ini,'evaluation_interval','int')
+    cfg.evaluation['interval'] = evaluation_interval
+
+
     # change runtime (log level, resume_from or load_from)
     cfg.work_dir = os.path.join(WORK_DIR,expr_name)
 
