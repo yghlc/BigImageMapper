@@ -122,6 +122,11 @@ def updated_config_file(WORK_DIR, expr_name,base_config_file,save_path,para_file
     # change dataset
     modify_dataset(cfg,para_file,network_setting_ini,gpu_num)
 
+    # change num_classes
+    NUM_CLASSES_noBG = parameters.get_digit_parameters(para_file,'NUM_CLASSES_noBG','int')
+    cfg.model.decode_head['num_classes'] = NUM_CLASSES_noBG + 1
+    cfg.model.auxiliary_head['num_classes'] = NUM_CLASSES_noBG + 1
+
     # change schedule
     iteration_num = get_iteration_num(WORK_DIR,para_file,network_setting_ini)
     cfg.runner['max_iters'] = iteration_num
