@@ -295,6 +295,10 @@ def get_polygon_bounding_box(polygon):
     # return the bounding box of a shapely polygon (minx, miny, maxx, maxy)
     return polygon.bounds
 
+def get_polygon_centroid(polygon):
+    # return the geometric center of a polygon
+    return polygon.centroid
+
 def get_polygon_envelope_xy(polygon):
     # get polygon envelope x,y coordinates
     # polygon, shapely polygon
