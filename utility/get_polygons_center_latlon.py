@@ -46,6 +46,16 @@ def calculate_center_latlon(input_vector, save_path,b_save2shp=False):
         f_obj.writelines(save_lines)
         basic.outputlogMessage('saved latitude and longitude of polygons to %s'%save_path)
 
+    ext_save_path = io_function.get_name_by_adding_tail(save_path,'ext')
+    delta = map_projection.meters_to_degrees_onEarth(1500)  #calculate distance in degree
+    with open(ext_save_path,'w') as f_obj:
+        for xx, yy in zip(x, y):
+            left_x = xx - delta
+            right_x = xx + delta
+            up_yy = yy + delta
+            down_yy = yy - delta
+            f_obj.writelines('%f,%f,%f,%f\n'%(left_x,down_yy,right_x,up_yy))
+
     # write the value to shapefile
     attributes = {'centerLat':x, 'centerLon':y}
     if b_save2shp:

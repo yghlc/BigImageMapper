@@ -16,6 +16,7 @@ sys.path.append(py_dir)
 
 import sys,basic
 from RSImage import RSImageclass
+import math
 
 try:
     from osgeo import ogr, osr, gdal
@@ -295,6 +296,11 @@ def transforms_raster_srs_to_base_image(rasterfile,baseimage,target_file,x_res,y
     if target_srs is False:
         return False
     return transforms_raster_srs(rasterfile,target_srs,target_file,x_res,y_res)
+
+def meters_to_degrees_onEarth(distance):
+    # distance in meters
+    return (distance/6371000.0)*180.0/math.pi
+
 
 if __name__=='__main__':
     length = len(sys.argv)
