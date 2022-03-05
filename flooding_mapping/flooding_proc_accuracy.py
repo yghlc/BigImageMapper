@@ -213,7 +213,9 @@ def apply_water_mask_to_mapping_result_Houston():
     surface_water_crop = resample_crop_raster(dl_map_results[0],surface_water)
     for dl_map_res in dl_map_results:
         save_dir = os.path.dirname(dl_map_res)
-        dl_map_res_watermask = mask_by_surface_water(dl_map_res, surface_water_crop, save_dir=save_dir)
+        print('processing: ',dl_map_res)
+        # dl_map_res_watermask = mask_by_surface_water(dl_map_res, surface_water_crop, save_dir=save_dir)
+        dl_map_res_watermask = dl_map_res
 
         # crop the mapping raster to extent of valid image area
         raster_crop = resample_crop_raster_using_shp(valid_image_shp,dl_map_res_watermask,save_dir=save_dir)
