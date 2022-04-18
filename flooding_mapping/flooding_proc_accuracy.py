@@ -187,7 +187,8 @@ def apply_water_mask_to_mapping_result_Houston():
     #  these three mapping results have the same extent
     dl_map_results = ['mapping_polygons_rasters/exp1_grd_Houston/Houston_SAR_20170829_houston_deeplabV3+_1_exp1_post_1_label.tif',
                       'mapping_polygons_rasters/exp2_binary_Houston/Houston_SAR_20170829_houston_deeplabV3+_1_exp2_post_1_label.tif',
-                      'mapping_polygons_rasters/exp4_3band_Houston/Houston_SAR_polar_20170829_houston_deeplabV3+_1_exp4_post_2_label.tif']
+                      'mapping_polygons_rasters/exp4_3band_Houston/Houston_SAR_polar_20170829_houston_deeplabV3+_1_exp4_post_2_label.tif',
+                      'mapping_polygons_rasters/exp5_3band_Houston_fixColor/Houston_SAR_polar_20170829_houston_deeplabV3+_1_exp5_post_1_label.tif']
 
     dl_map_results = [os.path.join(data_dir,item) for item in dl_map_results]
 
