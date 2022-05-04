@@ -31,6 +31,9 @@ def tifs_to_png(image_dir):
         print('tif to png: %d/%d tif'%(idx+1,len(tif_list)))
         basename = io_function.get_name_no_ext(tif)
         save_path = os.path.join(image_dir,basename+'.png')
+        if os.path.isfile(save_path):
+            print('%s exists, skip'%save_path)
+            continue
         command_str = "gdal_translate -of PNG %s %s"%(tif,save_path)
         basic.os_system_exit_code(command_str)
 
@@ -40,8 +43,11 @@ def get_tifs_bounding_boxes(image_dir):
         print('get bounding box: %d/%d tif'%(idx+1,len(tif_list)))
         basename = io_function.get_name_no_ext(tif)
         save_path = os.path.join(image_dir, basename + '_bound.geojson')
+        if os.path.isfile(save_path):
+            print('%s exists, skip'%save_path)
+            continue
 
-        command_str = imgExt + "%s -o tmp.gpkg" %tif
+        command_str = imgExt + " %s -o tmp.gpkg" %tif
         basic.os_system_exit_code(command_str)
         command_str = "ogr2ogr -f GeoJSON -t_srs EPSG:3413 %s tmp.gpkg"%save_path  # note: projection is EPSG:3413
         basic.os_system_exit_code(command_str)
