@@ -183,15 +183,11 @@ def get_file_list_by_ext(ext,folder,bsub_folder):
     elif isinstance(ext, list):
         extension = ext
     else:
-        basic.outputlogMessage('input extension type is not correct')
-        assert False
+        raise ValueError('input extension type is not correct')
     if os.path.isdir(folder) is False:
-        basic.outputlogMessage('input error, %s is not a directory'%folder)
-        assert False
+        raise IOError('input error, directory %s is invalid'%folder)
     if isinstance(bsub_folder,bool) is False:
-        basic.outputlogMessage('input error, bsub_folder must be a bool value')
-        assert False
-        # sys.exit(1)
+        raise ValueError('input error, bsub_folder must be a bool value')
 
     files = []
     sub_folders = []
@@ -279,6 +275,9 @@ def get_url_file_size(url_path):
 
     basic.outputlogMessage('error, get size of %s failed'%url_path)
     return False
+
+def get_file_size_bytes(path):
+    return os.path.getsize(path)        # return the file size in bytes
 
 def get_file_path_new_home_folder(in_path):
     if in_path is None:
@@ -535,7 +534,7 @@ def keep_only_used_files_in_list(output_list_file,old_image_list_txt,used_images
 
 def delete_shape_file(input):
     arg1 = os.path.splitext(input)[0]
-    exts = ['.shx', '.shp','.prj','.dbf']
+    exts = ['.shx', '.shp','.prj','.dbf','.cpg']
     for ext in exts:
         file_path = arg1 + ext
         if os.path.isfile(file_path):
