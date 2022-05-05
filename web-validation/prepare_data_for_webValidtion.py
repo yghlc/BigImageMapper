@@ -78,6 +78,9 @@ def organize_files(sub_img_dirs, save_dir):
         image_name_list.append(new_name)
 
         io_function.copy_file_to_dst(png,os.path.join(images_dir,new_name+'.png'))
+        png_xml = png + '.aux.xml'
+        if os.path.isfile(png_xml):
+            io_function.copy_file_to_dst(png_xml, os.path.join(images_dir, new_name + '.png.aux.xml'))
 
         bound_path = png.replace('.png','_bound.geojson')
         io_function.copy_file_to_dst(bound_path,os.path.join(imageBound_dir,new_name+'_bound.geojson'))
