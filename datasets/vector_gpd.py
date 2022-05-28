@@ -36,6 +36,28 @@ import basic_src.map_projection as map_projection
 from datetime import datetime
 from multiprocessing import Pool
 
+def check_remove_None_geometries(geometries, gpd_dataframe, file_path=None):
+    # Missing and empty geometries, find None geometry, then remove them
+    # https://geopandas.org/en/stable/docs/user_guide/missing_empty.html
+
+    # check None in geometries:
+    # gpd_dataframe = gpd.read_file(polygon_shp)
+    # geometries = shapefile.geometry.values
+
+    idx_list = [ idx for idx, polygon in enumerate(geometries) if polygon is None]
+    if len(idx_list) > 0:
+        message = 'Warning, %d None geometries, will be removed'%len(idx_list)
+        if file_path is not None:
+            message += ', file path: %s'%file_path
+        for idx in idx_list:
+            gpd_dataframe.drop(idx, inplace=True)
+            # geometries.drop(idx,inplace=True)     # not working
+        basic.outputlogMessage(message)
+
+    # return geometries again after droping some rows
+    return gpd_dataframe.geometry.values
+
+
 def read_polygons_json(polygon_shp, no_json=False):
     '''
     read polyogns and convert to json format
@@ -173,6 +195,10 @@ def read_polygons_gpd(polygon_shp, b_fix_invalid_polygon = True):
     shapefile = gpd.read_file(polygon_shp)
     polygons = shapefile.geometry.values
 
+    # print('before removing None, %d records'%len(shapefile))
+    polygons = check_remove_None_geometries(polygons,shapefile,polygon_shp)
+    # print('after removing None, %d records' % len(shapefile))
+
     # # check invalidity of polygons
     invalid_polygon_idx = []
     # for idx, geom in enumerate(polygons):
@@ -251,6 +277,9 @@ def read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygo
     '''
     shapefile = gpd.read_file(polygon_shp)
     polygons = shapefile.geometry.values
+    # check None
+    polygons = check_remove_None_geometries(polygons,shapefile,polygon_shp)
+
     # fix invalid polygons
     if b_fix_invalid_polygon:
         polygons = fix_invalid_polygons(polygons)
@@ -1207,8 +1236,8 @@ def main(options, args):
 
     ###############################################################
     # test thinning a polygon
-    input_shp = args[0]
-    save_shp = args[1]
+    # input_shp = args[0]
+    # save_shp = args[1]
     # out_polygons_list = []
     # polygons = read_polygons_gpd(input_shp)
     # for idx, polygon in enumerate(polygons):
@@ -1226,7 +1255,7 @@ def main(options, args):
     # wkt_string = map_projection.get_raster_or_vector_srs_info_wkt(input_shp)
     # save_polygons_to_files(out_polygon_df,'out_Polygons', wkt_string, save_shp)
 
-    remove_narrow_parts_of_polygons_shp(input_shp,save_shp, 1.5)
+    # remove_narrow_parts_of_polygons_shp(input_shp,save_shp, 1.5)
 
 
     pass
