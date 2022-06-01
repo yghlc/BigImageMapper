@@ -161,6 +161,7 @@ def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_o
         parameters_list = [(input, idx, patch, output_dir, out_format, extension, pre_name) for idx, patch in enumerate(patch_boundary)]
         theadPool = Pool(process_num)  # multi processes
         results = theadPool.starmap(get_one_patch, parameters_list)  # need python3
+        theadPool.close()
     else:
         raise ValueError('incorrect process number: %s'%(str(process_num)))
 

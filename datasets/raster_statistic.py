@@ -173,6 +173,7 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, tile_min_overlap=None
         para_list = [ (idx, polygon, image_tiles, img_tile_polygons, stats, nodata, range,band, all_touched,tile_min_overlap)
                       for idx, polygon in enumerate(polygons)]
         stats_res_list = threadpool.starmap(zonal_stats_one_polygon,para_list)
+        threadpool.close()
     else:
         raise ValueError('Wrong process number: %s '%str(process_num))
 
