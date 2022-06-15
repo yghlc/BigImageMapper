@@ -4,7 +4,7 @@
 #proc=2
 proc=1
 # for selecting headwall lines, must set a buffer size
-buffer=50
+buffer=20
 
 py=~/codes/PycharmProjects/Landuse_DL/alaska/select_rts_from_YOLO_demDiff_headwall.py
 
