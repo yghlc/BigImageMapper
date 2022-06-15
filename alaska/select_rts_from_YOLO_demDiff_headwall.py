@@ -271,6 +271,7 @@ def test_merge_polygon_for_demDiff_headwall_grids():
 def main(options, args):
 
     process_num = options.process_num
+    buffer_size = options.buffer_size
     # perform the selection grid by grid
     basic.setlogfile('select_RTS_YOLO_demDiff_headwall_%s.txt' % timeTools.get_now_time_str())
 
@@ -316,7 +317,8 @@ def main(options, args):
         else:
             save_path = io_function.get_name_by_adding_tail(yolo_box_shp, 'select')
 
-        select_polygons_overlap_others_in_group2(yolo_box_shp, dem_subsidence_shp, save_path, process_num=process_num)
+        select_polygons_overlap_others_in_group2(yolo_box_shp, dem_subsidence_shp, save_path, buffer_size=buffer_size,
+                                                 process_num=process_num)
 
     pass
 
@@ -332,6 +334,10 @@ if __name__ == '__main__':
     parser.add_option("-g", "--b_grid",
                       action="store_true", dest="b_grid", default=False,
                       help="if True, then we will process the selection grid by grids")
+
+    parser.add_option("-b", "--buffer_size",
+                      action="store", dest="buffer_size", type=float, default=0,
+                      help="the buffer size for poly_path1, if group 1 are lines, buffer_size have to be set")
 
     parser.add_option("", "--save_path",
                       action="store", dest="save_path",
