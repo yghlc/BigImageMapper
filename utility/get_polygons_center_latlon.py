@@ -57,7 +57,7 @@ def calculate_center_latlon(input_vector, save_path,b_save2shp=False):
             f_obj.writelines('%f,%f,%f,%f\n'%(left_x,down_yy,right_x,up_yy))
 
     # write the value to shapefile
-    attributes = {'centerLat':x, 'centerLon':y}
+    attributes = {'centerLat':y, 'centerLon':x}
     if b_save2shp:
         vector_gpd.add_attributes_to_shp(input_vector,attributes)
         basic.outputlogMessage('saved polygons latitude and longitude to %s' % input_vector)
