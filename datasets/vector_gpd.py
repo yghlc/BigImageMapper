@@ -57,6 +57,14 @@ def check_remove_None_geometries(geometries, gpd_dataframe, file_path=None):
     # return geometries again after droping some rows
     return gpd_dataframe.geometry.values
 
+def guess_file_format_extension(file_path):
+    _, extension = os.path.splitext(file_path)
+    if extension.lower() == '.gpkg':  # GPKG
+        return 'GPKG'
+    elif extension.lower() == '.shp':  # GPKG
+        return 'ESRI Shapefile'
+    else:
+        raise ValueError('unknown file format from extension: %s'%extension)
 
 def read_polygons_json(polygon_shp, no_json=False):
     '''
@@ -626,6 +634,13 @@ def save_shapefile_subset_as(data_poly_indices, org_shp, save_path,format='ESRI 
         selected_list[idx] = True
 
     shapefile_sub = shapefile[selected_list]
+    # change format
+    guess_format = guess_file_format_extension(save_path)
+    if guess_format != format:
+        basic.outputlogMessage('warning, the format (%s) associated with file extension is different with the input one (%s)'%
+                               (guess_format,format))
+        format = guess_format
+
     shapefile_sub.to_file(save_path, driver=format)
     basic.outputlogMessage('save subset (%d geometry) of shapefile to %s'%(save_count,save_path))
 
