@@ -118,6 +118,9 @@ def read_lines_gpd(lines_shp):
     # check are lines
     return lines
 
+def read_lines_attributes_list(polygon_shp, field_nameS):
+    return read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygon=False)
+
 def find_one_line_intersect_Polygon(polygon, line_list, line_check_list):
     for idx, (line, b_checked) in enumerate(zip(line_list,line_check_list)):
         if b_checked:
@@ -213,7 +216,7 @@ def read_polygons_gpd(polygon_shp, b_fix_invalid_polygon = True):
 
     return polygons
 
-def add_attributes_to_shp(shp_path, add_attributes):
+def add_attributes_to_shp(shp_path, add_attributes,save_as=None,format='ESRI Shapefile'):
     '''
     add attbibutes to a shapefile
     :param shp_path: the path of shapefile
@@ -235,7 +238,10 @@ def add_attributes_to_shp(shp_path, add_attributes):
 
     # print(shapefile)
     # save the original file
-    return shapefile.to_file(shp_path, driver='ESRI Shapefile')
+    if save_as is not None:
+        return shapefile.to_file(save_as, driver=format)
+    else:
+        return shapefile.to_file(shp_path, driver=format)
 
 
 def read_attribute_values_list(polygon_shp, field_name):
@@ -600,7 +606,7 @@ def list_to_dict(list_dict):
                 out_dict[key] = [dict_obj[key]]
     return out_dict
 
-def save_shapefile_subset_as(data_poly_indices, org_shp, save_path):
+def save_shapefile_subset_as(data_poly_indices, org_shp, save_path,format='ESRI Shapefile'):
     '''
     save subset of shapefile
     :param data_poly_indices: polygon index
@@ -620,7 +626,7 @@ def save_shapefile_subset_as(data_poly_indices, org_shp, save_path):
         selected_list[idx] = True
 
     shapefile_sub = shapefile[selected_list]
-    shapefile_sub.to_file(save_path, driver='ESRI Shapefile')
+    shapefile_sub.to_file(save_path, driver=format)
     basic.outputlogMessage('save subset (%d geometry) of shapefile to %s'%(save_count,save_path))
 
     return True
@@ -641,8 +647,8 @@ def save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path,form
 
     return True
 
-def save_lines_to_files(data_frame, geometry_name, wkt_string, save_path):
-    return save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path)
+def save_lines_to_files(data_frame, geometry_name, wkt_string, save_path,format='ESRI Shapefile'):
+    return save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path,format=format)
 
 def remove_narrow_parts_of_a_polygon(shapely_polygon, rm_narrow_thr):
     '''
@@ -1257,6 +1263,11 @@ def main(options, args):
 
     # remove_narrow_parts_of_polygons_shp(input_shp,save_shp, 1.5)
 
+    ###############################################################
+    # test reading polygons with
+    input_shp = args[0]
+    # read_polygons_gpd(input_shp)
+    read_polygons_attributes_list(input_shp,'demD_mean')
 
     pass
 

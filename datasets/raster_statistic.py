@@ -197,7 +197,93 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, tile_min_overlap=None
 
     vector_gpd.add_attributes_to_shp(in_shp,add_attributes)
 
-    pass
+def zonal_stats_multiRasters_polygons(polygons, raster_file_or_files, tile_min_overlap=None, nodata=None, band=1, stats=None, prefix='',
+                                 range=None, buffer=None, all_touched=True, process_num=1):
+    '''
+    zonal statistic based on vectors, along multiple rasters (image tiles), the input is not a file, but polygons, reduce disk IO
+    Args:
+        polygons: input polygons
+        raster_file_or_files: a raster file or multiple rasters
+        nodata:
+        band: band
+        stats: like [mean, std, max, min]
+        range: interested values [min, max], None means infinity
+        buffer: expand polygon with buffer (meter) before the statistic
+        all_touched:
+        process_num: process number for calculation
+
+    Returns:
+
+    '''
+    if stats is None:
+        basic.outputlogMessage('warning, No input stats, set to ["mean"])')
+        stats = ['mean']
+    stats_backup = stats.copy()
+    if 'area' in stats:
+        stats.remove('area')
+        if 'count' not in stats:
+            stats.append('count')
+
+    if isinstance(raster_file_or_files, str):
+        io_function.is_file_exist(raster_file_or_files)
+        image_tiles = [raster_file_or_files]
+    elif isinstance(raster_file_or_files, list):
+        image_tiles = raster_file_or_files
+    else:
+        raise ValueError('unsupport type for %s' % str(raster_file_or_files))
+
+    # check projection (assume we have the same projection), check them outside this function
+
+    # get image box
+    img_tile_boxes = [raster_io.get_image_bound_box(tile) for tile in image_tiles]
+    img_tile_polygons = [vector_gpd.convert_image_bound_to_shapely_polygon(box) for box in img_tile_boxes]
+    if len(polygons) < 1:
+        basic.outputlogMessage('No input polygons')
+        return None
+
+    # polygons_json = [mapping(item) for item in polygons]  # no need when use new verion of rasterio
+    if buffer is not None:
+        polygons = [poly.buffer(buffer) for poly in polygons]
+
+    # process polygons one by one polygons and the corresponding image tiles (parallel and save memory)
+    # also to avoid error: daemonic processes are not allowed to have children
+    if process_num == 1:
+        stats_res_list = []
+        for idx, polygon in enumerate(polygons):
+            out_stats = zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=nodata,
+                                                range=range,
+                                                band=band, all_touched=all_touched,
+                                                tile_min_overlap=tile_min_overlap)
+            stats_res_list.append(out_stats)
+
+    elif process_num > 1:
+        threadpool = Pool(process_num)
+        para_list = [(idx, polygon, image_tiles, img_tile_polygons, stats, nodata, range, band, all_touched,
+                      tile_min_overlap)
+                     for idx, polygon in enumerate(polygons)]
+        stats_res_list = threadpool.starmap(zonal_stats_one_polygon, para_list)
+        threadpool.close()
+    else:
+        raise ValueError('Wrong process number: %s ' % str(process_num))
+
+    # return the attributes
+    add_attributes = {}
+    new_key_list = [prefix + '_' + key for key in stats_res_list[0].keys()]
+    for new_ley in new_key_list:
+        add_attributes[new_ley] = []
+    for stats_result in stats_res_list:
+        for key in stats_result.keys():
+            add_attributes[prefix + '_' + key].append(stats_result[key])
+
+    if 'area' in stats_backup:
+        dx, dy = raster_io.get_xres_yres_file(image_tiles[0])
+        add_attributes[prefix + '_' + 'area'] = [count * dx * dy for count in
+                                                 add_attributes[prefix + '_' + 'count']]
+
+        if 'count' not in stats_backup:
+            del add_attributes[prefix + '_' + 'count']
+
+    return add_attributes
 
 
 def test_zonal_stats_multiRasters():

@@ -610,6 +610,10 @@ def pixel_xy_to_geo_xy(x0,y0, transform):
     y0_geo = transform[3] * x0 + transform[4] * y0 + transform[5]
     return x0_geo, y0_geo
 
+def pixel_xy_to_geo_xy_list(row_list, col_list, transform, offset='center'):
+    # https://rasterio.readthedocs.io/en/latest/api/rasterio.transform.html#rasterio.transform.xy
+    xs, ys = rasterio.transform.xy(transform,row_list,col_list, offset=offset)
+    return xs, ys
 
 def geo_xy_to_pixel_xy(x_list, y_list, transform, op=round, precision=None):
 
