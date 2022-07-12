@@ -641,6 +641,30 @@ def burn_polygon_to_raster_oneband(raster_path, polygon_shp, burn_value):
         return False
 
 
+def burn_polygons_to_a_existing_raster(input_raster,polygons,burn_value=0):
+    # burn polgyons into a existing raster
+    mask_values = [1]*len(polygons)
+    with rasterio.open(input_raster) as src:
+        transform = src.transform
+        image_data = src.read(src.indexes)  # read all bands
+
+        burn_out = np.zeros((src.height, src.width), dtype = np.uint8)
+        # rasterize the shapes
+        burn_shapes = [(item_shape, item_int) for (item_shape, item_int) in
+                       zip(polygons, mask_values)]
+        # get the mask
+        out_label = rasterize(burn_shapes, out=burn_out, transform=transform,
+                              fill=0, all_touched=False, dtype=rasterio.uint8)
+        # modify the image data
+        loc = np.where(out_label == 1)
+        image_data[:, loc[0], loc[1]] = burn_value
+        kwargs = src.meta
+
+    with rasterio.open(input_raster, 'w', **kwargs) as dst:
+        dst.write(image_data)
+    print('burn %s into %s'%(str(burn_value), input_raster))
+
+
 def burn_polygons_to_a_raster(ref_raster, polygons, burn_values, save_path, date_type='uint8',
                               xres=None,yres=None, extent=None, ref_prj=None, nodata=None):
     # if save_path is None, it will return the array, not saving to disk
@@ -652,7 +676,7 @@ def burn_polygons_to_a_raster(ref_raster, polygons, burn_values, save_path, date
         print('%s exist, skip burn_polygons_to_a_raster'%save_path)
         return save_path
 
-    if isinstance(burn_values,int):
+    if isinstance(burn_values,int) or isinstance(burn_values,float):
         values = [burn_values]*len(polygons)
     elif isinstance(burn_values,list):
         values = burn_values
