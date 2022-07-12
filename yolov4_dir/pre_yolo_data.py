@@ -26,15 +26,23 @@ from yoltv4Based.yolt_func import convert
 
 from yoltv4Based.yolt_func import convert_reverse
 
-def get_yolo_boxes_one_img(idx, total, image_path, label_path,num_classes_noBG,rm_edge_obj=False,b_save_vector=False):
+def object_box_to_polygon(minX, minY, maxX, maxY,geo_transform):
+    geo_xs, geo_ys = raster_io.pixel_xy_to_geo_xy_list([minY, maxY], [minX, maxX], geo_transform)
+    obj_polygon = vector_gpd.convert_image_bound_to_shapely_polygon([geo_xs[0], geo_ys[0], geo_xs[1], geo_ys[1]])  # (left, bottom, right, top)
+    return obj_polygon
+
+def get_yolo_boxes_one_img(idx, total, image_path, label_path,num_classes_noBG,rm_edge_obj=False,
+                           b_save_vector=False,b_mask_image=False):
     print('to yolo box: %d/%d'%(idx+1, total))
     # a object : [ class_id,  minX, minY, maxX, maxY ]
     objects = get_boxes_from_label_image(label_path)
     save_object_txt = os.path.splitext(image_path)[0] + '.txt'
     height, width, count, dtype = raster_io.get_height_width_bandnum_dtype(label_path)
+    geo_transform = raster_io.get_transform_from_file(image_path)
 
     with open(save_object_txt, 'w') as f_obj:
         obj_polygons = []
+        rm_obj_polygons = []
         for object in objects:
             class_id, minX, minY, maxX, maxY = object
             if class_id > num_classes_noBG:
@@ -46,6 +54,7 @@ def get_yolo_boxes_one_img(idx, total, image_path, label_path,num_classes_noBG,r
                 if minX==0 or minY==0 or maxX==(width-1) or maxY==(height-1):
                     print('warning, object (minX, minY, maxX, maxY): (%d %d %d %d) touched the edge in %s, ignore it'%
                           (minX, minY, maxX, maxY, label_path))
+                    rm_obj_polygons.append(object_box_to_polygon(minX, minY, maxX, maxY,geo_transform))
                     continue
 
             # in semantic, class_id 0 is background, yolo, class 0 is target, so minus 1
@@ -55,10 +64,7 @@ def get_yolo_boxes_one_img(idx, total, image_path, label_path,num_classes_noBG,r
 
             ## output objects to polygons for checking
             if b_save_vector:
-                geo_transform = raster_io.get_transform_from_file(image_path)
-                geo_xs, geo_ys = raster_io.pixel_xy_to_geo_xy_list([minY,maxY],[minX,maxX],geo_transform)
-                obj_polygon = vector_gpd.convert_image_bound_to_shapely_polygon([geo_xs[0],geo_ys[0], geo_xs[1], geo_ys[1]])   # (left, bottom, right, top)
-                obj_polygons.append(obj_polygon)
+                obj_polygons.append(object_box_to_polygon(minX, minY, maxX, maxY,geo_transform))
 
         # save objects to a vector file for checking
         if len(obj_polygons) > 0 and b_save_vector:
@@ -66,6 +72,10 @@ def get_yolo_boxes_one_img(idx, total, image_path, label_path,num_classes_noBG,r
             ref_prj = map_projection.get_raster_or_vector_srs_info_proj4(image_path)
             save_path_gpkg = os.path.splitext(image_path)[0] + '.gpkg'
             vector_gpd.save_polygons_to_files(save_pd,'Polygon', ref_prj,save_path_gpkg, format='GPKG')
+
+        # mask the portions image where boxes were removed
+        if len(rm_obj_polygons) > 0 and b_mask_image:
+            raster_io.burn_polygons_to_a_existing_raster(image_path,rm_obj_polygons,0)
 
 def get_image_list(txt_dir,sample_txt,img_dir, img_ext):
     img_list = []
@@ -101,6 +111,10 @@ def image_label_to_yolo_format(para_file):
     if b_ignore_edge_objects is None:
         b_ignore_edge_objects = False
 
+    b_mask_image_for_ignored_objects = parameters.get_bool_parameters_None_if_absence(para_file,'b_mask_image_for_ignored_objects')
+    if b_mask_image_for_ignored_objects is None:
+        b_mask_image_for_ignored_objects = False
+
     b_save_objects_to_vector = parameters.get_bool_parameters_None_if_absence(para_file,'b_save_objects_to_vector')
     if b_save_objects_to_vector is None:
         b_save_objects_to_vector = False
@@ -108,7 +122,8 @@ def image_label_to_yolo_format(para_file):
     # get boxes
     total_count = len(image_list)
     for idx, (img, label) in enumerate(zip(image_list,label_list)):
-        get_yolo_boxes_one_img(idx, total_count, img, label,num_classes_noBG,rm_edge_obj=b_ignore_edge_objects, b_save_vector=b_save_objects_to_vector)
+        get_yolo_boxes_one_img(idx, total_count, img, label,num_classes_noBG,rm_edge_obj=b_ignore_edge_objects,
+                               b_save_vector=b_save_objects_to_vector,b_mask_image=b_mask_image_for_ignored_objects)
 
     # write obj.data file
     train_sample_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
