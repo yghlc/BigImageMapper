@@ -142,6 +142,8 @@ def split_image(input,output_dir,patch_w=1024,patch_h=1024,adj_overlay_x=0,adj_o
         extension = '.tif'
     elif out_format.upper() == 'JPEG':  # jpg
         extension = '.jpg'
+    elif out_format.upper() == 'VRT':
+        extension = '.vrt'
     else:
         raise ValueError("unknow output format:%s" % out_format)
 
