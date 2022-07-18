@@ -114,10 +114,11 @@ def create_new_region_defined_parafile(template_para_file, img_dir, img_ext, are
     else:
         new_para_file = 'area_%s.ini'%area_name  # save to current folder
 
-    if area_remark is not None:
-        new_para_file = io_function.get_name_by_adding_tail(new_para_file, date + '_' + area_remark)
-    else:
+    if date != 'unknown':
         new_para_file = io_function.get_name_by_adding_tail(new_para_file, date)
+
+    if area_remark is not None:
+        new_para_file = io_function.get_name_by_adding_tail(new_para_file, area_remark)
 
     if os.path.isfile(new_para_file):
         raise IOError('%s already exists, please check or remove first'%new_para_file)
