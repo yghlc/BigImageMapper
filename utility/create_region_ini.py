@@ -88,7 +88,7 @@ def create_region_parafile_for_one_image(template_para_file, img_path, area_name
 
 
 
-def create_new_region_defined_parafile(template_para_file, img_dir, img_ext, area_remark=None):
+def create_new_region_defined_parafile(template_para_file, img_dir, img_ext, area_name=None, area_time=None, area_remark=None):
     '''
     create a new region defined para file. Only defined the new images (did not change others)
     :param template_para_file:
@@ -101,19 +101,32 @@ def create_new_region_defined_parafile(template_para_file, img_dir, img_ext, are
 
     dir_base = os.path.basename(img_dir)
     date_strs = re.findall('\d{8}',dir_base)
-    if len(date_strs) == 1:
-        date = date_strs[0]
+    if area_time is None:
+        if len(date_strs) == 1:
+            date = date_strs[0]
+        else:
+            date = 'unknown'
     else:
-        date = 'unknown'
+        date = area_time
 
-    new_para_file = io_function.get_name_by_adding_tail(template_para_file,date +'_'+ area_remark)
-    new_para_file = os.path.basename(new_para_file) # save to current folder
+    if area_name is None:
+        new_para_file = os.path.basename(template_para_file) # save to current folder
+    else:
+        new_para_file = 'area_%s.ini'%area_name  # save to current folder
+
+    if area_remark is not None:
+        new_para_file = io_function.get_name_by_adding_tail(new_para_file, date + '_' + area_remark)
+    else:
+        new_para_file = io_function.get_name_by_adding_tail(new_para_file, date)
+
     if os.path.isfile(new_para_file):
         raise IOError('%s already exists, please check or remove first'%new_para_file)
 
     # copy the file
     io_function.copy_file_to_dst(template_para_file,new_para_file)
 
+    if area_name is not None:
+        modify_parameter(new_para_file, 'area_name', area_name)
     if area_remark is not None:
         modify_parameter(new_para_file,'area_remark',area_remark)
     if date != 'unknown':
@@ -124,7 +137,7 @@ def create_new_region_defined_parafile(template_para_file, img_dir, img_ext, are
 
     tif_list = io_function.get_file_list_by_ext(img_ext,img_dir, bsub_folder=False)
     if len(tif_list) < 1:
-        raise ValueError('No tif in %s'%img_dir)
+        raise ValueError('No image files in %s'%img_dir)
     if len(tif_list) == 1:
         modify_parameter(new_para_file, 'input_image_or_pattern', os.path.basename(tif_list[0]))
         modify_parameter(new_para_file, 'inf_image_or_pattern', os.path.basename(tif_list[0]))
@@ -154,7 +167,8 @@ def main(options, args):
 
         for img_dir in img_dir_list:
             # copy template file
-            out_ini = create_new_region_defined_parafile(template_ini,img_dir,options.area_remark)
+            out_ini = create_new_region_defined_parafile(template_ini,img_dir,ext_name,area_name=options.area_name,
+                                                           area_time=options.area_time, area_remark=options.area_remark)
             region_ini_files_list.append(out_ini)
     else:
         for img_path in image_paths:
