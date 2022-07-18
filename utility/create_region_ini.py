@@ -88,11 +88,12 @@ def create_region_parafile_for_one_image(template_para_file, img_path, area_name
 
 
 
-def create_new_region_defined_parafile(template_para_file, img_dir, area_remark=None):
+def create_new_region_defined_parafile(template_para_file, img_dir, img_ext, area_remark=None):
     '''
     create a new region defined para file. Only defined the new images (did not change others)
     :param template_para_file:
     :param img_dir:
+    :param img_dir: the extension of a image file name, such as .tif
     :param area_remark:
     :return:
     '''
@@ -121,15 +122,15 @@ def create_new_region_defined_parafile(template_para_file, img_dir, area_remark=
     modify_parameter(new_para_file, 'input_image_dir', img_dir)
     modify_parameter(new_para_file, 'inf_image_dir', img_dir)
 
-    tif_list = io_function.get_file_list_by_ext('.tif',img_dir, bsub_folder=False)
+    tif_list = io_function.get_file_list_by_ext(img_ext,img_dir, bsub_folder=False)
     if len(tif_list) < 1:
         raise ValueError('No tif in %s'%img_dir)
     if len(tif_list) == 1:
         modify_parameter(new_para_file, 'input_image_or_pattern', os.path.basename(tif_list[0]))
         modify_parameter(new_para_file, 'inf_image_or_pattern', os.path.basename(tif_list[0]))
     else:
-        modify_parameter(new_para_file, 'input_image_or_pattern', '*.tif')
-        modify_parameter(new_para_file, 'inf_image_or_pattern', '*.tif')
+        modify_parameter(new_para_file, 'input_image_or_pattern', '*'+img_ext)
+        modify_parameter(new_para_file, 'inf_image_or_pattern', '*'+img_ext)
 
     print("modified and saved new parameter file: %s "%new_para_file)
 
@@ -138,8 +139,9 @@ def create_new_region_defined_parafile(template_para_file, img_dir, area_remark=
 def main(options, args):
     in_folder = args[0]
     template_ini = args[1]
+    ext_name = options.extension
 
-    image_paths = io_function.get_file_list_by_ext('.tif',in_folder, bsub_folder=True)
+    image_paths = io_function.get_file_list_by_ext(ext_name,in_folder, bsub_folder=True)
     if len(image_paths) < 1:
         raise IOError('no tif files in %s'%in_folder)
 
@@ -184,6 +186,10 @@ if __name__ == '__main__':
     parser.add_option("-t", "--area_time",
                       action="store", dest="area_time",
                       help="the time (date) information")
+
+    parser.add_option("-e", "--extension",
+                      action="store", dest="extension", default='.tif',
+                      help="the extension of images, for example .tif " )
 
     parser.add_option("-i", "--b_per_image_per_ini",
                       action="store_true", dest="b_per_image_per_ini", default=False,
