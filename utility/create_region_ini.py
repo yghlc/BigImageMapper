@@ -180,7 +180,7 @@ def main(options, args):
 
     with open('region_ini_files.txt','a') as f_obj:
         for ini in region_ini_files_list:
-            f_obj.writelines(ini + '\n')
+            f_obj.writelines(os.path.abspath(ini) + '\n')
 
     pass
 
