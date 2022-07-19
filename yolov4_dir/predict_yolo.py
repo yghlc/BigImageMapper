@@ -662,6 +662,7 @@ def parallel_prediction_main(para_file, trained_model):
     # get name of inference areas
     multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')
     b_use_multiGPUs = parameters.get_bool_parameters(para_file, 'b_use_multiGPUs')
+    maximum_prediction_jobs = parameters.get_digit_parameters(para_file,'maximum_prediction_jobs','int')
 
     # loop each inference regions
     sub_tasks = []
@@ -713,6 +714,10 @@ def parallel_prediction_main(para_file, trained_model):
             else:
                 gpuid = None
                 basic.outputlogMessage('%d: predict image %s on %s' % (idx, inf_img_list[idx], machine_name))
+
+            while basic.alive_process_count(sub_tasks) >= maximum_prediction_jobs:
+                print(datetime.now(),'%d jobs are running simultaneously, wait 5 seconds'%basic.alive_process_count(sub_tasks))
+                time.sleep(5)   # wait 5 seconds, then check the count of running jobs again
 
             # run inference
             img_save_dir = os.path.join(area_save_dir, 'I%d' % idx)
