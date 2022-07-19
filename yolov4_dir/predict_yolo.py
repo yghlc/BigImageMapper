@@ -692,6 +692,10 @@ def parallel_prediction_main(para_file, trained_model):
         idx = 0
         while idx < img_count:
 
+            while basic.alive_process_count(sub_tasks) >= maximum_prediction_jobs:
+                print(datetime.now(),'%d jobs are running simultaneously, wait 5 seconds'%basic.alive_process_count(sub_tasks))
+                time.sleep(5)   # wait 5 seconds, then check the count of running jobs again
+
             if b_use_multiGPUs:
                 # get available GPUs  # https://github.com/anderskm/gputil
                 # memory: orders the available GPU device ids by ascending memory usage
@@ -714,10 +718,6 @@ def parallel_prediction_main(para_file, trained_model):
             else:
                 gpuid = None
                 basic.outputlogMessage('%d: predict image %s on %s' % (idx, inf_img_list[idx], machine_name))
-
-            while basic.alive_process_count(sub_tasks) >= maximum_prediction_jobs:
-                print(datetime.now(),'%d jobs are running simultaneously, wait 5 seconds'%basic.alive_process_count(sub_tasks))
-                time.sleep(5)   # wait 5 seconds, then check the count of running jobs again
 
             # run inference
             img_save_dir = os.path.join(area_save_dir, 'I%d' % idx)
