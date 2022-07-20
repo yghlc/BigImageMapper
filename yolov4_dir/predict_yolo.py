@@ -680,7 +680,8 @@ def parallel_prediction_main(para_file, trained_model):
         inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir, inf_image_or_pattern)
         img_count = len(inf_img_list)
         if img_count < 1:
-            raise ValueError('No image for inference, please check inf_image_dir and inf_image_or_pattern in %s' % area_ini)
+            raise ValueError('No image for inference, please check inf_image_dir (%s) and inf_image_or_pattern (%s) in %s'
+                             % (inf_image_dir,inf_image_or_pattern,area_ini))
 
         area_save_dir = os.path.join(outdir, area_name + '_' + area_remark + '_' + area_time)
         io_function.mkdir(area_save_dir)
