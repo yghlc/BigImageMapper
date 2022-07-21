@@ -179,6 +179,32 @@ def calculate_polygon_topography(polygons_shp,para_file, dem_files,slope_files,a
 
     return True
 
+
+def calculate_polygon_ndwi(polygons_shp,para_file, ndwi_files,process_num=4):
+    '''
+    add NDWI information from raster into polygons
+    :param polygons_shp:
+    :param para_file:
+    :param ndwi_files:
+    :param process_num:
+    :return:
+    '''
+    all_touched = True
+    if ndwi_files is not None:
+        stats_list = ['min', 'max', 'mean', 'median', 'std']
+
+        tile_min_overlap =  get_tile_min_overlap(ndwi_files)
+        if zonal_stats_multiRasters(polygons_shp,ndwi_files,stats=stats_list,tile_min_overlap=tile_min_overlap,
+                                    prefix='ndwi',band=1,all_touched=all_touched, process_num=process_num, range=range) is False:
+            return False
+        # change value range: [28-228] to [-1 to 1] by  (ndwi-128)/100?, convert from Byte to float.
+
+    else:
+        basic.outputlogMessage('warning, NDWI file not exist, ignore adding NDWI information')
+
+
+    return True
+
 def calculate_hydrology(polygons_shp,flow_accumulation):
     """
     calculate the hydrology information of each polygons
@@ -406,6 +432,10 @@ def add_boxes_attributes(input, output, para_file=None,data_para_file=None):
                                         process_num=process_num) is False:
             basic.outputlogMessage('Warning: calculate information of topography failed')
             # return False   #  don't return
+
+        ndwi_files = get_file_path_parameter(data_para_file, 'ndwi_file_dir', 'ndwi_file_or_pattern')
+        if calculate_polygon_ndwi(output,para_file,ndwi_files,process_num=process_num) is False:
+            basic.outputlogMessage('Warning, calculate information of NDWI failed')
 
 
     return output
