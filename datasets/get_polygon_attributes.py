@@ -195,7 +195,7 @@ def calculate_polygon_ndwi(polygons_shp,para_file, ndwi_files,process_num=4):
 
         tile_min_overlap =  get_tile_min_overlap(ndwi_files)
         if zonal_stats_multiRasters(polygons_shp,ndwi_files,stats=stats_list,tile_min_overlap=tile_min_overlap,
-                                    prefix='ndwi',band=1,all_touched=all_touched, process_num=process_num, range=range) is False:
+                                    prefix='ndwi',band=1,all_touched=all_touched, process_num=process_num) is False:
             return False
         # change value range: [28-228] to [-1 to 1] by  (ndwi-128)/100?, convert from Byte to float.
 
