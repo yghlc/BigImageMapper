@@ -115,6 +115,7 @@ def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path
 
     polys_group1 = vector_gpd.read_polygons_gpd(polys_group1_path,b_fix_invalid_polygon=False)
     if buffer_size > 0:
+        print(datetime.now(), 'starting buffering for %d polygons in group 1' % len(polys_group1))
         polys_group1 = [item.buffer(buffer_size) for item in polys_group1]
     print(datetime.now(),'read %d polygons in group 1'%len(polys_group1))
     polys_group2 = vector_gpd.read_polygons_gpd(polys_group2_path,b_fix_invalid_polygon=False)
