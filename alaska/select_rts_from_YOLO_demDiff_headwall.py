@@ -104,9 +104,11 @@ def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path
 
     # check projections
     shp1_prj = map_projection.get_raster_or_vector_srs_info_proj4(polys_group1_path)
+    if shp1_prj is False:
+        raise ValueError('get projection of %s failed' % (polys_group1_path))
     shp2_prj = map_projection.get_raster_or_vector_srs_info_proj4(polys_group2_path)
-    if shp1_prj is False or shp2_prj is False:
-        return False
+    if shp2_prj is False:
+        raise ValueError('get projection of %s failed' % (polys_group2_path))
     if shp1_prj != shp2_prj:
         raise ValueError('%s and %s dont have the same projection'%(polys_group1_path,polys_group2_path))
 
