@@ -9,6 +9,17 @@ The scripts for producing our results in paper [Huang et al. 2020](https://www.s
 Please check out the [RSE2020paper](https://github.com/yghlc/Landuse_DL/tree/RES2020paper) Branch.
 
 ```
+@article{huang2022accuracy,
+  title={Accuracy, Efficiency, and Transferability of a Deep Learning Model for Mapping Retrogressive Thaw Slumps across the Canadian Arctic},
+  author={Huang, Lingcao and Lantz, Trevor C and Fraser, Robert H and Tiampo, Kristy F and Willis, Michael J and Schaefer, Kevin},
+  journal={Remote Sensing},
+  volume={14},
+  number={12},
+  pages={2747},
+  year={2022},
+  publisher={MDPI}
+}
+
 @article{huang2020using,
   title={Using Deep Learning to Map Retrogressive Thaw Slumps in the Beiluhe Region (Tibetan Plateau) from CubeSat Images},
   author={Huang, Lingcao and Luo, Jing and Lin, Zhanju and Niu, Fujun and Liu, Lin},
@@ -19,8 +30,7 @@ Please check out the [RSE2020paper](https://github.com/yghlc/Landuse_DL/tree/RES
   publisher={ELSEVIER},
   doi = {https://doi.org/10.1016/j.rse.2019.111534}
 }
-```
-```
+
 @article{huang2018automatic,
   title={Automatic Mapping of Thermokarst Landforms from Remote Sensing Images Using Deep Learning: A Case Study in the Northeastern Tibetan Plateau},
   author={Huang, Lingcao and Liu, Lin and Jiang, Liming and Zhang, Tingjun},
