@@ -93,9 +93,7 @@ def organize_files(sub_img_dirs, save_dir):
     txt_path = os.path.join(save_dir,'imageList.txt')
     io_function.save_list_to_txt(txt_path,image_name_list)
 
-
-
-def main():
+def alaska_main():
     # working on tesia:
     work_dir = os.path.expanduser('~/Data/Arctic/alaska/sub_images_for_web_validate')
 
@@ -125,6 +123,37 @@ def main():
 
     # step 5: organize files
     organize_files([shp1_subImg_dir,shp2_subImg_dir], os.path.join(work_dir,'data'))
+
+
+def panArctic_main():
+    # working on tesia:
+    work_dir = os.path.expanduser('~/Data/Arctic/pan_Arctic/sub_images_for_web_validate')
+
+    shp_dir = os.path.expanduser('~/Data/Arctic/pan_Arctic/arcticdem_results_thawslump')
+    shp1 = os.path.join(shp_dir,'panArctic_thawSlump_from_ArcticDEM_v2.shp')
+
+    # step 1: get subimages
+    # using ~/codes/PycharmProjects/ChangeDet_DL/dataTools/extract_subimage_timeSeries.py to get sub-image, but only one image
+    # see more in "get_multi_sub_images.sh" in shp1_subImg_dir and shp2_subImg_dir
+    shp1_subImg_dir = os.path.join(work_dir,'panArctic_thawSlump_from_ArcticDEM_v2')
+
+    # step 2: get geojson for each polygons
+    polygons2geojson(shp1,shp1_subImg_dir)
+
+    # step 3: convert subimages in the format of geotiff to pngs
+    tifs_to_png(shp1_subImg_dir)
+
+    # step 4: get bounding box of sub-images
+    get_tifs_bounding_boxes(shp1_subImg_dir)
+
+    # step 5: organize files
+    organize_files([shp1_subImg_dir], os.path.join(work_dir,'data'))
+
+def main():
+
+    # alaska_main()
+    panArctic_main()
+
 
     pass
 
