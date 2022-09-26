@@ -122,12 +122,12 @@ def is_folder_exist(folder_path):
     """
     if len(folder_path) < 1:
         basic.outputlogMessage('error: The input folder path is empty')
-        return False
+        raise IOError('error: The input folder path is empty')
     if os.path.isdir(folder_path):
         return True
     else:
         basic.outputlogMessage("Folder : %s not exist"%os.path.abspath(folder_path))
-        return False
+        raise IOError("Folder : %s not exist"%os.path.abspath(folder_path))
 
 
 def os_list_folder_dir(top_dir):
