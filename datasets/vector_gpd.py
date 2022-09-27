@@ -36,6 +36,8 @@ import basic_src.map_projection as map_projection
 from datetime import datetime
 from multiprocessing import Pool
 
+from packaging import version
+
 def check_remove_None_geometries(geometries, gpd_dataframe, file_path=None):
     # Missing and empty geometries, find None geometry, then remove them
     # https://geopandas.org/en/stable/docs/user_guide/missing_empty.html
@@ -165,7 +167,7 @@ def read_shape_gpd_to_NewPrj(shp_path, prj_str):
     # print(shapefile.crs)
 
     # shapefile  = shapefile.to_crs(prj_str)
-    if gpd.__version__ >= '0.7.0':
+    if version.parse(gpd.__version__)  >= version.parse('0.7.0'):
         shapefile = shapefile.to_crs(prj_str)
     else:
         shapefile  = shapefile.to_crs({'init':prj_str})
@@ -188,7 +190,7 @@ def reproject_shapefile(shp_path, prj_str,save_path):
     # print(shapefile.crs)
 
     # shapefile  = shapefile.to_crs(prj_str)
-    if gpd.__version__ >= '0.7.0':
+    if version.parse(gpd.__version__) >= version.parse('0.7.0'):
         shapefile = shapefile.to_crs(prj_str)
     else:
         shapefile = shapefile.to_crs({'init': prj_str})
