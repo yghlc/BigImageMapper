@@ -96,6 +96,7 @@ def merge_inputs_from_users(userinput_json_file,dir_geojson,user_json_file,image
     # convert and save to shapefile
     user_name_list = []
     possibility_list = []
+    org_polygon_name_list = []
     user_note_list = []
     polygon_list = []
 
@@ -109,6 +110,7 @@ def merge_inputs_from_users(userinput_json_file,dir_geojson,user_json_file,image
         org_json_path = os.path.join(dir_geojson, org_json)
         polygon_list.append(read_a_geojson_latlon(org_json_path)[0])
         user_name_list.append(user_name)
+        org_polygon_name_list.append(org_json)
         possibility_list.append(possibility)
         user_note_list.append(user_note)
 
@@ -119,11 +121,13 @@ def merge_inputs_from_users(userinput_json_file,dir_geojson,user_json_file,image
             for n_poly in new_polys:
                 polygon_list.append(n_poly)
                 user_name_list.append(user_name)
+                org_polygon_name_list.append(org_json)
                 possibility_list.append('useradd')      # these are addded by users
                 user_note_list.append(user_note)    # could be duplicated, but ok
 
     # save to file
-    polygon_pd = pd.DataFrame({'user':user_name_list,'possibilit':possibility_list,'note':user_note_list,'polygons':polygon_list})
+    polygon_pd = pd.DataFrame({'user':user_name_list,'o_geojson':org_polygon_name_list, 'possibilit':possibility_list,
+                               'note':user_note_list,'polygons':polygon_list})
     vector_gpd.save_polygons_to_files(polygon_pd, 'polygons', 'EPSG:4326', save_path,format='ESRI Shapefile')
 
 
@@ -140,7 +144,12 @@ def main(options, args):
     if save_path is None:
         save_path = 'polygons_after_webValidation.shp'
 
-    merge_inputs_from_users(userinput_json,dir_geojson, user_json,image_json,save_path)
+    # merge polygons
+    before_filter_save = io_function.get_name_by_adding_tail(save_path,'NoFilter')
+    merge_inputs_from_users(userinput_json,dir_geojson, user_json,image_json,before_filter_save)
+
+    # filter polygons
+
 
 
 
