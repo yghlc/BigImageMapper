@@ -86,11 +86,12 @@ def merge_inputs_from_users(userinput_json_file,dir_geojson,user_json_file,image
         image_polygons_valid_res.setdefault('user_polygon', []).append(rec['fields']['user_image_output'])          # modified or added polygons
 
 
-     # save to excel file
-    # save_xlsx = io_function.get_name_no_ext(save_path) + '_all_records.xlsx'
-    # table_pd = pd.DataFrame(image_polygons_valid_res)
-    # with pd.ExcelWriter(save_xlsx) as writer:
-    #     table_pd.to_excel(writer)
+    ## save to excel file
+    save_xlsx = io_function.get_name_no_ext(save_path) + '_all_records.xlsx'
+    table_pd = pd.DataFrame(image_polygons_valid_res)
+    with pd.ExcelWriter(save_xlsx) as writer:
+        table_pd.to_excel(writer)
+        print('saving to %s'%os.path.abspath(save_xlsx))
 
 
     # convert and save to shapefile
@@ -129,6 +130,7 @@ def merge_inputs_from_users(userinput_json_file,dir_geojson,user_json_file,image
     polygon_pd = pd.DataFrame({'user':user_name_list,'o_geojson':org_polygon_name_list, 'possibilit':possibility_list,
                                'note':user_note_list,'polygons':polygon_list})
     vector_gpd.save_polygons_to_files(polygon_pd, 'polygons', 'EPSG:4326', save_path,format='ESRI Shapefile')
+    print('saving to %s' % os.path.abspath(save_path))
 
 
 
