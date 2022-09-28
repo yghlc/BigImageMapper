@@ -21,6 +21,15 @@ import vector_gpd
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
+# from vector_features import max_IoU_score
+from vector_features import IoU
+
+# import nms
+import numpy as np
+
+defined_possibility = ['yes', 'high', 'medium', 'low', 'no']
+
+possib2value = {'yes':1.0, 'high':0.75, 'medium':0.5, 'low':0.25, 'no':0.0}
 
 # a dict of user name and ids
 # user_names = {}     # user_id <-> user_name
@@ -32,6 +41,41 @@ import basic_src.basic as basic
 #
 #     for rec in data_list:
 #         user_names[rec['pk']] = rec['fields']['username']       # id : username
+
+
+def non_max_suppression_polygons(polygons, scores,nms_iou_threshold=0.5):
+
+    # alternative: https://nms.readthedocs.io/ (not able to make it works)
+
+    # return indicies
+    if len(polygons) != len(scores):
+        raise ValueError('the length of polygons and scores are different')
+
+    count = len(polygons)
+    all_idx = [ item for item in range(count)]
+    rm_idx = []
+    # keep_idx = []
+    # iou_array = np.zeros((count,count),dtype=np.float32)
+    for i in range(count-1):
+        if i in rm_idx:
+            continue
+
+        for j in range(i+1, count):
+            if j in rm_idx:
+                continue
+
+            iou = IoU(polygons[i],polygons[j])
+
+            if iou >= nms_iou_threshold:
+                if scores[i] >= scores[j]:
+                    # keep_idx.append(i)
+                    rm_idx.append(j)
+                else:
+                    # keep_idx.append(j)
+                    rm_idx.append(i)
+                    break
+
+    return list(set(all_idx).difference(set(rm_idx)))
 
 
 def read_a_geojson_latlon(file_path):
@@ -52,8 +96,10 @@ def read_a_geojson_latlon(file_path):
 def test_read_a_geojson_latlon():
     # geojson = '/Users/huanglingcao/Data/labelearth.colorado.edu/data/data/objectPolygons/img000001_panArctic_time0_poly_3028.geojson'
     # geojson = '/Users/huanglingcao/Data/labelearth.colorado.edu/data/data/objectPolygons/img000001_panArctic_time0_poly_3028_by_CarolXU.geojson'
-    geojson = '/Users/huanglingcao/Data/labelearth.colorado.edu/data/data/objectPolygons/img000010_panArctic_time0_poly_432_by_liulin@cuhk.edu.hk_000.geojson'
-    read_a_geojson_latlon(geojson)
+
+    # geojson = '/Users/huanglingcao/Data/labelearth.colorado.edu/data/data/objectPolygons/img000010_panArctic_time0_poly_432_by_liulin@cuhk.edu.hk_000.geojson'
+    # read_a_geojson_latlon(geojson)
+    pass
 
 def merge_inputs_from_users(userinput_json_file,dir_geojson,user_json_file,image_json,save_path):
     with open(userinput_json_file) as f_obj:
@@ -133,6 +179,120 @@ def merge_inputs_from_users(userinput_json_file,dir_geojson,user_json_file,image
     print('saving to %s' % os.path.abspath(save_path))
 
 
+def handle_original_polygons(poly_index,all_polygons,all_possibilities):
+
+    # return index
+    save_poly_idx = None
+
+    ori_poly_possi = []
+    ori_poly_idx = []
+    useradd_poly_idx = []
+    for idx in poly_index:
+        if all_possibilities[idx] in defined_possibility:
+            ori_poly_possi.append(all_possibilities[idx])
+            ori_poly_idx.append(idx)
+        else:
+            useradd_poly_idx.append(idx)
+    #
+    ori_poly_possi_value = [ possib2value[item] for item in ori_poly_possi ]
+    valid_count = len(ori_poly_possi_value)
+    avg_possi = sum(ori_poly_possi_value)/valid_count
+    if avg_possi >= 0.5:
+        # # check modified polygons in "useradd_poly_idx"
+        # ***no need to check this, eventually, we will check all overlap polygons***
+
+        # org_polygon = all_polygons[ori_poly_idx[0]] # may have multiple polygon, but they are the same
+        # user_modify_added_polygons = [ all_polygons[idx] for idx in useradd_poly_idx]
+        # iou_value = max_IoU_score(org_polygon, user_modify_added_polygons)
+        # if iou_value > 0:
+        #     # do something
+        #    pass
+        save_poly_idx = ori_poly_idx[0]  # may have multiple polygon, but they are the same
+
+    return save_poly_idx, avg_possi,valid_count, useradd_poly_idx
+
+def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
+
+    # read polygons
+    all_polygons, possibilities = vector_gpd.read_polygons_attributes_list(all_polygon_shp,'possibilit',b_fix_invalid_polygon=False)
+    org_geojson = vector_gpd.read_attribute_values_list(all_polygon_shp,'o_geojson')
+    # users = vector_gpd.read_attribute_values_list(all_polygon_shp,'user')
+    # notes = vector_gpd.read_attribute_values_list(all_polygon_shp,'note')
+
+    save_polygon_list = []
+    save_val_time_list = []
+    save_possi_list = []    # keep
+    # save_user_list = []
+    # save_note_list = []
+    # save_org_geojson_list = []
+
+    all_modify_add_poly_idx_list = []
+
+    img_possi_index = {}
+    for idx, img_geojson in enumerate(org_geojson):
+        if img_geojson in img_possi_index.keys():
+            img_possi_index[img_geojson].append(idx)
+        else:
+            img_possi_index[img_geojson] = [idx]
+
+    # print('\n count of unique_img_geojson:', len(img_possi_index.keys()))
+    for img_geojson in img_possi_index.keys():
+        poly_index = img_possi_index[img_geojson]
+
+        # processing original boxes, keep or drop
+        # one_poly_possi = [ possibilities[item] for item in poly_index if possibilities[item] in defined_possibility ]
+        # print(one_poly_possi)
+
+        save_poly_idx, avg_possi, valid_times, modify_add_poly_idx_list = handle_original_polygons(poly_index,all_polygons,possibilities)
+        if save_poly_idx is not None:
+            save_polygon_list.append(all_polygons[save_poly_idx])
+            save_val_time_list.append(valid_times)
+            save_possi_list.append(avg_possi)
+
+        all_modify_add_poly_idx_list.extend(modify_add_poly_idx_list)
+
+        # if img_geojson == 'img000001_panArctic_time0_poly_3028.geojson':
+        #     break
+        #
+        # pass
+
+    print('number of saved polygons from orignal boxes:', len(save_polygon_list))
+    print('user added or modified polygons:', len(all_modify_add_poly_idx_list))
+
+    # for the polygons added by users keep for some of them, overlap each other, only keep one
+    all_modify_add_polygons = [all_polygons[item] for item in all_modify_add_poly_idx_list ]
+    all_modify_add_poly_scores = [1.0]*len(all_modify_add_polygons)
+
+    save_polygon_list.extend(all_modify_add_polygons)
+    save_val_time_list.extend([0]*len(all_modify_add_polygons))
+
+    scores = [ item - 0.01 for item in save_possi_list]     # make the score of original polygon smaller, so priority to user modified polygons
+    scores.extend(all_modify_add_poly_scores)
+
+    save_possi_list.extend([1] * len(all_modify_add_polygons))
+
+    print('Before non_max_suppression: %d polygons:' % len(save_polygon_list))
+
+    keep_idx = non_max_suppression_polygons(save_polygon_list,scores,nms_iou_threshold=0.5)
+
+    # save to file
+    final_polys = [save_polygon_list[idx] for idx in keep_idx]
+    final_val_times = [save_val_time_list[idx] for idx in keep_idx]
+    final_possis = [save_possi_list[idx] for idx in keep_idx]
+    print('After non_max_suppression, keep %d polygons:'%len(final_polys))
+
+    # save to file
+    polygon_pd = pd.DataFrame({'possibilit':final_possis,'val_times':final_val_times,'polygons': final_polys})
+    vector_gpd.save_polygons_to_files(polygon_pd, 'polygons', 'EPSG:4326', save_path, format='ESRI Shapefile')
+    print('saving to %s' % os.path.abspath(save_path))
+
+
+def test_filter_polygons_based_on_userInput():
+    all_polygon_shp = '/Users/huanglingcao/Data/labelearth.colorado.edu/data/thawslump_boxes/pan_arctic_thawslump_after_webValidation_NoFilter.shp'
+    save_path = 'filter_result.shp'
+
+    filter_polygons_based_on_userInput(all_polygon_shp,save_path)
+
 
 def main(options, args):
     userinput_json = args[0]
@@ -151,6 +311,7 @@ def main(options, args):
     merge_inputs_from_users(userinput_json,dir_geojson, user_json,image_json,before_filter_save)
 
     # filter polygons
+    filter_polygons_based_on_userInput(before_filter_save, save_path)
 
 
 
