@@ -285,7 +285,7 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
     print('After non_max_suppression, keep %d polygons:'%len(final_polys))
 
     # save to file
-    polygon_pd = pd.DataFrame({'id':[i for i in range(len(final_polys))],'possibilit':final_possis,
+    polygon_pd = pd.DataFrame({'id':[i+1 for i in range(len(final_polys))],'possibilit':final_possis,
                                'val_times':final_val_times,'polygons': final_polys})
     vector_gpd.save_polygons_to_files(polygon_pd, 'polygons', 'EPSG:4326', save_path, format='ESRI Shapefile')
     print('saving to %s' % os.path.abspath(save_path))
