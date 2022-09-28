@@ -31,7 +31,7 @@ defined_possibility = ['yes', 'high', 'medium', 'low', 'no']
 
 possib2value = {'yes':1.0, 'high':0.75, 'medium':0.5, 'low':0.25, 'no':0.0}
 
-nms_threshold = 0.3
+nms_threshold = 0.5
 possibility_threshold = 0.5
 
 # a dict of user name and ids
