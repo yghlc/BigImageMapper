@@ -31,6 +31,9 @@ defined_possibility = ['yes', 'high', 'medium', 'low', 'no']
 
 possib2value = {'yes':1.0, 'high':0.75, 'medium':0.5, 'low':0.25, 'no':0.0}
 
+nms_threshold = 0.3
+possibility_threshold = 0.5
+
 # a dict of user name and ids
 # user_names = {}     # user_id <-> user_name
 
@@ -197,7 +200,7 @@ def handle_original_polygons(poly_index,all_polygons,all_possibilities):
     ori_poly_possi_value = [ possib2value[item] for item in ori_poly_possi ]
     valid_count = len(ori_poly_possi_value)
     avg_possi = sum(ori_poly_possi_value)/valid_count
-    if avg_possi >= 0.5:
+    if avg_possi >= possibility_threshold:
         # # check modified polygons in "useradd_poly_idx"
         # ***no need to check this, eventually, we will check all overlap polygons***
 
@@ -273,7 +276,7 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
 
     print('Before non_max_suppression: %d polygons:' % len(save_polygon_list))
 
-    keep_idx = non_max_suppression_polygons(save_polygon_list,scores,nms_iou_threshold=0.5)
+    keep_idx = non_max_suppression_polygons(save_polygon_list,scores,nms_iou_threshold=nms_threshold)
 
     # save to file
     final_polys = [save_polygon_list[idx] for idx in keep_idx]
@@ -282,7 +285,8 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
     print('After non_max_suppression, keep %d polygons:'%len(final_polys))
 
     # save to file
-    polygon_pd = pd.DataFrame({'possibilit':final_possis,'val_times':final_val_times,'polygons': final_polys})
+    polygon_pd = pd.DataFrame({'id':[i for i in range(len(final_polys))],'possibilit':final_possis,
+                               'val_times':final_val_times,'polygons': final_polys})
     vector_gpd.save_polygons_to_files(polygon_pd, 'polygons', 'EPSG:4326', save_path, format='ESRI Shapefile')
     print('saving to %s' % os.path.abspath(save_path))
 
