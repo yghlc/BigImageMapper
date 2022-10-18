@@ -195,7 +195,7 @@ def handle_original_polygons(poly_index,all_polygons,all_possibilities):
             ori_poly_possi.append(all_possibilities[idx])
             ori_poly_idx.append(idx)
         else:
-            useradd_poly_idx.append(idx)
+            useradd_poly_idx.append(idx)    # useradd
     #
     ori_poly_possi_value = [ possib2value[item] for item in ori_poly_possi ]
     valid_count = len(ori_poly_possi_value)
@@ -220,7 +220,30 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
     all_polygons, possibilities = vector_gpd.read_polygons_attributes_list(all_polygon_shp,'possibilit',b_fix_invalid_polygon=False)
     org_geojson = vector_gpd.read_attribute_values_list(all_polygon_shp,'o_geojson')
     # users = vector_gpd.read_attribute_values_list(all_polygon_shp,'user')
-    # notes = vector_gpd.read_attribute_values_list(all_polygon_shp,'note')
+    notes = vector_gpd.read_attribute_values_list(all_polygon_shp,'note')
+
+    # remove ones with possibility as "NULL" (None); remove some copied ones
+    new_all_polygons=[]
+    new_possibilities = []
+    new_org_geojson=[]
+    rm_None_possi = 0
+    rm_copied_input = 0
+    for poly,p_text, o_json, user_note in zip(all_polygons,possibilities,org_geojson,notes):
+        if p_text is None:
+            rm_None_possi += 1
+            continue
+        if user_note == 'copy from lingcao.huang@colorado.edu':
+            rm_copied_input += 1
+            continue
+        new_all_polygons.append(poly)
+        new_possibilities.append(p_text)
+        new_org_geojson.append(o_json)
+    print('remove %d records of user input, with a possibility of None'%rm_None_possi)
+    print('remove %d records of copied user input'%rm_copied_input)
+    all_polygons = new_all_polygons
+    possibilities = new_possibilities
+    org_geojson = new_org_geojson
+
 
     save_polygon_list = []
     save_val_time_list = []
@@ -259,7 +282,7 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
         #
         # pass
 
-    print('number of saved polygons from orignal boxes:', len(save_polygon_list))
+    print('number of saved polygons from original boxes:', len(save_polygon_list))
     print('user added or modified polygons:', len(all_modify_add_poly_idx_list))
 
     # for the polygons added by users keep for some of them, overlap each other, only keep one
@@ -274,7 +297,7 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
 
     save_possi_list.extend([1] * len(all_modify_add_polygons))
 
-    print('Before non_max_suppression: %d polygons:' % len(save_polygon_list))
+    print('Before non_max_suppression: %d polygons (polygons from original boxes and user added/modified ones):' % len(save_polygon_list))
 
     keep_idx = non_max_suppression_polygons(save_polygon_list,scores,nms_iou_threshold=nms_threshold)
 
