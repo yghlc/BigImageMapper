@@ -320,6 +320,47 @@ def test_filter_polygons_based_on_userInput():
 
     filter_polygons_based_on_userInput(all_polygon_shp,save_path)
 
+def statistics_of_user_input(before_filter_shp,after_filter_shp,save_txt):
+    possibility_no_filter = vector_gpd.read_attribute_values_list(before_filter_shp, 'possibilit')
+    number_poly_user_add_edit = possibility_no_filter.count('useradd')
+
+    # after filtering
+    possibility = vector_gpd.read_attribute_values_list(after_filter_shp, 'possibilit')
+    val_times  = vector_gpd.read_attribute_values_list(after_filter_shp, 'val_times')
+
+    possibility_noZero_val = [ p for p, vt in zip(possibility,val_times) if vt > 0 ]
+    possibility_zero_val = [ p for p, vt in zip(possibility,val_times) if vt == 0 ]
+
+    possi_count_noZero_val = {}
+    for p_value in sorted(set(possibility_noZero_val),reverse=True):   # descending
+        print('get the number of the possibility: %s'%str(p_value))
+        possi_count_noZero_val[p_value] = possibility_noZero_val.count(p_value)
+
+    possi_count_zero_val = {}
+    for p_value in sorted(set(possibility_zero_val),reverse=True):   # descending
+        print('get the number of the possibility: %s'%str(p_value))
+        possi_count_zero_val[p_value] = possibility_zero_val.count(p_value)
+
+    # save to txt
+    with open(save_txt,'w') as f_obj:
+        f_obj.writelines('before merging and filtering: \n')
+        f_obj.writelines('polygon count: %d \n'%len(possibility_no_filter))
+        f_obj.writelines('count of polygons added or edited by users: %d \n'%number_poly_user_add_edit)
+
+        f_obj.writelines('\nAfter merging and filtering: \n')
+        count_noZero_val = len(possibility_noZero_val)
+        count_zero_val = len(possibility_zero_val)
+        f_obj.writelines('\nCount of polygons from original boxes: %d, count and percent for each possibility: \n'%count_noZero_val)
+        for p_value in possi_count_noZero_val.keys():
+            f_obj.writelines("Possibility: %lf, count: %d, percent: %.4lf \n"%(p_value, possi_count_noZero_val[p_value], possi_count_noZero_val[p_value]/count_noZero_val))
+
+        f_obj.writelines('\nCount of polygons added or edited by users: %d, count and percent for each possibility:\n'%count_zero_val)
+        for p_value in possi_count_zero_val.keys():
+            f_obj.writelines("Possibility: %lf, count: %d, percent: %.4lf"%(p_value, possi_count_zero_val[p_value], possi_count_zero_val[p_value]/count_zero_val))
+
+    print('saved to %s'%os.path.abspath(save_txt))
+
+
 
 def main(options, args):
     userinput_json = args[0]
@@ -340,7 +381,8 @@ def main(options, args):
     # filter polygons
     filter_polygons_based_on_userInput(before_filter_save, save_path)
 
-
+    save_txt = os.path.splitext(save_path)[0] + '_statistics.txt'
+    statistics_of_user_input(before_filter_save, save_path, save_txt)
 
 
 
