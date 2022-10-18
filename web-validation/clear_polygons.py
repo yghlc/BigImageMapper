@@ -382,6 +382,8 @@ def main(options, args):
     if save_path is None:
         save_path = 'polygons_after_webValidation.shp'
 
+    print('nms_threshold: %f, possibility_threshold: %f'%(nms_threshold,possibility_threshold))
+
     # merge polygons
     before_filter_save = io_function.get_name_by_adding_tail(save_path,'NoFilter')
     merge_inputs_from_users(userinput_json,dir_geojson, user_json,image_json,before_filter_save)
