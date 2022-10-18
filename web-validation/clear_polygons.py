@@ -285,6 +285,14 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
     print('number of saved polygons from original boxes:', len(save_polygon_list))
     print('user added or modified polygons:', len(all_modify_add_poly_idx_list))
 
+    # statistics before non_max_suppression
+    print('statistics of the saved polygons from original boxes before non_max_suppression:')
+    # possi_count_per = {}
+    for p_value in sorted(set(save_possi_list),reverse=True):   # descending
+        p_value_count = save_possi_list.count(p_value)
+        print('Possibility: %lf, count: %d, percent: %lf ' % (p_value,p_value_count, p_value_count/len(save_polygon_list)))
+        # possi_count_per[p_value] = save_possi_list.count(p_value)
+
     # for the polygons added by users keep for some of them, overlap each other, only keep one
     all_modify_add_polygons = [all_polygons[item] for item in all_modify_add_poly_idx_list ]
     all_modify_add_poly_scores = [1.0]*len(all_modify_add_polygons)
