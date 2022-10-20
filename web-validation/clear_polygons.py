@@ -250,7 +250,7 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
     save_possi_list = []    # keep
     # save_user_list = []
     # save_note_list = []
-    # save_org_geojson_list = []
+    save_org_geojson_list = []
 
     all_modify_add_poly_idx_list = []
 
@@ -274,6 +274,7 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
             save_polygon_list.append(all_polygons[save_poly_idx])
             save_val_time_list.append(valid_times)
             save_possi_list.append(avg_possi)
+            save_org_geojson_list.append(org_geojson[save_poly_idx])
 
         all_modify_add_poly_idx_list.extend(modify_add_poly_idx_list)
 
@@ -299,6 +300,7 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
 
     save_polygon_list.extend(all_modify_add_polygons)
     save_val_time_list.extend([0]*len(all_modify_add_polygons))
+    save_org_geojson_list.extend([org_geojson[item] for item in all_modify_add_poly_idx_list])
 
     scores = [ item - 0.01 for item in save_possi_list]     # make the score of original polygon smaller, so priority to user modified polygons
     scores.extend(all_modify_add_poly_scores)
@@ -311,13 +313,14 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
 
     # save to file
     final_polys = [save_polygon_list[idx] for idx in keep_idx]
+    final_org_jsons = [save_org_geojson_list[idx] for idx in keep_idx]
     final_val_times = [save_val_time_list[idx] for idx in keep_idx]
     final_possis = [save_possi_list[idx] for idx in keep_idx]
     print('After non_max_suppression, keep %d polygons:'%len(final_polys))
 
     # save to file
     polygon_pd = pd.DataFrame({'id':[i+1 for i in range(len(final_polys))],'possibilit':final_possis,
-                               'val_times':final_val_times,'polygons': final_polys})
+                               'val_times':final_val_times,'o_geojson':final_org_jsons, 'polygons': final_polys})
     vector_gpd.save_polygons_to_files(polygon_pd, 'polygons', 'EPSG:4326', save_path, format='ESRI Shapefile')
     print('saving to %s' % os.path.abspath(save_path))
 
