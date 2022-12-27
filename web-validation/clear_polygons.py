@@ -21,7 +21,7 @@ import vector_gpd
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
-# from vector_features import max_IoU_score
+from vector_features import max_IoU_score
 from vector_features import IoU
 
 # import nms
@@ -214,6 +214,19 @@ def handle_original_polygons(poly_index,all_polygons,all_possibilities):
 
     return save_poly_idx, avg_possi,valid_count, useradd_poly_idx
 
+def count_modify_add_polygons_overlap_YOLOv4_boxes(all_modify_add_polygons, yolov4_boxes):
+    # run this with possibility_threshold = 0
+    ncount = 0
+    for poly in all_modify_add_polygons:
+        max_iou =  max_IoU_score(poly,yolov4_boxes)
+        if max_iou > 0:
+            ncount += 1
+
+    print('Under possibility_threshold: %f :'%possibility_threshold,
+          '%d among %d user-modified-or-added polygons overlap original YOLOv4 boxes (%d)'%
+          (ncount,len(all_modify_add_polygons), len(yolov4_boxes) ))
+
+
 def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
 
     # read polygons
@@ -296,6 +309,7 @@ def filter_polygons_based_on_userInput(all_polygon_shp,save_path):
 
     # for the polygons added by users keep for some of them, overlap each other, only keep one
     all_modify_add_polygons = [all_polygons[item] for item in all_modify_add_poly_idx_list ]
+    count_modify_add_polygons_overlap_YOLOv4_boxes(all_modify_add_polygons,save_polygon_list)
     all_modify_add_poly_scores = [1.0]*len(all_modify_add_polygons)
 
     save_polygon_list.extend(all_modify_add_polygons)
