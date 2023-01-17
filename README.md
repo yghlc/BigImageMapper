@@ -5,8 +5,8 @@ This repo contains codes for  mapping thermokarst landforms including thermo-ero
 ## Citation
 If codes here are useful for your project, please consider citing our papers:
 
-The scripts for producing our results in paper [Huang et al. 2020](https://www.sciencedirect.com/science/article/pii/S003442571930553X). 
-Please check out the [RSE2020paper](https://github.com/yghlc/Landuse_DL/tree/RES2020paper) Branch.
+The scripts for producing our results in paper [Huang et al. 2020](https://www.sciencedirect.com/science/article/pii/S003442571930553X) 
+can be found at the [RSE2020paper](https://github.com/yghlc/Landuse_DL/tree/RES2020paper) Branch.
 
 ```
 @article{huang2022accuracy,
