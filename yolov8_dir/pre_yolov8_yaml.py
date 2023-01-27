@@ -58,12 +58,12 @@ def modify_config_yaml(conf_dict, work_dir,para_file):
     pre_trained_model = parameters.get_file_path_parameters(network_setting_ini,'pre_trained_model')
     io_function.is_file_exist(pre_trained_model)
     # model
-    if conf_dict['exist_ok'] and conf_dict['resume']:
-        # resume
-        last_model = os.path.join(expr_name,'weights','last.pt')
-        if os.path.isfile(last_model):
-            conf_dict['model'] = last_model
+    last_model = os.path.join(expr_name, 'weights', 'last.pt')
+    if os.path.isfile(last_model):
+        conf_dict['model'] = last_model
+        conf_dict['resume'] = True  # resume
     else:
+        conf_dict['resume'] = False
         conf_dict['model'] = pre_trained_model
 
     return conf_dict
