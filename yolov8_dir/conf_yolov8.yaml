@@ -17,7 +17,7 @@ device: null # cuda device, i.e. 0 or 0,1,2,3 or cpu. Device to run on
 workers: 8 # number of worker threads for data loading
 project: /home/lihu9680/Data/temp/panArctic_yolov8_1 # project name
 name: exp1 # experiment name
-exist_ok: False # whether to overwrite existing experiment
+exist_ok: True # whether to overwrite existing experiment
 pretrained: False # whether to use a pretrained model
 optimizer: 'SGD' # optimizer to use, choices=['SGD', 'Adam', 'AdamW', 'RMSProp']
 verbose: False # whether to print verbose output
@@ -28,7 +28,7 @@ image_weights: False # use weighted image selection for training
 rect: False # support rectangular training
 cos_lr: False # use cosine learning rate scheduler
 close_mosaic: 10 # disable mosaic augmentation for final 10 epochs
-resume: False # resume training from last checkpoint
+resume: True # resume training from last checkpoint
 # Segmentation
 overlap_mask: True # masks should overlap during training
 mask_ratio: 4 # mask downsample ratio
