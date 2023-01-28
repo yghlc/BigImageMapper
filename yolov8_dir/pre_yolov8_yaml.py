@@ -66,6 +66,9 @@ def modify_config_yaml(conf_dict, work_dir,para_file):
         conf_dict['resume'] = False
         conf_dict['model'] = pre_trained_model
 
+    train_epoch_num = parameters.get_digit_parameters(network_setting_ini,'train_epoch_num','int')
+    conf_dict['epochs'] = train_epoch_num
+
     return conf_dict
 
 
