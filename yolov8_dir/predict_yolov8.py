@@ -117,6 +117,8 @@ def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_na
 
     patch_idx = 0
     all_objects = []
+    with open(os.path.join(save_dir,'started.txt'),'w') as f_obj:
+        f_obj.writelines(str(datetime.now()) + ': The process has started')
     for b_idx, a_batch_patch in enumerate(batch_patches):
         t0 = time.time()
 
