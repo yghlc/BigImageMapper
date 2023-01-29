@@ -77,9 +77,10 @@ def save_one_patch_yolov8_detection_json(patch_idx, patch, detections, class_nam
                   'confidence': float(confidence)}
         objects.append(object)
 
-    json_data = json.dumps(objects, indent=2)
-    with open(save_res_json, "w") as f_obj:
-        f_obj.write(json_data)
+    return objects
+    # json_data = json.dumps(objects, indent=2)
+    # with open(save_res_json, "w") as f_obj:
+    #     f_obj.write(json_data)
 
 
 def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_names,
@@ -115,6 +116,7 @@ def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_na
         raise ValueError('only accept one band or three band images')
 
     patch_idx = 0
+    all_objects = []
     for a_batch_patch in batch_patches:
         t0 = time.time()
 
@@ -130,14 +132,17 @@ def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_na
         det_results = model(images, stream=True)  # generator of Results objects
 
         # save results
-        [save_one_patch_yolov8_detection_json(patch_idx + idx, patch, det_res,class_names, save_dir)
+        objects = [save_one_patch_yolov8_detection_json(patch_idx + idx, patch, det_res,class_names, save_dir)
          for idx, (patch, det_res) in enumerate(zip(a_batch_patch,det_results))]
+        [ all_objects.extend(item) for item in objects if len(item) > 0]   # ignore empty results
+
 
         if patch_idx % (100*batch_size) == 0:
-            print('saving %d patch, total: %d, cost %f second' % (patch_idx + batch_size, patch_count, time.time() - t0))
+            print('Processed %d patch, total: %d, cost %f second' % (patch_idx + batch_size, patch_count, time.time() - t0))
 
         patch_idx += len(a_batch_patch)
-    print('Have saved results of all patches')
+    print('Have obtained results of all patches')
+    return all_objects
 
 def merge_patch_json_files_to_one(res_json_files, save_path):
     all_objects = []
@@ -172,16 +177,19 @@ def predict_remoteSensing_image(para_file, image_path, save_dir, model, network_
     ultralytics_dir = parameters.get_file_path_parameters(network_ini,'ultralytics_dir')
 
     # using the python API
-    predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,object_names,
+    all_objects = predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,object_names,
                                      patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size)
 
     # for each patch has a json file, may end up with a lot of json files, affect I/O
     # try to merge them to one json file.
-    res_json_files = io_function.get_file_list_by_ext('.json', save_dir, bsub_folder=False)
+    # res_json_files = io_function.get_file_list_by_ext('.json', save_dir, bsub_folder=False)
     merge_josn_path = os.path.join(save_dir,'all_patches.json')
-    merge_patch_json_files_to_one(res_json_files,merge_josn_path)
-    for f_json in res_json_files:
-        io_function.delete_file_or_dir(f_json)
+    # merge_patch_json_files_to_one(res_json_files,merge_josn_path)
+    # for f_json in res_json_files:
+    #     io_function.delete_file_or_dir(f_json)
+    json_data = json.dumps(all_objects, indent=2)
+    with open(merge_josn_path, "w") as f_obj:
+        f_obj.write(json_data)
 
 
 
