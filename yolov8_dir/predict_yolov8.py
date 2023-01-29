@@ -48,7 +48,7 @@ def save_one_patch_yolov8_detection_json(patch_idx, patch, detections, save_dir,
     save_res_json = os.path.join(save_dir, '%d.json' % patch_idx)
     objects = []
     bbox_list = []
-    boxes = detections.boxes.numpy()
+    boxes = detections.boxes.cpu().numpy()
     # xyxy:  box with xyxy format, (N, 4)
     for cls, confidence, bbox in zip( boxes.cls, boxes.conf, boxes.xyxy,):
         # print('cls, confidence, bbox',cls, confidence, bbox)
