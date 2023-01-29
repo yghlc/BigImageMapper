@@ -43,7 +43,7 @@ def copy_one_patch_image_data(patch, entire_img_data):
     return patch_data
 
 
-def save_one_patch_yolov8_detection_json(patch_idx, patch, detections, save_dir, b_percent=False):
+def save_one_patch_yolov8_detection_json(patch_idx, patch, detections, class_names, save_dir, b_percent=False):
     # patch (xoff,yoff ,xsize, ysize)
     save_res_json = os.path.join(save_dir, '%d.json' % patch_idx)
     objects = []
@@ -72,6 +72,7 @@ def save_one_patch_yolov8_detection_json(patch_idx, patch, detections, save_dir,
         if b_percent:
             confidence = round(confidence * 100, 2)
         object = {'class_id': int(cls),
+                  'name': class_names[int(cls)],
                   'bbox': bbox,
                   'confidence': float(confidence)}
         objects.append(object)
@@ -81,7 +82,7 @@ def save_one_patch_yolov8_detection_json(patch_idx, patch, detections, save_dir,
         f_obj.write(json_data)
 
 
-def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,
+def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_names,
                            patch_w, patch_h, overlay_x, overlay_y, batch_size=1):
     sys.path.insert(0, ultralytics_dir)
     from ultralytics import YOLO
@@ -129,7 +130,7 @@ def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,
         det_results = model(images, stream=True)  # generator of Results objects
 
         # save results
-        [save_one_patch_yolov8_detection_json(patch_idx + idx, patch, det_res, save_dir)
+        [save_one_patch_yolov8_detection_json(patch_idx + idx, patch, det_res,class_names, save_dir)
          for idx, (patch, det_res) in enumerate(zip(a_batch_patch,det_results))]
 
         if patch_idx % (100*batch_size) == 0:
@@ -166,11 +167,12 @@ def predict_remoteSensing_image(para_file, image_path, save_dir, model, network_
     patch_h = parameters.get_digit_parameters(para_file, "inf_patch_height", 'int')
     overlay_x = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_x", 'int')
     overlay_y = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_y", 'int')
+    object_names = parameters.get_string_list_parameters(para_file, 'object_names')
 
     ultralytics_dir = parameters.get_file_path_parameters(network_ini,'ultralytics_dir')
 
     # using the python API
-    predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,
+    predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,object_names,
                                      patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size)
 
     # for each patch has a json file, may end up with a lot of json files, affect I/O
