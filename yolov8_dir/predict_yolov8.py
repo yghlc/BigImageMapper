@@ -117,7 +117,7 @@ def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_na
 
     patch_idx = 0
     all_objects = []
-    for a_batch_patch in batch_patches:
+    for b_idx, a_batch_patch in enumerate(batch_patches):
         t0 = time.time()
 
         # get width, height, and band_num of a patch, then create a darknet image.
@@ -137,8 +137,8 @@ def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_na
         [ all_objects.extend(item) for item in objects if len(item) > 0]   # ignore empty results
 
 
-        if patch_idx % (100*batch_size) == 0:
-            print('Processed %d patch, total: %d, cost %f second' % (patch_idx + batch_size, patch_count, time.time() - t0))
+        if b_idx % 100 == 0:
+            print('Processed %d patch, total: %d, this batch costs %f second' % (patch_idx + batch_size, patch_count, time.time() - t0))
 
         patch_idx += len(a_batch_patch)
     print('Have obtained results of all patches')
