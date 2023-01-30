@@ -11,6 +11,12 @@ to install Python and create a conda environment (name: pytorch).
 git clone https://github.com/yghlc/ultralytics.git
 cd ultralytics
 pip install -e '.[dev]'
+
+# other packages
+conda install -c conda-forge rasterio
+pip install scikit-image
+pip install GPUtil
+
 ```
 
 Other dependencies please follow the main readme file to install.
