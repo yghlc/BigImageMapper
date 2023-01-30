@@ -10,6 +10,9 @@ test.sh
 *.xlsx
 planet_download
 planetlabs_notebooks
+working_dir
+*.txt
+*.tar.gz
 
 # Pycharm folder
 .idea
