@@ -786,7 +786,7 @@ def parallel_prediction_main(para_file, trained_model):
 
     diff_time = end_time - start_time
     out_str = "%s: time cost of total parallel inference on %s: %d seconds" % (
-    str(end_time), machine_name, diff_time.seconds)
+    str(end_time), machine_name, diff_time.total_seconds())
     basic.outputlogMessage(out_str)
     with open("time_cost.txt", 'a') as t_obj:
         t_obj.writelines(out_str + '\n')
