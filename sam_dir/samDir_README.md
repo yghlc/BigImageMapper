@@ -15,9 +15,10 @@ pip install -e .
 
 # other packages
 conda install -c conda-forge rasterio
-pip install scikit-image
-pip install GPUtil
-pip install opencv-python pycocotools matplotlib onnxruntime onnx
+conda install -c conda-forge scikit-image   # use conda to avoid some dependency problem
+pip install GPUtil psutil
+pip install pycocotools matplotlib onnxruntime onnx
+pip install opencv-python   # may not need, if using rasterio
 
 ```
 
