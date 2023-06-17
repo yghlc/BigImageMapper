@@ -69,6 +69,7 @@ def save_masks_to_disk(accumulate_count, patch_boundary, masks,ref_raster, save_
             # print(mask_array.shape)
             # print(np.count_nonzero(mask_array))
             seg_map[mask_array != 0] = accumulate_count + idx + 1
+        seg_map[seg_map == 0] = accumulate_count
 
     raster_io.save_numpy_array_to_rasterfile(seg_map,save_path,ref_raster,compress='lzw', tiled='yes', bigtiff='if_safer',
                                              boundary=patch_boundary,verbose=False)
