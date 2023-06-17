@@ -201,6 +201,8 @@ def save_patch(patch_obj,img_data,save_path):
     xsize = boundary[2]
     ysize = boundary[3]
 
+    dt = np.dtype(img_data.dtype)
+
     # check width and height
     if img_data.ndim == 2:
         img_data = img_data.reshape(1, img_data.shape)
@@ -217,7 +219,7 @@ def save_patch(patch_obj,img_data,save_path):
         new_transform = org.window_transform(window)
     # calculate new transform and update profile (transform, width, height)
 
-    profile.update(count=nband, transform=new_transform, width=xsize, height=ysize)
+    profile.update(count=nband, dtype=dt.name, transform=new_transform, width=xsize, height=ysize)
     # set the block size, it should be a multiple of 16 (TileLength must be a multiple of 16)
     # if profile.has_key('blockxsize') and profile['blockxsize'] > xsize:
     if 'blockxsize' in profile and profile['blockxsize'] > xsize: # python3 & 2
