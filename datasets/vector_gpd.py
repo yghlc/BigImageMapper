@@ -496,6 +496,7 @@ def remove_polygons_based_values(shapefile,value_list, threshold, bsmaller,outpu
     '''
     # read polygons as shapely objects
     shapefile = gpd.read_file(shapefile)
+    org_count = len(shapefile)
 
     remove_count = 0
     for (idx,row), value in zip(shapefile.iterrows(),value_list):
@@ -1242,6 +1243,18 @@ def line_segments_to_LineString(segment_list):
 
     return merged_line
 
+def shapefile_to_ROIs_wkt(shp_path):
+    polygons = read_shape_gpd_to_NewPrj(shp_path,'EPSG:4326')  # lat, lon
+    if len(polygons) < 1:
+        raise ValueError('No polygons in %s'%shp_path)
+    ROIs_wkt = [str(p) for p in polygons ]
+    return ROIs_wkt
+
+def json_geometry_to_polygons(data_dict):
+    return Polygon(data_dict['coordinates'][0])
+
+def wkt_string_to_polygons(wkt_str):
+    return shapely.wkt.loads(wkt_str)
 
 
 def main(options, args):

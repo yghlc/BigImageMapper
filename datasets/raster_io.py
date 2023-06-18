@@ -24,6 +24,9 @@ import time
 #Color interpretation https://rasterio.readthedocs.io/en/latest/topics/color.html
 from rasterio.enums import ColorInterp
 
+import basic_src.basic as basic
+import basic_src.io_function as io_function
+
 def open_raster_read(raster_path):
     src = rasterio.open(raster_path)
     return src
@@ -448,7 +451,7 @@ def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='G
 
     return True
 
-def image_numpy_allBands_to_8bit_hist(img_np_allbands, min_max_values=None, per_min=0.01, per_max=0.99, src_nodata=None, dst_nodata=None):
+def image_numpy_allBands_to_8bit_hist(img_np_allbands, min_max_values=None, per_min=0.01, per_max=0.99, bin_count = 10000, src_nodata=None, dst_nodata=None):
 
     input_ndim = img_np_allbands.ndim
     if input_ndim == 3:
@@ -467,7 +470,6 @@ def image_numpy_allBands_to_8bit_hist(img_np_allbands, min_max_values=None, per_
             min_max_values = min_max_values * band_count
 
     # get min, max
-    bin_count = 500
     new_img_np = np.zeros_like(img_np_allbands, dtype=np.uint8)
     for band, img_oneband in enumerate(img_np_allbands):
         found_min, found_max, hist, bin_edges = get_max_min_histogram_percent_oneband(img_oneband, bin_count,
@@ -850,6 +852,37 @@ def write_colormaps(raster_path, color_map_dict):
 
     return True
 
+def trim_nodata_region(img_path, save_path,nodata=0, tmp_dir='./'):
+    # crop the nodata region of a raster
+    ## trim nodata region
+    # calculate the valid region
+    mask_tif = os.path.join(tmp_dir, io_function.get_name_no_ext(img_path) +'_mask.tif')
+    cmd_str = 'gdal_calc.py --type=Byte --NoDataValue=%s  --calc="A!=%s" -A %s --outfile=%s'%(str(nodata),str(nodata),img_path,mask_tif)
+    basic.os_system_exit_code(cmd_str)
+    io_function.is_file_exist(mask_tif)
+
+    # polygonize
+    outline_shp = os.path.join(tmp_dir, io_function.get_name_no_ext(img_path) +'_outline.shp')
+    cmd_str = 'gdal_polygonize.py -8  %s  -b 1 -f "ESRI Shapefile" %s'%(mask_tif,outline_shp)
+    basic.os_system_exit_code(cmd_str)
+    io_function.is_file_exist(mask_tif)
+
+    # crop, and translate to Geotiff
+    cmd_str = 'gdalwarp -of GTiff -co compress=lzw -co tiled=yes -co bigtiff=if_safer -cutline %s -crop_to_cutline '%outline_shp + img_path + ' ' + save_path
+    basic.os_system_exit_code(cmd_str)
+
+    ## a safe way to crop is use the bounding box, because something a polygon in outline.shp may be invalid.
+    ##  but here we need to call function in vector_gpd   noted by hlc, 2023, May 22.
+    # bounding_boxes = vector_gpd.get_vector_file_bounding_box(outline_shp)  # minx, miny, maxx, maxy
+
+    # if np.any(np.isnan(bounding_boxes) == True):  # nan
+    #   handle this
+
+    # box_str = ' '.join([str(item) for item in bounding_boxes])
+    # cmd_str = 'gdalwarp -of GTiff -co compress=lzw -co tiled=yes -co bigtiff=if_safer -te %s '%box_str + img_path + ' ' + save_path
+    # basic.os_system_exit_code(cmd_str)
+
+    return save_path
 
 def main():
     pass
