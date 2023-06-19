@@ -24,7 +24,8 @@ SECONDS=0
 # remove previous data or results if necessary
 rm time_cost.txt || true
 
-# prepare points
+# prepare prompts (points or boxes)
+${eo_dir}/sam_dir/trainingPolys_to_prompts.py ${para_file}
 
 duration=$SECONDS
 echo "$(date): time cost of preparing data points: ${duration} seconds">>"time_cost.txt"
@@ -32,7 +33,7 @@ echo "$(date): time cost of preparing data points: ${duration} seconds">>"time_c
 ################################################
 ## run within conda environment (name: pytorch)
 ### segment
-rm -r multi_inf_results || true
+rm -r multi_segment_results || true
 conda run --no-capture-output -n pytorch bash -c "${eo_dir}/sam_dir/sam_predict.py ${para_file}"
 ################################################
 

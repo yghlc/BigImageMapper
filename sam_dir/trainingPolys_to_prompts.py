@@ -17,6 +17,7 @@ code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
 import basic_src.io_function as io_function
+import basic_src.basic as basic
 import basic_src.map_projection as map_projection
 # import datasets.raster_io as raster_io
 import datasets.vector_gpd as vector_gpd
@@ -55,10 +56,18 @@ def sample_points_from_polygons(polygons_path, save_path, max_point_each_poly=10
 
 
 def extract_points_from_polygons(para_file):
+
     multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')
+    max_points_from_polygon = parameters.get_digit_parameters_None_if_absence(para_file, 'max_points_from_polygon','int')
+    prompt_save_folder = parameters.get_string_parameters(para_file, 'prompt_save_folder')
+    prompt_save_folder = os.path.abspath(prompt_save_folder)
+    if os.path.isdir(prompt_save_folder) is False:
+        io_function.mkdir(prompt_save_folder)
+
     for area_idx, area_ini in enumerate(multi_inf_regions):
         training_polygon_shp = parameters.get_file_path_parameters_None_if_absence(area_ini,'training_polygons')
         if training_polygon_shp is None:
+            basic.outputlogMessage('training polygons is not set in %s'%os.path.abspath(area_ini))
             continue
 
         # get image resolution
@@ -71,16 +80,42 @@ def extract_points_from_polygons(para_file):
         #                      % (inf_image_dir, inf_image_or_pattern, area_ini))
         # xres, yres = raster_io.get_xres_yres_file(inf_img_list[0])
 
-        max_points_from_polygon = parameters.get_digit_parameters_None_if_absence(para_file,'max_points_from_polygon','int')
-        prompt_save_folder = parameters.get_string_parameters(para_file,'prompt_save_folder')
-        prompt_save_folder = os.path.abspath(prompt_save_folder)
-        if os.path.isdir(prompt_save_folder) is False:
-            io_function.mkdir(prompt_save_folder)
         point_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'points')))
+
+        if os.path.isfile(point_save_path):
+            basic.outputlogMessage('%s already exists, skipping sampling points'%point_save_path)
+            continue
 
         sample_points_from_polygons(training_polygon_shp,point_save_path, max_points_from_polygon)
 
+def polygon_to_boxes(polygons_path, save_path):
+    polygons, class_values = vector_gpd.read_polygons_attributes_list(polygons_path, 'class_int')
+    boxes = [ vector_gpd.convert_bounds_to_polygon(vector_gpd.get_polygon_bounding_box(poly)) for poly in polygons]
+    # save to file
+    wkt_string = map_projection.get_raster_or_vector_srs_info_proj4(polygons_path)
+    box_df = pd.DataFrame({'id': [i + 1 for i in range(len(boxes))],
+                             'boxes': boxes,
+                             'class_int': class_values})
+    vector_gpd.save_points_to_file(box_df, 'boxes', wkt_string, save_path)
 
+def extract_boxes_from_polygons(para_file):
+    multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')
+    prompt_save_folder = parameters.get_string_parameters(para_file, 'prompt_save_folder')
+    prompt_save_folder = os.path.abspath(prompt_save_folder)
+    if os.path.isdir(prompt_save_folder) is False:
+        io_function.mkdir(prompt_save_folder)
+    for area_idx, area_ini in enumerate(multi_inf_regions):
+        training_polygon_shp = parameters.get_file_path_parameters_None_if_absence(area_ini,'training_polygons')
+        if training_polygon_shp is None:
+            basic.outputlogMessage('training polygons is not set in %s' % os.path.abspath(area_ini))
+            continue
+        box_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'boxes')))
+
+        if os.path.isfile(box_save_path):
+            basic.outputlogMessage('%s already exists, skipping extracting boxes'%box_save_path)
+            continue
+
+        polygon_to_boxes(training_polygon_shp,box_save_path)
 
 def trainingPolygons_to_promot_main(para_file):
     print("training Polygons (semantic segmentation) to Prompts (points or boxes)")
@@ -93,12 +128,12 @@ def trainingPolygons_to_promot_main(para_file):
     if prompt_type.lower() == 'point':
         extract_points_from_polygons(para_file)
     elif prompt_type.lower() == 'box':
-        pass
+        extract_boxes_from_polygons(para_file)
     else:
         raise ValueError('Unknown prompt type: %s, only support point and box'%str(prompt_type))
 
     duration = time.time() - SECONDS
-    os.system('echo "$(date): time cost of converting to yolo format: %.2f seconds">>time_cost.txt' % duration)
+    os.system('echo "$(date): time cost of converting to training polygont to promots: %.2f seconds">>time_cost.txt' % duration)
 
 
 
