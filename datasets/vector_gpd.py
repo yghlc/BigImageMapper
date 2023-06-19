@@ -499,16 +499,25 @@ def remove_polygons_based_values(shapefile,value_list, threshold, bsmaller,outpu
     shapefile = gpd.read_file(shapefile)
     org_count = len(shapefile)
 
-    remove_count = 0
-    for (idx,row), value in zip(shapefile.iterrows(),value_list):
-        if bsmaller:
-            if value < threshold:
-                shapefile.drop(idx, inplace=True)
-                remove_count += 1
-        else:
-            if value >= threshold:
-                shapefile.drop(idx, inplace=True)
-                remove_count += 1
+    # for (idx,row), value in zip(shapefile.iterrows(),value_list):
+    #     if bsmaller:
+    #         if value < threshold:
+    #             shapefile.drop(idx, inplace=True)
+    #             remove_count += 1
+    #     else:
+    #         if value >= threshold:
+    #             shapefile.drop(idx, inplace=True)
+    #             remove_count += 1
+
+    value_array = np.array(value_list)
+    if bsmaller:
+        # remove small values, so keep the bigger ones
+        shapefile = shapefile[value_array >= threshold]
+    else:
+        # remove small values, so keep the small ones
+        shapefile = shapefile[value_array < threshold]
+
+    remove_count = org_count - len(shapefile)
 
     if len(shapefile.geometry.values) < 1:
         basic.outputlogMessage('remove %d polygons based on a list of values, remain %d ones, no saved files' %
