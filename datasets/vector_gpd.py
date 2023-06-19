@@ -948,6 +948,15 @@ def convert_image_bound_to_shapely_polygon(img_bound_box):
     polygon = Polygon([letftop1, righttop1,rightbottom1,leftbottom1])
     return polygon
 
+def convert_bounds_to_polygon(bounds):
+    # bounding box: (left, bottom, right, top)
+    letftop1 = (bounds[0],bounds[3])
+    righttop1 = (bounds[2],bounds[3])
+    rightbottom1 = (bounds[2],bounds[1])
+    leftbottom1 = (bounds[0],bounds[1])
+    polygon = Polygon([letftop1, righttop1,rightbottom1,leftbottom1])
+    return polygon
+
 def get_overlap_area_two_boxes(box1, box2, buffer=None):
     '''
     get overlap areas of two box
