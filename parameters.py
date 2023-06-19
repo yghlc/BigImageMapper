@@ -52,6 +52,7 @@ def write_Parameters_file(parafile,parameter,new_value):
       raise IOError("Error: Open file failed, path: %s" % os.path.abspath(parafile))
     list_of_all_the_lines = inputfile.readlines()
     value = False
+    b_update = False
     for i in range(0,len(list_of_all_the_lines)):
         line = list_of_all_the_lines[i]
         if line[0:1] == '#' or len(line) < 2:
@@ -60,7 +61,11 @@ def write_Parameters_file(parafile,parameter,new_value):
         lineStrleft = lineStrs[0].strip()     #remove ' ' from left and right
         if lineStrleft.upper() == parameter.upper():
             list_of_all_the_lines[i] = lineStrleft + " = " +str(new_value) + "\n"
+            b_update = True
             break
+    if b_update is False:
+        # add a new line
+        list_of_all_the_lines.append('%s = %s'%(parameter, new_value))
     inputfile.close()
 
     # write the new file and overwrite the old one
