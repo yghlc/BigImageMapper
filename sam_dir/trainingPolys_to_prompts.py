@@ -94,12 +94,15 @@ def extract_boxes_from_polygons(area_ini, prompt_save_folder):
     polygon_to_boxes(training_polygon_shp,box_save_path)
     return box_save_path
 
-def trainingPolygons_to_promot_main(para_file):
+def trainingPolygons_to_prompt_main(para_file):
     print("training Polygons (semantic segmentation) to Prompts (points or boxes)")
     if os.path.isfile(para_file) is False:
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
-    prompt_type = parameters.get_string_parameters(para_file,'prompt_type')
+    prompt_type = parameters.get_string_parameters_None_if_absence(para_file,'prompt_type')
+    if prompt_type is None:
+        basic.outputlogMessage('prompt_type is not set, skipping getting prompts')
+        return
     multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')
 
     prompt_save_folder = parameters.get_string_parameters(para_file, 'prompt_save_folder')
@@ -134,7 +137,7 @@ def trainingPolygons_to_promot_main(para_file):
 
 def main(options, args):
     para_file = args[0]
-    trainingPolygons_to_promot_main(para_file)
+    trainingPolygons_to_prompt_main(para_file)
 
 if __name__ == '__main__':
     # test_sample_points_from_polygons()
