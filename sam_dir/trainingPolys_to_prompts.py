@@ -55,38 +55,19 @@ def sample_points_from_polygons(polygons_path, save_path, max_point_each_poly=10
     vector_gpd.save_points_to_file(point_df,'points',wkt_string,save_path)
 
 
-def extract_points_from_polygons(para_file):
+def extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_polygon):
 
-    multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')
-    max_points_from_polygon = parameters.get_digit_parameters_None_if_absence(para_file, 'max_points_from_polygon','int')
-    prompt_save_folder = parameters.get_string_parameters(para_file, 'prompt_save_folder')
-    prompt_save_folder = os.path.abspath(prompt_save_folder)
-    if os.path.isdir(prompt_save_folder) is False:
-        io_function.mkdir(prompt_save_folder)
+    training_polygon_shp = parameters.get_file_path_parameters_None_if_absence(area_ini,'training_polygons')
+    if training_polygon_shp is None:
+        basic.outputlogMessage('training polygons is not set in %s'%os.path.abspath(area_ini))
+        return None
+    point_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'points')))
+    if os.path.isfile(point_save_path):
+        basic.outputlogMessage('%s already exists, skipping sampling points'%point_save_path)
+        return point_save_path
 
-    for area_idx, area_ini in enumerate(multi_inf_regions):
-        training_polygon_shp = parameters.get_file_path_parameters_None_if_absence(area_ini,'training_polygons')
-        if training_polygon_shp is None:
-            basic.outputlogMessage('training polygons is not set in %s'%os.path.abspath(area_ini))
-            continue
-
-        # get image resolution
-        # inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
-        # inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
-        # inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir, inf_image_or_pattern)
-        # img_count = len(inf_img_list)
-        # if img_count < 1:
-        #     raise ValueError('No image for inference, please check inf_image_dir (%s) and inf_image_or_pattern (%s) in %s'
-        #                      % (inf_image_dir, inf_image_or_pattern, area_ini))
-        # xres, yres = raster_io.get_xres_yres_file(inf_img_list[0])
-
-        point_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'points')))
-
-        if os.path.isfile(point_save_path):
-            basic.outputlogMessage('%s already exists, skipping sampling points'%point_save_path)
-            continue
-
-        sample_points_from_polygons(training_polygon_shp,point_save_path, max_points_from_polygon)
+    sample_points_from_polygons(training_polygon_shp,point_save_path, max_points_from_polygon)
+    return point_save_path
 
 def polygon_to_boxes(polygons_path, save_path):
     polygons, class_values = vector_gpd.read_polygons_attributes_list(polygons_path, 'class_int')
@@ -98,24 +79,20 @@ def polygon_to_boxes(polygons_path, save_path):
                              'class_int': class_values})
     vector_gpd.save_points_to_file(box_df, 'boxes', wkt_string, save_path)
 
-def extract_boxes_from_polygons(para_file):
-    multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')
-    prompt_save_folder = parameters.get_string_parameters(para_file, 'prompt_save_folder')
-    prompt_save_folder = os.path.abspath(prompt_save_folder)
-    if os.path.isdir(prompt_save_folder) is False:
-        io_function.mkdir(prompt_save_folder)
-    for area_idx, area_ini in enumerate(multi_inf_regions):
-        training_polygon_shp = parameters.get_file_path_parameters_None_if_absence(area_ini,'training_polygons')
-        if training_polygon_shp is None:
-            basic.outputlogMessage('training polygons is not set in %s' % os.path.abspath(area_ini))
-            continue
-        box_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'boxes')))
+def extract_boxes_from_polygons(area_ini, prompt_save_folder):
 
-        if os.path.isfile(box_save_path):
-            basic.outputlogMessage('%s already exists, skipping extracting boxes'%box_save_path)
-            continue
+    training_polygon_shp = parameters.get_file_path_parameters_None_if_absence(area_ini,'training_polygons')
+    if training_polygon_shp is None:
+        basic.outputlogMessage('training polygons is not set in %s' % os.path.abspath(area_ini))
+        return None
+    box_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'boxes')))
 
-        polygon_to_boxes(training_polygon_shp,box_save_path)
+    if os.path.isfile(box_save_path):
+        basic.outputlogMessage('%s already exists, skipping extracting boxes'%box_save_path)
+        return box_save_path
+
+    polygon_to_boxes(training_polygon_shp,box_save_path)
+    return box_save_path
 
 def trainingPolygons_to_promot_main(para_file):
     print("training Polygons (semantic segmentation) to Prompts (points or boxes)")
@@ -123,14 +100,32 @@ def trainingPolygons_to_promot_main(para_file):
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
     prompt_type = parameters.get_string_parameters(para_file,'prompt_type')
+    multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')
+
+    prompt_save_folder = parameters.get_string_parameters(para_file, 'prompt_save_folder')
+    prompt_save_folder = os.path.abspath(prompt_save_folder)
+    if os.path.isdir(prompt_save_folder) is False:
+        io_function.mkdir(prompt_save_folder)
+    max_points_from_polygon = parameters.get_digit_parameters_None_if_absence(para_file,'max_points_from_polygon', 'int')
+
     SECONDS = time.time()
 
-    if prompt_type.lower() == 'point':
-        extract_points_from_polygons(para_file)
-    elif prompt_type.lower() == 'box':
-        extract_boxes_from_polygons(para_file)
-    else:
-        raise ValueError('Unknown prompt type: %s, only support point and box'%str(prompt_type))
+    for area_idx, area_ini in enumerate(multi_inf_regions):
+        prompt_path = parameters.get_file_path_parameters_None_if_absence(area_ini, 'prompt_path')
+        if prompt_path is not None:
+            basic.outputlogMessage('Prompt is set in %s, no need to generate a new one'%os.path.abspath(area_ini))
+            continue
+        if prompt_type.lower() == 'point':
+            prompt_save_path = extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_polygon)
+        elif prompt_type.lower() == 'box':
+            prompt_save_path = extract_boxes_from_polygons(area_ini, prompt_save_folder)
+        else:
+            raise ValueError('Unknown prompt type: %s, only support point and box'%str(prompt_type))
+
+        # modify area_ini and write prompt_save_path (relative path)
+        if prompt_save_path is not None:
+            parameters.write_Parameters_file(area_ini,'prompt_path', os.path.relpath(prompt_save_path))
+
 
     duration = time.time() - SECONDS
     os.system('echo "$(date): time cost of converting to training polygont to promots: %.2f seconds">>time_cost.txt' % duration)
