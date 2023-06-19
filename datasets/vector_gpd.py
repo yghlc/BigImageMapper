@@ -28,6 +28,7 @@ import pandas as pd
 import math
 import numpy as np
 import time
+import random
 
 import basic_src.basic as basic
 
@@ -668,6 +669,9 @@ def save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path,form
 def save_lines_to_files(data_frame, geometry_name, wkt_string, save_path,format='ESRI Shapefile'):
     return save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path,format=format)
 
+def save_points_to_file(data_frame, geometry_name, wkt_string, save_path,format='ESRI Shapefile'):
+    return save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path,format=format)
+
 def remove_narrow_parts_of_a_polygon(shapely_polygon, rm_narrow_thr):
     '''
     try to remove the narrow (or thin) parts of a polygon by using buffer opeartion
@@ -1255,6 +1259,34 @@ def json_geometry_to_polygons(data_dict):
 
 def wkt_string_to_polygons(wkt_str):
     return shapely.wkt.loads(wkt_str)
+
+
+def sample_points_within_polygon(polygon, b_grid=True, max_point_count=10):
+    minx, miny, maxx, maxy = polygon.bounds
+    if b_grid:
+        # get grid points
+        x_s = np.linspace(minx, maxx, num=max_point_count)
+        y_s = np.linspace(miny, maxy, num=max_point_count)
+    else:
+        # get random points
+        x_s = np.random.uniform(minx, maxx, max_point_count)
+        y_s = np.random.uniform(miny, maxy, max_point_count)
+        x_s = np.unique(x_s)
+        y_s = np.unique(y_s)
+
+    # to a grid
+    x_grid, y_grid = np.meshgrid(x_s,y_s)
+
+    point_list = [Point(x,y) for x,y in zip(x_grid.flatten(), y_grid.flatten())]
+
+    gpd_points = gpd.GeoSeries(point_list)
+    res = gpd_points.within(polygon)
+    gpd_points_within = gpd_points[res].to_list()
+    if len(gpd_points_within) > max_point_count:
+        # gpd_points_within = random.choices(gpd_points_within,k=max_point_count)   # may have duplicate values
+        gpd_points_within = random.sample(gpd_points_within,max_point_count)        # sample, get unique value
+    return gpd_points_within
+    # return point_list
 
 
 def main(options, args):
