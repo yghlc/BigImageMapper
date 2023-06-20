@@ -18,8 +18,10 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
+import basic_src.map_projection as map_projection
 import datasets.split_image as split_image
 import datasets.raster_io as raster_io
+import datasets.vector_gpd as vector_gpd
 
 import GPUtil
 from multiprocessing import Process
@@ -56,8 +58,9 @@ def save_masks_to_disk(accumulate_count, patch_boundary, masks,ref_raster, save_
 
     if b_prompt:
         dtype = np.uint8
-        seg_map = None
-        raise ('Something to do')
+        best_mask = masks[scores.argmax(),:,:]
+        # seg_map = np.zeros((best_mask.shape[0],best_mask.shape[1]), dtype=dtype)
+        seg_map = best_mask.astype(dtype)
     else:
         # everything mode
         dtype = np.uint32
@@ -73,6 +76,43 @@ def save_masks_to_disk(accumulate_count, patch_boundary, masks,ref_raster, save_
 
     raster_io.save_numpy_array_to_rasterfile(seg_map,save_path,ref_raster,compress='lzw', tiled='yes', bigtiff='if_safer',
                                              boundary=patch_boundary,verbose=False)
+
+
+def get_prompt_points_list(prompts_path, image_path):
+    # convert points to x,y
+    points, class_values = vector_gpd.read_polygons_attributes_list(prompts_path,'class_int',b_fix_invalid_polygon=False)
+    if len(points) < 1:
+        return [], []
+    if points[0].geom_type != 'Point':
+        raise ValueError('The geometry type should be Point, not %s'%str(points[0].geom_type))
+
+    # points to pixel coordinates
+    x_list = [item.x for item in points]
+    y_list = [item.y for item in points]
+    img_transform = raster_io.get_transform_from_file(image_path)
+    cols, rows = raster_io.geo_xy_to_pixel_xy(x_list, y_list, img_transform)
+    points_pixel_list = [ [x, y] for x,y in zip(cols, rows)]
+    # save to txt
+    # save_point_txt = os.path.splitext(io_function.get_name_by_adding_tail(prompts_path,'pixel'))[0] + '.txt'
+    # io_function.save_list_to_txt(save_point_txt,points_pixel_list)
+    # print(points_pixel_list)
+    # print(class_values)
+
+    return points_pixel_list, class_values
+
+def is_a_point_within_path(point, bounds):
+    # bounds (xoff,yoff ,xsize, ysize)
+    if point[0] > bounds[0] and point[0] < bounds[0]+bounds[2] and point[1] > bounds[1] and point[1] < bounds[1]+bounds[3]:
+        return True
+    return False
+
+def get_prompt_points_a_path(points_pixel_list, class_values, patch_boundary):
+    # extract points in a patch
+    # patch boundary: (xoff,yoff ,xsize, ysize)
+    idx_list = [idx for idx, p in enumerate(points_pixel_list) if is_a_point_within_path(p,patch_boundary)]
+    points_sel = [points_pixel_list[idx] for idx in idx_list]
+    class_values_sel = [class_values[idx] for idx in idx_list]
+    return points_sel, class_values_sel
 
 def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch_h, overlay_x, overlay_y,
                         batch_size=1, prompts=None):
@@ -92,6 +132,7 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     else:
         # only segment targets
         mask_generator = SamPredictor(sam)
+        points_pixel, class_values = get_prompt_points_list(prompts,image_path)
 
     height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(image_path)
     # print('input image: height, width, band_num, date_type',height, width, band_num, date_type)
@@ -140,6 +181,14 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
             total_seg_count += len(masks)
         else:
             # generate masks based on input points
+            input_point, input_label = get_prompt_points_a_path(points_pixel, class_values,a_patch)
+            input_point = np.array(input_point)
+            input_label = np.array(input_label)
+            print(input_point)
+            print(input_label)
+            if len(input_point) < 1:
+                continue
+
             mask_generator.set_image(image)
             masks, scores, logits = mask_generator.predict(
                 point_coords=input_point,
@@ -153,7 +202,30 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
         print('Processed %d patch, total: %d, this batch costs %f second' % (p_idx, patch_count, time.time() - t0))
 
 
-def segment_remoteSensing_image(para_file, image_path, save_dir, network_ini, batch_size=1):
+def get_prompts_for_an_image(image_path, area_prompt_path, save_dir):
+    '''
+    extract prompts (points or boxes), specific for this image
+    :param area_prompt_path:
+    :param save_dir:
+    :return:
+    '''
+    if area_prompt_path is None:
+        return None
+    if os.path.isdir(save_dir) is False:
+        io_function.mkdir(save_dir)
+    prompt_path = os.path.join(save_dir, io_function.get_name_no_ext(image_path) + '_prompts.shp')
+    if os.path.isfile(prompt_path):
+        basic.outputlogMessage('%s exists, skip extracting prompts for this image'%prompt_path)
+        return prompt_path
+
+    ## get prompts, specific for this image
+    #TODO: need to exclude no data regions
+    img_bounds = raster_io.get_image_bound_box(image_path)
+    img_prj = map_projection.get_raster_or_vector_srs_info_proj4(image_path)
+    vector_gpd.clip_geometries(area_prompt_path,prompt_path,img_bounds, target_prj=img_prj)
+    return prompt_path
+
+def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, network_ini, batch_size=1):
     '''
     segment
     :param para_file:
@@ -172,13 +244,20 @@ def segment_remoteSensing_image(para_file, image_path, save_dir, network_ini, ba
     model = parameters.get_file_path_parameters(network_ini,'checkpoint')
     model_type = parameters.get_string_parameters(network_ini,'model_type')
 
+    # prepare prompts (points or boxes)
+    prompt_type = parameters.get_string_parameters_None_if_absence(para_file, 'prompt_type')
+    if prompt_type is None:
+        prompt_image_path = None
+    else:
+        prompt_path = parameters.get_file_path_parameters_None_if_absence(area_ini, 'prompt_path')
+        prompt_image_path = get_prompts_for_an_image(image_path, prompt_path,save_dir)
+
     # using the python API
     out = segment_rs_image_sam(image_path, save_dir, model, model_type,
-                                         patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size)
+                               patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size,
+                               prompts=prompt_image_path)
 
-
-
-def segment_one_image_sam(para_file, image_path, img_save_dir, inf_list_file, gpuid):
+def segment_one_image_sam(para_file, area_ini, image_path, img_save_dir, inf_list_file, gpuid):
 
     network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
     inf_batch_size = parameters.get_digit_parameters(para_file, 'inf_batch_size', 'int')
@@ -192,7 +271,7 @@ def segment_one_image_sam(para_file, image_path, img_save_dir, inf_list_file, gp
     if gpuid is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = str(gpuid)
 
-    segment_remoteSensing_image(para_file, image_path, img_save_dir, network_ini, batch_size=inf_batch_size)
+    segment_remoteSensing_image(para_file, area_ini, image_path, img_save_dir, network_ini, batch_size=inf_batch_size)
 
     duration = time.time() - time0
     os.system('echo "$(date): time cost of segmenting an image in %s: %.2f seconds">>"time_cost.txt"' % (
@@ -298,7 +377,7 @@ def parallel_segment_main(para_file):
                 inf_obj.writelines(inf_img_list[idx] + '\n')
 
             sub_process = Process(target=segment_one_image_sam,
-                                  args=(para_file, inf_img_list[idx], img_save_dir, inf_list_file, gpuid))
+                                  args=(para_file, area_ini, inf_img_list[idx], img_save_dir, inf_list_file, gpuid))
 
             sub_process.start()
             sub_tasks.append(sub_process)

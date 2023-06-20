@@ -1306,6 +1306,22 @@ def sample_points_within_polygon(polygon, b_grid=True, max_point_count=10):
     return gpd_points_within
     # return point_list
 
+def clip_geometries(input_path, save_path, mask, target_prj=None, format='ESRI Shapefile'):
+    # If the mask is list-like with four elements (minx, miny, maxx, maxy), a faster rectangle clipping algorithm will be used
+    # ref: https://geopandas.org/en/stable/docs/reference/api/geopandas.clip.html
+
+    shapefile = gpd.read_file(input_path)
+    if target_prj is not None:
+        in_prj = map_projection.get_raster_or_vector_srs_info_proj4(input_path)
+        if in_prj != target_prj:
+            if version.parse(gpd.__version__) >= version.parse('0.7.0'):
+                shapefile = shapefile.to_crs(target_prj)
+            else:
+                shapefile = shapefile.to_crs({'init': target_prj})
+    shp_clip = gpd.clip(shapefile,mask)
+
+    shp_clip.to_file(save_path, driver=format)
+
 
 def main(options, args):
 
