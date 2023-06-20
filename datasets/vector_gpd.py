@@ -345,6 +345,11 @@ def get_polygon_centroid(polygon):
     # return the geometric center of a polygon
     return polygon.centroid
 
+def get_polygon_representative_point(polygon):
+    # centroid not always inside a polygon,
+    # use representative_point to get a point alway inside the polygon, not in general the same as the centroid
+    return polygon.representative_point()
+
 def get_polygon_envelope_xy(polygon):
     # get polygon envelope x,y coordinates
     # polygon, shapely polygon
