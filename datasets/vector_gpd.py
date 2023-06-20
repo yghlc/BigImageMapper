@@ -1281,14 +1281,15 @@ def wkt_string_to_polygons(wkt_str):
 
 def sample_points_within_polygon(polygon, b_grid=True, max_point_count=10):
     minx, miny, maxx, maxy = polygon.bounds
+    grid_size = 5 if max_point_count < 5 else max_point_count
     if b_grid:
         # get grid points
-        x_s = np.linspace(minx, maxx, num=max_point_count)
-        y_s = np.linspace(miny, maxy, num=max_point_count)
+        x_s = np.linspace(minx, maxx, num=grid_size)
+        y_s = np.linspace(miny, maxy, num=grid_size)
     else:
         # get random points
-        x_s = np.random.uniform(minx, maxx, max_point_count)
-        y_s = np.random.uniform(miny, maxy, max_point_count)
+        x_s = np.random.uniform(minx, maxx, grid_size)
+        y_s = np.random.uniform(miny, maxy, grid_size)
         x_s = np.unique(x_s)
         y_s = np.unique(y_s)
 
