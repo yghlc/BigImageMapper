@@ -46,7 +46,9 @@ def sample_points_from_polygons(polygons_path, save_path, max_point_each_poly=10
     for p_list, c_value in zip(points_2d, class_values):
         points_list.extend(p_list)
         point_classes.extend([c_value]*len(p_list))
-
+    if len(points_list) < 1:
+        basic.outputlogMessage('There is not points after sampling, please consider increasing max_point_count')
+        return None
     # save to file
     wkt_string = map_projection.get_raster_or_vector_srs_info_proj4(polygons_path)
     point_df = pd.DataFrame({'id':[i+1 for i in range(len(points_list))],
@@ -55,7 +57,7 @@ def sample_points_from_polygons(polygons_path, save_path, max_point_each_poly=10
     vector_gpd.save_points_to_file(point_df,'points',wkt_string,save_path)
 
 
-def extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_polygon):
+def extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_polygon,b_representative=False):
 
     training_polygon_shp = parameters.get_file_path_parameters_None_if_absence(area_ini,'training_polygons')
     if training_polygon_shp is None:
@@ -66,7 +68,10 @@ def extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_p
         basic.outputlogMessage('%s already exists, skipping sampling points'%point_save_path)
         return point_save_path
 
-    sample_points_from_polygons(training_polygon_shp,point_save_path, max_points_from_polygon)
+    if b_representative:
+        extract_representative_point_from_polygons(training_polygon_shp,point_save_path)
+    else:
+        sample_points_from_polygons(training_polygon_shp,point_save_path, max_points_from_polygon)
     return point_save_path
 
 def polygon_to_boxes(polygons_path, save_path):
@@ -94,6 +99,16 @@ def extract_boxes_from_polygons(area_ini, prompt_save_folder):
     polygon_to_boxes(training_polygon_shp,box_save_path)
     return box_save_path
 
+def extract_representative_point_from_polygons(polygons_path, save_path):
+    polygons, class_values = vector_gpd.read_polygons_attributes_list(polygons_path, 'class_int')
+    points = [vector_gpd.get_polygon_representative_point(poly) for poly in polygons]
+    # save to file
+    wkt_string = map_projection.get_raster_or_vector_srs_info_proj4(polygons_path)
+    box_df = pd.DataFrame({'id': [i + 1 for i in range(len(points))],
+                           'points': points,
+                           'class_int': class_values})
+    vector_gpd.save_points_to_file(box_df, 'points', wkt_string, save_path)
+
 def trainingPolygons_to_prompt_main(para_file):
     print("training Polygons (semantic segmentation) to Prompts (points or boxes)")
     if os.path.isfile(para_file) is False:
@@ -110,16 +125,20 @@ def trainingPolygons_to_prompt_main(para_file):
     if os.path.isdir(prompt_save_folder) is False:
         io_function.mkdir(prompt_save_folder)
     max_points_from_polygon = parameters.get_digit_parameters_None_if_absence(para_file,'max_points_from_polygon', 'int')
+    b_representative_point = parameters.get_bool_parameters_None_if_absence(para_file,'b_representative_point')
+    if b_representative_point is None:
+        b_representative_point = False
 
     SECONDS = time.time()
 
     for area_idx, area_ini in enumerate(multi_inf_regions):
         prompt_path = parameters.get_file_path_parameters_None_if_absence(area_ini, 'prompt_path')
-        if prompt_path is not None:
-            basic.outputlogMessage('Prompt is set in %s, no need to generate a new one'%os.path.abspath(area_ini))
+        if prompt_path is not None and os.path.isfile(prompt_path):
+            basic.outputlogMessage('Prompt is set in %s and exists, no need to generate a new one'%os.path.abspath(area_ini))
             continue
         if prompt_type.lower() == 'point':
-            prompt_save_path = extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_polygon)
+            prompt_save_path = extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_polygon,
+                                                            b_representative=b_representative_point)
         elif prompt_type.lower() == 'box':
             prompt_save_path = extract_boxes_from_polygons(area_ini, prompt_save_folder)
         else:
