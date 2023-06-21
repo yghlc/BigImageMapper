@@ -43,15 +43,20 @@ def sample_points_from_polygons(polygons_path, save_path, max_point_each_poly=10
     points_2d = [vector_gpd.sample_points_within_polygon(item,max_point_count=max_point_each_poly) for item in polygons]
     points_list = []
     point_classes = []
+    poly_ids = []
+    p_id = 1
     for p_list, c_value in zip(points_2d, class_values):
         points_list.extend(p_list)
         point_classes.extend([c_value]*len(p_list))
+        poly_ids.extend([p_id]*len(p_list))
+        p_id += 1
     if len(points_list) < 1:
         basic.outputlogMessage('There is not points after sampling, please consider increasing max_point_count')
         return None
     # save to file
     wkt_string = map_projection.get_raster_or_vector_srs_info_proj4(polygons_path)
     point_df = pd.DataFrame({'id':[i+1 for i in range(len(points_list))],
+                             'poly_id':poly_ids,
                                'points':points_list,
                                'class_int':point_classes})
     vector_gpd.save_points_to_file(point_df,'points',wkt_string,save_path)
@@ -79,7 +84,9 @@ def polygon_to_boxes(polygons_path, save_path):
     boxes = [ vector_gpd.convert_bounds_to_polygon(vector_gpd.get_polygon_bounding_box(poly)) for poly in polygons]
     # save to file
     wkt_string = map_projection.get_raster_or_vector_srs_info_proj4(polygons_path)
-    box_df = pd.DataFrame({'id': [i + 1 for i in range(len(boxes))],
+    id_list = [i + 1 for i in range(len(boxes))]
+    box_df = pd.DataFrame({'id': id_list,
+                           'poly_id': id_list,
                              'boxes': boxes,
                              'class_int': class_values})
     vector_gpd.save_points_to_file(box_df, 'boxes', wkt_string, save_path)
@@ -104,7 +111,9 @@ def extract_representative_point_from_polygons(polygons_path, save_path):
     points = [vector_gpd.get_polygon_representative_point(poly) for poly in polygons]
     # save to file
     wkt_string = map_projection.get_raster_or_vector_srs_info_proj4(polygons_path)
-    box_df = pd.DataFrame({'id': [i + 1 for i in range(len(points))],
+    id_list = [i + 1 for i in range(len(points))]
+    box_df = pd.DataFrame({'id': id_list,
+                           'poly_id': id_list,
                            'points': points,
                            'class_int': class_values})
     vector_gpd.save_points_to_file(box_df, 'points', wkt_string, save_path)
