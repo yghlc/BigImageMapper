@@ -57,10 +57,11 @@ def save_masks_to_disk(accumulate_count, patch_boundary, masks,ref_raster, save_
         return False
 
     if b_prompt:
-        dtype = np.uint8
-        best_mask = masks[scores.argmax(),:,:]
-        # seg_map = np.zeros((best_mask.shape[0],best_mask.shape[1]), dtype=dtype)
-        seg_map = best_mask.astype(dtype)
+        # dtype = np.uint8
+        # best_mask = masks[scores.argmax(),:,:]
+        # # seg_map = np.zeros((best_mask.shape[0],best_mask.shape[1]), dtype=dtype)
+        # seg_map = best_mask.astype(dtype)
+        seg_map = masks
     else:
         # everything mode
         dtype = np.uint32
@@ -80,7 +81,7 @@ def save_masks_to_disk(accumulate_count, patch_boundary, masks,ref_raster, save_
 
 def get_prompt_points_list(prompts_path, image_path):
     # convert points to x,y
-    points, class_values = vector_gpd.read_polygons_attributes_list(prompts_path,'class_int',b_fix_invalid_polygon=False)
+    points, attribute_values = vector_gpd.read_polygons_attributes_list(prompts_path,['class_int','poly_id'],b_fix_invalid_polygon=False)
     if len(points) < 1:
         return [], []
     if points[0].geom_type != 'Point':
@@ -97,8 +98,10 @@ def get_prompt_points_list(prompts_path, image_path):
     # io_function.save_list_to_txt(save_point_txt,points_pixel_list)
     # print(points_pixel_list)
     # print(class_values)
+    class_values = attribute_values[0]
+    poly_ids = attribute_values[1]
 
-    return points_pixel_list, class_values
+    return points_pixel_list, class_values, poly_ids
 
 def is_a_point_within_path(point, bounds):
     # bounds (xoff,yoff ,xsize, ysize)
@@ -106,13 +109,23 @@ def is_a_point_within_path(point, bounds):
         return True
     return False
 
-def get_prompt_points_a_path(points_pixel_list, class_values, patch_boundary):
+def get_prompt_points_a_patch(points_pixel_list, class_values, group_ids, patch_boundary):
     # extract points in a patch
     # patch boundary: (xoff,yoff ,xsize, ysize)
     idx_list = [idx for idx, p in enumerate(points_pixel_list) if is_a_point_within_path(p,patch_boundary)]
-    points_sel = [points_pixel_list[idx] for idx in idx_list]
+    points_sel = [[points_pixel_list[idx][0] - patch_boundary[0],
+                   points_pixel_list[idx][1] - patch_boundary[1] ] for idx in idx_list]     # substract xoff, yoff
     class_values_sel = [class_values[idx] for idx in idx_list]
-    return points_sel, class_values_sel
+    group_ids_sel = [group_ids[idx] for idx in idx_list]
+    return points_sel, class_values_sel, group_ids_sel
+
+def group_prompt_points(points_pixel_list, class_values, group_ids):
+    group_points = {}
+    group_classes = {}
+    for pt, c_v, g_id in zip(points_pixel_list, class_values, group_ids):
+        group_points.setdefault(g_id,[]).append(pt)
+        group_classes.setdefault(g_id,[]).append(c_v)
+    return group_points, group_classes
 
 def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch_h, overlay_x, overlay_y,
                         batch_size=1, prompts=None):
@@ -132,7 +145,7 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     else:
         # only segment targets
         mask_generator = SamPredictor(sam)
-        points_pixel, class_values = get_prompt_points_list(prompts,image_path)
+        points_pixel, class_values, group_ids = get_prompt_points_list(prompts,image_path)
 
     height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(image_path)
     # print('input image: height, width, band_num, date_type',height, width, band_num, date_type)
@@ -181,21 +194,56 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
             total_seg_count += len(masks)
         else:
             # generate masks based on input points
-            input_point, input_label = get_prompt_points_a_path(points_pixel, class_values,a_patch)
-            input_point = np.array(input_point)
-            input_label = np.array(input_label)
-            print(input_point)
-            print(input_label)
+            input_point, input_label, group_id = get_prompt_points_a_patch(points_pixel, class_values, group_ids, a_patch)
+            # input_point = np.array(input_point[-2:-1])
+            # input_label = np.array(input_label[-2:-1])
+            # input_point = np.array(input_point[:10])
+            # input_label = np.array([1 for i in range(10)])
+            # print(input_point)
+            # print(input_label)
             if len(input_point) < 1:
                 continue
 
+            group_points, group_classes = group_prompt_points(input_point, input_label, group_id)
             mask_generator.set_image(image)
-            masks, scores, logits = mask_generator.predict(
-                point_coords=input_point,
-                point_labels=input_label,
-                multimask_output=True,
-            )
-            save_masks_to_disk(0,a_patch,masks,image_path, save_path,scores=scores, b_prompt=True)
+            seg_map = np.zeros((a_patch[3], a_patch[2]), dtype=np.uint32)
+            for key_id in group_points.keys():
+                points = np.array(group_points[key_id])
+                labels = np.array(group_classes[key_id])
+                # if all the labels are 0 (background), then ignore this group
+                if np.any(labels==1) is False:
+                    basic.outputlogMessage('warning, In group %d, all points are labeled as 0, ignore this group'%key_id)
+                    continue
+                # print(key_id, points, labels)
+                b_multimask = True if len(points) < 2 else False
+                masks, scores, logits = mask_generator.predict(
+                    point_coords=points,
+                    point_labels=labels,
+                    multimask_output=b_multimask,
+                )
+                # get the best segment map
+                group_seg_map = masks[scores.argmax(),:,:]  # the output is True of False
+                # print(group_seg_map.dtype, group_seg_map.shape)
+                seg_map[group_seg_map ] = key_id   # save key id
+            # save to disk
+            save_masks_to_disk(0, a_patch, seg_map, image_path, save_path, scores=None, b_prompt=True)
+
+
+            # id = 0
+            # for pnt, lab in zip(input_point,input_label):
+            #     print(pnt, lab)
+            #     masks, scores, logits = mask_generator.predict(
+            #         point_coords=np.array([pnt]),
+            #         point_labels=np.array([lab]),
+            #         multimask_output=True,
+            #     )
+            #     #                     return_logits = True,
+            #     print(masks.shape, np.max(masks), np.min(masks))
+            #     print(scores)
+            #     save_path2 = io_function.get_name_by_adding_tail(save_path,'%d'%id)
+            #     save_masks_to_disk(0,a_patch,masks,image_path, save_path2, scores=scores, b_prompt=True)
+            #     id += 1
+            # break # for test
 
 
         # if p_idx % 100 == 0:
