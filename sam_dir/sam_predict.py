@@ -47,6 +47,11 @@ def copy_one_patch_image_data(patch, entire_img_data):
     col_e = patch[0] + patch[2]
     # entire_img_data is in opencv format:  height, width, band_num
     patch_data = entire_img_data[row_s:row_e, col_s:col_e, :]
+    # print(patch_data.shape) # e.g., (1171, 1000, 1), ndim = 3
+    if entire_img_data.shape[2] == 1:
+        # duplicate to three bands
+        patch_data = np.repeat(patch_data[:, :], 3, axis=2)
+    # print(patch_data.shape)
     return patch_data
 
 def save_masks_to_disk(accumulate_count, patch_boundary, masks,ref_raster, save_path,scores=None, b_prompt=False):
@@ -153,8 +158,8 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     # read the entire image
     entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
     entire_img_data = entire_img_data.transpose(1, 2, 0)  # to opencv format  # in HWC uint8 format
-    # # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
-    entire_img_data = entire_img_data[..., ::-1].copy()
+    # # # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
+    # entire_img_data = entire_img_data[..., ::-1].copy() # no need, hlc July 9, 2023. in amg.py, they use cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     entire_height, entire_width, band_num = entire_img_data.shape
     print("entire_height, entire_width, band_num", entire_height, entire_width, band_num)
     if band_num not in [1, 3]:
