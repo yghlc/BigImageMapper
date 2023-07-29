@@ -159,7 +159,7 @@ def trainingPolygons_to_prompt_main(para_file):
 
 
     duration = time.time() - SECONDS
-    os.system('echo "$(date): time cost of converting to training polygont to promots: %.2f seconds">>time_cost.txt' % duration)
+    os.system('echo "$(date): time cost of converting to training polygons to prompts: %.2f seconds">>time_cost.txt' % duration)
 
 
 
