@@ -133,7 +133,10 @@ def group_prompt_points(points_pixel_list, class_values, group_ids):
     return group_points, group_classes
 
 def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch_h, overlay_x, overlay_y,
-                        batch_size=1, prompts=None):
+                        batch_size=1, min_area=10, max_area=40000, prompts=None):
+
+    # for each region, after SAM, its area (in pixel) should be within [min_area, max_area],
+    # otherwise, remove it
 
     from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
     sam = sam_model_registry[model_type](checkpoint=model)
@@ -191,10 +194,10 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
         file_name = "I%d_%d" % (0, p_idx)
         save_path = os.path.join(save_dir, file_name + '.tif')
 
-        # yolov8 model can accept image with different size
         image = copy_one_patch_image_data(a_patch, entire_img_data)
         if prompts is None:
             masks = mask_generator.generate(image)
+            masks = [item for item in masks  if item.area >= min_area and item.area <= max_area]    # remove big and small region
             save_masks_to_disk(total_seg_count,a_patch,masks, image_path,save_path)
             total_seg_count += len(masks)
         else:
@@ -227,7 +230,13 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
                     multimask_output=b_multimask,
                 )
                 # get the best segment map
-                group_seg_map = masks[scores.argmax(),:,:]  # the output is True of False
+                group_seg_map = masks[scores.argmax(),:,:]  # the output is True or False
+
+                # calculate area, remove mask that is too small or too big
+                seg_map_size_pixel = np.sum(group_seg_map)
+                if seg_map_size_pixel < min_area or seg_map_size_pixel > max_area:
+                    continue
+
                 # print(group_seg_map.dtype, group_seg_map.shape)
                 seg_map[group_seg_map ] = key_id   # save key id
             # save to disk
@@ -294,6 +303,9 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
     overlay_x = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_x", 'int')
     overlay_y = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_y", 'int')
 
+    sam_mask_min_area = parameters.get_digit_parameters(para_file, "sam_mask_min_area_pixel", 'int')
+    sam_mask_max_area = parameters.get_digit_parameters(para_file, "sam_mask_max_area_pixel", 'int')
+
     model = parameters.get_file_path_parameters(network_ini,'checkpoint')
     model_type = parameters.get_string_parameters(network_ini,'model_type')
 
@@ -308,6 +320,7 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
     # using the python API
     out = segment_rs_image_sam(image_path, save_dir, model, model_type,
                                patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size,
+                               min_area=sam_mask_min_area, max_area=sam_mask_max_area,
                                prompts=prompt_image_path)
 
 def segment_one_image_sam(para_file, area_ini, image_path, img_save_dir, inf_list_file, gpuid):
