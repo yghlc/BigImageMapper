@@ -801,6 +801,39 @@ def raster2shapefile(in_raster, out_shp=None, driver='ESRI Shapefile', nodata=No
     return out_shp
 
 
+def numpy_array_to_shape(image_2d, ref_raster, boundary=None, nodata=None, connect8=True):
+    '''
+    convert to mask (image_2d) to a polygon (in the shapely format)
+    :param image_2d:
+    :param boundary: (xoff,yoff ,xsize, ysize)
+    :param ref_raster:
+    :param nodata:
+    :return: a list of geometries (geojson-like, use json_geometry_to_polygons to geometry), a list of raster values
+    '''
+    # import pprint
+    if image_2d.ndim != 2:
+        raise ValueError('Only support 2D image array')
+
+    connet = 4 if connect8 is False else 8
+
+    geometry_list = []  # geojson-like
+    raster_values = []
+    with rasterio.open(ref_raster) as src:
+        mask = None if nodata is None else image_2d != nodata
+        if boundary is not None:
+            window = boundary_to_window(boundary)
+            transform = src.window_transform(window)
+        else:
+            transform = src.transform
+
+        out = shapes(image_2d, mask=mask, connectivity=connet, transform=transform)
+        for geo_s, raster_v in out:
+            geometry_list.append(geo_s)
+            raster_values.append(raster_v)
+
+        return geometry_list, raster_values
+
+
 def read_colormaps_band1(raster_path):
     '''read color map for the first band'''
     # https://rasterio.readthedocs.io/en/latest/topics/color.html
