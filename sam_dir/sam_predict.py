@@ -13,6 +13,8 @@ import time
 from datetime import datetime
 from optparse import OptionParser
 
+import pandas as pd
+
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
@@ -53,6 +55,47 @@ def copy_one_patch_image_data(patch, entire_img_data):
         patch_data = np.repeat(patch_data[:, :], 3, axis=2)
     # print(patch_data.shape)
     return patch_data
+
+def save_masks_as_shape(patch_boundary, masks,ref_raster, save_path, min_area=None, max_area=None, b_prompt=False):
+    # covert masks to polygons, then save as vector files directly
+    if len(masks) < 0:
+        print('Warning, no masks')
+        return False
+
+    if b_prompt:
+        all_polygons = masks['mask']
+        all_values = masks['value']
+    else:
+        all_polygons = []
+        all_values = []
+        # everything mode
+        for idx, mask in enumerate(masks):
+            mask_array = mask_utils.decode(mask["segmentation"])
+            geometry_list, raster_values = raster_io.numpy_array_to_shape(mask_array,ref_raster,boundary=patch_boundary,nodata=0,connect8=True)
+            all_polygons.extend(geometry_list)
+            all_values.extend(raster_values)
+
+    # save to disk
+    if len(all_polygons) > 0:
+        all_polygons_shapely = [ vector_gpd.json_geometry_to_polygons(item) for item in all_polygons ]
+        # remove some small and big one
+        small_idx = []
+        if min_area is not None:
+            small_idx = [ idx for idx, poly in enumerate(all_polygons_shapely) if poly.area < min_area]
+        big_idx = []
+        if max_area is not None:
+            big_idx = [ idx for idx, poly in enumerate(all_polygons_shapely) if poly.area > max_area]
+        small_idx.extend(big_idx)
+        if len(small_idx) > 0:
+            all_polygons_shapely = [item for idx, item in enumerate(all_polygons_shapely) if idx not in small_idx]
+            all_values = [item for idx, item in enumerate(all_values) if idx not in small_idx]
+
+        save_path = save_path.replace('.tif','.gpkg')
+        prj4 = raster_io.get_projection(ref_raster,format='proj4')
+        data_pd = pd.DataFrame({'polygon':all_polygons_shapely, 'DN': all_values,'area': [item.area for item in all_polygons_shapely]} )
+        vector_gpd.save_polygons_to_files(data_pd,'polygon',prj4,save_path, format='GPKG')
+
+
 
 def save_masks_to_disk(accumulate_count, patch_boundary, masks,ref_raster, save_path,scores=None, b_prompt=False):
     # patch boundary: (xoff,yoff ,xsize, ysize)
@@ -157,6 +200,7 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
 
     height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(image_path)
     # print('input image: height, width, band_num, date_type',height, width, band_num, date_type)
+    xres, yres = raster_io.get_xres_yres_file(image_path)
 
     # read the entire image
     entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
@@ -197,8 +241,9 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
         image = copy_one_patch_image_data(a_patch, entire_img_data)
         if prompts is None:
             masks = mask_generator.generate(image)
-            masks = [item for item in masks  if item.area >= min_area and item.area <= max_area]    # remove big and small region
-            save_masks_to_disk(total_seg_count,a_patch,masks, image_path,save_path)
+            masks = [item for item in masks  if item['area'] >= min_area and item['area'] <= max_area]    # remove big and small region
+            # save_masks_to_disk(total_seg_count,a_patch,masks, image_path,save_path)
+            save_masks_as_shape(a_patch,masks,image_path,save_path, min_area=min_area*(xres**2))
             total_seg_count += len(masks)
         else:
             # generate masks based on input points
@@ -214,7 +259,8 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
 
             group_points, group_classes = group_prompt_points(input_point, input_label, group_id)
             mask_generator.set_image(image)
-            seg_map = np.zeros((a_patch[3], a_patch[2]), dtype=np.uint32)
+            # seg_map = np.zeros((a_patch[3], a_patch[2]), dtype=np.uint32)
+            seg_map_results = {'mask':[], 'value':[]}
             for key_id in group_points.keys():
                 points = np.array(group_points[key_id])
                 labels = np.array(group_classes[key_id])
@@ -233,14 +279,32 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
                 group_seg_map = masks[scores.argmax(),:,:]  # the output is True or False
 
                 # calculate area, remove mask that is too small or too big
-                seg_map_size_pixel = np.sum(group_seg_map)
+                seg_map_size_pixel = int(np.sum(group_seg_map))
+
+                # print('type', type(min_area), type(max_area), type(seg_map_size_pixel))
                 if seg_map_size_pixel < min_area or seg_map_size_pixel > max_area:
+                    # print('removed, %d'%key_id)
                     continue
+                # print('key_id: %d, its seg map has %s pixel, (min, max are %s, %s)  ' % (key_id, str(seg_map_size_pixel), min_area, max_area))
+                # print('polygon count: %d'%len(seg_map_results['mask']))
 
                 # print(group_seg_map.dtype, group_seg_map.shape)
-                seg_map[group_seg_map ] = key_id   # save key id
+                # seg_map[group_seg_map ] = key_id   # save key id
+                group_seg_map = group_seg_map.astype(np.uint8)
+                # print('group_seg_map uint8, pixel count: ', np.sum(group_seg_map))
+
+                # after numpy_array_to_shape, one region may end in several polygons, and some of them are very small.
+                # in the later step (save_masks_as_shape), remove these tiny polygons
+                geometry_list, raster_values = raster_io.numpy_array_to_shape(group_seg_map, image_path,
+                                                                              boundary=a_patch, nodata=0,
+                                                                              connect8=True)
+                seg_map_results['mask'].extend(geometry_list)
+                seg_map_results['value'].extend([key_id]*len(geometry_list))
+
             # save to disk
-            save_masks_to_disk(0, a_patch, seg_map, image_path, save_path, scores=None, b_prompt=True)
+            # save_masks_to_disk(0, a_patch, seg_map, image_path, save_path, scores=None, b_prompt=True)
+            save_masks_as_shape(a_patch, seg_map_results, image_path, save_path, min_area=min_area*(xres**2), b_prompt=True)
+
 
 
             # id = 0
