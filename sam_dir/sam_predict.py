@@ -92,7 +92,8 @@ def save_masks_as_shape(patch_boundary, masks,ref_raster, save_path, min_area=No
 
         save_path = save_path.replace('.tif','.gpkg')
         prj4 = raster_io.get_projection(ref_raster,format='proj4')
-        data_pd = pd.DataFrame({'polygon':all_polygons_shapely, 'DN': all_values,'area': [item.area for item in all_polygons_shapely]} )
+        # 'area': [item.area for item in all_polygons_shapely]     # no need to save area
+        data_pd = pd.DataFrame({'polygon':all_polygons_shapely, 'DN': all_values} )
         vector_gpd.save_polygons_to_files(data_pd,'polygon',prj4,save_path, format='GPKG')
 
 

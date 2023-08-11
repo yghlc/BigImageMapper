@@ -60,6 +60,32 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     out_raster = os.path.join(img_save_dir,merged_tif)
     return out_shp_path, out_raster
 
+def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
+    # when the inference directly output vector files (gpkg format),
+    # merge and convert them to shapefile
+    img_save_dir = os.path.join(area_save_dir, 'I%d' % img_idx)
+    out_name = os.path.basename(area_save_dir) + '_' + test_id
+
+    os.chdir(img_save_dir)
+
+    # to shapefile
+    out_shp = 'I%d' % img_idx + '_' + out_name + '.shp'
+    if os.path.isfile(out_shp):
+        print('%s already exist' % out_shp)
+    else:
+        command_string = 'ogrmerge.py -o %s -f "ESRI Shapefile"  -single -progress "I0_*.gpkg" ' % (out_shp)
+        res = os.system(command_string)
+        if res != 0:
+            # sys.exit(1)
+            os.chdir(curr_dir)
+            return None
+
+    os.chdir(curr_dir)
+    out_shp_path = os.path.join(img_save_dir, out_shp)
+    return out_shp_path
+
+
+
 # def add_polygon_attributes(script, in_shp_path, save_shp_path, para_file, data_para_file):
 #
 #     command_string = script +' -p %s -d %s %s %s' % (para_file,data_para_file, in_shp_path, save_shp_path)
@@ -187,7 +213,10 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
                 map_raster_list = []
                 for img_idx, img_path in enumerate(inf_img_list):
                     out_shp, out_raster = inf_results_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
-                    if out_shp is None or out_raster is None:
+                    # if no tif in the output, try to find gpkg
+                    if out_shp is None:
+                        out_shp = inf_results_gpkg_to_shapefile(WORK_DIR, img_idx, area_save_dir, test_id)
+                    if out_shp is None:
                         continue
                     result_shp_list.append(os.path.join(WORK_DIR,out_shp))
                     map_raster_list.append(out_raster)
