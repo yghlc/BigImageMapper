@@ -93,7 +93,7 @@ def get_prompts_from_one_dem_diff(demD_file, prompt_type, prompt_save_folder, ma
     '''
 
     prompt_save_path = os.path.join(prompt_save_folder, os.path.basename(
-        io_function.get_name_no_ext(demD_file) + 'prompts_thr%s.shp'%str(dem_diff_thread_m)))
+        io_function.get_name_no_ext(demD_file) + '_prompts_thr%s.txt'%str(dem_diff_thread_m)))
     if os.path.isfile(prompt_save_path):
         basic.outputlogMessage('%s already exists, skip getting prompts' % prompt_save_path)
         return prompt_save_path
@@ -125,16 +125,24 @@ def get_prompts_from_one_dem_diff(demD_file, prompt_type, prompt_save_folder, ma
     # more post-processing based for polygons????
     # remove small and big polygons?
 
-
-
+    prompt_point_path = prompt_save_path.replace('.txt', '_point.shp')
+    prompt_box_path = prompt_save_path.replace('.txt', '_box.shp')
     if prompt_type.lower() == 'point':
-        extract_points_from_polygons(bin_shp_path, prompt_save_path,b_representative=b_representative,
+        extract_points_from_polygons(bin_shp_path, prompt_point_path,b_representative=b_representative,
                                      max_points_from_polygon = max_points_one_region)
+        io_function.save_list_to_txt(prompt_save_path,[os.path.basename(prompt_point_path)])
     elif prompt_type.lower() == 'box':
-        extract_boxes_from_polygons(bin_shp_path, prompt_save_path)
+        extract_boxes_from_polygons(bin_shp_path, prompt_box_path)
+        io_function.save_list_to_txt(prompt_save_path, [os.path.basename(prompt_box_path)])
+    elif prompt_type.lower() == 'point+box':
+        extract_points_from_polygons(bin_shp_path, prompt_point_path, b_representative=b_representative,
+                                     max_points_from_polygon=max_points_one_region)
+        extract_boxes_from_polygons(bin_shp_path, prompt_box_path)
+        io_function.save_list_to_txt(prompt_save_path, [os.path.basename(prompt_point_path), os.path.basename(prompt_box_path)])
     else:
         raise ValueError('Unknown prompt type: %s, only support point and box' % str(prompt_type))
-    pass
+
+    return prompt_save_path
 
 def extract_points_from_dem_diff(area_ini, prompt_type, prompt_save_folder, max_points_one_region, b_representative=False,
                                  dem_diff_thread_m=-1.0):
