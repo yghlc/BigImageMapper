@@ -358,6 +358,13 @@ def get_polygon_envelope_xy(polygon):
     x, y = polygon_env.exterior.coords.xy
     return x,y
 
+def get_box_polygon_leftUp_rightDown(box_polygon):
+    # get box left-up and right-botton x,y coordinates
+    # box_polygon, shapely polygon
+    # output: (x1, y1, x2, y2)      # the last one is the same as the first one.
+    x, y = box_polygon.exterior.coords.xy
+    return (x[0], y[0], x[2], y[2])
+
 def remove_polygon_equal(shapefile,field_name, expect_value, b_equal, output):
     '''
     remove polygons the the attribute value is not equal to a specific value

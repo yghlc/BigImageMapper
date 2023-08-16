@@ -152,7 +152,45 @@ def get_prompt_points_list(prompts_path, image_path):
 
     return points_pixel_list, class_values, poly_ids
 
-def is_a_point_within_path(point, bounds):
+def get_prompt_boxes_list(prompts_path, image_path):
+    # convert points to x,y
+    boxes, attribute_values = vector_gpd.read_polygons_attributes_list(prompts_path,['class_int','poly_id'],b_fix_invalid_polygon=False)
+    if len(boxes) < 1:
+        return [], []
+    if boxes[0].geom_type != 'Polygon':
+        raise ValueError('The geometry type should be Polygon, not %s'%str(boxes[0].geom_type))
+
+    ## get (x1,y1, x2, y2) list. (left, up, right, down)
+    xyxy_geo_list = [vector_gpd.get_box_polygon_leftUp_rightDown(item) for item in boxes]
+    x1_list = []
+    y1_list = []
+    x2_list = []
+    y2_list = []
+    for x1,y1,x2,y2 in xyxy_geo_list:
+        x1_list.append(x1)
+        y1_list.append(y1)
+        x2_list.append(x2)
+        y2_list.append(y2)
+
+    # points to pixel coordinates
+    img_transform = raster_io.get_transform_from_file(image_path)
+    cols1, rows1 = raster_io.geo_xy_to_pixel_xy(x1_list, y1_list, img_transform)
+    cols2, rows2 = raster_io.geo_xy_to_pixel_xy(x2_list, y2_list, img_transform)
+
+    xyxy_pixel_list = [ [xp1, yp1, xp2, yp2] for xp1, yp1, xp2, yp2 in zip(cols1, rows1, cols2, rows2)]
+    class_values = attribute_values[0]
+    poly_ids = attribute_values[1]
+
+    # save to txt
+    # save_point_txt = os.path.splitext(io_function.get_name_by_adding_tail(prompts_path,'pixel'))[0] + '.txt'
+    # io_function.save_list_to_txt(save_point_txt,xyxy_pixel_list)
+    # print(xyxy_pixel_list)
+    # print(class_values)
+
+    return xyxy_pixel_list, class_values, poly_ids
+
+
+def is_a_point_within_patch(point, bounds):
     # bounds (xoff,yoff ,xsize, ysize)
     if point[0] > bounds[0] and point[0] < bounds[0]+bounds[2] and point[1] > bounds[1] and point[1] < bounds[1]+bounds[3]:
         return True
@@ -161,7 +199,7 @@ def is_a_point_within_path(point, bounds):
 def get_prompt_points_a_patch(points_pixel_list, class_values, group_ids, patch_boundary):
     # extract points in a patch
     # patch boundary: (xoff,yoff ,xsize, ysize)
-    idx_list = [idx for idx, p in enumerate(points_pixel_list) if is_a_point_within_path(p,patch_boundary)]
+    idx_list = [idx for idx, p in enumerate(points_pixel_list) if is_a_point_within_patch(p,patch_boundary)]
     points_sel = [[points_pixel_list[idx][0] - patch_boundary[0],
                    points_pixel_list[idx][1] - patch_boundary[1] ] for idx in idx_list]     # substract xoff, yoff
     class_values_sel = [class_values[idx] for idx in idx_list]
@@ -189,6 +227,13 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     else:
         sam.to(device='cpu')
 
+    if isinstance(prompts, list) is False:
+        prompts = [prompts]
+    prompts_dict = {}
+
+    # points_pixel, class_values, group_ids = None, None, None
+    # boxes_pixel, box_class_values, box_group_ids = None, None, None
+    print('Debug, prompts is:', prompts)
     if prompts is None:
         if overlay_x > 0 or overlay_y >0:
             raise ValueError('For everything mode, overlay_x and overlay_y should be zero')
@@ -197,7 +242,23 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     else:
         # only segment targets
         mask_generator = SamPredictor(sam)
-        points_pixel, class_values, group_ids = get_prompt_points_list(prompts,image_path)
+
+        # read prompts
+        for p_path in prompts:
+            if p_path.endswith('point.shp'):
+                points_pixel, class_values, group_ids = get_prompt_points_list(p_path,image_path)
+                prompts_dict['point'] = {'xy_pixel':points_pixel,'class_value':class_values, 'group_id':group_ids }
+            elif p_path.endswith('box.shp'):
+                boxes_pixel, box_class_values, box_group_ids = get_prompt_boxes_list(p_path, image_path)
+                prompts_dict['box'] = {'xyxy_pixel': boxes_pixel, 'class_value': box_class_values, 'group_id': box_group_ids}
+            else:
+                raise ValueError('Cannot find prompt type in the file name: %s'%os.path.basename(p_path))
+
+        # points_pixel, class_values, group_ids = get_prompt_points_list(prompts,image_path)
+        # prompts_box = io_function.get_name_by_adding_tail(prompts,'box')
+        # print('prompts_box:', prompts_box)
+        # if os.path.isfile(prompts_box):
+        #     boxes_pixel, box_class_values, box_group_ids = get_prompt_boxes_list(prompts_box, image_path)
 
     height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(image_path)
     # print('input image: height, width, band_num, date_type',height, width, band_num, date_type)
@@ -248,6 +309,7 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
             total_seg_count += len(masks)
         else:
             # generate masks based on input points
+            pause here, August 16, 2023
             input_point, input_label, group_id = get_prompt_points_a_patch(points_pixel, class_values, group_ids, a_patch)
             # input_point = np.array(input_point[-2:-1])
             # input_label = np.array(input_label[-2:-1])
@@ -274,6 +336,7 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
                 masks, scores, logits = mask_generator.predict(
                     point_coords=points,
                     point_labels=labels,
+                    box = None,
                     multimask_output=b_multimask,
                 )
                 # get the best segment map
@@ -329,18 +392,19 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
         print('Processed %d patch, total: %d, this batch costs %f second' % (p_idx, patch_count, time.time() - t0))
 
 
-def get_prompts_for_an_image(image_path, area_prompt_path, save_dir):
+def get_prompts_for_an_image(image_path, area_prompt_path, save_dir,prompt_type='point'):
     '''
     extract prompts (points or boxes), specific for this image
     :param area_prompt_path:
     :param save_dir:
+    :param prompt_type: point or box
     :return:
     '''
     if area_prompt_path is None:
         return None
     if os.path.isdir(save_dir) is False:
         io_function.mkdir(save_dir)
-    prompt_path = os.path.join(save_dir, io_function.get_name_no_ext(image_path) + '_prompts.shp')
+    prompt_path = os.path.join(save_dir, io_function.get_name_no_ext(image_path) + '_prompts_%s.shp'%prompt_type)
     if os.path.isfile(prompt_path):
         basic.outputlogMessage('%s exists, skip extracting prompts for this image'%prompt_path)
         return prompt_path
@@ -376,17 +440,40 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
 
     # prepare prompts (points or boxes)
     prompt_type = parameters.get_string_parameters_None_if_absence(para_file, 'prompt_type')
+    # print('Debug, prompt_type', prompt_type)
+    prompt_type_list = prompt_type.split('+')
     if prompt_type is None:
-        prompt_image_path = None
+        prompts_an_image_list = None
     else:
         prompt_path = parameters.get_file_path_parameters_None_if_absence(area_ini, 'prompt_path')
-        prompt_image_path = get_prompts_for_an_image(image_path, prompt_path,save_dir)
+
+        prompts_list = io_function.read_list_from_txt(prompt_path)
+        # only keep those match the prompt type
+        prompts_list_new = []
+        for p_type in prompt_type_list:
+            for tmp in prompts_list:
+                if tmp.endswith('%s.shp'%p_type):
+                    prompts_list_new.append(tmp)
+        prompts_list = prompts_list_new
+        prompts_list = [os.path.join(os.path.dirname(prompt_path), item)  for item in prompts_list]
+
+        prompts_an_image_list = []
+
+        for p_path in prompts_list:
+            #TODO: after crop, the number of points and boxes may not the same
+            if p_path.endswith('point.shp'):
+                prompt_image_path = get_prompts_for_an_image(image_path, p_path,save_dir,prompt_type='point')
+            elif p_path.endswith('box.shp'):
+                prompt_image_path = get_prompts_for_an_image(image_path, p_path, save_dir, prompt_type='box')
+            else:
+                raise ValueError('Cannot find prompt type in the file name: %s'%os.path.basename(p_path))
+            prompts_an_image_list.append(prompt_image_path)
 
     # using the python API
     out = segment_rs_image_sam(image_path, save_dir, model, model_type,
                                patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size,
                                min_area=sam_mask_min_area, max_area=sam_mask_max_area,
-                               prompts=prompt_image_path)
+                               prompts=prompts_an_image_list)
 
 def segment_one_image_sam(para_file, area_ini, image_path, img_save_dir, inf_list_file, gpuid):
 
