@@ -196,6 +196,13 @@ def is_a_point_within_patch(point, bounds):
         return True
     return False
 
+def is_a_box_totally_within_a_path(box, bounds):
+    # bounds (xoff,yoff ,xsize, ysize)
+    # box: (x1,y1, x2, y2), i.e. (left, up, right, down)
+    if box[0] >= bounds[0] and box[2] < bounds[0]+bounds[2] and box[1] >= bounds[1] and box[3] < bounds[1]+bounds[3]:
+        return True
+    return False
+
 def get_prompt_points_a_patch(points_pixel_list, class_values, group_ids, patch_boundary):
     # extract points in a patch
     # patch boundary: (xoff,yoff ,xsize, ysize)
@@ -206,13 +213,44 @@ def get_prompt_points_a_patch(points_pixel_list, class_values, group_ids, patch_
     group_ids_sel = [group_ids[idx] for idx in idx_list]
     return points_sel, class_values_sel, group_ids_sel
 
-def group_prompt_points(points_pixel_list, class_values, group_ids):
-    group_points = {}
-    group_classes = {}
-    for pt, c_v, g_id in zip(points_pixel_list, class_values, group_ids):
-        group_points.setdefault(g_id,[]).append(pt)
-        group_classes.setdefault(g_id,[]).append(c_v)
-    return group_points, group_classes
+def get_prompt_boxes_a_patch(boxes_pixel_list, class_values, group_ids, patch_boundary, b_ignore_touch_edge=True):
+    # extract boxes in a patch
+    # box list: (x1,y1, x2, y2) list. (left, up, right, down)
+    # patch boundary: (xoff,yoff ,xsize, ysize)
+    # when b_ignore_touch_edge is true, then ignore those boxes touch the patch edge
+
+    if b_ignore_touch_edge:
+        idx_list = [idx for idx, box in enumerate(boxes_pixel_list) if is_a_box_totally_within_a_path(box,patch_boundary)]
+        box_sel = [ [boxes_pixel_list[idx][0] - patch_boundary[0],
+                     boxes_pixel_list[idx][1] - patch_boundary[1],
+                     boxes_pixel_list[idx][2] - patch_boundary[0],
+                     boxes_pixel_list[idx][3] - patch_boundary[1]]  for idx in idx_list ]   # substract xoff, yoff
+        class_values_sel = [class_values[idx] for idx in idx_list]
+        group_ids_sel = [group_ids[idx] for idx in idx_list]
+        return box_sel, class_values_sel, group_ids_sel
+    else:
+        raise ValueError('not support yet')
+
+
+def group_prompt_points_boxes(points_pixel_list, class_values, group_ids,input_boxes, box_label, box_group_id):
+    # group_points = {}
+    # group_classes = {}
+    # for pt, c_v, g_id in zip(points_pixel_list, class_values, group_ids):
+    #     group_points.setdefault(g_id,[]).append(pt)
+    #     group_classes.setdefault(g_id,[]).append(c_v)
+    # return group_points, group_classes
+
+    group_prompts_all = {}
+    if points_pixel_list is not None:
+        for pt, c_v, g_id in zip(points_pixel_list, class_values, group_ids):
+            group_prompts_all.setdefault(g_id,{}).setdefault('point',[]).append(pt)
+            group_prompts_all.setdefault(g_id,{}).setdefault('p_class',[]).append(c_v)
+    if input_boxes is not None:
+        for box, c_v, g_id in zip(input_boxes, box_label, box_group_id):
+            group_prompts_all.setdefault(g_id, {}).setdefault('box', []).append(box)
+            group_prompts_all.setdefault(g_id, {}).setdefault('b_class', []).append(c_v)
+
+    return group_prompts_all
 
 def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch_h, overlay_x, overlay_y,
                         batch_size=1, min_area=10, max_area=40000, prompts=None):
@@ -309,8 +347,18 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
             total_seg_count += len(masks)
         else:
             # generate masks based on input points
-            pause here, August 16, 2023
-            input_point, input_label, group_id = get_prompt_points_a_patch(points_pixel, class_values, group_ids, a_patch)
+            # pause here, August 16, 2023
+            input_point, input_label, group_id = None, None, None
+            if 'point' in prompts_dict.keys():
+                input_point, input_label, group_id = get_prompt_points_a_patch( prompts_dict['point']['xy_pixel'],
+                                                                                prompts_dict['point']['class_value'],
+                                                                                prompts_dict['point']['group_id'], a_patch)
+            input_boxes, box_label, box_group_id = None, None, None
+            if 'box' in prompts_dict.keys():
+                input_boxes, box_label, box_group_id= get_prompt_boxes_a_patch(prompts_dict['box']['xyxy_pixel'],
+                                                                                prompts_dict['box']['class_value'],
+                                                                                prompts_dict['box']['group_id'], a_patch)
+
             # input_point = np.array(input_point[-2:-1])
             # input_label = np.array(input_label[-2:-1])
             # input_point = np.array(input_point[:10])
@@ -320,23 +368,35 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
             if len(input_point) < 1:
                 continue
 
-            group_points, group_classes = group_prompt_points(input_point, input_label, group_id)
+            group_prompts_dict = group_prompt_points_boxes(input_point, input_label, group_id,input_boxes, box_label, box_group_id)
             mask_generator.set_image(image)
             # seg_map = np.zeros((a_patch[3], a_patch[2]), dtype=np.uint32)
             seg_map_results = {'mask':[], 'value':[]}
-            for key_id in group_points.keys():
-                points = np.array(group_points[key_id])
-                labels = np.array(group_classes[key_id])
+            for key_id in group_prompts_dict.keys():
+                a_group_prompt = group_prompts_dict[key_id]
+                points = np.array(a_group_prompt['point']) if 'point' in a_group_prompt.keys() else None
+                p_labels = np.array(a_group_prompt['p_class']) if 'p_class' in a_group_prompt.keys() else None
+                boxes = np.array(a_group_prompt['box']) if 'box' in a_group_prompt.keys() else None
+                b_labels = np.array(a_group_prompt['b_class']) if 'b_class' in a_group_prompt.keys() else None
+
+                # for each group, usually, only have one box, but may have multiple points
+                if np.sum(b_labels) == 0:   # 0 is background, we don't need boxes for background
+                    boxes = None
+
                 # if all the labels are 0 (background), then ignore this group
-                if np.any(labels==1) is False:
+                if p_labels is not None and np.any(p_labels==1) is False:
                     basic.outputlogMessage('warning, In group %d, all points are labeled as 0, ignore this group'%key_id)
                     continue
                 # print(key_id, points, labels)
-                b_multimask = True if len(points) < 2 else False
+                b_multimask = False
+                if points is not None and len(points) < 2:
+                    b_multimask = True
+                # b_multimask = True if len(points) < 2 and boxes is None else False
+                # for the case only use box, b_multimask is also False in the example.
                 masks, scores, logits = mask_generator.predict(
                     point_coords=points,
-                    point_labels=labels,
-                    box = None,
+                    point_labels=p_labels,
+                    box = boxes,
                     multimask_output=b_multimask,
                 )
                 # get the best segment map
