@@ -18,10 +18,6 @@ import sys,basic
 from RSImage import RSImageclass
 import math
 
-try:
-    from osgeo import ogr, osr, gdal
-except:
-    sys.exit('ERROR: cannot find GDAL/OGR modules')
 
 import io_function
 
@@ -303,6 +299,12 @@ def meters_to_degrees_onEarth(distance):
 
 
 if __name__=='__main__':
+
+    try:
+        from osgeo import ogr, osr, gdal
+    except:
+        sys.exit('ERROR: cannot find GDAL/OGR modules')
+
     length = len(sys.argv)
     if length == 6:
         rasterfile = sys.argv[1]

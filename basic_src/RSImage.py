@@ -13,12 +13,6 @@ import sys,os,json,subprocess,numpy
 from basic_src import basic
 
 
-# node: import gdal clobbering PATH environment variable on Ubuntu, add on 11 Nov 2020  gdal version 2.3.3
-# https://github.com/OSGeo/gdal/issues/1231
-try:
-    from osgeo import ogr, osr, gdal
-except:
-    sys.exit('ERROR: cannot find GDAL/OGR modules')
 
 
 def dependInit():
@@ -686,6 +680,14 @@ def test_get_image_max_min_value():
 
 
 if __name__=='__main__':
+
+    # node: import gdal clobbering PATH environment variable on Ubuntu, add on 11 Nov 2020  gdal version 2.3.3
+    # https://github.com/OSGeo/gdal/issues/1231
+    try:
+        from osgeo import ogr, osr, gdal
+    except:
+        sys.exit('ERROR: cannot find GDAL/OGR modules')
+
     # test_error_handler()
     # open dataset
     # ds = gdal.Open('test.tif')
