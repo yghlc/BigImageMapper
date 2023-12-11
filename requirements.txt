@@ -8,3 +8,5 @@ geopandas
 openpyxl
 xlsxwriter
 psutil
+scikit-image
+opencv-python
