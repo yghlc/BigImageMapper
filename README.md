@@ -9,6 +9,16 @@ The scripts for producing our results in paper [Huang et al. 2020](https://www.s
 can be found at the [RSE2020paper](https://github.com/yghlc/Landuse_DL/tree/RES2020paper) Branch.
 
 ```
+@article{huang2023identifying,
+  title={Identifying active retrogressive thaw slumps from ArcticDEM},
+  author={Huang, Lingcao and Willis, Michael J and Li, Guiye and Lantz, Trevor C and Schaefer, Kevin and Wig, Elizabeth and Cao, Guofeng and Tiampo, Kristy F},
+  journal={ISPRS Journal of Photogrammetry and Remote Sensing},
+  volume={205},
+  pages={301--316},
+  year={2023},
+  publisher={Elsevier}
+}
+
 @article{huang2022accuracy,
   title={Accuracy, Efficiency, and Transferability of a Deep Learning Model for Mapping Retrogressive Thaw Slumps across the Canadian Arctic},
   author={Huang, Lingcao and Lantz, Trevor C and Fraser, Robert H and Tiampo, Kristy F and Willis, Michael J and Schaefer, Kevin},
