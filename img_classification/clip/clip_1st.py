@@ -22,6 +22,8 @@ with torch.no_grad():
     #text_features = model.encode_text(text)
 
     logits_per_image, logits_per_text = model(image,text)
+    print(logits_per_image)
+    print(logits_per_text)
     probs = logits_per_image.softmax(dim=-1).cpu().numpy()
 
 # Label probs: [[0.9927   0.004185 0.003016]]
