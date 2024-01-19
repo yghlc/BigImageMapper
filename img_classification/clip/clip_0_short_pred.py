@@ -28,8 +28,15 @@ image_features /= image_features.norm(dim=-1, keepdim=True)
 text_features /= text_features.norm(dim=-1, keepdim=True)
 #print(image_features,text_inputs)
 
+# @  matrix multiplication for tensor
+# * element-wise multiplication
+# Applies the Softmax function to an n-dimensional input Tensor rescaling them 
+# so that the elements of the n-dimensional output Tensor lie in the range [0,1] 
+# and sum to 1.
+
 similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
 #print(similarity)
+# topk: Returns the k largest elements of the given input tensor along a given dimension.
 values, indices = similarity[0].topk(5)
 
 # print the result
