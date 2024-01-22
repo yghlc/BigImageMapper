@@ -127,6 +127,8 @@ def os_system_exit_code(command_str):
     '''
     res = os.system(command_str)
     if res != 0:
+        print('command_str:')
+        print(command_str)
         sys.exit(1)
 
 def exec_command_string(command_str):
@@ -165,6 +167,8 @@ def exec_command_string_one_file(command_str,output):
     # (status, result) = subprocess.check_output(command_str, universal_newlines=True, stderr=sys.stdout)  #available in both Python 2.x and 3.x
 
     (status, result) = getstatusoutput(command_str)
+    if status != 0:
+        outputlogMessage(result)
 
     if os.path.isfile(output):
         return output
@@ -216,6 +220,7 @@ def check_exitcode_of_process(processes):
     # check exitcode, if not 0, the quit
     for task in processes:
         if task.exitcode is not None and task.exitcode != 0:
+            print('a process was failed, exitcode:',task.exitcode,'process id:',task.pid)
             sys.exit(task.exitcode)
 
 

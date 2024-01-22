@@ -187,6 +187,11 @@ def get_raster_or_vector_srs_info(spatial_data,format):
     result = basic.exec_command_string_output_string(CommandString)
     if result.find('ERROR') >=0:
         return False
+    if result.find('Confidence') >= 0:  # new GDAL, with
+        print(result)
+        tmp = result.split('\n')
+        result = tmp[2]
+
     return result
 
 def get_raster_or_vector_srs_info_wkt(spatial_data):
