@@ -46,7 +46,7 @@ def test_classification_ucm(model, preprocess):
 
     # randomly read ten images
     image_txt = os.path.join(data_dir,'all.txt')
-    image_list = [ item.split() for item in io_function.read_list_from_txt(label_list_txt)]
+    image_list = [ item.split() for item in io_function.read_list_from_txt(image_txt)]
     image_path_list = [ os.path.join(data_dir,'Images', item[0]) for item in image_list]
     image_class_list = [ int(item[1]) for item in image_list]
 
@@ -61,7 +61,8 @@ def test_classification_ucm(model, preprocess):
 
     text_probs = (100.0 * image_features @ text_features.T).softmax(dim=-1)
     top_probs, top_labels = text_probs.cpu().topk(5, dim=-1)
-    print(top_probs, top_labels)
+    print(top_probs)
+    print(top_labels)
 
 
 
