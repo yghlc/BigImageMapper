@@ -51,7 +51,8 @@ def test_classification_ucm(model, preprocess):
     image_class_list = [ int(item[1]) for item in image_list]
 
     images = []
-    sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
+    # sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
+    sel_index = [item for item in range(len(image_path_list))]
     for idx in sel_index:
         image = Image.open(image_path_list[idx]).convert("RGB")
         images.append(preprocess(image))
@@ -70,6 +71,23 @@ def test_classification_ucm(model, preprocess):
     print(top_labels_1)
 
     # output accuracy
+    # top1 accuray
+    top_labels_1 = top_labels_1.numpy().squeeze()
+    hit_count = 0
+    for idx, pred_l in zip(sel_index,top_labels_1):
+        if image_class_list[idx] == pred_l:
+            hit_count += 1
+    print('top 1 accuray: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+
+    # top5 accuray 
+    top_labels_5 = top_labels_5.numpy().squeeze()
+    # print(top_labels_5)
+    hit_count = 0
+    for idx, pred_l_s in zip(sel_index,top_labels_5):
+        # print(pred_l_s)
+        if image_class_list[idx] in pred_l_s:
+            hit_count += 1
+    print('top 5 accuray: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
     
 
 
