@@ -51,7 +51,8 @@ def test_classification_ucm(model, preprocess):
     image_class_list = [ int(item[1]) for item in image_list]
 
     images = []
-    for idx in [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]:
+    sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
+    for idx in sel_index:
         image = Image.open(image_path_list[idx]).convert("RGB")
         images.append(preprocess(image))
     image_input = torch.tensor(np.stack(images)).cuda()
@@ -60,9 +61,17 @@ def test_classification_ucm(model, preprocess):
         image_features /= image_features.norm(dim=-1, keepdim=True)
 
     text_probs = (100.0 * image_features @ text_features.T).softmax(dim=-1)
-    top_probs, top_labels = text_probs.cpu().topk(5, dim=-1)
-    print(top_probs)
-    print(top_labels)
+    top_probs_5, top_labels_5 = text_probs.cpu().topk(5, dim=-1)
+    print(top_probs_5)
+    print(top_labels_5)
+
+    top_probs_1, top_labels_1 = text_probs.cpu().topk(1, dim=-1)
+    print(top_probs_1)
+    print(top_labels_1)
+
+    # output accuracy
+    
+
 
 
 
