@@ -77,7 +77,7 @@ def test_classification_ucm(model, preprocess):
     for idx, pred_l in zip(sel_index,top_labels_1):
         if image_class_list[idx] == pred_l:
             hit_count += 1
-    print('top 1 accuray: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+    print('top 1 accuracy: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
 
     # top5 accuray 
     top_labels_5 = top_labels_5.numpy().squeeze()
@@ -87,7 +87,7 @@ def test_classification_ucm(model, preprocess):
         # print(pred_l_s)
         if image_class_list[idx] in pred_l_s:
             hit_count += 1
-    print('top 5 accuray: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+    print('top 5 accuracy: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
     
 
 
@@ -98,7 +98,8 @@ def main(options, args):
     para_file = args[0]
     trained_model = options.trained_model
 
-    model, preprocess = clip.load("ViT-B/32")
+    # model, preprocess = clip.load("ViT-B/32")
+    model, preprocess = clip.load("RN50")
     # model, preprocess = clip.load("ViT-L/14")
     model.cuda().eval() # to download the pre-train models.
 
