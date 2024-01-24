@@ -99,6 +99,7 @@ def main(options, args):
     trained_model = options.trained_model
 
     model, preprocess = clip.load("ViT-B/32")
+    # model, preprocess = clip.load("ViT-L/14")
     model.cuda().eval() # to download the pre-train models.
 
     input_resolution = model.visual.input_resolution
