@@ -29,7 +29,7 @@ import parameters
 import basic_src.io_function as io_function
 
 
-def calcualte_top_k_accuracy(predict_labels,ground_truths, k=5):
+def calculate_top_k_accuracy(predict_labels,ground_truths, k=5):
     # top-k accuracy
     if k == 1:
         predict_labels = predict_labels.numpy()
@@ -91,7 +91,7 @@ def test_classification_ucm(model, preprocess):
     ground_truths = [image_class_list[idx] for idx in sel_index]
     calcualte_top_k_accuracy(top_labels_1, ground_truths, k=1)
 
-    # top5 accuray 
+    # top5 accuracy
     calcualte_top_k_accuracy(top_labels_5, ground_truths, k=5)
     
 
