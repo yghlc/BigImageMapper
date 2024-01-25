@@ -41,7 +41,7 @@ def calcualte_top_k_accuracy(predict_labels,ground_truths, k=5):
         # print(pred_l_s)
         if gt in pred_l_s:
             hit_count += 1
-    print('top %d accuracy: (%d /%d): %f'%(k, hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+    print('top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), 100.0*hit_count/len(ground_truths) ))
 
 
 def test_classification_ucm(model, preprocess):
@@ -67,7 +67,7 @@ def test_classification_ucm(model, preprocess):
     image_class_list = [ int(item[1]) for item in image_list]
 
     images = []
-    # sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
+    #sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
     sel_index = [item for item in range(len(image_path_list))]
     for idx in sel_index:
         image = Image.open(image_path_list[idx]).convert("RGB")
@@ -87,27 +87,12 @@ def test_classification_ucm(model, preprocess):
     print(top_labels_1)
 
     # output accuracy
-    # top1 accuray
-    # top_labels_1 = top_labels_1.numpy().squeeze()
-    # hit_count = 0
-    # for idx, pred_l in zip(sel_index,top_labels_1):
-    #     if image_class_list[idx] == pred_l:
-    #         hit_count += 1
-    # print('top 1 accuracy: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+    # top1 accuracy
     ground_truths = [image_class_list[idx] for idx in sel_index]
     calcualte_top_k_accuracy(top_labels_1, ground_truths, k=1)
 
     # top5 accuray 
-    # top_labels_5 = top_labels_5.numpy().squeeze()
-    # # print(top_labels_5)
-    # hit_count = 0
-    # for idx, pred_l_s in zip(sel_index,top_labels_5):
-    #     # print(pred_l_s)
-    #     if image_class_list[idx] in pred_l_s:
-    #         hit_count += 1
-    # print('top 5 accuracy: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
-
-    calcualte_top_k_accuracy(top_labels_5, ground_truths, k=1)
+    calcualte_top_k_accuracy(top_labels_5, ground_truths, k=5)
     
 
 
@@ -118,8 +103,8 @@ def main(options, args):
     para_file = args[0]
     trained_model = options.trained_model
 
-    # model, preprocess = clip.load("ViT-B/32")
-    model, preprocess = clip.load("RN50")
+    model, preprocess = clip.load("ViT-B/32")
+    #model, preprocess = clip.load("RN50")
     # model, preprocess = clip.load("ViT-L/14")
     model.cuda().eval() # to download the pre-train models.
 
