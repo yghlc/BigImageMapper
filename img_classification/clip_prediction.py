@@ -28,6 +28,22 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.io_function as io_function
 
+
+def calcualte_top_k_accuracy(predict_labels,ground_truths, k=5):
+    # top-k accuracy
+    if k == 1:
+        predict_labels = predict_labels.numpy()
+    else:
+        predict_labels = predict_labels.numpy().squeeze()
+    # print(top_labels_5)
+    hit_count = 0
+    for gt, pred_l_s in zip(ground_truths,predict_labels):
+        # print(pred_l_s)
+        if gt in pred_l_s:
+            hit_count += 1
+    print('top %d accuracy: (%d /%d): %f'%(k, hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+
+
 def test_classification_ucm(model, preprocess):
     data_dir = os.path.expanduser('~/Data/image_classification/UCMerced_LandUse')
 
@@ -72,22 +88,26 @@ def test_classification_ucm(model, preprocess):
 
     # output accuracy
     # top1 accuray
-    top_labels_1 = top_labels_1.numpy().squeeze()
-    hit_count = 0
-    for idx, pred_l in zip(sel_index,top_labels_1):
-        if image_class_list[idx] == pred_l:
-            hit_count += 1
-    print('top 1 accuracy: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+    # top_labels_1 = top_labels_1.numpy().squeeze()
+    # hit_count = 0
+    # for idx, pred_l in zip(sel_index,top_labels_1):
+    #     if image_class_list[idx] == pred_l:
+    #         hit_count += 1
+    # print('top 1 accuracy: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+    ground_truths = [image_class_list[idx] for idx in sel_index]
+    calcualte_top_k_accuracy(top_labels_1, ground_truths, k=1)
 
     # top5 accuray 
-    top_labels_5 = top_labels_5.numpy().squeeze()
-    # print(top_labels_5)
-    hit_count = 0
-    for idx, pred_l_s in zip(sel_index,top_labels_5):
-        # print(pred_l_s)
-        if image_class_list[idx] in pred_l_s:
-            hit_count += 1
-    print('top 5 accuracy: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+    # top_labels_5 = top_labels_5.numpy().squeeze()
+    # # print(top_labels_5)
+    # hit_count = 0
+    # for idx, pred_l_s in zip(sel_index,top_labels_5):
+    #     # print(pred_l_s)
+    #     if image_class_list[idx] in pred_l_s:
+    #         hit_count += 1
+    # print('top 5 accuracy: (%d /%d): %f'%(hit_count, len(sel_index), 100.0*hit_count/len(sel_index) ))
+
+    calcualte_top_k_accuracy(top_labels_5, ground_truths, k=1)
     
 
 
