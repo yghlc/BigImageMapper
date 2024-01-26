@@ -89,10 +89,10 @@ def test_classification_ucm(model, preprocess):
     # output accuracy
     # top1 accuracy
     ground_truths = [image_class_list[idx] for idx in sel_index]
-    calcualte_top_k_accuracy(top_labels_1, ground_truths, k=1)
+    calculate_top_k_accuracy(top_labels_1, ground_truths, k=1)
 
     # top5 accuracy
-    calcualte_top_k_accuracy(top_labels_5, ground_truths, k=5)
+    calculate_top_k_accuracy(top_labels_5, ground_truths, k=5)
     
 
 
