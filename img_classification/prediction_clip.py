@@ -147,7 +147,7 @@ def prepare_dataset(area_ini, transform=None, test = False):
 
     else:
         image_path_labels = [item.split() for item in io_function.read_list_from_txt(all_image_patch_labels)]
-        image_path_labels = image_path_labels[:200] # for test
+        # image_path_labels = image_path_labels[:200] # for test
         image_path_list = [os.path.join(inf_image_dir, 'Images', item[0]) for item in image_path_labels]
         image_labels = [ int(item[1]) for item in image_path_labels]
 
