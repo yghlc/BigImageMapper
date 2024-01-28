@@ -1,0 +1,423 @@
+#!/usr/bin/env python
+# Filename: zeroshort_classify_clip.py 
+"""
+introduction:
+
+authors: Huang Lingcao
+email:huanglingcao@gmail.com
+add time: 22 January, 2024
+"""
+
+
+
+import os,sys
+import os.path as osp
+from optparse import OptionParser
+from datetime import datetime
+import time
+import GPUtil
+
+from PIL import Image
+
+import numpy as np
+import torch
+import clip
+
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+import parameters
+import basic_src.io_function as io_function
+import basic_src.basic as basic
+
+from multiprocessing import Process
+
+from class_utils import RSPatchDataset, RSVectorDataset
+
+def is_file_exist_in_folder(folder):
+    # just check if the folder is empty
+    if len(os.listdir(folder)) == 0:
+        return False
+    else:
+        return True
+
+def calculate_top_k_accuracy(predict_labels,ground_truths, k=5):
+    if torch.is_tensor(ground_truths):
+        ground_truths = ground_truths.numpy()
+    if torch.is_tensor(predict_labels):
+        predict_labels = predict_labels.numpy()
+    # top-k accuracy
+    if k > 1:
+        predict_labels = predict_labels.squeeze()
+    # print(top_labels_5)
+    hit_count = 0
+    for gt, pred_l_s in zip(ground_truths,predict_labels):
+        # print(pred_l_s)
+        if gt in pred_l_s:
+            hit_count += 1
+    print('top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), 100.0*hit_count/len(ground_truths) ))
+
+
+def test_classification_ucm(model, preprocess):
+    data_dir = os.path.expanduser('~/Data/image_classification/UCMerced_LandUse')
+
+
+    # read classes info
+    label_list_txt = os.path.join(data_dir,'label_list.txt')
+    class_labels = [item.split(',')[0] for item in io_function.read_list_from_txt(label_list_txt) ]
+    text_descriptions = [f"This is a satellite image of a {label}" for label in class_labels]
+    text_tokens = clip.tokenize(text_descriptions).cuda()
+
+    # process text
+    with torch.no_grad():
+        text_features = model.encode_text(text_tokens).float()
+        text_features /= text_features.norm(dim=-1, keepdim=True)
+
+
+    # randomly read ten images
+    image_txt = os.path.join(data_dir,'all.txt')
+    image_list = [ item.split() for item in io_function.read_list_from_txt(image_txt)]
+    image_path_list = [ os.path.join(data_dir,'Images', item[0]) for item in image_list]
+    image_class_list = [ int(item[1]) for item in image_list]
+
+    images = []
+    #sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
+    sel_index = [item for item in range(len(image_path_list))]
+    for idx in sel_index:
+        image = Image.open(image_path_list[idx]).convert("RGB")
+        images.append(preprocess(image))
+    image_input = torch.tensor(np.stack(images)).cuda()
+    with torch.no_grad():
+        image_features = model.encode_image(image_input).float()
+        image_features /= image_features.norm(dim=-1, keepdim=True)
+
+    text_probs = (100.0 * image_features @ text_features.T).softmax(dim=-1)
+    top_probs_5, top_labels_5 = text_probs.cpu().topk(5, dim=-1)
+    print(top_probs_5)
+    print(top_labels_5)
+
+    top_probs_1, top_labels_1 = text_probs.cpu().topk(1, dim=-1)
+    print(top_probs_1)
+    print(top_labels_1)
+
+    # output accuracy
+    # top1 accuracy
+    ground_truths = [image_class_list[idx] for idx in sel_index]
+    calculate_top_k_accuracy(top_labels_1, ground_truths, k=1)
+
+    # top5 accuracy
+    calculate_top_k_accuracy(top_labels_5, ground_truths, k=5)
+
+def prepare_dataset(area_ini, transform=None, test = False):
+    area_data_type = parameters.get_string_parameters(area_ini,'area_data_type')
+    inf_image_dir = parameters.get_directory(area_ini,'inf_image_dir')
+    inf_image_or_pattern = parameters.get_string_parameters(area_ini,'inf_image_or_pattern')
+    class_labels = parameters.get_file_path_parameters(area_ini,'class_labels')
+
+    all_image_patch_labels = parameters.get_file_path_parameters_None_if_absence(area_ini,'all_image_patch_labels')
+    if all_image_patch_labels is None:
+        inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir, inf_image_or_pattern)
+        img_count = len(inf_img_list)
+        if img_count < 1:
+            raise ValueError(
+                'No image for inference, please check inf_image_dir (%s) and inf_image_or_pattern (%s) in %s'
+                % (inf_image_dir, inf_image_or_pattern, area_ini))
+        #TODO: add these two
+        image_path_list = None
+        image_labels =  None
+
+    else:
+        image_path_labels = [item.split() for item in io_function.read_list_from_txt(all_image_patch_labels)]
+        # image_path_labels = image_path_labels[:200] # for test
+        image_path_list = [os.path.join(inf_image_dir, 'Images', item[0]) for item in image_path_labels]
+        image_labels = [ int(item[1]) for item in image_path_labels]
+
+
+    if area_data_type == 'image_patch':
+        input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
+    elif area_data_type == 'image_vector':
+        # TODO: add these
+        input_data =  None
+    else:
+        raise ValueError('Unknown area data type: %s, only accept: image_patch and image_vector'%area_data_type)
+
+
+    return input_data
+
+def run_prediction(model, test_loader,prompt, device):
+
+    model.eval()
+    model.float()
+    text_descriptions = [prompt.format(label) for label in test_loader.dataset.classes]
+    # text_tokens = clip.tokenize(text_descriptions).cuda()
+    text_tokens = clip.tokenize(text_descriptions).to(device)
+
+    text_features = model.encode_text(text_tokens).float()
+    text_features /= text_features.norm(dim=-1, keepdim=True)
+
+    pre_probs = []
+    gts = []
+    with torch.no_grad():
+        cnt = 0
+        for data in test_loader:
+            images, targets, _ = data
+            images = images.to(device)
+            targets = targets.to(device).squeeze()
+
+            image_features = model.encode_image(images)
+
+            similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
+            pre_probs.append(similarity)    # .cpu().numpy()
+            gts.append(targets)             #.cpu().numpy()
+
+
+    # pre_probs = np.concatenate(pre_probs, 0)     # for numpy array
+    pre_probs = torch.cat(pre_probs, 0)               # for tensor
+    gts = torch.cat(gts, 0)               # for tensor
+    return pre_probs, gts
+
+
+def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=16):
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load(model_type,device=device)
+
+    # load trained model
+    if os.path.isfile(trained_model):
+        checkpoint = torch.load(open(trained_model, 'rb'), map_location="cpu")
+        model.load_state_dict(checkpoint['state_dict'])
+
+    if device == "cpu":
+        model.eval()
+    else:
+        model.cuda().eval()  # to download the pre-train models.
+
+    input_resolution = model.visual.input_resolution
+    context_length = model.context_length
+    vocab_size = model.vocab_size
+    print("Model parameters:", f"{np.sum([int(np.prod(p.shape)) for p in model.parameters()]):,}")
+    print("Input resolution:", input_resolution)
+    print("Context length:", context_length)
+    print("Vocab size:", vocab_size)
+
+    # run image classification
+    in_dataset = prepare_dataset(area_ini,transform=preprocess,test=True)
+    clip_prompt = parameters.get_string_parameters(para_file,'clip_prompt')
+
+    test_loader = torch.utils.data.DataLoader(
+        in_dataset,
+        batch_size=batch_size, shuffle=False,
+        num_workers=8, pin_memory=True)
+
+    pre_probs, ground_truths = run_prediction(model, test_loader, clip_prompt, device)
+
+    top_probs_5, top_labels_5 = pre_probs.cpu().topk(5, dim=-1)
+    # print(top_probs_5)
+    # print(top_labels_5)
+
+    top_probs_1, top_labels_1 = pre_probs.cpu().topk(1, dim=-1)
+    # print(top_probs_1)
+    # print(top_labels_1)
+
+    # output accuracy
+    # top1 accuracy
+    calculate_top_k_accuracy(top_labels_1, ground_truths, k=1)
+
+    # top5 accuracy
+    calculate_top_k_accuracy(top_labels_5, ground_truths, k=5)
+
+
+
+def classify_one_region(area_idx, area_ini, para_file, area_save_dir, gpuid, inf_list_file, model_type, trained_model):
+
+    inf_batch_size = parameters.get_digit_parameters(para_file,'inf_batch_size','int')
+
+    done_indicator = '%s_done'%inf_list_file
+    if os.path.isfile(done_indicator):
+        basic.outputlogMessage('warning, %s exist, skip prediction'%done_indicator)
+        return
+    # use a specific GPU for prediction, only inference one image
+    time0 = time.time()
+    if gpuid is not None:
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(gpuid)
+
+    predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=inf_batch_size)
+
+    duration = time.time() - time0
+    os.system('echo "$(date): time cost of inference for image in %s: %.2f seconds">>"time_cost.txt"' % (inf_list_file, duration))
+    # write a file to indicate that the prediction has done.
+    os.system('echo %s > %s_done'%(inf_list_file,inf_list_file))
+
+def parallel_prediction_main(para_file,trained_model):
+
+    print("CLIP prediction using the trained model ") # (run parallel if using multiple GPUs)
+    machine_name = os.uname()[1]
+    start_time = datetime.now()
+
+    if os.path.isfile(para_file) is False:
+        raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
+
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+    model_type = parameters.get_string_parameters(network_ini,'model_type')
+
+    outdir = parameters.get_directory(para_file, 'inf_output_dir')
+    # remove previous results (let user remove this folder manually or in exe.sh folder)
+    io_function.mkdir(outdir)
+
+    # get name of inference areas
+    multi_inf_regions = parameters.get_string_list_parameters(para_file, 'inference_regions')
+    b_use_multiGPUs = parameters.get_bool_parameters(para_file, 'b_use_multiGPUs')
+    maximum_prediction_jobs = parameters.get_digit_parameters(para_file, 'maximum_prediction_jobs', 'int')
+
+    # loop each inference regions
+    sub_tasks = []
+    for area_idx, area_ini in enumerate(multi_inf_regions):
+
+        area_name = parameters.get_string_parameters(area_ini, 'area_name')
+        area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
+        area_time = parameters.get_string_parameters(area_ini, 'area_time')
+
+        inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
+
+        # it is ok consider a file name as pattern and pass it the following functions to get file list
+        inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
+
+        inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir, inf_image_or_pattern)
+        img_count = len(inf_img_list)
+        if img_count < 1:
+            raise ValueError(
+                'No image for inference, please check inf_image_dir (%s) and inf_image_or_pattern (%s) in %s'
+                % (inf_image_dir, inf_image_or_pattern, area_ini))
+
+        area_name_remark_time = area_name + '_' + area_remark + '_' + area_time
+        area_save_dir = os.path.join(outdir, area_name_remark_time)
+        io_function.mkdir(area_save_dir)
+
+        # parallel inference images for this area
+        CUDA_VISIBLE_DEVICES = []
+        if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
+            CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
+        # idx = 0
+
+        while basic.alive_process_count(sub_tasks) >= maximum_prediction_jobs:
+            print(datetime.now(),
+                  '%d jobs are running simultaneously, wait 5 seconds' % basic.alive_process_count(sub_tasks))
+            time.sleep(5)  # wait 5 seconds, then check the count of running jobs again
+
+        if b_use_multiGPUs:
+            # get available GPUs  # https://github.com/anderskm/gputil
+            # memory: orders the available GPU device ids by ascending memory usage
+            deviceIDs = GPUtil.getAvailable(order='memory', limit=100, maxLoad=0.5,
+                                            maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
+            # only use the one in CUDA_VISIBLE_DEVICES
+            if len(CUDA_VISIBLE_DEVICES) > 0:
+                deviceIDs = [item for item in deviceIDs if item in CUDA_VISIBLE_DEVICES]
+                basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs) +
+                                       ', among visible ones:' + str(CUDA_VISIBLE_DEVICES))
+            else:
+                basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
+
+            if len(deviceIDs) < 1:
+                time.sleep(5)  # wait 5 seconds, then check the available GPUs again
+                continue
+            # set only the first available visible
+            gpuid = deviceIDs[0]
+            basic.outputlogMessage(
+                '%d: predict region: %s on GPU %d of %s' % (area_idx, area_name_remark_time, gpuid, machine_name))
+        else:
+            gpuid = None
+            basic.outputlogMessage('%d: predict region: %s on %s' % (area_idx, area_name_remark_time, machine_name))
+
+        # run inference
+        inf_list_file = os.path.join(area_save_dir, '%d.txt' % area_idx)
+
+        done_indicator = '%s_done' % inf_list_file
+        if os.path.isfile(done_indicator):
+            basic.outputlogMessage('warning, %s exist, skip prediction' % done_indicator)
+            continue
+
+        # if it already exists, then skip
+        if os.path.isdir(area_save_dir) and is_file_exist_in_folder(area_save_dir):
+            basic.outputlogMessage('folder of %dth region (%s) already exist, '
+                                   'it has been predicted or is being predicted' % (area_idx, area_name_remark_time))
+            continue
+
+        with open(inf_list_file, 'w') as inf_obj:
+            inf_obj.writelines(area_name_remark_time + '\n')
+
+        sub_process = Process(target=classify_one_region,
+                              args=(area_idx, area_ini, para_file, area_save_dir, gpuid, inf_list_file, model_type, trained_model))
+
+        sub_process.start()
+        sub_tasks.append(sub_process)
+
+        if b_use_multiGPUs is False:
+            # wait until previous one finished
+            while sub_process.is_alive():
+                time.sleep(1)
+
+        # wait until predicted image patches exist or exceed 20 minutes
+        time0 = time.time()
+        elapsed_time = time.time() - time0
+        while elapsed_time < 20 * 60:
+            elapsed_time = time.time() - time0
+            file_exist = os.path.isdir(area_save_dir) and is_file_exist_in_folder(area_save_dir)
+            if file_exist is True or sub_process.is_alive() is False:
+                break
+            else:
+                time.sleep(1)
+
+        if sub_process.exitcode is not None and sub_process.exitcode != 0:
+            sys.exit(1)
+
+        basic.close_remove_completed_process(sub_tasks)
+            # if 'chpc' in machine_name:
+            #     time.sleep(60)  # wait 60 second on ITSC services
+            # else:
+            #     time.sleep(10)
+
+
+    # check all the tasks already finished
+    wait_all_finish = 0
+    while basic.b_all_process_finish(sub_tasks) is False:
+        if wait_all_finish % 100 == 0:
+            basic.outputlogMessage('wait all tasks to finish')
+        time.sleep(1)
+        wait_all_finish += 1
+
+    basic.close_remove_completed_process(sub_tasks)
+    end_time = datetime.now()
+
+    diff_time = end_time - start_time
+    out_str = "%s: time cost of total parallel inference on %s: %d seconds" % (
+        str(end_time), machine_name, diff_time.total_seconds())
+    basic.outputlogMessage(out_str)
+    with open("time_cost.txt", 'a') as t_obj:
+        t_obj.writelines(out_str + '\n')
+
+
+def main(options, args):
+
+    para_file = args[0]
+    trained_model = options.trained_model
+
+    parallel_prediction_main(para_file, trained_model)
+
+
+    # test_classification_ucm(model, preprocess)
+
+if __name__ == '__main__':
+    usage = "usage: %prog [options] para_file"
+    parser = OptionParser(usage=usage, version="1.0 2024-01-22")
+    parser.description = 'Introduction: run prediction in parallel using clip '
+
+    parser.add_option("-m", "--trained_model",
+                      action="store", dest="trained_model", default='',
+                      help="the trained model for prediction")
+
+    (options, args) = parser.parse_args()
+    # if len(sys.argv) < 2:
+    #     parser.print_help()
+    #     sys.exit(2)
+
+    main(options, args)
