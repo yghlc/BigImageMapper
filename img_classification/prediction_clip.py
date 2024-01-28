@@ -40,7 +40,7 @@ def is_file_exist_in_folder(folder):
     else:
         return True
 
-def calculate_top_k_accuracy(predict_labels,ground_truths, k=5):
+def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
     if torch.is_tensor(ground_truths):
         ground_truths = ground_truths.numpy()
     if torch.is_tensor(predict_labels):
@@ -54,7 +54,27 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, k=5):
         # print(pred_l_s)
         if gt in pred_l_s:
             hit_count += 1
-    print('top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), 100.0*hit_count/len(ground_truths) ))
+    print_msg = 'top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), 100.0*hit_count/len(ground_truths))
+    print(print_msg)
+    if print_msg is not None:
+        io_function.save_list_to_txt(save_path,[print_msg])
+
+
+def save_prediction_results(dataset, predict_probs, save_path, k=5):
+    if k < 1:
+        raise ValueError('k should be larger than 0')
+    top_probs_k, top_labels_k = predict_probs.cpu().topk(5, dim=-1)
+    top_probs_k = top_probs_k.numpy().squeeze()
+    top_labels_k = top_labels_k.numpy().squeeze()
+
+    # save to a json file
+    res_dict = {}
+    for i_path, probs, labels in zip(dataset.img_list,top_probs_k,top_labels_k):
+        res_dict[os.path.basename(i_path)] = { }
+        res_dict[os.path.basename(i_path)]['confidence'] = probs.tolist()
+        res_dict[os.path.basename(i_path)]['pre_labels'] = labels.tolist()
+
+    io_function.save_dict_to_txt_json(save_path,res_dict)
 
 
 def test_classification_ucm(model, preprocess):
@@ -127,7 +147,7 @@ def prepare_dataset(area_ini, transform=None, test = False):
 
     else:
         image_path_labels = [item.split() for item in io_function.read_list_from_txt(all_image_patch_labels)]
-        # image_path_labels = image_path_labels[:200] # for test
+        image_path_labels = image_path_labels[:200] # for test
         image_path_list = [os.path.join(inf_image_dir, 'Images', item[0]) for item in image_path_labels]
         image_labels = [ int(item[1]) for item in image_path_labels]
 
@@ -210,6 +230,9 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
 
     pre_probs, ground_truths = run_prediction(model, test_loader, clip_prompt, device)
 
+    save_path = os.path.join(area_save_dir, os.path.basename(area_save_dir)+'-classify_results.json' )
+    save_prediction_results(in_dataset,pre_probs, save_path, k=5)
+
     top_probs_5, top_labels_5 = pre_probs.cpu().topk(5, dim=-1)
     # print(top_probs_5)
     # print(top_labels_5)
@@ -220,10 +243,15 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
 
     # output accuracy
     # top1 accuracy
-    calculate_top_k_accuracy(top_labels_1, ground_truths, k=1)
+    top1_acc_save_path = os.path.join(area_save_dir, 'top1_accuracy.txt' )
+    calculate_top_k_accuracy(top_labels_1, ground_truths, save_path=top1_acc_save_path, k=1)
 
     # top5 accuracy
-    calculate_top_k_accuracy(top_labels_5, ground_truths, k=5)
+    top5_acc_save_path = os.path.join(area_save_dir, 'top5_accuracy.txt')
+    calculate_top_k_accuracy(top_labels_5, ground_truths, save_path=top5_acc_save_path, k=5)
+
+
+
 
 
 
