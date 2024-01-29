@@ -30,6 +30,7 @@ import basic_src.io_function as io_function
 import basic_src.basic as basic
 
 from multiprocessing import Process
+# import torch.multiprocessing as Process
 
 from class_utils import RSPatchDataset
 import class_utils
@@ -43,9 +44,9 @@ def is_file_exist_in_folder(folder):
 
 def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
     if torch.is_tensor(ground_truths):
-        ground_truths = ground_truths.numpy()
+        ground_truths = ground_truths.cpu().numpy()
     if torch.is_tensor(predict_labels):
-        predict_labels = predict_labels.numpy()
+        predict_labels = predict_labels.cpu().numpy()
     # top-k accuracy
     if k > 1:
         predict_labels = predict_labels.squeeze()
@@ -454,5 +455,7 @@ if __name__ == '__main__':
     # if len(sys.argv) < 2:
     #     parser.print_help()
     #     sys.exit(2)
+
+    torch.multiprocessing.set_start_method('spawn')
 
     main(options, args)
