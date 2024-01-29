@@ -14,6 +14,7 @@ import os,sys
 from torch.utils.data.dataset import Dataset
 import numpy as np
 from PIL import Image
+import re
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
@@ -60,6 +61,34 @@ def get_class_labels_from_vector_file(img_path_list, vector_path):
         idx =int(tmp.split('.')[0])
         label_list.append(shp_label_list[idx])
     return label_list
+
+def get_file_list(input_dir, pattern, area_ini):
+    file_list = io_function.get_file_list_by_pattern(input_dir, pattern)
+    if len(file_list) < 1:
+        raise ValueError('No files for processing, please check directory (%s) and pattern (%s) in %s'
+                         % (input_dir, pattern, area_ini))
+    return file_list
+
+# copy from dem_common.py
+def get_grid_id_from_path(item):
+    return int(re.findall('grid\d+', os.path.basename(item))[0][4:])
+
+def pair_raster_vecor_files_grid(vector_files, raster_files):
+    # pair the vector and raster files for each grid based on information in file name
+    # e.g. sel_regions_small_S2_SR_grid9226_8bit.tif  : dem_diffs_polygons_grid9226.gpkg
+    raster_grid_nums = [get_grid_id_from_path(item) for item in raster_files]
+    vector_grid_nums = [get_grid_id_from_path(item) for item in vector_files]
+
+    raster_vector_pairs = {}
+    # set vector files as base
+    for idx, v_grid in enumerate(vector_grid_nums):
+        if v_grid in raster_grid_nums:
+            ref_idx = raster_grid_nums.index(v_grid)
+            raster_vector_pairs[v_grid] = [vector_files[idx], raster_files[ref_idx]]
+
+    return raster_vector_pairs
+
+
 
 if __name__ == '__main__':
     pass

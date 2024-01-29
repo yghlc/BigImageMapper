@@ -155,15 +155,41 @@ def prepare_dataset(para_file, area_ini, area_save_dir, transform=None, test = F
         rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
         process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
-        all_polygons_labels = parameters.get_file_path_parameters(area_ini,'all_polygons_labels')
+        all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(area_ini,'all_polygons_labels')
+        if all_polygons_labels is not None:
+            command_string = get_subImage_script  + ' -b ' + str(buffersize) + ' -e ' + inf_image_or_pattern + \
+                             ' -o ' + area_save_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
+                             + ' ' + rectangle_ext + ' --no_label_image ' + all_polygons_labels + ' ' + inf_image_dir
+            basic.os_system_exit_code(command_string)
+            image_path_list = io_function.get_file_list_by_pattern(area_save_dir, 'subImages/*.tif')
+            image_labels = class_utils.get_class_labels_from_vector_file(image_path_list, all_polygons_labels)
+        else:
+            # get sub-images, grid by grid
+            all_polygons_dir = parameters.get_directory(area_ini,'all_polygons_dir')
+            all_polygons_pattern = parameters.get_string_parameters(area_ini,'all_polygons_pattern')
+            vector_file_list = class_utils.get_file_list(all_polygons_dir,all_polygons_pattern,area_ini)
+            raster_file_list = class_utils.get_file_list(inf_image_dir,inf_image_or_pattern,area_ini)
 
-        command_string = get_subImage_script  + ' -b ' + str(buffersize) + ' -e ' + inf_image_or_pattern + \
-                         ' -o ' + area_save_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
-                         + ' ' + rectangle_ext + ' --no_label_image ' + all_polygons_labels + ' ' + inf_image_dir
-        basic.os_system_exit_code(command_string)
+            image_path_list = []
+            image_labels = []
 
-        image_path_list = io_function.get_file_list_by_pattern(area_save_dir,'subImages/*.tif')
-        image_labels = class_utils.get_class_labels_from_vector_file(image_path_list,all_polygons_labels)
+            # pair the vector file and raster files
+            raster_vector_pairs = class_utils.pair_raster_vecor_files_grid(vector_file_list, raster_file_list)
+            for key in raster_vector_pairs:
+                vector_file = raster_vector_pairs[key][0]
+                raster_file = raster_vector_pairs[key][1]
+                grid_save_dir = os.path.join(area_save_dir, 'grid%d'%key)
+                command_string = get_subImage_script + ' -b ' + str(buffersize) + ' -e ' + os.path.basename(raster_file) + \
+                                 ' -o ' + grid_save_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
+                                 + ' ' + rectangle_ext + ' --no_label_image ' + vector_file + ' ' + os.path.dirname(raster_file)
+                basic.os_system_exit_code(command_string)
+
+                image_path_list_grid = io_function.get_file_list_by_pattern(grid_save_dir, 'subImages/*.tif')
+                image_labels_grid = class_utils.get_class_labels_from_vector_file(image_path_list_grid, vector_file)
+
+                image_path_list.extend(image_path_list_grid)
+                image_labels.extend(image_labels_grid)
+
         input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
     else:
         raise ValueError('Unknown area data type: %s, only accept: image_patch and image_vector'%area_data_type)
