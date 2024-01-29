@@ -47,16 +47,23 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
         ground_truths = ground_truths.cpu().numpy()
     if torch.is_tensor(predict_labels):
         predict_labels = predict_labels.cpu().numpy()
-    # top-k accuracy
-    if k > 1:
-        predict_labels = predict_labels.squeeze()
-    # print(top_labels_5)
-    hit_count = 0
-    for gt, pred_l_s in zip(ground_truths,predict_labels):
-        # print(pred_l_s)
-        if gt in pred_l_s:
-            hit_count += 1
-    print_msg = 'top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), 100.0*hit_count/len(ground_truths))
+
+    if np.all(ground_truths == -1):
+        print_msg = 'No ground truth, skip reporting accuracy for %d prediction'%len(predict_labels)
+    elif np.any(ground_truths == -1):
+        print_msg = 'Some ground truth is missing, skip reporting accuracy for %d prediction'%len(predict_labels)
+    else:
+        # top-k accuracy
+        if k > 1:
+            predict_labels = predict_labels.squeeze()
+        # print(top_labels_5)
+        hit_count = 0
+        for gt, pred_l_s in zip(ground_truths,predict_labels):
+            # print(pred_l_s)
+            if gt in pred_l_s:
+                hit_count += 1
+        print_msg = 'top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), 100.0*hit_count/len(ground_truths))
+
     print(print_msg)
     if print_msg is not None:
         io_function.save_list_to_txt(save_path,[print_msg])
