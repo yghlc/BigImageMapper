@@ -31,7 +31,8 @@ import basic_src.basic as basic
 
 from multiprocessing import Process
 
-from class_utils import RSPatchDataset, RSVectorDataset
+from class_utils import RSPatchDataset
+import class_utils
 
 def is_file_exist_in_folder(folder):
     # just check if the folder is empty
@@ -127,36 +128,42 @@ def test_classification_ucm(model, preprocess):
     # top5 accuracy
     calculate_top_k_accuracy(top_labels_5, ground_truths, k=5)
 
-def prepare_dataset(area_ini, transform=None, test = False):
+def prepare_dataset(para_file, area_ini, area_save_dir, transform=None, test = False):
     area_data_type = parameters.get_string_parameters(area_ini,'area_data_type')
     inf_image_dir = parameters.get_directory(area_ini,'inf_image_dir')
     inf_image_or_pattern = parameters.get_string_parameters(area_ini,'inf_image_or_pattern')
     class_labels = parameters.get_file_path_parameters(area_ini,'class_labels')
 
-    all_image_patch_labels = parameters.get_file_path_parameters_None_if_absence(area_ini,'all_image_patch_labels')
-    if all_image_patch_labels is None:
-        inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir, inf_image_or_pattern)
-        img_count = len(inf_img_list)
-        if img_count < 1:
-            raise ValueError(
-                'No image for inference, please check inf_image_dir (%s) and inf_image_or_pattern (%s) in %s'
-                % (inf_image_dir, inf_image_or_pattern, area_ini))
-        #TODO: add these two
-        image_path_list = None
-        image_labels =  None
 
-    else:
+    if area_data_type == 'image_patch':
+        all_image_patch_labels = parameters.get_file_path_parameters(area_ini, 'all_image_patch_labels')
         image_path_labels = [item.split() for item in io_function.read_list_from_txt(all_image_patch_labels)]
         # image_path_labels = image_path_labels[:200] # for test
         image_path_list = [os.path.join(inf_image_dir, 'Images', item[0]) for item in image_path_labels]
         image_labels = [ int(item[1]) for item in image_path_labels]
 
-
-    if area_data_type == 'image_patch':
         input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
+
     elif area_data_type == 'image_vector':
-        # TODO: add these
-        input_data =  None
+
+        # extract sub-images
+        get_subImage_script = os.path.join(code_dir, 'datasets', 'get_subImages.py')
+
+        dstnodata = parameters.get_string_parameters(para_file, 'dst_nodata')
+        buffersize = parameters.get_string_parameters(para_file, 'buffer_size')
+        rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
+        process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
+
+        all_polygons_labels = parameters.get_file_path_parameters(area_ini,'all_polygons_labels')
+
+        command_string = get_subImage_script  + ' -b ' + str(buffersize) + ' -e ' + inf_image_or_pattern + \
+                         ' -o ' + area_save_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
+                         + ' ' + rectangle_ext + ' --no_label_image ' + all_polygons_labels + ' ' + inf_image_dir
+        basic.os_system_exit_code(command_string)
+
+        image_path_list = io_function.get_file_list_by_pattern(area_save_dir,'subImages/*.tif')
+        image_labels = class_utils.get_class_labels_from_vector_file(image_path_list,all_polygons_labels)
+        input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
     else:
         raise ValueError('Unknown area data type: %s, only accept: image_patch and image_vector'%area_data_type)
 
@@ -220,7 +227,7 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     print("Vocab size:", vocab_size)
 
     # run image classification
-    in_dataset = prepare_dataset(area_ini,transform=preprocess,test=True)
+    in_dataset = prepare_dataset(para_file, area_ini,area_save_dir,transform=preprocess,test=True)
     clip_prompt = parameters.get_string_parameters(para_file,'clip_prompt')
 
     test_loader = torch.utils.data.DataLoader(
