@@ -1323,7 +1323,11 @@ def clip_geometries(input_path, save_path, mask, target_prj=None, format='ESRI S
     # If the mask is list-like with four elements (minx, miny, maxx, maxy), a faster rectangle clipping algorithm will be used
     # ref: https://geopandas.org/en/stable/docs/reference/api/geopandas.clip.html
 
-    shapefile = gpd.read_file(input_path)
+    if isinstance(input_path,str) and os.path.isfile(input_path):
+        shapefile = gpd.read_file(input_path)
+    else:
+        # if the input is already a geo dataframe
+        shapefile = input_path
     if target_prj is not None:
         in_prj = map_projection.get_raster_or_vector_srs_info_proj4(input_path)
         if in_prj != target_prj:
@@ -1335,6 +1339,69 @@ def clip_geometries(input_path, save_path, mask, target_prj=None, format='ESRI S
 
     shp_clip.to_file(save_path, driver=format)
 
+def clip_geometries_ogr2ogr(input_path, save_path, bounds, format='ESRI Shapefile'):
+    # bounds: xmin, ymin, xmax, ymax
+    # using ogr2ogr to crop vector file, if the vector file is very large (> 1GB),
+    # we don't have to read all geometries to cpu memory, then use geopandas to clip it  (slow, out-of-memory)
+
+
+    # ogr2ogr -progress -f GPKG -spat ${xmin} ${ymin} ${xmax} ${ymax}  ${dst} ${src}
+    commond_str = 'ogr2ogr -f "%s"'%format      # -progress
+    commond_str += ' -spat %s %s %s %s '%(str(bounds[0]), str(bounds[1]), str(bounds[2]), str(bounds[3]))
+    commond_str += " %s %s"%(save_path,input_path)
+
+    res = os.system(commond_str)
+    if res == 0:
+        return save_path
+    else:
+        return None
+
+
+def geometries_overlap_another_group(input_shp, ref_shp, how='intersection'):
+    # using geopandas to find geometries in "input_shp" that overlap any geometries in "ref_shp"
+    # Read the shapefiles into GeoDataFrames
+    group1 = gpd.read_file(input_shp)
+    group2 = gpd.read_file(ref_shp)
+
+    if group1.crs != group2.crs:
+        print('Warning, CRS in group 1 (%s) and 2 (%s) is different, re-project group 2 to %s'%(group1.crs, group2.crs, group1.crs))
+        group2 = group2.to_crs(group1.crs)
+
+    # Perform overlay operation to find overlapping or touching geometries
+    # overlap_touch = gpd.overlay(group1, group2, how=how)
+
+    # Perform spatial join to find overlapping or touching geometries
+    overlap_touch = gpd.sjoin(group1, group2, how='inner', op='intersects')
+
+    # remove duplicated geometries in overlap_touch
+    overlap_touch = overlap_touch.drop_duplicates(subset=['geometry'])    # only check geometry
+
+    # save to disk for checking
+    # overlap_touch.to_file(os.path.splitext(os.path.basename(ref_shp))[0] + '_sel.shp')
+
+    return overlap_touch
+
+
+def expand_polygon_to_specific_size(polygon, new_area_size):
+
+    # check if polygons are in lat/lon (EPSG: 4326), need XY projection for calculating areas
+    # https://math.stackexchange.com/questions/1889423/calculating-the-scale-factor-to-resize-a-polygon-to-a-specific-size
+    # https://gis.stackexchange.com/questions/97963/how-to-surround-a-polygon-object-with-a-corridor-of-specified-width
+    # https://stackoverflow.com/questions/72786576/how-to-scale-polygon-using-shapely
+
+    # outside this function, need to make sure that the coordinate of polygons and unit of area_size is consistant
+    # i.e., both are in meter or both are in degree
+
+    if polygon.area >= new_area_size:
+        return polygon
+    # Calculate the scaling factor to achieve the desired area
+    scaling_factor = (new_area_size / polygon.area) ** 0.5
+    # Scale the polygon using the scaling factor
+    expanded_polygon = polygon.buffer(0).scale(scaling_factor, scaling_factor)
+
+    return expanded_polygon
+
+ 
 
 def main(options, args):
 
