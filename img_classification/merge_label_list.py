@@ -21,13 +21,15 @@ def merge_label_list(label_list_txts, save_path):
 
     labels = []
     for txt in label_list_txts:
-        tmp_labels = [ item.split(',') for item in  io_function.read_list_from_txt(txt)]
+        print('reading %s'%txt)
+        tmp_labels = [ item.split(',')[0] for item in  io_function.read_list_from_txt(txt)]
         #TODO: check duplication
         labels.extend(tmp_labels)
 
     # save
     labels_strs = [ '%s, %d'%(item, idx) for idx, item in enumerate(labels)]
     io_function.save_list_to_txt(save_path,labels_strs)
+    print('saved to %s'%os.path.abspath(save_path))
 
 
 def main(options, args):
