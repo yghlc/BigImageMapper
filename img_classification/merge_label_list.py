@@ -14,6 +14,13 @@ code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
 
+def read_BigEarthNet_labels(path):
+    label_dict = io_function.read_dict_from_txt_json(path)
+    label_19 = label_dict['BigEarthNet-19_labels']
+    labels = [item for item in label_19.keys()]
+    print(labels)
+    return labels
+
 
 def merge_label_list(label_list_txts, save_path):
     if len(label_list_txts) < 2:
@@ -22,6 +29,11 @@ def merge_label_list(label_list_txts, save_path):
     labels = []
     for txt in label_list_txts:
         print('reading %s'%txt)
+        if 'BigEarthNet' in txt:
+            tmp_labels = read_BigEarthNet_labels(txt)
+            labels.extend(tmp_labels)
+            continue
+
         tmp_labels = [ item.split(',')[0] for item in  io_function.read_list_from_txt(txt)]
         #TODO: check duplication
         labels.extend(tmp_labels)
