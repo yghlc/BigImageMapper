@@ -16,9 +16,11 @@ import basic_src.io_function as io_function
 
 def read_BigEarthNet_labels(path):
     label_dict = io_function.read_dict_from_txt_json(path)
-    label_19 = label_dict['BigEarthNet-19_labels']
-    labels = [item for item in label_19.keys()]
+    # label_19 = label_dict['BigEarthNet-19_labels']
+    # labels = [item.replace(',',' ') for item in label_19.keys()]
     # print(labels)
+    labels = [item for item in label_dict['original_labels'].keys()]
+
     return labels
 
 
