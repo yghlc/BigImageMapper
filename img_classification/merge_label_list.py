@@ -19,7 +19,7 @@ def read_BigEarthNet_labels(path):
     # label_19 = label_dict['BigEarthNet-19_labels']
     # labels = [item.replace(',',' ') for item in label_19.keys()]
     # print(labels)
-    labels = [item for item in label_dict['original_labels'].keys()]
+    labels = [item.replace(',',' ') for item in label_dict['original_labels'].keys()]
 
     return labels
 
