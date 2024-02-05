@@ -136,12 +136,11 @@ def test_classification_ucm(model, preprocess):
     # top5 accuracy
     calculate_top_k_accuracy(top_labels_5, ground_truths, k=5)
 
-def prepare_dataset(para_file, area_ini, area_save_dir, transform=None, test = False):
+def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_pattern, transform=None, test = False):
     area_data_type = parameters.get_string_parameters(area_ini,'area_data_type')
-    inf_image_dir = parameters.get_directory(area_ini,'inf_image_dir')
-    inf_image_or_pattern = parameters.get_string_parameters(area_ini,'inf_image_or_pattern')
+    inf_image_dir = image_dir
+    inf_image_or_pattern = image_or_pattern
     class_labels = parameters.get_file_path_parameters(area_ini,'class_labels')
-
 
     if area_data_type == 'image_patch':
         all_image_patch_labels = parameters.get_file_path_parameters(area_ini, 'all_image_patch_labels')
@@ -263,7 +262,10 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     print("Vocab size:", vocab_size)
 
     # run image classification
-    in_dataset = prepare_dataset(para_file, area_ini,area_save_dir,transform=preprocess,test=True)
+    inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
+    inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
+    in_dataset = prepare_dataset(para_file, area_ini,area_save_dir,inf_image_dir, inf_image_or_pattern,
+                                 transform=preprocess,test=True)
     clip_prompt = parameters.get_string_parameters(para_file,'clip_prompt')
 
     # TODO: read num_workers from para_file
