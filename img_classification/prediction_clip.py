@@ -266,6 +266,7 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     in_dataset = prepare_dataset(para_file, area_ini,area_save_dir,transform=preprocess,test=True)
     clip_prompt = parameters.get_string_parameters(para_file,'clip_prompt')
 
+    # TODO: read num_workers from para_file
     test_loader = torch.utils.data.DataLoader(
         in_dataset,
         batch_size=batch_size, shuffle=False,
