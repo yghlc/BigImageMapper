@@ -81,7 +81,7 @@ def generate_pseudo_labels(dataset, data_loader, save_dir, device, model, clip_p
     classes = dataset.classes
     save_str_list = []
     for c, name in enumerate(classes):
-        pre_probs_per_class = predict_probs[:, c]
+        pre_probs_per_class = predict_probs[:, c].cpu()
         indices = np.argsort(-pre_probs_per_class)[:topk]
         for ind in indices:
             im, label, im_path = dataset[ind]
