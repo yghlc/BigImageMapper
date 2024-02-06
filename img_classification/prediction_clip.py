@@ -65,8 +65,7 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
         print_msg = 'top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), 100.0*hit_count/len(ground_truths))
 
     print(print_msg)
-    if print_msg is not None:
-        io_function.save_list_to_txt(save_path,[print_msg])
+    io_function.save_list_to_txt(save_path,[print_msg])
 
 
 def save_prediction_results(dataset, predict_probs, save_path, k=5):
