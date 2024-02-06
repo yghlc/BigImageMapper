@@ -28,6 +28,7 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
+import basic_src.timeTools as timeTools
 
 from multiprocessing import Process
 # import torch.multiprocessing as Process
@@ -48,6 +49,8 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
     if torch.is_tensor(predict_labels):
         predict_labels = predict_labels.cpu().numpy()
 
+    topk_accuray = 0.0
+
     if np.all(ground_truths == -1):
         print_msg = 'No ground truth, skip reporting accuracy for %d prediction'%len(predict_labels)
     elif np.any(ground_truths == -1):
@@ -62,10 +65,13 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
             # print(pred_l_s)
             if gt in pred_l_s:
                 hit_count += 1
-        print_msg = 'top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), 100.0*hit_count/len(ground_truths))
+        topk_accuray = 100.0*hit_count/len(ground_truths)
+        print_msg = 'top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), topk_accuray)
 
     print(print_msg)
-    io_function.save_list_to_txt(save_path,[print_msg])
+    if save_path is not None:
+        io_function.save_list_to_txt(save_path,[print_msg])
+    return topk_accuray
 
 
 def save_prediction_results(dataset, predict_probs, save_path, k=5):
@@ -139,7 +145,7 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
     area_data_type = parameters.get_string_parameters(area_ini,'area_data_type')
     inf_image_dir = image_dir
     inf_image_or_pattern = image_or_pattern
-    class_labels = parameters.get_file_path_parameters(area_ini,'class_labels')
+    class_labels = parameters.get_file_path_parameters(para_file,'class_labels')
 
     if area_data_type == 'image_patch':
         all_image_patch_labels = parameters.get_file_path_parameters(area_ini, 'all_image_patch_labels')
@@ -162,12 +168,17 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
         rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
         process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
+        extract_done_indicator = os.path.join(area_save_dir,'extract_image_using_vector.done')
+
         all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(area_ini,'all_polygons_labels')
         if all_polygons_labels is not None:
             command_string = get_subImage_script  + ' -b ' + str(buffersize) + ' -e ' + inf_image_or_pattern + \
                              ' -o ' + area_save_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
                              + ' ' + rectangle_ext + ' --no_label_image ' + all_polygons_labels + ' ' + inf_image_dir
-            basic.os_system_exit_code(command_string)
+            if os.path.isfile(extract_done_indicator):
+                basic.outputlogMessage('Warning, sub-images already been extracted, read them directly')
+            else:
+                basic.os_system_exit_code(command_string)
             image_path_list = io_function.get_file_list_by_pattern(area_save_dir, 'subImages/*.tif')
             image_labels = class_utils.get_class_labels_from_vector_file(image_path_list, all_polygons_labels)
         else:
@@ -189,13 +200,20 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
                 command_string = get_subImage_script + ' -b ' + str(buffersize) + ' -e ' + os.path.basename(raster_file) + \
                                  ' -o ' + grid_save_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
                                  + ' ' + rectangle_ext + ' --no_label_image ' + vector_file + ' ' + os.path.dirname(raster_file)
-                basic.os_system_exit_code(command_string)
+                if os.path.isfile(extract_done_indicator):
+                    basic.outputlogMessage('Warning, sub-images already been extracted, read them directly')
+                else:
+                    basic.os_system_exit_code(command_string)
 
                 image_path_list_grid = io_function.get_file_list_by_pattern(grid_save_dir, 'subImages/*.tif')
                 image_labels_grid = class_utils.get_class_labels_from_vector_file(image_path_list_grid, vector_file)
 
                 image_path_list.extend(image_path_list_grid)
                 image_labels.extend(image_labels_grid)
+
+        if os.path.isfile(extract_done_indicator) is False:
+            with open(extract_done_indicator,'w') as f_obj:
+                f_obj.writelines('%s image extracting, complete on %s \n'% (area_save_dir, timeTools.get_now_time_str() ))
 
         input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
     else:
