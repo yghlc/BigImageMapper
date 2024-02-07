@@ -308,7 +308,7 @@ def training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device,
         # load models from previous iteration?
         if previous_train_model is not None:
             log_string("Loading pretrained model : [%s]" % previous_train_model)
-            checkpoint = torch.load(open(args.load_from, 'rb'), map_location="cpu")
+            checkpoint = torch.load(open(previous_train_model, 'rb'), map_location="cpu")
             model.load_state_dict(checkpoint['state_dict'])
 
         # run training
