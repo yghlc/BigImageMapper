@@ -219,7 +219,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
             optimizer.zero_grad()
 
             images, targets = images.to(device), targets.to(device)
-            texts = [prompt.format(test_loader.dataset.classes[t]) for t in targets]
+            texts = [prompt.format(train_loader.dataset.classes[t]) for t in targets]
             texts = torch.stack([clip.tokenize(t) for t in texts])
             texts = texts.squeeze().to(device)
 
