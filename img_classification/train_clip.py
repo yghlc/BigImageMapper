@@ -265,7 +265,6 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
     log_string('[Elapsed time = {:.1f} min]'.format((time.time() - tstart) / 60))
     log_string('Done!')
 
-    log_string('-' * 108)
     return saved_model
 
 
