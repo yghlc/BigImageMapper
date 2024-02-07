@@ -264,6 +264,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
     # Final output
     log_string('[Elapsed time = {:.1f} min]'.format((time.time() - tstart) / 60))
     log_string('Done!')
+    logger.removeHandler(file_handler)
     file_handler.close()
 
     return saved_model
