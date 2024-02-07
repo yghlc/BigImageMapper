@@ -43,8 +43,12 @@ def evaluate(model, test_loader, device, prompt):
     """
 
     pre_probs, gts = run_prediction(model, test_loader, prompt, device)
-    top1_accuray = calculate_top_k_accuracy(pre_probs, gts, k=1)
-    top5_accuray = calculate_top_k_accuracy(pre_probs, gts, k=5)
+
+    top_probs_1, top_labels_1 = pre_probs.cpu().topk(1, dim=-1)
+    top1_accuray = calculate_top_k_accuracy(top_labels_1, gts, k=1)
+
+    top_probs_5, top_labels_5 = pre_probs.cpu().topk(5, dim=-1)
+    top5_accuray = calculate_top_k_accuracy(top_labels_5, gts, k=5)
 
     return top1_accuray, top5_accuray
 
