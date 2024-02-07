@@ -270,19 +270,19 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
 
 def training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess):
     # without any human input training data
-    train_dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=True)
+    dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=True)
 
     num_workers = parameters.get_digit_parameters(para_file,'process_num','int')
     train_batch_size = parameters.get_digit_parameters(network_ini,'batch_size','int')
 
     data_loader = torch.utils.data.DataLoader(
-        train_dataset,
+        dataset,
         batch_size=train_batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=True)
 
     # get training label
     clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')
-    training_samples_txt = generate_pseudo_labels(train_dataset, data_loader, train_save_dir, device, model,
+    training_samples_txt = generate_pseudo_labels(dataset, data_loader, train_save_dir, device, model,
                                                   clip_prompt)
 
     # prepare new training and validation datasets
@@ -293,7 +293,7 @@ def training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device,
     train_dataset = class_utils.RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=preprocess, test=True)
 
     # run training
-    run_training_model(train_save_dir, network_ini, train_dataset, train_dataset,clip_prompt, device, model, preprocess, num_workers)
+    run_training_model(train_save_dir, network_ini, train_dataset, dataset,clip_prompt, device, model, preprocess, num_workers)
 
     test = 1
 
