@@ -101,11 +101,11 @@ def convert_models_to_fp32(model):
         p.data = p.data.float()
         p.grad.data = p.grad.data.float()
 
-def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,prompt, device, model, preprocess, num_workers):
+def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,prompt, device, model, preprocess, num_workers,description=''):
 
     # setting logger
     logger.setLevel(logging.INFO)
-    file_handler = logging.FileHandler('%s/%s.txt' % (work_dir, 'train_log-%s' % timeTools.get_now_time_str()))
+    file_handler = logging.FileHandler('%s/%s.txt' % (work_dir, 'train_log-%s-%s' % (description,timeTools.get_now_time_str())))
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -184,6 +184,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
 
     n_batch = 0
     loss = None
+    saved_model = None
 
     while n_batch <= nbatches:
         # Training the model
@@ -201,7 +202,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
                            format(n_batch,nbatches,top1_test_acc,top5_test_acc))
 
                 if n_batch == 300:
-                    saved_model = os.path.join(work_dir, "batch_%d.ckpt" % (n_batch))
+                    saved_model = os.path.join(work_dir, "batch_%d_%s.ckpt" % (n_batch,description))
                     log_string("Saved model at: [" + saved_model + "]")
                     state = {
                         "top1_train_acc": top1_avg,
@@ -265,6 +266,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
     log_string('Done!')
 
     log_string('-' * 108)
+    return saved_model
 
 
 
@@ -280,20 +282,41 @@ def training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device,
         batch_size=train_batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=True)
 
-    # get training label
-    clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')
-    training_samples_txt = generate_pseudo_labels(dataset, data_loader, train_save_dir, device, model,
-                                                  clip_prompt)
 
-    # prepare new training and validation datasets
-    class_labels = parameters.get_file_path_parameters(para_file, 'class_labels')
-    image_path_labels = [item.split() for item in io_function.read_list_from_txt(training_samples_txt)]
-    image_path_list = [item[0] for item in image_path_labels]   # it's already absolute path
-    image_labels = [int(item[1]) for item in image_path_labels]
-    train_dataset = class_utils.RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=preprocess, test=True)
+    # probs_thr=0.6, topk=10, version=1
+    topk_list = parameters.get_string_list_parameters_None_if_absence(network_ini,'topk_list')
+    probability_threshold = parameters.get_digit_parameters(network_ini,'probability_threshold','float')
+    if topk_list is not None:
+        topk_list = [ int(item) for item in topk_list ]
+    else:
+        topk = parameters.get_digit_parameters(network_ini,'topk','int')
+        topk_list = [topk]
 
-    # run training
-    run_training_model(train_save_dir, network_ini, train_dataset, dataset,clip_prompt, device, model, preprocess, num_workers)
+    previous_train_model = None
+    for v_num, topk in enumerate(topk_list, start=1):
+        # get pseudo labels
+        clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')
+        training_samples_txt = generate_pseudo_labels(dataset, data_loader, train_save_dir, device, model,clip_prompt,
+                                                      probs_thr=probability_threshold, topk=topk,version=v_num)
+
+        # prepare new training datasets using pseudo labels
+        class_labels = parameters.get_file_path_parameters(para_file, 'class_labels')
+        image_path_labels = [item.split() for item in io_function.read_list_from_txt(training_samples_txt)]
+        image_path_list = [item[0] for item in image_path_labels]   # it's already absolute path
+        image_labels = [int(item[1]) for item in image_path_labels]
+        train_dataset = class_utils.RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=preprocess, test=True)
+
+        # load models from previous iteration?
+        if previous_train_model is not None:
+            log_string("Loading pretrained model : [%s]" % previous_train_model)
+            checkpoint = torch.load(open(args.load_from, 'rb'), map_location="cpu")
+            model.load_state_dict(checkpoint['state_dict'])
+
+        # run training
+        description = 'v{}_topk{}'.format(v_num,topk)
+        save_model = run_training_model(train_save_dir, network_ini, train_dataset, dataset,clip_prompt, device, model, preprocess, num_workers,
+                                        description = description)
+        previous_train_model = save_model
 
     test = 1
 
