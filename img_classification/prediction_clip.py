@@ -507,9 +507,9 @@ if __name__ == '__main__':
                       help="the trained model for prediction")
 
     (options, args) = parser.parse_args()
-    # if len(sys.argv) < 2:
-    #     parser.print_help()
-    #     sys.exit(2)
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
 
     torch.multiprocessing.set_start_method('spawn')
 
