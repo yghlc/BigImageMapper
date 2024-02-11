@@ -252,6 +252,9 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
             n_batch += 1
             scheduler.step()
 
+            # clean (try to avoid memory issues)
+            del loss, outputs
+
             if (n_batch >= nbatches): break
 
         # Logging results
