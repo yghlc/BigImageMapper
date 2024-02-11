@@ -252,8 +252,6 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
             n_batch += 1
             scheduler.step()
 
-            # clean (try to avoid memory issues)
-            del loss, outputs
 
             if (n_batch >= nbatches): break
 
@@ -263,6 +261,9 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
                    format(n_batch, nbatches,
                           timedelta(seconds=round(current_elapsed_time)),
                           loss, top1_avg, top5_avg))
+        # clean (try to avoid memory issues)
+        del loss, outputs
+        del top1_avg, top5_avg,total_top1_hits, total_top5_hits, N
 
     # Final output
     log_string('[Elapsed time = {:.1f} min]'.format((time.time() - tstart) / 60))
