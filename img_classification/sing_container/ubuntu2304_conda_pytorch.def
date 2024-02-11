@@ -1,0 +1,70 @@
+Bootstrap: docker
+FROM: ubuntu:23.04
+OSVersion: ubuntu:23.04
+
+
+%help
+    Singularity container for  installing and running conda environment, GDAL, Pytorch 2.2, geopandas, rasterio.
+
+
+%labels
+	Maintainer: Lingcao Huang
+
+%environment
+    export LC_ALL=C
+    export PATH=/usr/local/miniconda3/bin:$PATH
+    export PROJ_LIB=/usr/local/miniconda3/share/proj
+
+#setup
+
+## %post -c /bin/bash : use bash as default intead of sh
+%post
+    # avoid setting tzdata
+    export DEBIAN_FRONTEND=noninteractive
+# prep apt-get and cudnn
+    apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils
+
+# install requirements
+    apt-get update \
+  	&& apt-get install -y --no-install-recommends \
+        wget \
+        vim \
+	  && apt-get clean \
+	  && rm -rf /var/lib/apt/lists/*
+
+
+# install miniconda
+    # https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    wget --quiet --no-check-certificate https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh -O ~/miniconda.sh \
+    && /bin/bash ~/miniconda.sh -b -p /usr/local/miniconda3 \
+    && rm ~/miniconda.sh \
+    && /usr/local/miniconda3/bin/conda clean -tipy
+
+    # no idea if this works. Still need to set PROJ_LIB manunally
+    ln -s /usr/local/miniconda3/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /usr/local/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
+
+#    # conda clean  -tipsy  # t: tarball, i index-cache p: package  y: Do not ask for confirmation
+#    # conda build purge-all # remove source cache files.
+#
+    export PATH=/usr/local/miniconda3/bin:$PATH
+# install python package
+    # need to install numpy first
+    pip install numpy psutil GPUtil
+
+    conda install -y -c conda-forge rasterio geopandas
+#    conda install -y rasterio geopandas
+#    conda install -y rasterio geopandas scikit-learn
+
+    # install pytorch
+    conda install -y pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+
+    # install CLIP
+    pip install ftfy regex tqdm && pip install git+https://github.com/openai/CLIP.git
+
+    # clean
+    conda clean -tipy
+
+
