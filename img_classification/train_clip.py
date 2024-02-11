@@ -296,6 +296,7 @@ def training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device,
         topk_list = [topk]
 
     previous_train_model = None
+    # TODO: it doesn't release CUDA memory at each iteration, eventuall, out of CUDA memory.
     for v_num, topk in enumerate(topk_list, start=1):
         # get pseudo labels
         clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')
@@ -320,6 +321,9 @@ def training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device,
         save_model = run_training_model(train_save_dir, network_ini, train_dataset, dataset,clip_prompt, device, model, preprocess, num_workers,
                                         description = description)
         previous_train_model = save_model
+
+        # clear memory
+        torch.cuda.empty_cache()
 
     test = 1
 
