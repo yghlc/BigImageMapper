@@ -300,7 +300,7 @@ def training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device,
         topk_list = [topk]
 
     previous_train_model = None
-    # TODO: it doesn't release CUDA memory at each iteration, eventuall, out of CUDA memory.
+    # TODO: it doesn't release CUDA memory at each iteration, eventually, out of CUDA memory.
     for v_num, topk in enumerate(topk_list, start=1):
         # get pseudo labels
         clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')
@@ -329,19 +329,25 @@ def training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device,
         # clear memory
         torch.cuda.empty_cache()
 
-    test = 1
+
+def training_zero_shot_bash(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess):
+    # without any human input training data
+    # similar to training_zero_shot, but use to run the training, avoid out-of-memory problem
+
+   #to add
+   pass
 
 
 
 def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess):
     # with a few human input training data
-    dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=False)
+    train_dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=False)
 
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
     train_batch_size = parameters.get_digit_parameters(network_ini, 'batch_size', 'int')
 
     data_loader = torch.utils.data.DataLoader(
-        dataset,
+        train_dataset,
         batch_size=train_batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=True)
 
@@ -350,29 +356,19 @@ def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, 
 
     # get pseudo labels
     clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')
-    # training_samples_txt =
-    # # training_samples_txt = generate_pseudo_labels(dataset, data_loader, train_save_dir, device, model, clip_prompt,
-    # #                                               probs_thr=probability_threshold, topk=topk, version=v_num)
-    #
-    # # prepare new training datasets using pseudo labels
-    # class_labels = parameters.get_file_path_parameters(para_file, 'class_labels')
-    # image_path_labels = [item.split() for item in io_function.read_list_from_txt(training_samples_txt)]
-    # image_path_list = [item[0] for item in image_path_labels]  # it's already absolute path
-    # image_labels = [int(item[1]) for item in image_path_labels]
-    # train_dataset = class_utils.RSPatchDataset(image_path_list, image_labels, label_txt=class_labels,
-    #                                            transform=preprocess, test=True)
-    #
-    # # load models from previous iteration?
-    # if previous_train_model is not None:
-    #     log_string("Loading pretrained model : [%s]" % previous_train_model)
-    #     checkpoint = torch.load(open(previous_train_model, 'rb'), map_location="cpu")
-    #     model.load_state_dict(checkpoint['state_dict'])
-    #
-    # # run training
-    # description = 'v{}_topk{}'.format(v_num, topk)
-    # save_model = run_training_model(train_save_dir, network_ini, train_dataset, dataset, clip_prompt, device, model,
-    #                                 preprocess, num_workers,
-    #                                 description=description)
+
+    # load models from previous iteration?
+    if previous_train_model is not None:
+        log_string("Loading pretrained model : [%s]" % previous_train_model)
+        checkpoint = torch.load(open(previous_train_model, 'rb'), map_location="cpu")
+        model.load_state_dict(checkpoint['state_dict'])
+
+    # run training
+    description = 'few_shot'
+    save_model = run_training_model(train_save_dir, network_ini, train_dataset, train_dataset, clip_prompt, device, model,
+                                    preprocess, num_workers,
+                                    description=description)
+    torch.cuda.empty_cache()
 
 
 def train_clip(WORK_DIR, para_file, gpu_num):
