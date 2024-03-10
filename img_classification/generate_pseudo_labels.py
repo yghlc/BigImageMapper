@@ -85,11 +85,13 @@ def generate_pseudo_labels_main(para_file, trained_model = None, v_num=1, topk=1
 def main(options, args):
 
     para_file = args[0]
-    generate_pseudo_labels_main(para_file)
+    v_num = args[1]
+    topk = args[2]
+    generate_pseudo_labels_main(para_file, v_num, topk)
 
 
 if __name__ == '__main__':
-    usage = "usage: %prog [options] para_file"
+    usage = "usage: %prog [options] para_file v_num topk"
     parser = OptionParser(usage=usage, version="1.0 2024-01-24")
     parser.description = 'Introduction: run prediction and generate pseudo labels'
 
