@@ -76,26 +76,6 @@ def prepare_training_data(WORK_DIR, para_file, transform, test=False):
                                  transform, test=test)
     return in_dataset
 
-def generate_pseudo_labels(dataset, data_loader, save_dir, device, model, clip_prompt,
-                          probs_thr=0.6, topk=10, version=1):
-    # run prediction
-    predict_probs, ground_truths = run_prediction(model,data_loader, clip_prompt, device)
-
-    # save the results, as training data
-    classes = dataset.classes
-    save_str_list = []
-    for c, name in enumerate(classes):
-        pre_probs_per_class = predict_probs[:, c].cpu()
-        indices = np.argsort(-pre_probs_per_class)[:topk]
-        for ind in indices:
-            im, label, im_path = dataset[ind]
-            save_str_list.append(im_path + ' ' + str(c) + ' ' + str(label) + ' ' + '%f'%float(pre_probs_per_class[ind].cpu()))
-
-    save_path_txt = os.path.join(save_dir,'pseudo_v{}_train_{}shot.txt'.format(version,topk))
-    io_function.save_list_to_txt(save_path_txt, save_str_list)
-
-    return save_path_txt
-
 def convert_models_to_fp32(model):
     for p in model.parameters():
         p.data = p.data.float()
