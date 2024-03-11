@@ -86,8 +86,8 @@ def generate_pseudo_labels_main(para_file, trained_model = None, v_num=1, topk=1
 def main(options, args):
 
     para_file = args[0]
-    v_num = args[1]
-    topk = args[2]
+    v_num = int(args[1])
+    topk = int(args[2])
     trained_model = options.trained_model
 
     generate_pseudo_labels_main(para_file,trained_model, v_num, topk)
