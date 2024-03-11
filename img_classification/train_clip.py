@@ -392,7 +392,10 @@ def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, 
         model.load_state_dict(checkpoint['state_dict'])
 
     # run training
-    description = 'few_shot'
+    if train_data_txt != '':
+        description = os.path.splitext(os.path.basename(train_data_txt))[0]
+    else:
+        description = 'few_shot'
     save_model = run_training_model(train_save_dir, network_ini, train_dataset, train_dataset, clip_prompt, device, model,
                                     preprocess, num_workers,
                                     description=description)
