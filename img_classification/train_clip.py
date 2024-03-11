@@ -20,9 +20,11 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.io_function as io_function
 import basic_src.timeTools as timeTools
+import basic_src.basic as basic
 from datetime import timedelta
 
 from prediction_clip import prepare_dataset, run_prediction, calculate_top_k_accuracy
+# from generate_pseudo_labels import generate_pseudo_labels
 import class_utils
 
 import clip
@@ -314,33 +316,79 @@ def training_zero_shot_bash(para_file, network_ini, WORK_DIR, train_save_dir, de
     # without any human input training data
     # similar to training_zero_shot, but use to run the training, avoid out-of-memory problem
 
-   #to add
-   pass
+    # probs_thr=0.6, topk=10, version=1
+    topk_list = parameters.get_string_list_parameters_None_if_absence(network_ini, 'topk_list')
+    # probability_threshold = parameters.get_digit_parameters(network_ini, 'probability_threshold', 'float')
+    if topk_list is not None:
+        topk_list = [int(item) for item in topk_list]
+    else:
+        topk = parameters.get_digit_parameters(network_ini, 'topk', 'int')
+        topk_list = [topk]
+
+    previous_train_model = None
+    pydir = os.path.dirname(os.path.abspath(__file__))
+    py_train = os.path.abspath(__file__)
+    py_get_pseudo = os.path.join(pydir, 'generate_pseudo_labels.py')
 
 
+    for v_num, topk in enumerate(topk_list, start=1):
+        # get pseudo labels
+        cmd_str = py_get_pseudo + ' ' + para_file + ' ' + str(v_num) + ' ' + str(topk)
+        if previous_train_model is not None:
+            cmd_str += ' --trained_model=%s '%previous_train_model
+        basic.os_system_exit_code(cmd_str)
 
-def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess):
+
+        save_path_txt = class_utils.get_pseudo_labels_path(train_save_dir,v_num, topk)
+        if os.path.isfile(save_path_txt) is False:
+            raise ValueError('generating %s failed'%save_path_txt)
+
+        # run training
+        cmd_str = py_train + ' ' + para_file + ' ' + ' --train_data_txt=%s '%save_path_txt + ' --b_a_few_shot '
+        if previous_train_model is not None:
+            cmd_str += ' --pretrain_model=%s '%previous_train_model
+        basic.os_system_exit_code(cmd_str)
+
+        save_model_path = class_utils.get_model_save_path(train_save_dir,para_file,save_path_txt)
+        if os.path.isfile(save_model_path) is False:
+            raise ValueError('find trained model %s failed' % save_model_path)
+        previous_train_model = save_model_path
+
+        # clear memory
+        torch.cuda.empty_cache()
+
+
+def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess,p_train_model='', train_data_txt=''):
     # with a few human input training data
-    train_dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=False)
+    dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=False)
 
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
     train_batch_size = parameters.get_digit_parameters(network_ini, 'batch_size', 'int')
 
     data_loader = torch.utils.data.DataLoader(
-        train_dataset,
+        dataset,
         batch_size=train_batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=True)
-
-    # resume training, need to read the trained model from the disks
-    previous_train_model = None
 
     # get pseudo labels
     clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')
 
-    # load models from previous iteration?
-    if previous_train_model is not None:
-        log_string("Loading pretrained model : [%s]" % previous_train_model)
-        checkpoint = torch.load(open(previous_train_model, 'rb'), map_location="cpu")
+    if os.path.isfile(train_data_txt):
+        # prepare new training datasets
+        class_labels = parameters.get_file_path_parameters(para_file, 'class_labels')
+        image_path_labels = [item.split() for item in io_function.read_list_from_txt(train_data_txt)]
+        image_path_list = [item[0] for item in image_path_labels]  # it's already absolute path
+        image_labels = [int(item[1]) for item in image_path_labels]
+        train_dataset = class_utils.RSPatchDataset(image_path_list, image_labels, label_txt=class_labels,
+                                                   transform=preprocess, test=False)
+    else:
+        # TODO: split dataset into training and validation
+        train_dataset = dataset
+
+    # resume training, need to read the trained model from the disks
+    if os.path.isfile(p_train_model):
+        log_string("Loading pretrained model : [%s]" % p_train_model)
+        checkpoint = torch.load(open(p_train_model, 'rb'), map_location="cpu")
         model.load_state_dict(checkpoint['state_dict'])
 
     # run training
@@ -350,8 +398,12 @@ def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, 
                                     description=description)
     torch.cuda.empty_cache()
 
+    # rename save file path
+    save_model_path = class_utils.get_model_save_path(train_save_dir, para_file, train_data_txt)
+    io_function.move_file_to_dst(save_model, save_model_path)
 
-def train_clip(WORK_DIR, para_file, gpu_num):
+
+def train_clip(WORK_DIR, para_file,pre_train_model='',train_data_txt='',b_a_few_shot=False,gpu_num=1):
     network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
 
@@ -372,16 +424,21 @@ def train_clip(WORK_DIR, para_file, gpu_num):
     print("Context length:", context_length)
     print("Vocab size:", vocab_size)
 
-
-    b_a_few_shot_training = parameters.get_bool_parameters(para_file,'a_few_shot_training')
-    if b_a_few_shot_training:
-        training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess)
+    if b_a_few_shot:
+        b_a_few_shot_training = True
     else:
-        training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess )
+        b_a_few_shot_training = parameters.get_bool_parameters(para_file, 'a_few_shot_training')
+
+    if b_a_few_shot_training:
+        training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess,
+                          p_train_model=pre_train_model,train_data_txt=train_data_txt)
+    else:
+        # training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess )
+        training_zero_shot_bash(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess)
 
     # result backup
 
-def clip_train_main(para_file,gpu_num=1):
+def clip_train_main(para_file,pre_train_model='',train_data_txt='',b_a_few_shot=False,gpu_num=1):
     print(datetime.now(),"train CLIP")
     SECONDS = time.time()
 
@@ -389,7 +446,8 @@ def clip_train_main(para_file,gpu_num=1):
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
     WORK_DIR = os.getcwd()
-    train_clip(WORK_DIR, para_file, gpu_num)
+    train_clip(WORK_DIR, para_file, pre_train_model=pre_train_model,train_data_txt=train_data_txt,
+                    b_a_few_shot=b_a_few_shot,gpu_num=gpu_num)
 
     duration = time.time() - SECONDS
     os.system('echo "$(date): time cost of training: %.2f seconds">>time_cost.txt' % duration)
@@ -398,13 +456,31 @@ def clip_train_main(para_file,gpu_num=1):
 def main(options, args):
 
     para_file = args[0]
-    clip_train_main(para_file)
+    pre_train_model = options.pretrain_model
+    train_data_txt = options.train_data_txt
+    b_a_few_shot = options.b_a_few_shot
+
+    clip_train_main(para_file,pre_train_model=pre_train_model,train_data_txt=train_data_txt,
+                    b_a_few_shot=b_a_few_shot)
 
 
 if __name__ == '__main__':
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2024-01-24")
     parser.description = 'Introduction: fine-tune the clip model using custom data'
+
+    parser.add_option("-m", "--pretrain_model",
+                      action="store", dest="pretrain_model",default='',
+                      help="the pre-trained model")
+
+    parser.add_option("-t", "--train_data_txt",
+                      action="store", dest="train_data_txt",default='',
+                      help="the training dataset saved in txt")
+
+    parser.add_option("-f", "--b_a_few_shot",
+                      action="store_true", dest="b_a_few_shot", default=False,
+                      help="if set, will force to run a few shot training, ignoring the the setting in ini files")
+
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:

@@ -20,6 +20,7 @@ code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import basic_src.io_function as  io_function
 import datasets.vector_gpd as vector_gpd
+import parameters
 
 class RSVectorDataset(Dataset):
     pass
@@ -72,6 +73,22 @@ def get_file_list(input_dir, pattern, area_ini):
 # copy from dem_common.py
 def get_grid_id_from_path(item):
     return int(re.findall('grid\d+', os.path.basename(item))[0][4:])
+
+def get_pseudo_labels_path(save_dir, v_num, topk):
+    save_path_txt = os.path.join(save_dir, 'pseudo_v{}_train_{}shot.txt'.format(v_num, topk))
+    return save_path_txt
+
+def get_model_save_path(train_save_dir, para_file, train_data_txt=''):
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+    model_type = parameters.get_string_parameters(network_ini, 'model_type')
+
+    model_type = model_type.replace('/','')
+    if train_data_txt != '':
+        model_type += os.path.splitext(os.path.basename(train_data_txt))[0]
+    file_name = 'model_'+model_type +'.ckpt'
+    save_path = os.path.join(train_save_dir,file_name)
+    return save_path
 
 def pair_raster_vecor_files_grid(vector_files, raster_files):
     # pair the vector and raster files for each grid based on information in file name

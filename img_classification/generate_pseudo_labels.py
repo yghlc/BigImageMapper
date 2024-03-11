@@ -17,6 +17,7 @@ sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
 import parameters
 
+import class_utils
 from prediction_clip import prepare_dataset, run_prediction, calculate_top_k_accuracy
 from train_clip import prepare_training_data, log_string
 
@@ -38,7 +39,7 @@ def generate_pseudo_labels(dataset, data_loader, save_dir, device, model, clip_p
             im, label, im_path = dataset[ind]
             save_str_list.append(im_path + ' ' + str(c) + ' ' + str(label) + ' ' + '%f'%float(pre_probs_per_class[ind].cpu()))
 
-    save_path_txt = os.path.join(save_dir,'pseudo_v{}_train_{}shot.txt'.format(version,topk))
+    save_path_txt = class_utils.get_pseudo_labels_path(save_dir,version,topk)
     io_function.save_list_to_txt(save_path_txt, save_str_list)
 
     return save_path_txt
@@ -87,13 +88,19 @@ def main(options, args):
     para_file = args[0]
     v_num = args[1]
     topk = args[2]
-    generate_pseudo_labels_main(para_file, v_num, topk)
+    trained_model = options.trained_model
+
+    generate_pseudo_labels_main(para_file,trained_model, v_num, topk)
 
 
 if __name__ == '__main__':
     usage = "usage: %prog [options] para_file v_num topk"
     parser = OptionParser(usage=usage, version="1.0 2024-01-24")
     parser.description = 'Introduction: run prediction and generate pseudo labels'
+
+    parser.add_option("-m", "--trained_model",
+                      action="store", dest="trained_model", default='',
+                      help="the trained model for prediction")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
