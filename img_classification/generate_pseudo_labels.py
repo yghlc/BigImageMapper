@@ -70,7 +70,7 @@ def generate_pseudo_labels_main(para_file, trained_model = None, v_num=1, topk=1
 
     probability_threshold = parameters.get_digit_parameters(network_ini, 'probability_threshold', 'float')
 
-    if trained_model is not None:
+    if os.path.isfile(trained_model):
         log_string("Loading pretrained model : [%s]" % trained_model)
         checkpoint = torch.load(open(trained_model, 'rb'), map_location="cpu")
         model.load_state_dict(checkpoint['state_dict'])
