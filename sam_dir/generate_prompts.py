@@ -28,6 +28,18 @@ from trainingPolys_to_prompts import extract_representative_point_from_polygons,
 import cv2
 from skimage import measure
 
+def merge_txts_into_one(txt_list, save_path=None):
+    if isinstance(txt_list, list) is False:
+        return txt_list
+    if len(txt_list) == 1:
+        return txt_list[0]
+    tmp_list = []
+    for txt in txt_list:
+        tmp_list.extend(io_function.read_list_from_txt(txt))
+    out_path = txt_list[0] if save_path is None else save_path
+    io_function.save_list_to_txt(out_path,tmp_list)
+    return out_path
+
 
 def binary_thresholding(image_2d, threshold, b_greater=False, b_morphology=False, morp_k_size=3, min_area=10):
     '''
@@ -220,6 +232,8 @@ def generate_prompts_main(para_file):
 
         prompt_save_path = extract_prompts_from_raster(area_ini, para_file, prompt_save_folder, max_points_from_polygon,
                                                         b_representative=b_representative_point)
+
+        prompt_save_path = merge_txts_into_one(prompt_save_path)
         # modify area_ini and write prompt_save_path (relative path)
         if prompt_save_path is not None and isinstance(prompt_save_path, list) is False:
             parameters.write_Parameters_file(area_ini, 'prompt_path', os.path.relpath(prompt_save_path))
