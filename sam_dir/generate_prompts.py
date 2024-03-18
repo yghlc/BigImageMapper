@@ -186,13 +186,14 @@ def extract_prompts_from_raster(area_ini, para_file, prompt_save_folder, max_poi
     :return:
     '''
     prompt_type = parameters.get_string_parameters_None_if_absence(para_file, 'prompt_type')
-    dem_diff_thread_m = parameters.get_digit_parameters(para_file,'dem_diff_threshold_m','float')
+
     if prompt_type is None:
         basic.outputlogMessage('prompt_type is not set, skipping getting prompts')
         return
 
     prompt_source_data = parameters.get_string_parameters(para_file, 'prompt_source_data')
     if prompt_source_data.lower() == 'dem_diff':
+        dem_diff_thread_m = parameters.get_digit_parameters(para_file, 'dem_diff_threshold_m', 'float')
         prompt_save_path = extract_points_from_dem_diff(area_ini, prompt_type, prompt_save_folder, max_points_one_region,
                                                         b_representative=b_representative, dem_diff_thread_m=dem_diff_thread_m)
     elif prompt_source_data.lower() == 'ndwi':
