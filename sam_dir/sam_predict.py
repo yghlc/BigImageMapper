@@ -271,7 +271,7 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
 
     # points_pixel, class_values, group_ids = None, None, None
     # boxes_pixel, box_class_values, box_group_ids = None, None, None
-    print('Debug, prompts is:', prompts)
+    # print('Debug, prompts is:', prompts)
     if prompts is None:
         if overlay_x > 0 or overlay_y >0:
             raise ValueError('For everything mode, overlay_x and overlay_y should be zero')

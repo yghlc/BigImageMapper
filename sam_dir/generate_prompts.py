@@ -164,10 +164,15 @@ def extract_points_from_dem_diff(area_ini, prompt_type, prompt_save_folder, max_
     dem_diff_file_or_pattern = parameters.get_string_parameters(area_ini, 'dem_diff_prompt_or_pattern')
     dem_diff_file_list = io_function.get_file_list_by_pattern(dem_diff_file_dir, dem_diff_file_or_pattern)
 
+    if len(dem_diff_file_list) < 1:
+        raise IOError('No DEM Diff file found by \n dem_diff_file_dir: %s \n dem_diff_file_or_pattern: %s'%(dem_diff_file_dir, dem_diff_file_or_pattern))
+    else:
+        basic.outputlogMessage('find %d DEM diff files'%len(dem_diff_file_list))
+
     prompt_save_list = []
 
     for idx, dem_diff_file in enumerate(dem_diff_file_list):
-        print('%d/%d, getting prompts from a DEM diff file'%(idx+1, len(dem_diff_file_list)))
+        basic.outputlogMessage('%d/%d, getting prompts from a DEM diff file'%(idx+1, len(dem_diff_file_list)))
         prompt_save_path = get_prompts_from_one_dem_diff(dem_diff_file, prompt_type,prompt_save_folder,
                                                          max_points_one_region,b_representative=b_representative,
                                                          dem_diff_thread_m = dem_diff_thread_m)
