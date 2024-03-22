@@ -265,7 +265,7 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     else:
         sam.to(device='cpu')
 
-    if isinstance(prompts, list) is False:
+    if prompts is not None and isinstance(prompts, list) is False:
         prompts = [prompts]
     prompts_dict = {}
 
