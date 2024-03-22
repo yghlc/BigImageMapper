@@ -501,10 +501,11 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
     # prepare prompts (points or boxes)
     prompt_type = parameters.get_string_parameters_None_if_absence(para_file, 'prompt_type')
     # print('Debug, prompt_type', prompt_type)
-    prompt_type_list = prompt_type.split('+')
+
     if prompt_type is None:
         prompts_an_image_list = None
     else:
+        prompt_type_list = prompt_type.split('+')
         prompt_path = parameters.get_file_path_parameters_None_if_absence(area_ini, 'prompt_path')
 
         prompts_list = io_function.read_list_from_txt(prompt_path)
