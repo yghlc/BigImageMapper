@@ -37,6 +37,12 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     if os.path.isfile(merged_tif):
         print('%s already exist'%merged_tif)
     else:
+        # check if tif exists
+        tif_list = io_function.get_file_list_by_pattern('./', 'I0_*.tif')
+        if len(tif_list) < 1:
+            print('Warning, NO I0_*.tif in %s'%img_save_dir)
+            return None, None
+
         #gdal_merge.py -init 0 -n 0 -a_nodata 0 -o I${n}_${output} I0_*.tif
         command_string = 'gdal_merge.py  -init 0 -n 0 -a_nodata 0 -o ' + merged_tif + ' I0_*.tif'
         res  = os.system(command_string)
