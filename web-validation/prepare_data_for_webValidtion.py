@@ -85,7 +85,7 @@ def organize_files(sub_img_dirs, save_dir):
         bound_path = png.replace('.png','_bound.geojson')
         io_function.copy_file_to_dst(bound_path,os.path.join(imageBound_dir,new_name+'_bound.geojson'))
 
-        digit_str = re.findall('_\d+', basename)
+        digit_str = re.findall(r'_\d+', basename)
         id_str = digit_str[0][1:]
         object_path = os.path.join(os.path.dirname(png), 'id_%s.geojson'%id_str)
         io_function.copy_file_to_dst(object_path, os.path.join(objectPolygons_dir, new_name + '.geojson'))

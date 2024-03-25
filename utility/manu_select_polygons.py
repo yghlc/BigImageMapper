@@ -48,7 +48,7 @@ def select_polygons_by_ids_in_excel(in_shp, table_path, save_path,id_name='id'):
     return vector_gpd.save_shapefile_subset_as(select_idx,in_shp,save_path)
 
 def get_id_from_filepath(filepath):
-    id_str = re.findall('_\d+_', os.path.basename(filepath))[0]
+    id_str = re.findall(r'_\d+_', os.path.basename(filepath))[0]
     return int(id_str[1:-1])
 
 def select_polygons_by_ids_in_filenames(in_shp, folder, save_path,id_name='id'):

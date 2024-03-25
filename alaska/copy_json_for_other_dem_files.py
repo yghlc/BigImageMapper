@@ -22,8 +22,8 @@ import re
 work_dir=os.path.expanduser('~/Data/Arctic/alaska/time_series_sub_images_191Polys')
 
 def get_date_str_poly_num(file_name):
-    date_str = re.findall('[0-9]{8}', file_name)[0]
-    poly_num = re.findall('poly_\d+', file_name)[0]
+    date_str = re.findall(r'[0-9]{8}', file_name)[0]
+    poly_num = re.findall(r'poly_\d+', file_name)[0]
     return date_str, poly_num
 
 

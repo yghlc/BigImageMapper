@@ -38,7 +38,7 @@ def create_region_parafile_for_one_image(template_para_file, img_path, area_name
 
     if area_time is None:
         path_base = os.path.basename(img_path)
-        date_strs = re.findall('[0-9]{8}',path_base)
+        date_strs = re.findall(r'[0-9]{8}',path_base)
         date_strs = list(set(date_strs))  # remove duplicate ones
         if len(date_strs) == 1:
             area_time = date_strs[0]
@@ -100,7 +100,7 @@ def create_new_region_defined_parafile(template_para_file, img_dir, img_ext, are
     io_function.is_file_exist(template_para_file)
 
     dir_base = os.path.basename(img_dir)
-    date_strs = re.findall('\d{8}',dir_base)
+    date_strs = re.findall(r'\d{8}',dir_base)
     if area_time is None:
         if len(date_strs) == 1:
             date = date_strs[0]
