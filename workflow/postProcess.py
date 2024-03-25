@@ -41,6 +41,7 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         tif_list = io_function.get_file_list_by_pattern('./', 'I0_*.tif')
         if len(tif_list) < 1:
             print('Warning, NO I0_*.tif in %s'%img_save_dir)
+            os.chdir(curr_dir)
             return None, None
 
         #gdal_merge.py -init 0 -n 0 -a_nodata 0 -o I${n}_${output} I0_*.tif
