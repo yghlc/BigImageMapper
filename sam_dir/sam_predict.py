@@ -132,7 +132,7 @@ def get_prompt_points_list(prompts_path, image_path):
     # convert points to x,y
     points, attribute_values = vector_gpd.read_polygons_attributes_list(prompts_path,['class_int','poly_id'],b_fix_invalid_polygon=False)
     if len(points) < 1:
-        return [], []
+        return [], [], []
     if points[0].geom_type != 'Point':
         raise ValueError('The geometry type should be Point, not %s'%str(points[0].geom_type))
 
