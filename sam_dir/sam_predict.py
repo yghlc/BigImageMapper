@@ -156,7 +156,7 @@ def get_prompt_boxes_list(prompts_path, image_path):
     # convert points to x,y
     boxes, attribute_values = vector_gpd.read_polygons_attributes_list(prompts_path,['class_int','poly_id'],b_fix_invalid_polygon=False)
     if len(boxes) < 1:
-        return [], []
+        return [], [], []
     if boxes[0].geom_type != 'Polygon':
         raise ValueError('The geometry type should be Polygon, not %s'%str(boxes[0].geom_type))
 
