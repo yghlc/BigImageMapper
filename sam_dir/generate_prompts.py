@@ -35,10 +35,11 @@ def merge_txts_into_one(txt_list, save_path=None):
         return txt_list[0]
     tmp_list = []
     for txt in txt_list:
-        # avoid duplication
-        if txt in tmp_list:
-            continue
-        tmp_list.extend(io_function.read_list_from_txt(txt))
+        # avoid duplication (when run multiple time)
+        file_list = io_function.read_list_from_txt(txt)
+        file_list_unique = [item for item in file_list if item not in tmp_list]
+
+        tmp_list.extend(file_list_unique)
     out_path = txt_list[0] if save_path is None else save_path
     io_function.save_list_to_txt(out_path,tmp_list)
     return out_path
