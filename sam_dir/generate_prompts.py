@@ -240,10 +240,18 @@ def generate_prompts_main(para_file):
             basic.outputlogMessage('Prompt is set in %s and exists, no need to generate a new one' % os.path.abspath(area_ini))
             continue
 
+        area_name = parameters.get_string_parameters(area_ini, 'area_name')
+        area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
+        area_time = parameters.get_string_parameters(area_ini, 'area_time')
+        area_name_remark_time = area_name + '_' + area_remark + '_' + area_time
+
         prompt_save_path = extract_prompts_from_raster(area_ini, para_file, prompt_save_folder, max_points_from_polygon,
                                                         b_representative=b_representative_point)
 
-        prompt_save_path = merge_txts_into_one(prompt_save_path)
+        # merged_txt = None
+        # if isinstance(prompt_save_path, list) and len(prompt_save_path) > 1:
+        merged_txt = os.path.join(prompt_save_folder, area_name_remark_time + "_prompts.txt")
+        prompt_save_path = merge_txts_into_one(prompt_save_path,save_path=merged_txt)
         # modify area_ini and write prompt_save_path (relative path)
         if prompt_save_path is not None and isinstance(prompt_save_path, list) is False:
             parameters.write_Parameters_file(area_ini, 'prompt_path', os.path.relpath(prompt_save_path))
