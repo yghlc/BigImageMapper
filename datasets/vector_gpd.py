@@ -1336,8 +1336,11 @@ def clip_geometries(input_path, save_path, mask, target_prj=None, format='ESRI S
             else:
                 shapefile = shapefile.to_crs({'init': target_prj})
     shp_clip = gpd.clip(shapefile,mask)
+    if shp_clip.empty:
+        return None
 
     shp_clip.to_file(save_path, driver=format)
+    return save_path
 
 def clip_geometries_ogr2ogr(input_path, save_path, bounds, format='ESRI Shapefile'):
     # bounds: xmin, ymin, xmax, ymax

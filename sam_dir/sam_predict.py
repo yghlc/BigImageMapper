@@ -473,7 +473,7 @@ def get_prompts_for_an_image(image_path, area_prompt_path, save_dir,prompt_type=
     #TODO: need to exclude no data regions
     img_bounds = raster_io.get_image_bound_box(image_path)
     img_prj = map_projection.get_raster_or_vector_srs_info_proj4(image_path)
-    vector_gpd.clip_geometries(area_prompt_path,prompt_path,img_bounds, target_prj=img_prj)
+    prompt_path = vector_gpd.clip_geometries(area_prompt_path,prompt_path,img_bounds, target_prj=img_prj)
     return prompt_path
 
 def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, network_ini, batch_size=1):
@@ -528,6 +528,8 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
                 prompt_image_path = get_prompts_for_an_image(image_path, p_path, save_dir, prompt_type='box')
             else:
                 raise ValueError('Cannot find prompt type in the file name: %s'%os.path.basename(p_path))
+            if prompt_image_path is None:
+                continue
             prompts_an_image_list.append(prompt_image_path)
 
     # using the python API
