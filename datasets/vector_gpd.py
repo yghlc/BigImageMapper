@@ -1161,6 +1161,13 @@ def get_surrounding_polygons(in_polygons,buffer_size):
 
     return surround_polys
 
+def merge_vector_files(file_list, save_path,format='ESRI Shapefile'):
+
+    command_string = 'ogrmerge.py -o %s -f "%s" -single -progress '%(save_path,format)
+    for item in file_list:
+        command_string += ' "%s"'%item
+    basic.os_system_exit_code(command_string)
+
 
 def merge_shape_files(file_list, save_path):
 

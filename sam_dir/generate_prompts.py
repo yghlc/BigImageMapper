@@ -45,6 +45,32 @@ def merge_txts_into_one(txt_list, save_path=None):
     return out_path
 
 
+def merge_prompts_same_type_into_one(prompts_txt_list, save_path=None):
+    # if not multiple (>1) files, return it directly
+    if isinstance(prompts_txt_list, list) is False:
+        return prompts_txt_list
+    if len(prompts_txt_list) == 1:
+        return prompts_txt_list[0]
+
+    # need to use *.shp (not *.gpkg) because in "sam_predict.py", need to check file names end with .shp
+    # prmopts are points or boxes, so, it should be easy to keep file size small than 2 GB
+    print(save_path)
+    prompt_point_path = save_path.replace('.txt', '_point.shp')
+    prompt_box_path = save_path.replace('.txt', '_box.shp')
+    all_vector_list = []
+    for txt in prompts_txt_list:
+        tmp_list = io_function.read_list_from_txt(txt)
+        all_vector_list.extend( [ os.path.join(os.path.dirname(txt) ,item) for item in tmp_list ])
+
+    prompt_point_txt_list = [item for item in all_vector_list if item.endswith('point.shp')]
+    prompt_box_txt_list = [item for item in all_vector_list if item.endswith('box.shp')]
+
+    vector_gpd.merge_vector_files(prompt_point_txt_list,prompt_point_path)
+    vector_gpd.merge_vector_files(prompt_box_txt_list, prompt_box_path)
+
+    io_function.save_list_to_txt(save_path,[os.path.basename(prompt_point_path), os.path.basename(prompt_box_path)])
+    return save_path
+
 def binary_thresholding(image_2d, threshold, b_greater=False, b_morphology=False, morp_k_size=3, min_area=10):
     '''
     thresholding
@@ -248,10 +274,10 @@ def generate_prompts_main(para_file):
         prompt_save_path = extract_prompts_from_raster(area_ini, para_file, prompt_save_folder, max_points_from_polygon,
                                                         b_representative=b_representative_point)
 
-        # merged_txt = None
-        # if isinstance(prompt_save_path, list) and len(prompt_save_path) > 1:
         merged_txt = os.path.join(prompt_save_folder, area_name_remark_time + "_prompts.txt")
-        prompt_save_path = merge_txts_into_one(prompt_save_path,save_path=merged_txt)
+        # prompt_save_path = merge_txts_into_one(prompt_save_path,save_path=merged_txt)
+        prompt_save_path = merge_prompts_same_type_into_one(prompt_save_path,merged_txt)
+
         # modify area_ini and write prompt_save_path (relative path)
         if prompt_save_path is not None and isinstance(prompt_save_path, list) is False:
             parameters.write_Parameters_file(area_ini, 'prompt_path', os.path.relpath(prompt_save_path))

@@ -509,6 +509,13 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
         prompt_path = parameters.get_file_path_parameters_None_if_absence(area_ini, 'prompt_path')
 
         prompts_list = io_function.read_list_from_txt(prompt_path)
+
+        # in the case when each prompt type has multiple (>1) vector files, making things complicated.
+        # so, when generating prompts for each region, merge these prompts into one file
+        # checking if one type have only one prompt file
+        if len(prompt_type_list) != len(prompts_list):
+            raise ValueError('for each region, each prompt type should only have one vector file')
+
         # only keep those match the prompt type
         prompts_list_new = []
         for p_type in prompt_type_list:
