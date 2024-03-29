@@ -696,7 +696,7 @@ def parallel_segment_main(para_file):
             #     time.sleep(60)  # wait 60 second on ITSC services
             # else:
             #     time.sleep(10)
-            time.sleep(10) # wait a few seconds allowing models being loaded before moving to next
+            time.sleep(15) # wait a few seconds allowing models being loaded before moving to next
 
     # check all the tasks already finished
     wait_all_finish = 0
