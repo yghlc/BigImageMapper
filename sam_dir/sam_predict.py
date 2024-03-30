@@ -474,8 +474,12 @@ def get_prompts_for_an_image(image_path, area_prompt_path, save_dir,prompt_type=
     ## get prompts, specific for this image
     #TODO: need to exclude no data regions
     img_bounds = raster_io.get_image_bound_box(image_path)
-    img_prj = map_projection.get_raster_or_vector_srs_info_proj4(image_path)
-    prompt_path = vector_gpd.clip_geometries(area_prompt_path,prompt_path,img_bounds, target_prj=img_prj)
+    # gpd.clip is very slow when the input vector file is very large
+    # img_prj = map_projection.get_raster_or_vector_srs_info_proj4(image_path)
+    # prompt_path = vector_gpd.clip_geometries(area_prompt_path,prompt_path,img_bounds, target_prj=img_prj)
+
+    # use ogr2ogr to crop
+    prompt_path = vector_gpd.clip_geometries_ogr2ogr(area_prompt_path, prompt_path, img_bounds, format='ESRI Shapefile')
     print('crop shapefile: %s, costs %f second' % (area_prompt_path, time.time() - t0))
     return prompt_path
 
