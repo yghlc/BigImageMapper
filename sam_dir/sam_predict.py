@@ -469,11 +469,14 @@ def get_prompts_for_an_image(image_path, area_prompt_path, save_dir,prompt_type=
         basic.outputlogMessage('%s exists, skip extracting prompts for this image'%prompt_path)
         return prompt_path
 
+    t0 = time.time()
+
     ## get prompts, specific for this image
     #TODO: need to exclude no data regions
     img_bounds = raster_io.get_image_bound_box(image_path)
     img_prj = map_projection.get_raster_or_vector_srs_info_proj4(image_path)
     prompt_path = vector_gpd.clip_geometries(area_prompt_path,prompt_path,img_bounds, target_prj=img_prj)
+    print('crop shapefile: %s, costs %f second' % (area_prompt_path, time.time() - t0))
     return prompt_path
 
 def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, network_ini, batch_size=1):
