@@ -49,7 +49,7 @@ def merge_polygon_rasterize(ref_raster, in_shp, out_shp=None, work_dir='./', b_r
         raise IOError('polygonzied failed for %s' % save_raster)
 
     if b_rm_tif:
-        io_function.delete_file_or_dir(b_rm_tif)
+        io_function.delete_file_or_dir(save_raster)
 
     return out_shp
 
