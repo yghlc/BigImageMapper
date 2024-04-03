@@ -30,6 +30,7 @@ import datasets.vector_gpd as vector_gpd
 
 
 def merge_polygon_rasterize(ref_raster, in_shp, work_dir='./'):
+    # union polygons touch each other in a shapefile
 
     in_polygons = vector_gpd.read_polygons_gpd(in_shp,b_fix_invalid_polygon=False)
 
@@ -111,7 +112,7 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
             return None
 
         # in the shapefile, merge those polygons touch each other
-        img_idx_txt = os.path.join(area_save_dir, '%d.txt' % img_idx)
+        img_idx_txt = os.path.join('../', '%d.txt' % img_idx)
         ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
         out_shp = merge_polygon_rasterize(ref_raster,out_shp)
 
