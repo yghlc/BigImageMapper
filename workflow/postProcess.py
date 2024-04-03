@@ -25,6 +25,29 @@ from datasets.get_polygon_attributes import add_polygon_attributes
 from datasets.remove_mappedPolygons import remove_polygons_main
 from datasets.evaluation_result import evaluation_polygons
 
+import datasets.raster_io as raster_io
+import datasets.vector_gpd as vector_gpd
+
+
+def merge_polygon_rasterize(ref_raster, in_shp, work_dir='./'):
+
+    in_polygons = vector_gpd.read_polygons_gpd(in_shp,b_fix_invalid_polygon=False)
+
+    # rasterize to raster
+    save_raster = os.path.basename(io_function.get_name_by_adding_tail(ref_raster,'merge'))
+    save_raster = os.path.join(work_dir,save_raster)
+    raster_io.burn_polygons_to_a_raster(ref_raster,in_polygons,1,save_raster)
+
+    # set nodata
+    if raster_io.set_nodata_to_raster_metadata(save_raster,0) is False:
+        raise IOError('Set nodata failed for %s'%save_raster)
+
+    # polygonize
+    out_shp = vector_gpd.raster2shapefile(save_raster, connect8=True,format='ESRI Shapefile')
+    if out_shp is None:
+        raise IOError('polygonzied failed for %s' % save_raster)
+
+    return out_shp
 
 def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
 
@@ -86,6 +109,11 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
             # sys.exit(1)
             os.chdir(curr_dir)
             return None
+
+        # in the shapefile, merge those polygons touch each other
+        img_idx_txt = os.path.join(area_save_dir, '%d.txt' % img_idx)
+        ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
+        out_shp = merge_polygon_rasterize(ref_raster,out_shp)
 
     os.chdir(curr_dir)
     out_shp_path = os.path.join(img_save_dir, out_shp)
