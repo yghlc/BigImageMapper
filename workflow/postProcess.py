@@ -29,7 +29,7 @@ import datasets.raster_io as raster_io
 import datasets.vector_gpd as vector_gpd
 
 
-def merge_polygon_rasterize(ref_raster, in_shp, work_dir='./'):
+def merge_polygon_rasterize(ref_raster, in_shp, out_shp=None, work_dir='./', b_rm_tif=True):
     # union polygons touch each other in a shapefile
 
     in_polygons = vector_gpd.read_polygons_gpd(in_shp,b_fix_invalid_polygon=False)
@@ -44,9 +44,12 @@ def merge_polygon_rasterize(ref_raster, in_shp, work_dir='./'):
         raise IOError('Set nodata failed for %s'%save_raster)
 
     # polygonize
-    out_shp = vector_gpd.raster2shapefile(save_raster, connect8=True,format='ESRI Shapefile')
+    out_shp = vector_gpd.raster2shapefile(save_raster, out_shp=out_shp, connect8=True,format='ESRI Shapefile')
     if out_shp is None:
         raise IOError('polygonzied failed for %s' % save_raster)
+
+    if b_rm_tif:
+        io_function.delete_file_or_dir(b_rm_tif)
 
     return out_shp
 
@@ -114,7 +117,8 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
         # in the shapefile, merge those polygons touch each other
         img_idx_txt = os.path.join('../', '%d.txt' % img_idx)
         ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
-        out_shp = merge_polygon_rasterize(ref_raster,out_shp)
+        merge_poly_shp = io_function.get_name_by_adding_tail(out_shp,'merge')
+        out_shp = merge_polygon_rasterize(ref_raster,out_shp,out_shp=merge_poly_shp)
 
     os.chdir(curr_dir)
     out_shp_path = os.path.join(img_save_dir, out_shp)
