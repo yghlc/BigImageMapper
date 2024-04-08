@@ -36,8 +36,7 @@ ${eo_dir}/workflow/split_train_val.py ${para_file}
 
 ################################################
 ## run within conda environment (name: pytorch)
-### segment
-rm -r multi_segment_results || true
+### training SAM
 conda run --no-capture-output -n pytorch bash -c "${eo_dir}/sam_dir/fine_tune_sam.py ${para_file}"
 ################################################
 
