@@ -1354,6 +1354,7 @@ def clip_geometries_ogr2ogr(input_path, save_path, bounds, format='ESRI Shapefil
     # using ogr2ogr to crop vector file, if the vector file is very large (> 1GB),
     # we don't have to read all geometries to cpu memory, then use geopandas to clip it  (slow, out-of-memory)
 
+    # noted: may need to check the projection before calling this function
 
     # ogr2ogr -progress -f GPKG -spat ${xmin} ${ymin} ${xmax} ${ymax}  ${dst} ${src}
     commond_str = 'ogr2ogr -f "%s"'%format      # -progress
