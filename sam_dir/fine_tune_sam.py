@@ -33,7 +33,7 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1):
     model = parameters.get_file_path_parameters(network_ini, 'checkpoint')
     model_type = parameters.get_string_parameters(network_ini, 'model_type')
 
-    # get training data
+    # get training data (after get sub-images and splitting)
 
 
     # train SAM
