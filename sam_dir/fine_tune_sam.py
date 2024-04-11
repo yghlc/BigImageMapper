@@ -214,7 +214,7 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=
     # train SAM
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     best_valid_loss = float('inf')
-    timestamp_writer = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp_writer = datetime.now().strftime("%Y%m%d_%H%M%S")
     writer = SummaryWriter(os.path.join(train_save_dir, f"trainer_{timestamp_writer}"))
     for epch in range(epochs):  # type: ignore
         running_vloss = 0.
