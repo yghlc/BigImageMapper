@@ -253,7 +253,7 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=
 
 
 def fine_tune_sam_main(para_file, pre_train_model='',gpu_num=1):
-    print(datetime.now(), "fine-tune Segment anything models")
+    print(datetime.now(), "fine-tune Segment Anything models")
     SECONDS = time.time()
 
     if os.path.isfile(para_file) is False:

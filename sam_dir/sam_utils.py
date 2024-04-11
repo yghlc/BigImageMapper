@@ -15,6 +15,8 @@ from torch.utils.data import DataLoader, Dataset
 from segment_anything.utils.transforms import ResizeLongestSide
 import torch
 
+import cv2
+
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import basic_src.io_function as  io_function
@@ -61,11 +63,13 @@ class RSPatchDataset(Dataset):
         image_path = os.path.join('split_images', image_id.strip() + self.img_ext)
         label_path = os.path.join('split_labels', image_id.strip() + self.img_ext)
 
-        # image = cv2.imread(image_path)
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image_cv = cv2.imread(image_path)
+        # image_cv = cv2.cvtColor(image_cv, cv2.COLOR_BGR2RGB)
 
-        image = raster_io.read_raster_all_bands_np(image_path)
-        label_masks = raster_io.read_raster_all_bands_np(label_path)
+        image, nodata = raster_io.read_raster_all_bands_np(image_path)
+        image = image.transpose(1, 2, 0)  # to opencv format  # in HWC uint8 format
+        label_masks, nodata_l = raster_io.read_raster_all_bands_np(label_path)
+        label_masks = label_masks.transpose(1, 2, 0)  # # to opencv format  # in HWC
 
         if self.transform:
             # image, masks, bboxes = self.transform(image, masks, np.array(bboxes))
