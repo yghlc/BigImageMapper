@@ -148,7 +148,7 @@ def load_datasets(para_file, img_size=1024):
     training_list_txt = parameters.get_string_parameters(para_file,'training_sample_list_txt')
     valid_list_txt = parameters.get_string_parameters(para_file,'validation_sample_list_txt')
 
-    network_ini = parameters.get_string_parameters(para_file,'network_setting_ini.ini')
+    network_ini = parameters.get_string_parameters(para_file,'network_setting_ini')
     batch_size = parameters.get_digit_parameters(network_ini,'batch_size','int')
 
     process_num = parameters.get_digit_parameters(para_file,'process_num','int')
