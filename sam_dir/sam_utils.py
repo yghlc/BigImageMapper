@@ -160,7 +160,7 @@ def load_datasets(para_file, img_size=1024):
 
     valdata = RSPatchDataset(cur_dir,
                              para_file,
-                             valid_list_txt,
+                             os.path.join('list', valid_list_txt),
                              transform=transform)
 
     train_dataloader = DataLoader(traindata,
