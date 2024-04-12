@@ -237,10 +237,9 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=
                 preds = preds.to(device)
                 vloss = criterion(preds, label_raster, device)
                 running_vloss += vloss.item()
-        print(f'epoch: {epch}, validloss: {running_vloss}')
+
         avg_vloss = running_vloss / len(validloader)
-        # save model
-        print(f'epoch: {epch}, validloss: {running_vloss}')
+        print(f'epoch: {epch}, validloss: {running_vloss}, avg_vloss: {avg_vloss}')
 
         if running_vloss < best_valid_loss:
             best_model = model
