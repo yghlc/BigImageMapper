@@ -77,7 +77,7 @@ class RSPatchDataset(Dataset):
 
         # bboxes = np.stack(bboxes, axis=0)
         # masks = np.stack(masks, axis=0)
-        return image, image_path, torch.tensor(label_raster).float()
+        return image, image_path, label_raster.float()
 
 
 def get_totalmask(masks):

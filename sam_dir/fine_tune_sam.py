@@ -224,16 +224,17 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=
         if not b_evaluate:  # type: ignore
             continue
         with torch.no_grad():
-            for images, path, masks in validloader:
+            for images, path, label_raster in validloader:
                 model.to(device)
                 images = images.to(device)
-                masks = masks[0].to(device)
-                total_mask = get_totalmask(masks)
-                total_mask = total_mask.to(device)
+                # masks = masks[0].to(device)
+                label_raster = label_raster.to(device)
+                # total_mask = get_totalmask(masks)
+                # total_mask = total_mask.to(device)
                 model.eval()
                 preds, iou = model(images)
                 preds = preds.to(device)
-                vloss = criterion(preds, total_mask, device)
+                vloss = criterion(preds, label_raster, device)
                 running_vloss += vloss.item()
         print(f'epoch: {epch}, validloss: {running_vloss}')
         avg_vloss = running_vloss / len(validloader)
