@@ -165,7 +165,7 @@ def train_one_epoch(model, trainloader, optimizer, epoch_idx, tb_writer, device)
         image = image.to(device)
         optimizer.zero_grad()
         pred, _ = model(image)
-        label_raster = label_raster.squeeze()   # rm uncessary dimision
+        label_raster = label_raster.flatten(0, 2)   # see "flatten(0, 2)" in forward
         label_raster = label_raster.to(device)
         # total_mask = get_totalmask(masks)
         pred = pred.to(device)
@@ -228,7 +228,7 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=
                 model.to(device)
                 images = images.to(device)
                 # masks = masks[0].to(device)
-                label_raster = label_raster.squeeze()  # rm uncessary dimision
+                label_raster = label_raster.flatten(0, 2) # see "flatten(0, 2)" in forward
                 label_raster = label_raster.to(device)
                 # total_mask = get_totalmask(masks)
                 # total_mask = total_mask.to(device)
