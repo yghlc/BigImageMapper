@@ -161,14 +161,15 @@ def train_one_epoch(model, trainloader, optimizer, epoch_idx, tb_writer, device)
 
     """
     running_loss = 0.
-    for i, (image, path, masks) in enumerate(trainloader):
+    for i, (image, path, label_raster) in enumerate(trainloader):
         image = image.to(device)
         optimizer.zero_grad()
         pred, _ = model(image)
-        masks = masks[0].to(device)
-        total_mask = get_totalmask(masks)
+        label_raster = label_raster.to(device)
+        # total_mask = get_totalmask(masks)
+        total_mask = label_raster
         pred = pred.to(device)
-        loss = criterion(pred, total_mask)
+        loss = criterion(pred, total_mask,device)
         loss.backward()
         optimizer.step()
         running_loss += loss.item()

@@ -68,16 +68,16 @@ class RSPatchDataset(Dataset):
 
         image, nodata = raster_io.read_raster_all_bands_np(image_path)
         image = image.transpose(1, 2, 0)  # to opencv format  # in HWC uint8 format
-        label_masks, nodata_l = raster_io.read_raster_all_bands_np(label_path)
-        label_masks = label_masks.transpose(1, 2, 0)  # # to opencv format  # in HWC
+        label_raster, nodata_l = raster_io.read_raster_all_bands_np(label_path)
+        label_raster = label_raster.transpose(1, 2, 0)  # # to opencv format  # in HWC
 
         if self.transform:
             # image, masks, bboxes = self.transform(image, masks, np.array(bboxes))
-            image, masks, _ = self.transform(image, label_masks, None)
+            image, label_raster = self.transform(image, label_raster)
 
         # bboxes = np.stack(bboxes, axis=0)
         # masks = np.stack(masks, axis=0)
-        return image, image_path, torch.tensor(label_masks).float()
+        return image, image_path, torch.tensor(label_raster).float()
 
 
 def get_totalmask(masks):
@@ -96,7 +96,7 @@ def get_totalmask(masks):
 
 class ResizeAndPad:
     """
-    Resize and pad images and masks to a target size.
+    Resize and pad images and label_raster to a target size (for semantic segmentation).
 
     ...
     Attributes
@@ -112,12 +112,14 @@ class ResizeAndPad:
         self.transform = ResizeLongestSide(target_size)
         self.to_tensor = transforms.ToTensor()
 
-    def __call__(self, image, masks, bboxes):
+    def __call__(self, image, label_raster):
         # Resize image and masks
         og_h, og_w, _ = image.shape
         image = self.transform.apply_image(image)
-        masks = [torch.tensor(self.transform.apply_image(mask)) for mask in masks]
+        label_raster = self.transform.apply_image(label_raster)
+        # masks = [torch.tensor(self.transform.apply_image(mask)) for mask in masks]
         image = self.to_tensor(image)
+        label_raster = self.to_tensor(label_raster)
 
         # Pad image and masks to form a square
         _, h, w = image.shape
@@ -127,13 +129,15 @@ class ResizeAndPad:
 
         padding = (pad_w, pad_h, max_dim - w - pad_w, max_dim - h - pad_h)
         image = transforms.Pad(padding)(image)
-        masks = [transforms.Pad(padding)(mask) for mask in masks]
+        label_raster = transforms.Pad(padding)(label_raster)
+        # masks = [transforms.Pad(padding)(mask) for mask in masks]
 
-        # Adjust bounding boxes
-        bboxes = self.transform.apply_boxes(bboxes, (og_h, og_w))
-        bboxes = [[bbox[0] + pad_w, bbox[1] + pad_h, bbox[2] + pad_w, bbox[3] + pad_h] for bbox in bboxes]
+        # # Adjust bounding boxes
+        # if bboxes is not None:
+        #     bboxes = self.transform.apply_boxes(bboxes, (og_h, og_w))
+        #     bboxes = [[bbox[0] + pad_w, bbox[1] + pad_h, bbox[2] + pad_w, bbox[3] + pad_h] for bbox in bboxes]
 
-        return image, masks, bboxes
+        return image, label_raster #, bboxes
 
 
 def load_datasets(para_file, img_size=1024):
