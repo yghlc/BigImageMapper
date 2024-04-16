@@ -28,10 +28,10 @@ def main():
         print("The key names in the two .pth files are different.")
 
     with open('keys1.txt','w')  as f_obj:
-        f_obj.writelines([str(key) for key in keys1])
+        f_obj.writelines([str(key) +'\n' for key in keys1])
 
     with open('keys2.txt','w')  as f_obj:
-        f_obj.writelines([str(key) for key in keys2])
+        f_obj.writelines([str(key) +'\n' for key in keys2])
 
 
 if __name__ == '__main__':
