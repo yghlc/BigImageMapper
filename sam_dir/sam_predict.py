@@ -264,12 +264,14 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     if finetune_m is None:
+        basic.outputlogMessage('loading a checkpoint: %s'%model)
         sam = sam_model_registry[model_type](checkpoint=model)
     else:
         # load the trained model
         from fine_tune_sam import ModelSAM
         model_trained = ModelSAM()
         model_trained.setup(model_type, model)
+        basic.outputlogMessage('loading fine-tuned model: %s'%finetune_m)
         model_trained.load_state_dict(torch.load(finetune_m, map_location=torch.device(device)) )
         sam = model_trained.model
 
