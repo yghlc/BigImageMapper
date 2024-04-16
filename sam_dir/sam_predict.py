@@ -515,8 +515,13 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
     overlay_x = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_x", 'int')
     overlay_y = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_y", 'int')
 
-    sam_mask_min_area = parameters.get_digit_parameters(para_file, "sam_mask_min_area_pixel", 'int')
-    sam_mask_max_area = parameters.get_digit_parameters(para_file, "sam_mask_max_area_pixel", 'int')
+    # sam_mask_min_area = parameters.get_digit_parameters(para_file, "sam_mask_min_area_pixel", 'int')
+    # sam_mask_max_area = parameters.get_digit_parameters(para_file, "sam_mask_max_area_pixel", 'int')
+    xres, yres = raster_io.get_xres_yres_file(image_path)
+    sam_mask_min_area = parameters.get_digit_parameters(para_file, "sam_mask_min_area_m2", 'float')
+    sam_mask_max_area = parameters.get_digit_parameters(para_file, "sam_mask_max_area_m2", 'float')
+    sam_mask_min_area = sam_mask_min_area/(xres**2)    # to pixels
+    sam_mask_max_area = sam_mask_max_area/(xres**2)
 
     model = parameters.get_file_path_parameters(network_ini,'checkpoint')
     model_type = parameters.get_string_parameters(network_ini,'model_type')
