@@ -255,17 +255,29 @@ def group_prompt_points_boxes(points_pixel_list, class_values, group_ids,input_b
     return group_prompts_all
 
 def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch_h, overlay_x, overlay_y,
-                        batch_size=1, min_area=10, max_area=40000, prompts=None):
+                        batch_size=1, min_area=10, max_area=40000, prompts=None, finetune_m=None):
 
     # for each region, after SAM, its area (in pixel) should be within [min_area, max_area],
     # otherwise, remove it
 
     from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
-    sam = sam_model_registry[model_type](checkpoint=model)
-    if torch.cuda.is_available():
-        sam.to(device='cuda')
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    if finetune_m is None:
+        sam = sam_model_registry[model_type](checkpoint=model)
     else:
-        sam.to(device='cpu')
+        # load the trained model
+        from fine_tune_sam import ModelSAM
+        model_trained = ModelSAM()
+        model_trained.setup(model_type, model)
+        model_trained.load_state_dict(torch.load(finetune_m, map_location=torch.device(device)) )
+        sam = model_trained.model
+
+    sam.to(device=device)
+    # if torch.cuda.is_available():
+    #     sam.to(device='cuda')
+    # else:
+    #     sam.to(device='cpu')
 
     if prompts is not None and isinstance(prompts, list) is False:
         prompts = [prompts]
@@ -506,6 +518,7 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
 
     model = parameters.get_file_path_parameters(network_ini,'checkpoint')
     model_type = parameters.get_string_parameters(network_ini,'model_type')
+    finedtuned_model = parameters.get_file_path_parameters_None_if_absence(network_ini,'finedtuned_model')
 
     # prepare prompts (points or boxes)
     prompt_type = parameters.get_string_parameters_None_if_absence(para_file, 'prompt_type')
@@ -552,7 +565,7 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
     out = segment_rs_image_sam(image_path, save_dir, model, model_type,
                                patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size,
                                min_area=sam_mask_min_area, max_area=sam_mask_max_area,
-                               prompts=prompts_an_image_list)
+                               prompts=prompts_an_image_list,finetune_m=finedtuned_model)
 
 def segment_one_image_sam(para_file, area_ini, image_path, img_save_dir, inf_list_file, gpuid):
 
