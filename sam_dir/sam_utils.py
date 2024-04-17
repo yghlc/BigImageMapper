@@ -14,6 +14,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset
 from segment_anything.utils.transforms import ResizeLongestSide
 import torch
+import numpy as np
 
 import cv2
 
@@ -78,6 +79,41 @@ class RSPatchDataset(Dataset):
         # bboxes = np.stack(bboxes, axis=0)
         # masks = np.stack(masks, axis=0)
         return image, image_path, label_raster.float()
+
+
+class SAM_RS_Dataset(Dataset):
+  """
+  This class is used to create a dataset that serves input images and masks.
+  processor is from hugging face transformers
+  it will also handle RS image patches
+
+  It takes a dataset and a processor as input and overrides the __len__ and __getitem__ methods of the Dataset class.
+  """
+  def __init__(self, dataset, processor):
+    self.dataset = dataset
+    self.processor = processor
+
+  def __len__(self):
+    return len(self.dataset)
+
+  def __getitem__(self, idx):
+    item = self.dataset[idx]
+    image = item["image"]
+    ground_truth_mask = np.array(item["label"])
+
+    # get bounding box prompt
+    prompt = get_bounding_box(ground_truth_mask)
+
+    # prepare image and prompt for the model
+    inputs = self.processor(image, input_boxes=[[prompt]], return_tensors="pt")
+
+    # remove batch dimension which the processor adds by default
+    inputs = {k:v.squeeze(0) for k,v in inputs.items()}
+
+    # add ground truth segmentation
+    inputs["ground_truth_mask"] = ground_truth_mask
+
+    return inputs
 
 
 def get_totalmask(masks):

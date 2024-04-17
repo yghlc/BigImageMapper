@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # Filename: fine_tune_sam.py 
 """
-introduction:
+introduction: fine tune sam models.
+ref: https://maxjoas.medium.com/finetune-segment-anything-sam-for-images-with-multiple-masks-34514ee811bb
+problem:
+(1) the results is not good, and I am not sure where is the problem
+(2) after resize input images into 1024 by 1024, there is not an easy way to convert it back
 
 authors: Huang Lingcao
 email:huanglingcao@gmail.com
