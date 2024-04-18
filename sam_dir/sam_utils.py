@@ -112,8 +112,8 @@ class SAM_RS_Dataset(Dataset):
 
   def __getitem__(self, idx):
     item = self.dataset[idx]
-    print('debuging',idx)
-    print('debuging',item)
+    # print('debuging',idx)
+    # print('debuging',item)
     image = item["image"]
     # print(image)
     # print(item["label"])
@@ -302,7 +302,7 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
             raise ValueError('size different')
     # Create the dataset using the datasets.Dataset class
     dataset = huggingface_Dataset.from_dict(dataset_dict)
-    print('debuging', dataset)
+    # print('debuging', dataset)
     return dataset
 
 
