@@ -328,6 +328,16 @@ def test_prepare_dataset_for_SAM_RS():
     para_file = 'main_para.ini'
     dataset, valid_dataset = prepare_dataset_for_SAM_RS(para_file)
 
+    # Initialize the processor
+    from transformers import SamProcessor
+    processor = SamProcessor.from_pretrained("facebook/sam-vit-huge")
+    train_dataset = SAM_RS_Dataset(dataset=dataset, processor=processor)
+    example = train_dataset[0]
+    # print(example)
+    for k, v in example.items():
+        print(k, v.shape)
+        print(v)
+
     # img_num = random.randint(0, filtered_images.shape[0] - 1)
     img_num = 1
     example_image = dataset[img_num]["image"]
