@@ -10,11 +10,11 @@ add time: 11 April, 2024
 
 import os,sys
 
-# import torchvision.transforms as transforms
-# from torch.utils.data import DataLoader, Dataset
-# from segment_anything.utils.transforms import ResizeLongestSide
-# import torch
-# import numpy as np
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader, Dataset
+from segment_anything.utils.transforms import ResizeLongestSide
+import torch
+import numpy as np
 
 import cv2
 # this would import the global environment, not the "datasets" in the local folder
