@@ -18,7 +18,8 @@ import numpy as np
 
 import cv2
 # this would import the global environment, not the "datasets" in the local folder
-from datasets import Dataset
+# there is also another "Dataset" used in torch.utils.data, so rename it to huggingface_Dataset
+from datasets import Dataset as huggingface_Dataset
 from PIL import Image
 
 # Save the original sys.path
@@ -300,7 +301,7 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
             print(labl.size)
             raise ValueError('size different')
     # Create the dataset using the datasets.Dataset class
-    dataset = Dataset.from_dict(dataset_dict)
+    dataset = huggingface_Dataset.from_dict(dataset_dict)
     print('debuging', dataset)
     return dataset
 
