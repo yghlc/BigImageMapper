@@ -23,11 +23,14 @@ import numpy as np
 from tqdm import tqdm
 from statistics import mean
 
+# Save the original sys.path
+original_path = sys.path[:]
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
 import basic_src.io_function as io_function
-
+# Restore the original sys.path
+sys.path = original_path
 #
 from transformers import SamProcessor
 from transformers import SamModel

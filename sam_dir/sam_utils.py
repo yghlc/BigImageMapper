@@ -10,17 +10,19 @@ add time: 11 April, 2024
 
 import os,sys
 
-import torchvision.transforms as transforms
-from torch.utils.data import DataLoader, Dataset
-from segment_anything.utils.transforms import ResizeLongestSide
-import torch
-import numpy as np
+# import torchvision.transforms as transforms
+# from torch.utils.data import DataLoader, Dataset
+# from segment_anything.utils.transforms import ResizeLongestSide
+# import torch
+# import numpy as np
 
 import cv2
 # this would import the global environment, not the "datasets" in the local folder
 from datasets import Dataset
 from PIL import Image
 
+# Save the original sys.path
+original_path = sys.path[:]
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
@@ -33,6 +35,8 @@ sys.path.insert(0, code_dir2)
 # import Landuse_DL.datasets.vector_gpd as vector_gpd
 import Landuse_DL.datasets.raster_io as raster_io
 
+# Restore the original sys.path
+sys.path = original_path
 
 class RSPatchDataset(Dataset):
     """
