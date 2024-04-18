@@ -112,7 +112,17 @@ class SAM_RS_Dataset(Dataset):
   def __getitem__(self, idx):
     item = self.dataset[idx]
     image = item["image"]
-    ground_truth_mask = np.array(item["label"])
+    # print(image)
+    # print(item["label"])
+    # TODO: multiple it by 255?, because we set the ground truth as 1, but SAM may use 255?
+
+    # TODO: 2, only support batch_size = 1, batch_size > 1, end error:
+    # setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions.
+    # The detected shape was (4,) + inhomogeneous part
+    # ground_truth_mask = np.array(item["label"]) # error: int() argument must be a string, a bytes-like object or a number, not 'png**Image'
+    # ground_truth_mask = np.array(item["label"][0]) # error:  index 1 is out of bounds for dimension 0 with size 1
+    ground_truth_mask = np.array(item["label"])    # it's ok on linux (np == 1.26.2)
+    # print(ground_truth_mask.shape)
 
     # get bounding box prompt
     prompt = get_bounding_box(ground_truth_mask)
@@ -249,18 +259,26 @@ def load_datasets(para_file, img_size=1024):
 def read_one_dataset_PIL(img_list_txt, img_ext):
 
     img_ids = [item.strip() for item in io_function.read_list_from_txt(img_list_txt)]
+    #TODO: need to assigned this from para_file
+    target_size = (256, 256)  # Desired target size for the images
 
     # read training images
     img_list = [ os.path.join('split_images', img_id.strip() + img_ext)  for img_id in  img_ids ]
     mask_list = [ os.path.join('split_labels', img_id.strip() + img_ext) for img_id in  img_ids ]
     # read image file to Pillow images and store them in a dictionary
     dataset_dict = {
-        "image": [Image.open(img) for img in img_list],
-        "label": [Image.open(mask) for mask in mask_list],
+        "image": [Image.open(img).resize(target_size) for img in img_list],
+        "label": [Image.open(mask).resize(target_size) for mask in mask_list],
     }
-    print('reading %d image patches into memory, e.g,'%len(img_list), 'size of the first one:', dataset_dict['image'][0].size )
+    print('reading %d image patches into memory, e.g,'%len(img_list), 'size of the first one:', dataset_dict['image'][0].size, dataset_dict['label'][0].size )
+    for img, labl in zip(dataset_dict['image'],dataset_dict['label']):
+        if img.size != target_size or labl.size != target_size:
+            print(img.size)
+            print(labl.size)
+            raise ValueError('size different')
     # Create the dataset using the datasets.Dataset class
     dataset = Dataset.from_dict(dataset_dict)
+    # print(dataset)
     return dataset
 
 
@@ -284,9 +302,44 @@ def prepare_dataset_for_SAM_RS(para_file):
     return training_dataset, valid_dataset
 
 
+def test_prepare_dataset_for_SAM_RS():
+    import matplotlib.pyplot as plt
+    para_file = 'main_para.ini'
+    dataset, valid_dataset = prepare_dataset_for_SAM_RS(para_file)
+
+    # img_num = random.randint(0, filtered_images.shape[0] - 1)
+    img_num = 1
+    example_image = dataset[img_num]["image"]
+    example_mask = dataset[img_num]["label"]
+
+    print(np.array(example_image).shape)
+    print(np.array(example_mask).shape)
+    print(np.unique(np.array(example_mask), return_counts=True))
+
+    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+
+    # Plot the first image on the left
+    # axes[0].imshow(np.array(example_image), cmap='gray')  # Assuming the first image is grayscale
+    axes[0].imshow(np.array(example_image))
+    axes[0].set_title("Image")
+
+    # Plot the second image on the right
+    axes[1].imshow(example_mask, cmap='gray')  # Assuming the second image is grayscale
+    axes[1].set_title("Mask")
+
+    # Hide axis ticks and labels
+    # for ax in axes:
+    #     ax.set_xticks([])
+    #     ax.set_yticks([])
+    #     ax.set_xticklabels([])
+    #     ax.set_yticklabels([])
+
+    # Display the images side by side
+    plt.show()
 
 def main():
     pass
 
 if __name__ == '__main__':
+    test_prepare_dataset_for_SAM_RS()
     pass
