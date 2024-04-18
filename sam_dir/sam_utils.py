@@ -111,6 +111,8 @@ class SAM_RS_Dataset(Dataset):
 
   def __getitem__(self, idx):
     item = self.dataset[idx]
+    print('debuging',idx)
+    print('debuging',item)
     image = item["image"]
     # print(image)
     # print(item["label"])
@@ -299,7 +301,7 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
             raise ValueError('size different')
     # Create the dataset using the datasets.Dataset class
     dataset = Dataset.from_dict(dataset_dict)
-    # print(dataset)
+    print('debuging', dataset)
     return dataset
 
 
@@ -337,6 +339,12 @@ def test_prepare_dataset_for_SAM_RS():
     for k, v in example.items():
         print(k, v.shape)
         print(v)
+
+    batch_size = 2
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=False)
+    batch = next(iter(train_dataloader))
+    for k, v in batch.items():
+        print(k, v.shape)
 
     # img_num = random.randint(0, filtered_images.shape[0] - 1)
     img_num = 1
