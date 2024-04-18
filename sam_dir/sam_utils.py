@@ -17,6 +17,10 @@ import torch
 import numpy as np
 
 import cv2
+# this would import the global environment, not the "datasets" in the local folder
+from datasets import Dataset
+from PIL import Image
+
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
@@ -129,6 +133,21 @@ def get_totalmask(masks):
         total_gt += masks[0][k,:,:]
     return total_gt
 
+#Get bounding boxes from mask.
+def get_bounding_box(ground_truth_map):
+  # get bounding box from mask
+  y_indices, x_indices = np.where(ground_truth_map > 0)
+  x_min, x_max = np.min(x_indices), np.max(x_indices)
+  y_min, y_max = np.min(y_indices), np.max(y_indices)
+  # add perturbation to bounding box coordinates
+  H, W = ground_truth_map.shape
+  x_min = max(0, x_min - np.random.randint(0, 20))
+  x_max = min(W, x_max + np.random.randint(0, 20))
+  y_min = max(0, y_min - np.random.randint(0, 20))
+  y_max = min(H, y_max + np.random.randint(0, 20))
+  bbox = [x_min, y_min, x_max, y_max]
+
+  return bbox
 
 class ResizeAndPad:
     """
@@ -218,6 +237,42 @@ def load_datasets(para_file, img_size=1024):
                                 num_workers=process_num)
     return train_dataloader, val_dataloader
 
+def read_one_dataset_PIL(img_list_txt, img_ext):
+
+    img_ids = [item.strip() for item in io_function.read_list_from_txt(img_list_txt)]
+
+    # read training images
+    img_list = [ os.path.join('split_images', img_id.strip() + img_ext)  for img_id in  img_ids ]
+    mask_list = [ os.path.join('split_labels', img_id.strip() + img_ext) for img_id in  img_ids ]
+    # read image file to Pillow images and store them in a dictionary
+    dataset_dict = {
+        "image": [Image.open(img) for img in img_list],
+        "label": [Image.open(mask) for mask in mask_list],
+    }
+    print('reading %d image patches into memory, e.g,'%len(img_list), 'shape of the first one:', dataset_dict['image'][0].shape )
+    # Create the dataset using the datasets.Dataset class
+    dataset = Dataset.from_dict(dataset_dict)
+    return dataset
+
+
+def prepare_dataset_for_SAM_RS(para_file):
+
+    training_list_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
+    training_list_txt = os.path.join('list', training_list_txt)
+    valid_list_txt = parameters.get_string_parameters(para_file, 'validation_sample_list_txt')
+    valid_list_txt = os.path.join('list', valid_list_txt)
+
+    # network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+    # batch_size = parameters.get_digit_parameters(network_ini, 'batch_size', 'int')
+    # process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
+    img_ext = parameters.get_string_parameters_None_if_absence(para_file, 'split_image_format')
+
+    # read and create datasets.Dataset class for training
+    training_dataset = read_one_dataset_PIL(training_list_txt,img_ext)
+
+    # validation images
+    valid_dataset = read_one_dataset_PIL(valid_list_txt, img_ext)
+    return training_dataset, valid_dataset
 
 
 

@@ -36,7 +36,7 @@ import monai
 
 from torch.utils.data import DataLoader
 
-from sam_utils import SAM_RS_Dataset
+from sam_utils import SAM_RS_Dataset, prepare_dataset_for_SAM_RS
 
 def get_model_type_hf(model_type):
     # get the pre-trained model string on hugging face
@@ -63,13 +63,17 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=
 
     # checkpoint = parameters.get_file_path_parameters(network_ini, 'checkpoint')
     model_type = parameters.get_string_parameters(network_ini, 'model_type')
+    batch_size = parameters.get_digit_parameters(network_ini,'batch_size', 'int')
 
     # Initialize the processor
     processor = SamProcessor.from_pretrained(get_model_type_hf(model_type))
 
+    #TODO: how to use valid_images?, or use 100% of image patches for validation
+    train_images, valid_images = prepare_dataset_for_SAM_RS(para_file)
+
     # Create an instance of the SAMDataset for training data (after get sub-images and splitting)
-    train_dataset = SAM_RS_Dataset(dataset=dataset, processor=processor)
-    train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True, drop_last=False)
+    train_dataset = SAM_RS_Dataset(dataset=train_images, processor=processor)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=False)
 
     num_epochs = parameters.get_digit_parameters(network_ini,'train_epoch_num','int')
     # lr = parameters.get_digit_parameters(network_ini,'base_learning_rate','float')  # 1e-5
@@ -90,9 +94,7 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=
         if name.startswith("vision_encoder") or name.startswith("prompt_encoder"):
             param.requires_grad_(False)
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
-
     model.train()
     for epoch in range(num_epochs):
         epoch_losses = []
