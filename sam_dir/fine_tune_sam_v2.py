@@ -97,6 +97,9 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=
         if name.startswith("vision_encoder") or name.startswith("prompt_encoder"):
             param.requires_grad_(False)
 
+    train_loss_txt = os.path.join(train_save_dir, 'training_loss_%s.txt' % expr_name)
+    t_loss_obj = open(train_loss_txt,'w')
+
     model.to(device)
     model.train()
     for epoch in range(num_epochs):
@@ -119,10 +122,12 @@ def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=
             # optimize
             optimizer.step()
             epoch_losses.append(loss.item())
-
+        t_loss_obj.writelines(f'EPOCH: {epoch}, Mean loss: {mean(epoch_losses)}\n')
+        t_loss_obj.flush()
         print(f'EPOCH: {epoch}')
         print(f'Mean loss: {mean(epoch_losses)}')
 
+    t_loss_obj.close()
     #  save the model
     save_path = os.path.join(train_save_dir, 'finetuned_%s.pth' % expr_name)
     torch.save(model.state_dict(), save_path)
