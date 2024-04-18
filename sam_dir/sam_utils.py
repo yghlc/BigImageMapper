@@ -128,7 +128,7 @@ class SAM_RS_Dataset(Dataset):
     prompt = get_bounding_box(ground_truth_mask)
 
     # prepare image and prompt for the model
-    inputs = self.processor(image, input_boxes=[prompt], return_tensors="pt")
+    inputs = self.processor(image, input_boxes=[[prompt]], return_tensors="pt")
 
     # remove batch dimension which the processor adds by default
     inputs = {k:v.squeeze(0) for k,v in inputs.items()}
@@ -153,25 +153,39 @@ def get_totalmask(masks):
     return total_gt
 
 #Get bounding boxes from mask.
+# def get_bounding_box(ground_truth_map):
+
+    # if ground_truth_map.ndim == 2:
+    #     ground_truth_map = np.expand_dims(ground_truth_map, axis=0)
+
+    # bbox = []
+    # for map in ground_truth_map:
+    #     # get bounding box from mask
+    #     y_indices, x_indices = np.where(map > 0)
+    #     x_min, x_max = np.min(x_indices), np.max(x_indices)
+    #     y_min, y_max = np.min(y_indices), np.max(y_indices)
+    #     # add perturbation to bounding box coordinates
+    #     H, W = map.shape
+    #     x_min = max(0, x_min - np.random.randint(0, 20))
+    #     x_max = min(W, x_max + np.random.randint(0, 20))
+    #     y_min = max(0, y_min - np.random.randint(0, 20))
+    #     y_max = min(H, y_max + np.random.randint(0, 20))
+    #     a_box = [x_min, y_min, x_max, y_max]
+    #     bbox.append(a_box)
+    #
+    # return bbox
 def get_bounding_box(ground_truth_map):
-
-    if ground_truth_map.ndim == 2:
-        ground_truth_map = np.expand_dims(ground_truth_map, axis=0)
-
-    bbox = []
-    for map in ground_truth_map:
-        # get bounding box from mask
-        y_indices, x_indices = np.where(map > 0)
-        x_min, x_max = np.min(x_indices), np.max(x_indices)
-        y_min, y_max = np.min(y_indices), np.max(y_indices)
-        # add perturbation to bounding box coordinates
-        H, W = map.shape
-        x_min = max(0, x_min - np.random.randint(0, 20))
-        x_max = min(W, x_max + np.random.randint(0, 20))
-        y_min = max(0, y_min - np.random.randint(0, 20))
-        y_max = min(H, y_max + np.random.randint(0, 20))
-        a_box = [x_min, y_min, x_max, y_max]
-        bbox.append(a_box)
+    # get bounding box from mask
+    y_indices, x_indices = np.where(ground_truth_map > 0)
+    x_min, x_max = np.min(x_indices), np.max(x_indices)
+    y_min, y_max = np.min(y_indices), np.max(y_indices)
+    # add perturbation to bounding box coordinates
+    H, W = ground_truth_map.shape
+    x_min = max(0, x_min - np.random.randint(0, 20))
+    x_max = min(W, x_max + np.random.randint(0, 20))
+    y_min = max(0, y_min - np.random.randint(0, 20))
+    y_max = min(H, y_max + np.random.randint(0, 20))
+    bbox = [x_min, y_min, x_max, y_max]
 
     return bbox
 
