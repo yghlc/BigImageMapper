@@ -258,7 +258,7 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
         "image": [Image.open(img) for img in img_list],
         "label": [Image.open(mask) for mask in mask_list],
     }
-    print('reading %d image patches into memory, e.g,'%len(img_list), 'shape of the first one:', dataset_dict['image'][0].shape )
+    print('reading %d image patches into memory, e.g,'%len(img_list), 'size of the first one:', dataset_dict['image'][0].size )
     # Create the dataset using the datasets.Dataset class
     dataset = Dataset.from_dict(dataset_dict)
     return dataset
