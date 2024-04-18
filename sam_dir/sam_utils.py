@@ -25,9 +25,14 @@ from PIL import Image
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import basic_src.io_function as  io_function
-import datasets.vector_gpd as vector_gpd
-import datasets.raster_io as raster_io
 import parameters
+
+# import from an upper level of folder, avoid the conflit with "datasets" from hugging face
+code_dir2 = os.path.abspath(os.path.join(code_dir, '..'))
+sys.path.insert(0, code_dir2)
+# import Landuse_DL.datasets.vector_gpd as vector_gpd
+import Landuse_DL.datasets.raster_io as raster_io
+
 
 class RSPatchDataset(Dataset):
     """
