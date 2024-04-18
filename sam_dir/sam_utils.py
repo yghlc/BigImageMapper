@@ -16,7 +16,6 @@ from segment_anything.utils.transforms import ResizeLongestSide
 import torch
 import numpy as np
 
-import cv2
 # this would import the global environment, not the "datasets" in the local folder
 # there is also another "Dataset" used in torch.utils.data, so rename it to huggingface_Dataset
 from datasets import Dataset as huggingface_Dataset
@@ -118,13 +117,7 @@ class SAM_RS_Dataset(Dataset):
     # print(image)
     # print(item["label"])
     # TODO: multiple it by 255?, because we set the ground truth as 1, but SAM may use 255?
-
-    # TODO: 2, only support batch_size = 1, batch_size > 1, end error:
-    # setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions.
-    # The detected shape was (4,) + inhomogeneous part
-    # ground_truth_mask = np.array(item["label"]) # error: int() argument must be a string, a bytes-like object or a number, not 'png**Image'
-    # ground_truth_mask = np.array(item["label"][0]) # error:  index 1 is out of bounds for dimension 0 with size 1
-    ground_truth_mask = np.array(item["label"])    # it's ok on linux (np == 1.26.2)
+    ground_truth_mask = np.array(item["label"])
     # print(ground_truth_mask.shape)
 
     # get bounding box prompt
@@ -156,27 +149,6 @@ def get_totalmask(masks):
     return total_gt
 
 #Get bounding boxes from mask.
-# def get_bounding_box(ground_truth_map):
-
-    # if ground_truth_map.ndim == 2:
-    #     ground_truth_map = np.expand_dims(ground_truth_map, axis=0)
-
-    # bbox = []
-    # for map in ground_truth_map:
-    #     # get bounding box from mask
-    #     y_indices, x_indices = np.where(map > 0)
-    #     x_min, x_max = np.min(x_indices), np.max(x_indices)
-    #     y_min, y_max = np.min(y_indices), np.max(y_indices)
-    #     # add perturbation to bounding box coordinates
-    #     H, W = map.shape
-    #     x_min = max(0, x_min - np.random.randint(0, 20))
-    #     x_max = min(W, x_max + np.random.randint(0, 20))
-    #     y_min = max(0, y_min - np.random.randint(0, 20))
-    #     y_max = min(H, y_max + np.random.randint(0, 20))
-    #     a_box = [x_min, y_min, x_max, y_max]
-    #     bbox.append(a_box)
-    #
-    # return bbox
 def get_bounding_box(ground_truth_map):
     # get bounding box from mask
     y_indices, x_indices = np.where(ground_truth_map > 0)
