@@ -38,6 +38,19 @@ import Landuse_DL.datasets.raster_io as raster_io
 # Restore the original sys.path
 sys.path = original_path
 
+def get_model_type_hf(model_type):
+    # get the pre-trained model string on hugging face
+    if model_type == 'vit_b':
+        pre_str = "facebook/sam-vit-base"
+    elif model_type == 'vit_l':
+        pre_str = "facebook/sam-vit-large"
+    elif model_type == 'vit_h':
+        pre_str = "facebook/sam-vit-huge"
+    else:
+        raise ValueError('Unknown mmodel type: %s'%model_type)
+
+    return pre_str
+
 class RSPatchDataset(Dataset):
     """
     A PyTorch Dataset to load data from a current folder.
@@ -116,7 +129,7 @@ class SAM_RS_Dataset(Dataset):
     image = item["image"]
     # print(image)
     # print(item["label"])
-    # TODO: multiple it by 255?, because we set the ground truth as 1, but SAM may use 255?
+    # TODO: multiply it by 255?, because we set the ground truth as 1, but SAM may use 255?
     ground_truth_mask = np.array(item["label"])
     # print(ground_truth_mask.shape)
 

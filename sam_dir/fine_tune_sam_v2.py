@@ -39,20 +39,8 @@ import monai
 
 from torch.utils.data import DataLoader
 
-from sam_utils import SAM_RS_Dataset, prepare_dataset_for_SAM_RS
+from sam_utils import SAM_RS_Dataset, prepare_dataset_for_SAM_RS, get_model_type_hf
 
-def get_model_type_hf(model_type):
-    # get the pre-trained model string on hugging face
-    if model_type == 'vit_b':
-        pre_str = "facebook/sam-vit-base"
-    elif model_type == 'vit_l':
-        pre_str = "facebook/sam-vit-large"
-    elif model_type == 'vit_h':
-        pre_str = "facebook/sam-vit-huge"
-    else:
-        raise ValueError('Unknow mmodel type: %s'%model_type)
-
-    return pre_str
 
 def fine_tune_sam(WORK_DIR, para_file, pre_train_model='', gpu_num=1,b_evaluate=True):
     network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
