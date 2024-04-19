@@ -123,8 +123,8 @@ def test_am_prediction_hg_small_img(trained_model, processor, device):
     with torch.no_grad():
         outputs = trained_model(**inputs, multimask_output=False)
 
-    print('outputs', outputs.shape)
-    print(np.max(outputs), np.min(outputs), np.mean(outputs))
+    # print('outputs', outputs.shape)
+    # print(np.max(outputs), np.min(outputs), np.mean(outputs))
 
     # apply sigmoid
     medsam_seg_prob = torch.sigmoid(outputs.pred_masks.squeeze(1))
