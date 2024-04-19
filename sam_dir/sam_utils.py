@@ -287,8 +287,8 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
     valid_indices = [i for i, mask in enumerate(dataset_dict['label']) if np.array(mask).max() != 0]
     # Filter the image and mask arrays to keep only the non-empty pairs
     dataset_dict = {
-        "image": dataset_dict['image'][valid_indices],
-        "label": dataset_dict['label'][valid_indices],
+        "image":  [dataset_dict['image'][idx] for idx in valid_indices],
+        "label": [dataset_dict['label'][idx] for idx in valid_indices],
     }
 
     print('reading %d image patches into memory, e.g,'%len(img_list), 'size of the first one:', dataset_dict['image'][0].size, dataset_dict['label'][0].size )
