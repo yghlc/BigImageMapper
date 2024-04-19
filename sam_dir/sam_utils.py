@@ -284,7 +284,7 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
         "label": [Image.open(mask).crop((0,0,256,256)) for mask in mask_list],
     }
     # Create a list to store the indices of non-empty masks
-    valid_indices = [i for i, mask in enumerate(dataset_dict['label']) if mask.max() != 0]
+    valid_indices = [i for i, mask in enumerate(dataset_dict['label']) if np.array(mask).max() != 0]
     # Filter the image and mask arrays to keep only the non-empty pairs
     dataset_dict = {
         "image": dataset_dict['image'][valid_indices],
