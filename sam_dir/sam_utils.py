@@ -275,9 +275,13 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
     img_list = [ os.path.join('split_images', img_id.strip() + img_ext)  for img_id in  img_ids ]
     mask_list = [ os.path.join('split_labels', img_id.strip() + img_ext) for img_id in  img_ids ]
     # read image file to Pillow images and store them in a dictionary
+    # dataset_dict = {
+    #     "image": [Image.open(img).resize(target_size) for img in img_list],
+    #     "label": [Image.open(mask).resize(target_size) for mask in mask_list],
+    # }
     dataset_dict = {
-        "image": [Image.open(img).resize(target_size) for img in img_list],
-        "label": [Image.open(mask).resize(target_size) for mask in mask_list],
+        "image": [Image.open(img).crop((0,0,256,256)) for img in img_list],
+        "label": [Image.open(mask).crop((0,0,256,256)) for mask in mask_list],
     }
     print('reading %d image patches into memory, e.g,'%len(img_list), 'size of the first one:', dataset_dict['image'][0].size, dataset_dict['label'][0].size )
     for img, labl in zip(dataset_dict['image'],dataset_dict['label']):
