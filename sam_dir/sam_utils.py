@@ -283,6 +283,14 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
         "image": [Image.open(img).crop((0,0,256,256)) for img in img_list],
         "label": [Image.open(mask).crop((0,0,256,256)) for mask in mask_list],
     }
+    # Create a list to store the indices of non-empty masks
+    valid_indices = [i for i, mask in enumerate(dataset_dict['label']) if mask.max() != 0]
+    # Filter the image and mask arrays to keep only the non-empty pairs
+    dataset_dict = {
+        "image": dataset_dict['image'][valid_indices],
+        "label": dataset_dict['label'][valid_indices],
+    }
+
     print('reading %d image patches into memory, e.g,'%len(img_list), 'size of the first one:', dataset_dict['image'][0].size, dataset_dict['label'][0].size )
     for img, labl in zip(dataset_dict['image'],dataset_dict['label']):
         if img.size != target_size or labl.size != target_size:
