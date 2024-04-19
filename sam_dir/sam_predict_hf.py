@@ -149,7 +149,8 @@ def test_am_prediction_hg_small_img(trained_model, processor, device):
     #     ax.set_yticklabels([])
 
     # Display the images side by side
-    plt.show()
+    # plt.show()
+    plt.savefig('output.jpg')
 
 
 
