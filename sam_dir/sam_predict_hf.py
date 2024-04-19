@@ -35,6 +35,10 @@ from sam_utils import get_model_type_hf, get_bounding_box
 # there is also another "Dataset" used in torch.utils.data, so rename it to huggingface_Dataset
 from datasets import Dataset as huggingface_Dataset
 
+# must be before importing matplotlib.pyplot or pylab!
+import matplotlib
+if os.name == 'posix' and "DISPLAY" not in os.environ:
+    matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
