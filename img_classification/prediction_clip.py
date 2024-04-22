@@ -351,7 +351,7 @@ def parallel_prediction_main(para_file,trained_model):
     network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
     model_type = parameters.get_string_parameters(network_ini,'model_type')
 
-    outdir = parameters.get_directory(para_file, 'inf_output_dir')
+    outdir = os.path.join(parameters.get_directory(para_file, 'inf_output_dir'), expr_name)
     # remove previous results (let user remove this folder manually or in exe.sh folder)
     io_function.mkdir(outdir)
 
