@@ -467,6 +467,10 @@ def parallel_prediction_main(para_file,trained_model):
             # else:
             #     time.sleep(10)
 
+        # copy and backup area ini file
+        bak_area_ini = os.path.join(area_save_dir, os.path.basename(io_function.get_name_by_adding_tail(area_ini, 'region')))
+        io_function.copy_file_to_dst(area_ini, bak_area_ini, overwrite=True)
+
 
     # check all the tasks already finished
     wait_all_finish = 0
@@ -485,6 +489,18 @@ def parallel_prediction_main(para_file,trained_model):
     basic.outputlogMessage(out_str)
     with open("time_cost.txt", 'a') as t_obj:
         t_obj.writelines(out_str + '\n')
+
+    # copy and back up parameter files
+    test_id = expr_name # os.path.basename(WORK_DIR) + '_' +
+    bak_para_ini = os.path.join(outdir, '_'.join([test_id, 'para']) + '.ini')
+    bak_network_ini = os.path.join(outdir, '_'.join([test_id, 'network']) + '.ini')
+    bak_time_cost = os.path.join(outdir, '_'.join([test_id, 'time_cost']) + '.txt')
+
+    io_function.copy_file_to_dst(para_file, bak_para_ini,overwrite=True)
+    io_function.copy_file_to_dst(network_ini, bak_network_ini,overwrite=True)
+    if os.path.isfile('time_cost.txt'):
+        io_function.copy_file_to_dst('time_cost.txt', bak_time_cost,overwrite=True)
+
 
 
 def main(options, args):
