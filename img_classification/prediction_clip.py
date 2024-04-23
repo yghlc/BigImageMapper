@@ -491,7 +491,8 @@ def parallel_prediction_main(para_file,trained_model):
         t_obj.writelines(out_str + '\n')
 
     # copy and back up parameter files
-    test_id = expr_name # os.path.basename(WORK_DIR) + '_' +
+    WORK_DIR = os.getcwd()
+    test_id = os.path.basename(WORK_DIR) + '_' + expr_name
     bak_para_ini = os.path.join(outdir, '_'.join([test_id, 'para']) + '.ini')
     bak_network_ini = os.path.join(outdir, '_'.join([test_id, 'network']) + '.ini')
     bak_time_cost = os.path.join(outdir, '_'.join([test_id, 'time_cost']) + '.txt')
