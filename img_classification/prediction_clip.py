@@ -36,6 +36,8 @@ from multiprocessing import Process
 from class_utils import RSPatchDataset
 import class_utils
 
+from tqdm import tqdm
+
 def is_file_exist_in_folder(folder):
     # just check if the folder is empty
     if len(os.listdir(folder)) == 0:
@@ -220,7 +222,7 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
     else:
         raise ValueError('Unknown area data type: %s, only accept: image_patch and image_vector'%area_data_type)
 
-
+    basic.outputlogMessage('read %d images for prediction'%len(input_data))
     return input_data
 
 def run_prediction(model, test_loader,prompt, device):
@@ -238,7 +240,7 @@ def run_prediction(model, test_loader,prompt, device):
     gts = []
     with torch.no_grad():
         cnt = 0
-        for data in test_loader:
+        for data in tqdm(test_loader):
             images, targets, _ = data
             images = images.to(device)
             targets = targets.to(device).squeeze()
