@@ -172,6 +172,7 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
         process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
         extract_done_indicator = os.path.join(extract_img_dir,'extract_image_using_vector.done')
+        patch_list_txt = os.path.join(extract_img_dir, os.path.basename(area_save_dir) + '_patch_list.txt')
 
         all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(area_ini,'all_polygons_labels')
         if all_polygons_labels is not None:
@@ -213,6 +214,9 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
 
                 image_path_list.extend(image_path_list_grid)
                 image_labels.extend(image_labels_grid)
+
+        if os.path.isfile(patch_list_txt) is False:
+            io_function.save_list_to_txt(patch_list_txt ,image_path_list)
 
         if os.path.isfile(extract_done_indicator) is False:
             with open(extract_done_indicator,'w') as f_obj:
