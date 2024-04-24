@@ -143,7 +143,8 @@ def test_classification_ucm(model, preprocess):
     # top5 accuracy
     calculate_top_k_accuracy(top_labels_5, ground_truths, k=5)
 
-def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_pattern, transform=None, test = False, extract_img_dir=None):
+def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_pattern, transform=None, test = False,
+                    extract_img_dir=None, training_poly_shp=None):
     area_data_type = parameters.get_string_parameters(area_ini,'area_data_type')
     inf_image_dir = image_dir
     inf_image_or_pattern = image_or_pattern
@@ -175,7 +176,11 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
         extract_done_indicator = os.path.join(extract_img_dir,'extract_image_using_vector.done')
         patch_list_txt = os.path.join(extract_img_dir, os.path.basename(area_save_dir) + '_patch_list.txt')
 
-        all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(area_ini,'all_polygons_labels')
+        if training_poly_shp is not None:
+            # assign a different training polygon
+            all_polygons_labels = training_poly_shp
+        else:
+            all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(area_ini,'all_polygons_labels')
         if all_polygons_labels is not None:
             command_string = get_subImage_script  + ' -b ' + str(buffersize) + ' -e ' + inf_image_or_pattern + \
                              ' -o ' + extract_img_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
