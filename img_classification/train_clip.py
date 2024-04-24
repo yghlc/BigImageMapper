@@ -74,8 +74,9 @@ def prepare_training_data(WORK_DIR, para_file, transform, test=False):
     train_image_dir = parameters.get_directory(area_ini, 'input_image_dir')
     train_image_or_pattern = parameters.get_string_parameters(area_ini, 'input_image_or_pattern')
     # TODO need to check preprocess, do we need to define it?
+    extract_img_dir = os.path.join(WORK_DIR,'training_data', os.path.basename(area_save_dir))
     in_dataset = prepare_dataset(para_file,area_ini,area_save_dir, train_image_dir, train_image_or_pattern,
-                                 transform, test=test)
+                                 transform, test=test, extract_img_dir=extract_img_dir)
     return in_dataset
 
 def convert_models_to_fp32(model):

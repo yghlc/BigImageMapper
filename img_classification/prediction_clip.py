@@ -143,12 +143,13 @@ def test_classification_ucm(model, preprocess):
     # top5 accuracy
     calculate_top_k_accuracy(top_labels_5, ground_truths, k=5)
 
-def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_pattern, transform=None, test = False):
+def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_pattern, transform=None, test = False, extract_img_dir=None):
     area_data_type = parameters.get_string_parameters(area_ini,'area_data_type')
     inf_image_dir = image_dir
     inf_image_or_pattern = image_or_pattern
     class_labels = parameters.get_file_path_parameters(para_file,'class_labels')
-    extract_img_dir = os.path.join(os.getcwd(),'image_patches', os.path.basename(area_save_dir))
+    if extract_img_dir is None:
+        extract_img_dir = os.path.join(os.getcwd(),'image_patches', os.path.basename(area_save_dir))
 
     if area_data_type == 'image_patch':
         all_image_patch_labels = parameters.get_file_path_parameters(area_ini, 'all_image_patch_labels')
