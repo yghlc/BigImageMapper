@@ -405,7 +405,7 @@ def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, 
 
     # rename save file path
     save_model_path = class_utils.get_model_save_path(train_save_dir, para_file, train_data_txt)
-    io_function.move_file_to_dst(save_model, save_model_path)
+    io_function.move_file_to_dst(save_model, save_model_path, overwrite=True)
 
 
 def train_clip(WORK_DIR, para_file,pre_train_model='',train_data_txt='',b_a_few_shot=False,gpu_num=1):
