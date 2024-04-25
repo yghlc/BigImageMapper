@@ -4,7 +4,7 @@ all_label = []
 
 data_root = os.path.expanduser('~/Data/image_classification/EuroSAT')
 
-all_classes = os.listdir(os.path.join(data_root, 'EuroSAT_RGB'))
+all_classes = sorted(os.listdir(os.path.join(data_root, 'EuroSAT_RGB')))
 # on Mac, there is a hidden file
 if '.DS_Store' in all_classes:
     all_classes.remove('.DS_Store')
@@ -18,7 +18,7 @@ for i, cls in enumerate(all_classes):
     print(cls, i)
     f2.writelines(cls + ', ' + str(i) + '\n')
 
-    cls_list = glob.glob(os.path.join(data_root, 'EuroSAT_RGB' , cls, '*.jpg'))
+    cls_list = sorted(glob.glob(os.path.join(data_root, 'EuroSAT_RGB' , cls, '*.jpg')))
     # print(cls_list)
     cls_list = ["/".join(dd.split('/')[-2:]) for dd in cls_list]
 
