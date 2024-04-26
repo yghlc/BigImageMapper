@@ -112,9 +112,10 @@ def check_projection_rasters(image_path_list):
 
     if len(image_path_list) < 2:
         return True
-    proj4 = get_projection_proj4(image_path_list[0])
+    # proj4 = get_projection_proj4(image_path_list[0])
+    proj4 = raster_io.get_projection(image_path_list[0],'proj4')
     for idx in range(1,len(image_path_list)):
-        proj4_tmp = get_projection_proj4(image_path_list[idx])
+        proj4_tmp = raster_io.get_projection(image_path_list[idx], 'proj4')
         if proj4_tmp != proj4:
             raise ValueError('error, %s have different projection with the first raster'%image_path_list[idx])
     return True
