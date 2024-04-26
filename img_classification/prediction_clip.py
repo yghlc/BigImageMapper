@@ -223,7 +223,7 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
 
         if os.path.isfile(patch_list_txt) is False:
             # save the relative path and label to file
-            image_path_label_list = [ '%s %d'%(os.path.realpath(item), idx) for idx, item in zip(image_labels, image_path_list) ]
+            image_path_label_list = [ '%s %d'%(os.path.relpath(item), idx) for idx, item in zip(image_labels, image_path_list) ]
             io_function.save_list_to_txt(patch_list_txt ,image_path_label_list)
 
 
