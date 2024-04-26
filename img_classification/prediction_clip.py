@@ -222,7 +222,10 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
                 image_labels.extend(image_labels_grid)
 
         if os.path.isfile(patch_list_txt) is False:
-            io_function.save_list_to_txt(patch_list_txt ,image_path_list)
+            # save the relative path and label to file
+            image_path_label_list = [ '%s %d'%(os.path.realpath(item), idx) for idx, item in zip(image_labels, patch_list_txt) ]
+            io_function.save_list_to_txt(patch_list_txt ,image_path_label_list)
+
 
         if os.path.isfile(extract_done_indicator) is False:
             with open(extract_done_indicator,'w') as f_obj:
