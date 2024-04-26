@@ -191,7 +191,12 @@ def get_string_list_parameters(parafile,name):
         raise ValueError('No inference area is set in %s' % parafile)
     return str_value
 
-
+def get_area_name_remark_time(area_ini):
+    area_name = get_string_parameters(area_ini, 'area_name')
+    area_remark = get_string_parameters(area_ini, 'area_remark')
+    area_time = get_string_parameters(area_ini, 'area_time')
+    area_name_remark_time = area_name + '_' + area_remark + '_' + area_time
+    return area_name_remark_time
 
 
 
