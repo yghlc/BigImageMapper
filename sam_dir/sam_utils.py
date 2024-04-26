@@ -279,6 +279,7 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
     #     "image": [Image.open(img).resize(target_size) for img in img_list],
     #     "label": [Image.open(mask).resize(target_size) for mask in mask_list],
     # }
+    #TODO: this is debuging
     dataset_dict = {
         "image": [Image.open(img).crop((0,0,256,256)) for img in img_list],
         "label": [Image.open(mask).crop((0,0,256,256)) for mask in mask_list],
@@ -290,6 +291,7 @@ def read_one_dataset_PIL(img_list_txt, img_ext):
         "image":  [dataset_dict['image'][idx] for idx in valid_indices],
         "label": [dataset_dict['label'][idx] for idx in valid_indices],
     }
+    ########################
 
     print('reading %d image patches into memory, e.g,'%len(img_list), 'size of the first one:', dataset_dict['image'][0].size, dataset_dict['label'][0].size )
     for img, labl in zip(dataset_dict['image'],dataset_dict['label']):
