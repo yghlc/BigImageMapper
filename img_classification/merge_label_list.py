@@ -37,7 +37,10 @@ def merge_label_list(label_list_txts, save_path):
             continue
 
         tmp_labels = [ item.split(',')[0] for item in  io_function.read_list_from_txt(txt)]
-        #TODO: check duplication
+        tmp_labels = [ item.lower().strip() for item in tmp_labels]
+        # check duplication
+        tmp_labels = [ item for item in tmp_labels if item not in labels]
+
         labels.extend(tmp_labels)
 
     # save
