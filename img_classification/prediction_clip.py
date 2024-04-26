@@ -34,7 +34,7 @@ from multiprocessing import Process
 # import torch.multiprocessing as Process
 
 from class_utils import RSPatchDataset
-from get_organize_training_data import get_sub_image_labels_one_region
+from get_organize_training_data import get_sub_image_labels_one_region, read_sub_image_labels_one_region
 
 from tqdm import tqdm
 
@@ -146,21 +146,13 @@ def test_classification_ucm(model, preprocess):
 def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_pattern, transform=None, test = False,
                     extract_img_dir=None, training_poly_shp=None):
     area_data_type = parameters.get_string_parameters(area_ini,'area_data_type')
-    inf_image_dir = image_dir
-    inf_image_or_pattern = image_or_pattern
+
     class_labels = parameters.get_file_path_parameters(para_file,'class_labels')
     if extract_img_dir is None:
         extract_img_dir = os.path.join(os.getcwd(),'image_patches', os.path.basename(area_save_dir))
 
     if area_data_type == 'image_patch':
-        all_image_patch_labels = parameters.get_file_path_parameters(area_ini, 'all_image_patch_labels')
-        image_path_labels = [item.split() for item in io_function.read_list_from_txt(all_image_patch_labels)]
-        # image_path_labels = image_path_labels[:200] # for test
-        if 'UCMerced_LandUse' in inf_image_dir:
-            inf_image_dir = os.path.join(inf_image_dir, 'Images')
-        image_path_list = [os.path.join(inf_image_dir, item[0]) for item in image_path_labels]
-        image_labels = [ int(item[1]) for item in image_path_labels]
-
+        image_path_list, image_labels, _ =  read_sub_image_labels_one_region(extract_img_dir,para_file,area_ini,b_training= not test)
         input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
 
     elif area_data_type == 'image_vector':

@@ -26,7 +26,7 @@ import class_utils
 class_id_shp={'thawslump':1, 'background':0}
 label_ids = {}
 
-def convert_label_id_to_newSystem(image_labels):
+def convert_label_id_to_newSystem(image_labels,class_id_shp):
 
     ng_1_count_before = image_labels.count(-1)
 
@@ -37,7 +37,9 @@ def convert_label_id_to_newSystem(image_labels):
         else:
             # set these into -1 if it is not in the new System
             new_id = -1
-        image_labels = [ new_id if ii==original_id else ii for ii in image_labels ]
+        if original_id != new_id:
+            basic.outputlogMessage('warning, change class id (%d) to a new one (%d) for %s'%(original_id, new_id, key) )
+            image_labels = [ new_id if ii==original_id else ii for ii in image_labels ]
 
     ng_1_count_after = image_labels.count(-1)
     if ng_1_count_after > ng_1_count_before:
@@ -52,13 +54,66 @@ def convert_label_id_to_newSystem(image_labels):
 
 def read_label_ids(label_txt):
     global label_ids
+    label_ids = read_label_ids_local(label_txt)
+
+def read_label_ids_local(label_txt):
     # label_list = [[item.split(',')[0], int(item.split(',')[1])] for item in io_function.read_list_from_txt(label_txt)]
+    label_ids = {}
     for item in io_function.read_list_from_txt(label_txt):
         tmp = item.split(',')
         label_ids[tmp[0]] = int(tmp[1])
+    return label_ids
 
+def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_training=True):
 
-def get_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_training=True, b_convert_label=False):
+    area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
+    patch_list_txt = os.path.join(save_img_dir, area_name_remark_time + '_patch_list.txt')
+    if os.path.isfile(patch_list_txt):
+        image_path_labels = [item.split() for item in io_function.read_list_from_txt(patch_list_txt)]
+        image_path_list = [item[0] for item in image_path_labels]
+        image_labels = [int(item[1]) for item in image_path_labels]
+        return image_path_list, image_labels,
+
+    # class ids for this specific regions
+    class_labels = parameters.get_file_path_parameters(area_ini, 'class_labels')
+    class_labels_main = parameters.get_file_path_parameters(para_file, 'class_labels')
+
+    if b_training:
+        # for training
+        image_dir = parameters.get_directory(area_ini, 'input_image_dir')                             # train_image_dir
+        # image_or_pattern = parameters.get_string_parameters(area_ini, 'input_image_or_pattern')       # train_image_or_pattern
+    else:
+        # for inference
+        image_dir = parameters.get_directory(area_ini, 'inf_image_dir')                             # inf_image_dir
+        # image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')       # inf_image_or_pattern
+
+    # TODO: all_image_patch_labels for training and inference become different
+    all_image_patch_labels = parameters.get_file_path_parameters(area_ini, 'all_image_patch_labels')
+
+    image_path_labels = [item.split() for item in io_function.read_list_from_txt(all_image_patch_labels)]
+    # image_path_labels = image_path_labels[:200] # for test
+    image_path_list = [os.path.join(image_dir, item[0]) for item in image_path_labels]
+
+    # check path
+    if os.path.isfile(image_path_list[0]) is False:
+        raise IOError("%s doesn't exists, please check the image directory in %s"%area_ini)
+
+    image_labels = [int(item[1]) for item in image_path_labels]
+
+    class_id_original = read_label_ids_local(class_labels)
+
+    if class_labels_main != class_labels:
+        image_labels = convert_label_id_to_newSystem(image_labels, class_id_original)
+
+    if os.path.isfile(patch_list_txt) is False:
+        # save the relative path and label to file
+        image_path_label_list = ['%s %d' % (os.path.relpath(item), idx) for idx, item in
+                                 zip(image_labels, image_path_list)]
+        io_function.save_list_to_txt(patch_list_txt, image_path_label_list)
+
+    return image_path_list, image_labels, patch_list_txt
+
+def get_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_training=True, b_convert_label=True):
     '''
      get some images and labels (if available) from one region for image classification
     :param save_img_dir:  save directory for the saved images
@@ -77,10 +132,7 @@ def get_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_trainin
     rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
     process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
-    area_name = parameters.get_string_parameters(area_ini, 'area_name')
-    area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
-    area_time = parameters.get_string_parameters(area_ini, 'area_time')
-    area_name_remark_time = area_name + '_' + area_remark + '_' + area_time
+    area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
 
     if b_training:
         # for training
@@ -138,7 +190,7 @@ def get_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_trainin
             image_labels.extend(image_labels_grid)
 
     if b_convert_label:
-        image_labels = convert_label_id_to_newSystem(image_labels)
+        image_labels = convert_label_id_to_newSystem(image_labels, class_id_shp)
 
     if os.path.isfile(patch_list_txt) is False:
         # save the relative path and label to file
@@ -153,8 +205,11 @@ def get_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_trainin
     return image_path_list, image_labels, patch_list_txt
 
 
-def merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts):
-    pass
+def merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts, save_path):
+    with open(save_path, 'w') as outfile:
+        for fname in image_patch_labels_list_txts:
+            with open(fname) as infile:
+                outfile.write(infile.read())
 
 def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
     print("get and organize training data for image classification")
@@ -173,6 +228,9 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
     read_label_ids(class_labels)
 
     image_patch_labels_list_txts = []
+    training_data_dir = os.path.join(WORK_DIR, 'training_data')
+    if os.path.isdir(training_data_dir) is False:
+        io_function.mkdir(training_data_dir)
 
     for area_idx, area_ini in enumerate(training_regions):
 
@@ -181,11 +239,18 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
         area_time = parameters.get_string_parameters(area_ini, 'area_time')
         area_name_remark_time = area_name + '_' + area_remark + '_' + area_time
 
-        extract_img_dir = os.path.join(WORK_DIR, 'training_data', area_name_remark_time)
+        extract_img_dir = os.path.join(training_data_dir, area_name_remark_time)
         area_data_type = parameters.get_string_parameters(area_ini, 'area_data_type')
         if area_data_type == 'image_patch':
             # directly read
             all_image_patch_labels = parameters.get_file_path_parameters(area_ini, 'all_image_patch_labels')
+            image_path_labels = [item.split() for item in io_function.read_list_from_txt(all_image_patch_labels)]
+            image_dir = parameters.get_directory(area_ini, 'input_image_dir')
+
+            image_path_list = [os.path.join(image_dir, item[0]) for item in image_path_labels]
+            image_labels = [int(item[1]) for item in image_path_labels]
+
+
             image_patch_labels_list_txts.append(all_image_patch_labels)
 
         else:
@@ -195,7 +260,7 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
             image_patch_labels_list_txts.append(patch_list_txt)
 
     # merge label list
-
+    save_path = os.path.join(training_data_dir, )
     merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts)
 
 
