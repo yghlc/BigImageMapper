@@ -34,7 +34,7 @@ from multiprocessing import Process
 # import torch.multiprocessing as Process
 
 from class_utils import RSPatchDataset
-import class_utils
+from get_organize_training_data import get_sub_image_labels_one_region
 
 from tqdm import tqdm
 
@@ -164,73 +164,7 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
         input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
 
     elif area_data_type == 'image_vector':
-
-        # extract sub-images
-        get_subImage_script = os.path.join(code_dir, 'datasets', 'get_subImages.py')
-
-        dstnodata = parameters.get_string_parameters(para_file, 'dst_nodata')
-        buffersize = parameters.get_string_parameters(para_file, 'buffer_size')
-        rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
-        process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
-
-        extract_done_indicator = os.path.join(extract_img_dir,'extract_image_using_vector.done')
-        patch_list_txt = os.path.join(extract_img_dir, os.path.basename(area_save_dir) + '_patch_list.txt')
-
-        if training_poly_shp is not None:
-            # assign a different training polygon
-            all_polygons_labels = training_poly_shp
-        else:
-            all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(area_ini,'all_polygons_labels')
-        if all_polygons_labels is not None:
-            command_string = get_subImage_script  + ' -b ' + str(buffersize) + ' -e ' + inf_image_or_pattern + \
-                             ' -o ' + extract_img_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
-                             + ' ' + rectangle_ext + ' --no_label_image ' + all_polygons_labels + ' ' + inf_image_dir
-            if os.path.isfile(extract_done_indicator):
-                basic.outputlogMessage('Warning, sub-images already been extracted, read them directly')
-            else:
-                basic.os_system_exit_code(command_string)
-            image_path_list = io_function.get_file_list_by_pattern(extract_img_dir, 'subImages/*.tif')
-            image_labels = class_utils.get_class_labels_from_vector_file(image_path_list, all_polygons_labels)
-        else:
-            # get sub-images, grid by grid
-            all_polygons_dir = parameters.get_directory(area_ini,'all_polygons_dir')
-            all_polygons_pattern = parameters.get_string_parameters(area_ini,'all_polygons_pattern')
-            vector_file_list = class_utils.get_file_list(all_polygons_dir,all_polygons_pattern,area_ini)
-            raster_file_list = class_utils.get_file_list(inf_image_dir,inf_image_or_pattern,area_ini)
-
-            image_path_list = []
-            image_labels = []
-
-            # pair the vector file and raster files
-            raster_vector_pairs = class_utils.pair_raster_vecor_files_grid(vector_file_list, raster_file_list)
-            for key in raster_vector_pairs:
-                vector_file = raster_vector_pairs[key][0]
-                raster_file = raster_vector_pairs[key][1]
-                grid_save_dir = os.path.join(extract_img_dir, 'grid%d'%key)
-                command_string = get_subImage_script + ' -b ' + str(buffersize) + ' -e ' + os.path.basename(raster_file) + \
-                                 ' -o ' + grid_save_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
-                                 + ' ' + rectangle_ext + ' --no_label_image ' + vector_file + ' ' + os.path.dirname(raster_file)
-                if os.path.isfile(extract_done_indicator):
-                    basic.outputlogMessage('Warning, sub-images already been extracted, read them directly')
-                else:
-                    basic.os_system_exit_code(command_string)
-
-                image_path_list_grid = io_function.get_file_list_by_pattern(grid_save_dir, 'subImages/*.tif')
-                image_labels_grid = class_utils.get_class_labels_from_vector_file(image_path_list_grid, vector_file)
-
-                image_path_list.extend(image_path_list_grid)
-                image_labels.extend(image_labels_grid)
-
-        if os.path.isfile(patch_list_txt) is False:
-            # save the relative path and label to file
-            image_path_label_list = [ '%s %d'%(os.path.relpath(item), idx) for idx, item in zip(image_labels, image_path_list) ]
-            io_function.save_list_to_txt(patch_list_txt ,image_path_label_list)
-
-
-        if os.path.isfile(extract_done_indicator) is False:
-            with open(extract_done_indicator,'w') as f_obj:
-                f_obj.writelines('%s image extracting, complete on %s \n'% (extract_img_dir, timeTools.get_now_time_str() ))
-
+        image_path_list, image_labels, _ = get_sub_image_labels_one_region(extract_img_dir,para_file,area_ini,b_training= not test)
         input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
     else:
         raise ValueError('Unknown area data type: %s, only accept: image_patch and image_vector'%area_data_type)
