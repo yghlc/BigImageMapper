@@ -54,6 +54,23 @@ def evaluate(model, test_loader, device, prompt):
 
     return top1_accuray, top5_accuray
 
+def create_training_data_from_txt(para_file, train_data_txt, preprocess, test=False):
+    '''
+    read and create training data from a txt file
+    :param para_file:
+    :param train_data_txt:
+    :param preprocess:
+    :param test:
+    :return:
+    '''
+
+    class_labels = parameters.get_file_path_parameters(para_file, 'class_labels')
+    image_path_labels = [item.split() for item in io_function.read_list_from_txt(train_data_txt)]
+    image_path_list = [item[0] for item in image_path_labels]  # it's already absolute path
+    image_labels = [int(item[1]) for item in image_path_labels]
+    train_dataset = class_utils.RSPatchDataset(image_path_list, image_labels, label_txt=class_labels,
+                                               transform=preprocess, test=test)
+    return train_dataset
 
 def prepare_training_data(WORK_DIR, para_file, transform, test=False):
 
@@ -61,23 +78,16 @@ def prepare_training_data(WORK_DIR, para_file, transform, test=False):
     if training_regions is None or len(training_regions) < 1:
         raise ValueError('No training area is set in %s'%para_file)
 
-    # TODO: support multiple training regions
-    area_ini = training_regions[0]
-    area_name = parameters.get_string_parameters(area_ini, 'area_name')
-    area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
-    area_time = parameters.get_string_parameters(area_ini, 'area_time')
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    training_data_dir = class_utils.get_training_data_dir(WORK_DIR)
+    merged_training_data_txt = class_utils.get_merged_training_data_txt(training_data_dir, expr_name,len(training_regions))
 
-    area_name_remark_time = area_name + '_' + area_remark + '_' + area_time
-    area_save_dir = os.path.join(WORK_DIR, area_name_remark_time)
+    if os.path.isfile(merged_training_data_txt):
+        in_dataset = create_training_data_from_txt(para_file,merged_training_data_txt,transform,test=test)
+    else:
+        in_dataset = None
+        basic.outputlogMessage('Please run img_classification/get_organize_training_data.py first to prepare and organize the training data')
 
-    # prepare training data
-    train_image_dir = parameters.get_directory(area_ini, 'input_image_dir')
-    train_image_or_pattern = parameters.get_string_parameters(area_ini, 'input_image_or_pattern')
-    training_polygons = parameters.get_file_path_parameters_None_if_absence(area_ini,'training_polygons')
-    # TODO need to check preprocess, do we need to define it?
-    extract_img_dir = os.path.join(WORK_DIR,'training_data', os.path.basename(area_save_dir))
-    in_dataset = prepare_dataset(para_file,area_ini,area_save_dir, train_image_dir, train_image_or_pattern,
-                                 transform, test=test, extract_img_dir=extract_img_dir, training_poly_shp=training_polygons)
     return in_dataset
 
 def convert_models_to_fp32(model):
@@ -363,6 +373,8 @@ def training_zero_shot_bash(para_file, network_ini, WORK_DIR, train_save_dir, de
 def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess,p_train_model='', train_data_txt=''):
     # with a few human input training data
     dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=False)
+    if dataset is None:
+        return None
 
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
@@ -370,13 +382,7 @@ def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, 
     clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')
 
     if os.path.isfile(train_data_txt):
-        # prepare new training datasets
-        class_labels = parameters.get_file_path_parameters(para_file, 'class_labels')
-        image_path_labels = [item.split() for item in io_function.read_list_from_txt(train_data_txt)]
-        image_path_list = [item[0] for item in image_path_labels]  # it's already absolute path
-        image_labels = [int(item[1]) for item in image_path_labels]
-        train_dataset = class_utils.RSPatchDataset(image_path_list, image_labels, label_txt=class_labels,
-                                                   transform=preprocess, test=False)
+        train_dataset = create_training_data_from_txt(para_file, train_data_txt, preprocess, test=False)
     else:
         # TODO: split dataset into training and validation
         train_dataset = dataset
