@@ -120,7 +120,7 @@ def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_traini
 
     return image_path_list, image_labels, patch_list_txt
 
-def get_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_training=True, b_convert_label=True):
+def extract_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_training=True, b_convert_label=True):
     '''
      get some images and labels (if available) from one region for image classification
     :param save_img_dir:  save directory for the saved images
@@ -140,6 +140,13 @@ def get_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_trainin
     process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
     area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
+    patch_list_txt = os.path.join(extract_img_dir, area_name_remark_time + '_patch_list.txt')
+
+    if os.path.isfile(patch_list_txt):
+        image_path_labels = [item.split() for item in io_function.read_list_from_txt(patch_list_txt)]
+        image_path_list = [item[0] for item in image_path_labels]
+        image_labels = [int(item[1]) for item in image_path_labels]
+        return image_path_list, image_labels, patch_list_txt
 
     if b_training:
         # for training
@@ -154,7 +161,7 @@ def get_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_trainin
 
 
     extract_done_indicator = os.path.join(extract_img_dir, 'extract_image_using_vector.done')
-    patch_list_txt = os.path.join(extract_img_dir, area_name_remark_time + '_patch_list.txt')
+
 
     if all_polygons_labels is not None:
         command_string = get_subImage_script + ' -b ' + str(buffersize) + ' -e ' + image_or_pattern + \
@@ -259,7 +266,7 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
         else:
 
             image_path_list, image_labels, patch_list_txt = \
-                get_sub_image_labels_one_region(extract_img_dir, para_file, area_ini, b_training=True, b_convert_label=True)
+                extract_sub_image_labels_one_region(extract_img_dir, para_file, area_ini, b_training=True, b_convert_label=True)
             image_patch_labels_list_txts.append(patch_list_txt)
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')

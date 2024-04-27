@@ -34,7 +34,7 @@ from multiprocessing import Process
 # import torch.multiprocessing as Process
 
 from class_utils import RSPatchDataset
-from get_organize_training_data import get_sub_image_labels_one_region, read_sub_image_labels_one_region
+from get_organize_training_data import extract_sub_image_labels_one_region, read_sub_image_labels_one_region
 
 from tqdm import tqdm
 
@@ -156,7 +156,7 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
         input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
 
     elif area_data_type == 'image_vector':
-        image_path_list, image_labels, _ = get_sub_image_labels_one_region(extract_img_dir,para_file,area_ini,b_training= not test)
+        image_path_list, image_labels, _ = extract_sub_image_labels_one_region(extract_img_dir,para_file,area_ini,b_training= not test)
         input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
     else:
         raise ValueError('Unknown area data type: %s, only accept: image_patch and image_vector'%area_data_type)
