@@ -365,12 +365,6 @@ def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, 
     dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=False)
 
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
-    train_batch_size = parameters.get_digit_parameters(network_ini, 'batch_size', 'int')
-
-    data_loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=train_batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=True)
 
     # get pseudo labels
     clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')

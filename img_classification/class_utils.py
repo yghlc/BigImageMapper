@@ -86,7 +86,7 @@ def get_model_save_path(train_save_dir, para_file, train_data_txt=''):
     model_type = model_type.replace('/','')
     if train_data_txt != '':
         model_type += '_' + os.path.splitext(os.path.basename(train_data_txt))[0]
-    file_name = 'model_'+model_type +'.ckpt'
+    file_name = 'model_'+model_type + '_' + expr_name +'.ckpt'
     save_path = os.path.join(train_save_dir,file_name)
     return save_path
 
