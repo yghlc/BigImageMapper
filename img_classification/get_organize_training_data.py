@@ -43,7 +43,7 @@ def convert_label_id_to_newSystem(image_labels,class_id_shp):
 
     ng_1_count_after = image_labels.count(-1)
     if ng_1_count_after > ng_1_count_before:
-        basic.outputlogMessage('Warning, After convert_label_id_to_newSystem, adding %d new (-1) values (original count=%d)'
+        basic.outputlogMessage('Warning, After convert_label_id_to_newSystem, adding %d (-1) values (original count=%d)'
                                ''%(ng_1_count_after - ng_1_count_before, ng_1_count_before))
 
     if ng_1_count_after < ng_1_count_before:
