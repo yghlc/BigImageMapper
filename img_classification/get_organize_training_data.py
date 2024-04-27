@@ -65,6 +65,14 @@ def read_label_ids_local(label_txt):
     return label_ids
 
 def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_training=True):
+    '''
+    read image patches and labels (if available) from one region for image classification (no need to extract from big imagery using vector file)
+    :param save_img_dir: save directory (only save a txt file, containing image path and label )
+    :param para_file: para file
+    :param area_ini: area file
+    :param b_training: if True, will read image for training, otherwise, will read image for inference
+    :return:
+    '''
 
     area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
     patch_list_txt = os.path.join(save_img_dir, area_name_remark_time + '_patch_list.txt')
@@ -72,7 +80,7 @@ def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_traini
         image_path_labels = [item.split() for item in io_function.read_list_from_txt(patch_list_txt)]
         image_path_list = [item[0] for item in image_path_labels]
         image_labels = [int(item[1]) for item in image_path_labels]
-        return image_path_list, image_labels,
+        return image_path_list, image_labels, patch_list_txt
 
     # class ids for this specific regions
     class_labels = parameters.get_file_path_parameters(area_ini, 'class_labels')
@@ -82,15 +90,14 @@ def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_traini
         # for training
         image_dir = parameters.get_directory(area_ini, 'input_image_dir')                             # train_image_dir
         # image_or_pattern = parameters.get_string_parameters(area_ini, 'input_image_or_pattern')       # train_image_or_pattern
+        image_patch_labels = parameters.get_file_path_parameters(area_ini, 'input_image_patch_labels')
     else:
         # for inference
         image_dir = parameters.get_directory(area_ini, 'inf_image_dir')                             # inf_image_dir
         # image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')       # inf_image_or_pattern
+        image_patch_labels = parameters.get_file_path_parameters(area_ini, 'inf_image_patch_labels')
 
-    # TODO: all_image_patch_labels for training and inference become different
-    all_image_patch_labels = parameters.get_file_path_parameters(area_ini, 'all_image_patch_labels')
-
-    image_path_labels = [item.split() for item in io_function.read_list_from_txt(all_image_patch_labels)]
+    image_path_labels = [item.split() for item in io_function.read_list_from_txt(image_patch_labels)]
     # image_path_labels = image_path_labels[:200] # for test
     image_path_list = [os.path.join(image_dir, item[0]) for item in image_path_labels]
 
@@ -243,26 +250,22 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
         area_data_type = parameters.get_string_parameters(area_ini, 'area_data_type')
         if area_data_type == 'image_patch':
             # directly read
-            all_image_patch_labels = parameters.get_file_path_parameters(area_ini, 'all_image_patch_labels')
-            image_path_labels = [item.split() for item in io_function.read_list_from_txt(all_image_patch_labels)]
-            image_dir = parameters.get_directory(area_ini, 'input_image_dir')
 
-            image_path_list = [os.path.join(image_dir, item[0]) for item in image_path_labels]
-            image_labels = [int(item[1]) for item in image_path_labels]
-
-
-            image_patch_labels_list_txts.append(all_image_patch_labels)
+            image_path_list, image_labels, patch_list_txt = read_sub_image_labels_one_region(extract_img_dir, para_file, area_ini, b_training=True)
+            image_patch_labels_list_txts.append(patch_list_txt)
 
         else:
 
-            image_path_list, image_labels, patch_list_txt = get_sub_image_labels_one_region(extract_img_dir, para_file, area_ini, b_training=True,
-                                                                                        b_convert_label=True)
+            image_path_list, image_labels, patch_list_txt = \
+                get_sub_image_labels_one_region(extract_img_dir, para_file, area_ini, b_training=True, b_convert_label=True)
             image_patch_labels_list_txts.append(patch_list_txt)
 
-    # merge label list
-    save_path = os.path.join(training_data_dir, )
-    merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts)
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    region_count = len(training_regions)
 
+    # merge label list
+    save_path = os.path.join(training_data_dir, 'merge_training_data_for_%s_from_%d_regions.txt'%(expr_name, region_count))
+    merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts, save_path)
 
 
     duration= time.time() - SECONDS
