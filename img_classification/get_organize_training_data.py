@@ -247,6 +247,8 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
         area_name_remark_time = area_name + '_' + area_remark + '_' + area_time
 
         extract_img_dir = os.path.join(training_data_dir, area_name_remark_time)
+        if os.path.isdir(extract_img_dir) is False:
+            io_function.mkdir(extract_img_dir)
         area_data_type = parameters.get_string_parameters(area_ini, 'area_data_type')
         if area_data_type == 'image_patch':
             # directly read
