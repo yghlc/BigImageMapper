@@ -61,7 +61,7 @@ def read_label_ids_local(label_txt):
     label_ids = {}
     for item in io_function.read_list_from_txt(label_txt):
         tmp = item.split(',')
-        label_ids[tmp[0]] = int(tmp[1])
+        label_ids[tmp[0].lower()] = int(tmp[1]) # change to lower case
     return label_ids
 
 def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_training=True):
