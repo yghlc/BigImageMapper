@@ -90,6 +90,17 @@ def get_model_save_path(train_save_dir, para_file, train_data_txt=''):
     save_path = os.path.join(train_save_dir,file_name)
     return save_path
 
+def get_training_data_dir(WORK_DIR):
+    training_data_dir = os.path.join(WORK_DIR, 'training_data')
+    if os.path.isdir(training_data_dir) is False:
+        io_function.mkdir(training_data_dir)
+    return training_data_dir
+
+def get_merged_training_data_txt(training_data_dir, expr_name, region_count):
+    save_path = os.path.join(training_data_dir,
+                             'merge_training_data_for_%s_from_%d_regions.txt' % (expr_name, region_count))
+    return save_path
+
 def pair_raster_vecor_files_grid(vector_files, raster_files):
     # pair the vector and raster files for each grid based on information in file name
     # e.g. sel_regions_small_S2_SR_grid9226_8bit.tif  : dem_diffs_polygons_grid9226.gpkg

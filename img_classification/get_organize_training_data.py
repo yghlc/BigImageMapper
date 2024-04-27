@@ -244,9 +244,7 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
     read_label_ids(class_labels)
 
     image_patch_labels_list_txts = []
-    training_data_dir = os.path.join(WORK_DIR, 'training_data')
-    if os.path.isdir(training_data_dir) is False:
-        io_function.mkdir(training_data_dir)
+    training_data_dir = class_utils.get_training_data_dir(WORK_DIR)
 
     for area_idx, area_ini in enumerate(training_regions):
         basic.outputlogMessage(' %d/%d: getting training data from region: %s'%(area_idx, len(training_regions), area_ini))
@@ -269,10 +267,9 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
             image_patch_labels_list_txts.append(patch_list_txt)
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
-    region_count = len(training_regions)
 
     # merge label list
-    save_path = os.path.join(training_data_dir, 'merge_training_data_for_%s_from_%d_regions.txt'%(expr_name, region_count))
+    save_path = class_utils.get_merged_training_data_txt(training_data_dir, expr_name, len(training_regions))
     merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts, save_path)
 
 
