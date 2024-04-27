@@ -77,6 +77,7 @@ def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_traini
     area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
     patch_list_txt = os.path.join(save_img_dir, area_name_remark_time + '_patch_list.txt')
     if os.path.isfile(patch_list_txt):
+        print('%s exists, read it directly'%patch_list_txt)
         image_path_labels = [item.split() for item in io_function.read_list_from_txt(patch_list_txt)]
         image_path_list = [item[0] for item in image_path_labels]
         image_labels = [int(item[1]) for item in image_path_labels]
@@ -143,6 +144,7 @@ def extract_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_tra
     patch_list_txt = os.path.join(extract_img_dir, area_name_remark_time + '_patch_list.txt')
 
     if os.path.isfile(patch_list_txt):
+        print('%s exists, read it directly' % patch_list_txt)
         image_path_labels = [item.split() for item in io_function.read_list_from_txt(patch_list_txt)]
         image_path_list = [item[0] for item in image_path_labels]
         image_labels = [int(item[1]) for item in image_path_labels]
@@ -247,11 +249,8 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
         io_function.mkdir(training_data_dir)
 
     for area_idx, area_ini in enumerate(training_regions):
-
-        area_name = parameters.get_string_parameters(area_ini, 'area_name')
-        area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
-        area_time = parameters.get_string_parameters(area_ini, 'area_time')
-        area_name_remark_time = area_name + '_' + area_remark + '_' + area_time
+        basic.outputlogMessage(' %d/%d: getting training data from region: %s'%(area_idx, len(training_regions), area_ini))
+        area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
 
         extract_img_dir = os.path.join(training_data_dir, area_name_remark_time)
         if os.path.isdir(extract_img_dir) is False:
