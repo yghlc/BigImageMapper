@@ -104,7 +104,7 @@ def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_traini
 
     # check path
     if os.path.isfile(image_path_list[0]) is False:
-        raise IOError("%s doesn't exists, please check the image directory in %s"%area_ini)
+        raise IOError("%s doesn't exists, please check the image directory in %s"%(image_path_list[0],area_ini))
 
     image_labels = [int(item[1]) for item in image_path_labels]
 
