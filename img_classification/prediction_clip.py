@@ -80,6 +80,7 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
                 hit_count += 1
         topk_accuray = 100.0*hit_count/len(ground_truths)
         print_msg = 'top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), topk_accuray)
+        out_msgs.append(print_msg)
 
     for print_msg in out_msgs:
         print(print_msg)
