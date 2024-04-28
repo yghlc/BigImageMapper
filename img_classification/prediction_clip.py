@@ -101,6 +101,7 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
         io_function.save_list_to_txt(save_path,out_msgs)
     else:
         with open('topk_accruacy.txt', 'a') as f_obj:
+            out_msgs = [item+'\n' for item in out_msgs]
             f_obj.writelines(out_msgs)
     return topk_accuray
 
