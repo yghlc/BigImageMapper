@@ -227,11 +227,12 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
                                  transform=preprocess,test=True)
     clip_prompt = parameters.get_string_parameters(para_file,'clip_prompt')
 
-    # TODO: read num_workers from para_file
+    #  read num_workers from para_file
+    num_workers = parameters.get_digit_parameters(para_file,'process_num','int')
     test_loader = torch.utils.data.DataLoader(
         in_dataset,
         batch_size=batch_size, shuffle=False,
-        num_workers=8, pin_memory=True)
+        num_workers=num_workers, pin_memory=True)
 
     pre_probs, ground_truths = run_prediction(model, test_loader, clip_prompt, device)
 
