@@ -64,7 +64,7 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
         if np.any(ground_truths == -1):
             ng_1_loc = np.where(ground_truths != -1)
             out_msgs.append('skip reporting accuracy for %d predictions that do not have ground truth (-1)'
-                            %(ground_truths.size - ng_1_loc.size ))
+                            %(ground_truths.size - ng_1_loc[0].size ))
 
             ground_truths = ground_truths[ng_1_loc]
             predict_labels = predict_labels[ng_1_loc]
