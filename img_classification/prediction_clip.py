@@ -52,12 +52,23 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
         predict_labels = predict_labels.cpu().numpy()
 
     topk_accuray = 0.0
+    out_msgs = []
 
     if np.all(ground_truths == -1):
         print_msg = 'No ground truth, skip reporting accuracy for %d prediction'%len(predict_labels)
-    elif np.any(ground_truths == -1):
-        print_msg = 'Some ground truth is missing, skip reporting accuracy for %d prediction'%len(predict_labels)
+        out_msgs.append(print_msg)
+    # elif np.any(ground_truths == -1):
+    #     print_msg = 'Some ground truth is missing, skip reporting accuracy for %d prediction'%len(predict_labels)
     else:
+        # remove those are -1
+        if np.any(ground_truths == -1):
+            ng_1_loc = np.where(ground_truths != -1)
+            out_msgs.append('skip reporting accuracy for %d predictions that do not have ground truth (-1)'
+                            %(ground_truths.size - ng_1_loc.size ))
+
+            ground_truths = ground_truths[ng_1_loc]
+            predict_labels = predict_labels[ng_1_loc]
+
         # top-k accuracy
         if k > 1:
             predict_labels = predict_labels.squeeze()
@@ -70,9 +81,10 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
         topk_accuray = 100.0*hit_count/len(ground_truths)
         print_msg = 'top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), topk_accuray)
 
-    print(print_msg)
+    for print_msg in out_msgs:
+        print(print_msg)
     if save_path is not None:
-        io_function.save_list_to_txt(save_path,[print_msg])
+        io_function.save_list_to_txt(save_path,out_msgs)
     return topk_accuray
 
 
