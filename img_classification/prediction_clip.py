@@ -91,7 +91,7 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
                 pre_v = pre_v.squeeze()
                 correct_count =np.count_nonzero(pre_v == gt_v)
                 gt_v_accuray = 100.0 * correct_count / gt_count
-                print_msg = 'for class: %d, accuracy (top-1) is: (%d /%d): %f' % (gt_v, correct_count, gt_count, gt_v_accuray)
+                print_msg = 'class: %d, accuracy (top-1) is: (%d /%d): %f' % (gt_v, correct_count, gt_count, gt_v_accuray)
                 out_msgs.append(print_msg)
 
 
