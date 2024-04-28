@@ -82,6 +82,19 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
         print_msg = 'top %d accuracy: (%d /%d): %f'%(k, hit_count, len(ground_truths), topk_accuray)
         out_msgs.append(print_msg)
 
+        # when k=1, calculate the accuracy of each classes
+        if k == 1:
+            gt_values, gt_counts = np.unique(ground_truths, return_counts=True)
+            for gt_v, gt_count in zip(gt_values, gt_counts):
+                gt_v_loc = np.where(ground_truths == gt_v)
+                pre_v = predict_labels[gt_v_loc]
+                pre_v = pre_v.squeeze()
+                correct_count =np.count_nonzero(pre_v == gt_v)
+                gt_v_accuray = 100.0 * correct_count / len(gt_count)
+                print_msg = 'for class: %d, accuracy (top-1) is: (%d /%d): %f' % (gt_v, correct_count, gt_count, gt_v_accuray)
+                out_msgs.append(print_msg)
+
+
     for print_msg in out_msgs:
         print(print_msg)
     if save_path is not None:
