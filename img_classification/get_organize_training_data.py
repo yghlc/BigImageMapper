@@ -29,6 +29,12 @@ label_ids = {}
 
 def convert_label_id_to_newSystem(image_labels,class_id_shp):
 
+    if len(class_id_shp) < 1:
+        raise ValueError('class_id_shp is empty')
+    if len(label_ids) < 1:
+        raise ValueError('label_ids is empty')
+
+
     ng_1_count_before = image_labels.count(-1)
 
     for key in class_id_shp.keys():
