@@ -33,7 +33,7 @@ import basic_src.timeTools as timeTools
 from multiprocessing import Process
 # import torch.multiprocessing as Process
 
-from class_utils import RSPatchDataset
+from class_utils import RSPatchDataset, get_accuracy_log_path
 from get_organize_training_data import extract_sub_image_labels_one_region, read_sub_image_labels_one_region
 
 from tqdm import tqdm
@@ -100,7 +100,7 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
     if save_path is not None:
         io_function.save_list_to_txt(save_path,out_msgs)
     else:
-        with open('topk_accruacy.txt', 'a') as f_obj:
+        with open(get_accuracy_log_path(), 'a') as f_obj:
             out_msgs = [item+'\n' for item in out_msgs]
             f_obj.writelines(out_msgs)
     return topk_accuray

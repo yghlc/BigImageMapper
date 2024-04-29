@@ -74,6 +74,9 @@ def get_file_list(input_dir, pattern, area_ini):
 def get_grid_id_from_path(item):
     return int(re.findall(r'grid\d+', os.path.basename(item))[0][4:])
 
+def get_accuracy_log_path():
+    return 'accuracy_log.txt'
+
 def get_pseudo_labels_path(save_dir, v_num, topk):
     save_path_txt = os.path.join(save_dir, 'pseudo_v{}_train_{}shot.txt'.format(v_num, topk))
     return save_path_txt

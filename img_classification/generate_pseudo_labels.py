@@ -32,12 +32,21 @@ def generate_pseudo_labels(dataset, data_loader, save_dir, device, model, clip_p
     # save the results, as training data
     classes = dataset.classes
     save_str_list = []
+    correct_all = 0
     for c, name in enumerate(classes):
         pre_probs_per_class = predict_probs[:, c].cpu()
         indices = np.argsort(-pre_probs_per_class)[:topk]
+        correct = 0
         for ind in indices:
             im, label, im_path = dataset[ind]
+            correct += (label==c)
+            correct_all += (label==c)
+            # image_path, predict_label, ground truth, predicted_confidence
             save_str_list.append(im_path + ' ' + str(c) + ' ' + str(label) + ' ' + '%f'%float(pre_probs_per_class[ind].cpu()))
+
+    with open(class_utils.get_accuracy_log_path(),'a') as f_obj:
+        f_obj.writelines('topk: %d, pseudo accuracy: %f, (%d/%d) \n'
+                         %(topk, 100.0*correct_all / (len(classes) * topk),correct_all, len(classes) * topk))
 
     save_path_txt = class_utils.get_pseudo_labels_path(save_dir,version,topk)
     io_function.save_list_to_txt(save_path_txt, save_str_list)
