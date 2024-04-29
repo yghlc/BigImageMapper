@@ -170,7 +170,7 @@ def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_traini
 
     if os.path.isfile(patch_list_txt) is False:
         # save the relative path and label to file
-        save_image_path_label_to_txt(image_labels, image_path_list, patch_list_txt)
+        save_image_path_label_to_txt(image_path_list, image_labels, patch_list_txt)
 
 
     return image_path_list, image_labels, patch_list_txt
