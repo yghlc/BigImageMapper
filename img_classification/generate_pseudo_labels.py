@@ -58,8 +58,7 @@ def generate_pseudo_labels_main(para_file, trained_model = None, v_num=1, topk=1
     model_type = parameters.get_string_parameters(network_ini, 'model_type')
     model, preprocess = clip.load(model_type, device=device)
 
-    #TODO: this would not work after we re-write prepare_training_data and add get_organize_training_data (April 29,2024)
-    dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=True)
+    dataset, _ = prepare_training_data(WORK_DIR, para_file, preprocess, test=True)
 
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
     train_batch_size = parameters.get_digit_parameters(network_ini, 'batch_size', 'int')
