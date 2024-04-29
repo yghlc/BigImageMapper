@@ -81,6 +81,8 @@ def prepare_training_data(WORK_DIR, para_file, transform, test=False):
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
     training_data_dir = class_utils.get_training_data_dir(WORK_DIR)
     merged_training_data_txt = class_utils.get_merged_training_data_txt(training_data_dir, expr_name,len(training_regions))
+    merged_training_data_txt_all = io_function.get_name_by_adding_tail(merged_training_data_txt,'all')
+    valid_dataset = None
 
     if os.path.isfile(merged_training_data_txt):
         in_dataset = create_training_data_from_txt(para_file,merged_training_data_txt,transform,test=test)
@@ -88,7 +90,10 @@ def prepare_training_data(WORK_DIR, para_file, transform, test=False):
         in_dataset = None
         basic.outputlogMessage('Please run img_classification/get_organize_training_data.py first to prepare and organize the training data')
 
-    return in_dataset
+    if os.path.isfile(merged_training_data_txt_all):
+        valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_all, transform, test=test)
+
+    return in_dataset, valid_dataset
 
 def convert_models_to_fp32(model):
     for p in model.parameters():
@@ -272,6 +277,8 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
 
 
 def training_zero_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess):
+    ### this function is abandoned"""
+
     # without any human input training data
     dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=True)
 
@@ -372,20 +379,21 @@ def training_zero_shot_bash(para_file, network_ini, WORK_DIR, train_save_dir, de
 
 def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, model, preprocess,p_train_model='', train_data_txt=''):
     # with a few human input training data
-    dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=False)
-    if dataset is None:
-        return None
+    valid_dataset = None
 
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
-
-    # get pseudo labels
+    # get clip prompt
     clip_prompt = parameters.get_string_parameters(para_file, 'clip_prompt')
 
     if os.path.isfile(train_data_txt):
         train_dataset = create_training_data_from_txt(para_file, train_data_txt, preprocess, test=False)
     else:
-        # TODO: split dataset into training and validation
-        train_dataset = dataset
+        train_dataset, valid_dataset = prepare_training_data(WORK_DIR, para_file, preprocess, test=False)
+        if train_dataset is None:
+            return None
+
+    if valid_dataset is None:
+        valid_dataset = train_dataset
 
     # resume training, need to read the trained model from the disks
     if os.path.isfile(p_train_model):
@@ -398,7 +406,7 @@ def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, 
         description = os.path.splitext(os.path.basename(train_data_txt))[0]
     else:
         description = 'few_shot'
-    save_model = run_training_model(train_save_dir, network_ini, train_dataset, train_dataset, clip_prompt, device, model,
+    save_model = run_training_model(train_save_dir, network_ini, train_dataset, valid_dataset, clip_prompt, device, model,
                                     preprocess, num_workers,
                                     description=description)
     torch.cuda.empty_cache()
