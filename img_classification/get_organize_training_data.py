@@ -327,7 +327,8 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
     merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts, save_path)
 
     a_few_shot_samp_count = parameters.get_digit_parameters_None_if_absence(para_file,'a_few_shot_samp_count','int')
-    if a_few_shot_samp_count is not None:
+    b_a_few_shot_training = parameters.get_bool_parameters(para_file, 'a_few_shot_training')
+    if b_a_few_shot_training and a_few_shot_samp_count is not None:
         # backup the original file
         save_path_all_samp = io_function.get_name_by_adding_tail(save_path,'all')
         io_function.copy_file_to_dst(save_path,save_path_all_samp)
