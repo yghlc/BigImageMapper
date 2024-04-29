@@ -25,13 +25,13 @@ import random
 import class_utils
 
 class_id_shp={'thawslump':1, 'background':0}
-label_ids = {}
+main_label_ids = {}
 
 def convert_label_id_to_newSystem(image_labels,class_id_shp):
 
     if len(class_id_shp) < 1:
         raise ValueError('class_id_shp is empty')
-    if len(label_ids) < 1:
+    if len(main_label_ids) < 1:
         raise ValueError('label_ids is empty')
 
 
@@ -39,8 +39,8 @@ def convert_label_id_to_newSystem(image_labels,class_id_shp):
 
     for key in class_id_shp.keys():
         original_id = class_id_shp[key]
-        if key in label_ids.keys():
-            new_id = label_ids[key]
+        if key in main_label_ids.keys():
+            new_id = main_label_ids[key]
         else:
             # set these into -1 if it is not in the new System
             new_id = -1
@@ -60,8 +60,8 @@ def convert_label_id_to_newSystem(image_labels,class_id_shp):
 
 
 def read_label_ids(label_txt):
-    global label_ids
-    label_ids = read_label_ids_local(label_txt)
+    global main_label_ids
+    main_label_ids = read_label_ids_local(label_txt)
 
 def read_label_ids_local(label_txt):
     # label_list = [[item.split(',')[0], int(item.split(',')[1])] for item in io_function.read_list_from_txt(label_txt)]
@@ -145,8 +145,8 @@ def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_traini
         return image_path_list, image_labels, patch_list_txt
 
     # class ids for this specific regions
-    class_labels = parameters.get_file_path_parameters(area_ini, 'class_labels')
-    class_labels_main = parameters.get_file_path_parameters(para_file, 'class_labels')
+    class_labels_txt = parameters.get_file_path_parameters(area_ini, 'class_labels')
+    class_labels_txt_main = parameters.get_file_path_parameters(para_file, 'class_labels')
 
     if b_training:
         # for training
@@ -169,9 +169,12 @@ def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_traini
 
     image_labels = [int(item[1]) for item in image_path_labels]
 
-    class_id_original = read_label_ids_local(class_labels)
+    if len(main_label_ids) < 1:
+        read_label_ids(class_labels_txt_main)
 
-    if class_labels_main != class_labels:
+    class_id_original = read_label_ids_local(class_labels_txt)
+
+    if class_labels_txt_main != class_labels_txt:
         image_labels = convert_label_id_to_newSystem(image_labels, class_id_original)
 
     if os.path.isfile(patch_list_txt) is False:
@@ -300,8 +303,9 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
         raise ValueError('No training area is set in %s' % para_file)
 
     # read class name and ids
-    class_labels = parameters.get_file_path_parameters(para_file,'class_labels')
-    read_label_ids(class_labels)
+    main_class_labels_txt = parameters.get_file_path_parameters(para_file,'class_labels')
+    if len(main_label_ids) < 1:
+        read_label_ids(main_class_labels_txt)
 
     image_patch_labels_list_txts = []
     training_data_dir = class_utils.get_training_data_dir(WORK_DIR)
