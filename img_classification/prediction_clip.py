@@ -91,7 +91,7 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
                 pre_v = pre_v.squeeze()
                 correct_count =np.count_nonzero(pre_v == gt_v)
                 gt_v_accuray = 100.0 * correct_count / gt_count
-                print_msg = 'for class: %d, accuracy (top-1) is: (%d /%d): %f' % (gt_v, correct_count, gt_count, gt_v_accuray)
+                print_msg = 'class: %d, accuracy (top-1) is: (%d /%d): %f' % (gt_v, correct_count, gt_count, gt_v_accuray)
                 out_msgs.append(print_msg)
 
 
@@ -99,6 +99,10 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
         print(print_msg)
     if save_path is not None:
         io_function.save_list_to_txt(save_path,out_msgs)
+    else:
+        with open('topk_accruacy.txt', 'a') as f_obj:
+            out_msgs = [item+'\n' for item in out_msgs]
+            f_obj.writelines(out_msgs)
     return topk_accuray
 
 
