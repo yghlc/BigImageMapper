@@ -180,6 +180,8 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
     class_labels = parameters.get_file_path_parameters(para_file,'class_labels')
     if extract_img_dir is None:
         extract_img_dir = os.path.join(os.getcwd(),'image_patches', os.path.basename(area_save_dir))
+        if os.path.isdir(extract_img_dir) is False:
+            io_function.mkdir(extract_img_dir)
 
     if area_data_type == 'image_patch':
         image_path_list, image_labels, _ =  read_sub_image_labels_one_region(extract_img_dir,para_file,area_ini,b_training= not test)
@@ -337,10 +339,6 @@ def parallel_prediction_main(para_file,trained_model):
     sub_tasks = []
     for area_idx, area_ini in enumerate(multi_inf_regions):
 
-        area_name = parameters.get_string_parameters(area_ini, 'area_name')
-        area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
-        area_time = parameters.get_string_parameters(area_ini, 'area_time')
-
         inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
 
         # it is ok consider a file name as pattern and pass it the following functions to get file list
@@ -353,7 +351,7 @@ def parallel_prediction_main(para_file,trained_model):
                 'No image for inference, please check inf_image_dir (%s) and inf_image_or_pattern (%s) in %s'
                 % (inf_image_dir, inf_image_or_pattern, area_ini))
 
-        area_name_remark_time = area_name + '_' + area_remark + '_' + area_time
+        area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
         area_save_dir = os.path.join(outdir, area_name_remark_time)
         io_function.mkdir(area_save_dir)
 
