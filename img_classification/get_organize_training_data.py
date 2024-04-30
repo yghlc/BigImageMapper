@@ -47,8 +47,9 @@ def convert_label_id_to_newSystem(image_labels,class_id_shp):
             # set these into -1 if it is not in the new System
             new_id = -1
         if original_id != new_id:
-            basic.outputlogMessage('warning, change class id (%d) to a new one (%d) for %s'%(original_id, new_id, key) )
+            basic.outputlogMessage('warning, try to change class id (%d) to a new one (%d) for %s'%(original_id, new_id, key) )
             image_labels = [ new_id if ii==original_id else ii for ii in image_labels ]
+            basic.outputlogMessage('changed the class id of %d samples '%image_labels.count(new_id))
 
     ng_1_count_after = image_labels.count(-1)
     if ng_1_count_after > ng_1_count_before:
