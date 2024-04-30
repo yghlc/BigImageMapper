@@ -32,7 +32,7 @@ def convert_label_id_to_newSystem(image_labels,class_id_shp):
     if len(class_id_shp) < 1:
         raise ValueError('class_id_shp is empty')
     if len(main_label_ids) < 1:
-        raise ValueError('label_ids is empty')
+        raise ValueError('main_label_ids is empty')
 
 
     ng_1_count_before = image_labels.count(-1)
@@ -267,6 +267,10 @@ def extract_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_tra
 
             image_path_list.extend(image_path_list_grid)
             image_labels.extend(image_labels_grid)
+
+    if len(main_label_ids) < 1:
+        class_labels_txt_main = parameters.get_file_path_parameters(para_file, 'class_labels')
+        read_label_ids(class_labels_txt_main)
 
     if b_convert_label:
         image_labels = convert_label_id_to_newSystem(image_labels, class_id_shp)
