@@ -274,8 +274,11 @@ def extract_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_tra
         class_labels_txt_main = parameters.get_file_path_parameters(para_file, 'class_labels')
         read_label_ids(class_labels_txt_main)
 
-    if b_convert_label and np.all(np.array(image_labels) == -1) is False:
-        image_labels = convert_label_id_to_newSystem(image_labels, global_slump_class_id_shp)
+    if b_convert_label:
+        if np.all(np.array(image_labels) == -1):
+            basic.outputlogMessage('there is no ground truth in the vector file')
+        else:
+            image_labels = convert_label_id_to_newSystem(image_labels, global_slump_class_id_shp)
 
     if os.path.isfile(patch_list_txt) is False:
         # save the relative path and label to file
