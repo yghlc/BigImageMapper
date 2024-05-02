@@ -33,6 +33,8 @@ def main(options, args):
 
     img_folder = args[0]
     backup_folder = img_folder + '_delete'
+    if os.path.isdir(backup_folder) is False:
+        io_function.mkdir(backup_folder)
     img_list = io_function.get_file_list_by_ext('.tif',img_folder,bsub_folder=False)
     delete_images_low_quality(img_list,backup_folder)
 
