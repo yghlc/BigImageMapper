@@ -202,7 +202,10 @@ def extract_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_tra
     extract_img_dir = save_img_dir
 
     dstnodata = parameters.get_string_parameters(para_file, 'dst_nodata')
-    buffersize = parameters.get_string_parameters(para_file, 'buffer_size')
+    if b_training:
+        buffersize = parameters.get_string_parameters(para_file, 'train_buffer_size')
+    else:
+        buffersize = parameters.get_string_parameters(para_file, 'inf_buffer_size')
     rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
     process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
