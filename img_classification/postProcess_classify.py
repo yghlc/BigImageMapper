@@ -59,7 +59,7 @@ def select_sample_for_manu_check(class_id, save_dir, sel_count, class_id_dict, i
 
     # save the file name of all samples to txt
     top1_predict_all_txt = os.path.join(save_dir, '%s_id%d_all_samples.txt'%(class_name, class_id))
-    top1_predict_str = ['%s %d'%(item[0], item[1]) for item in top1_predict]
+    top1_predict_str = ['%s %f'%(item[0], item[1]) for item in top1_predict]
     io_function.save_list_to_txt(top1_predict_all_txt, top1_predict_str)
 
     # copy the file and save the confidences
