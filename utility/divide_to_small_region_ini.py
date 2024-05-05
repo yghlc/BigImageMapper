@@ -23,13 +23,23 @@ import re
 def modify_parameter(para_file, para_name, new_value):
     parameters.write_Parameters_file(para_file,para_name,new_value)
 
+def divide_large_region_into_subsets(in_grid_shp, save_dir):
+
+
+
+def test_divide():
+    grids_shp = os.path.expanduser('~/Data/slump_demdiff_classify/select_regions_Huangetal2023/overlap_touch_all.shp')
+    save_dir = './'
+    divide_large_region_into_subsets(grids_shp)
 
 
 
 def main(options, args):
-    in_folder = args[0]
-    template_ini = args[1]
-    ext_name = options.extension
+    big_region_ini = args[0]
+    max_grid_count_per_ini = options.max_img_count
+    save_dir = options.save_dir
+
+
 
     image_paths = io_function.get_file_list_by_ext(ext_name,in_folder, bsub_folder=True)
     if len(image_paths) < 1:
@@ -66,9 +76,9 @@ if __name__ == '__main__':
     parser = OptionParser(usage=usage, version="1.0 2024-04-23")
     parser.description = 'Introduction: divide a big region into many small regions (ini) '
 
-    parser.add_option("-c", "--img_count",
-                      action="store", dest="img_count", type=int,
-                      help="image (grid) count per sub regions")
+    parser.add_option("-c", "--max_img_count",
+                      action="store", dest="max_img_count", type=int,
+                      help="maximum image (grid) count per sub regions")
 
     parser.add_option("-s", "--save_dir",
                       action="store", dest="save_dir",
