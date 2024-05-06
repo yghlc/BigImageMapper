@@ -217,7 +217,7 @@ def divide_large_region_ini_into_subsets_ini(region_ini, region_grid_shp, min_gr
     area_name_remark_time = parameters.get_area_name_remark_time(region_ini)
     if save_dir is None:
         save_dir = area_name_remark_time + '_sub_regions'
-    if os.path.isdir(save_dir):
+    if os.path.isdir(save_dir) is False:
         io_function.mkdir(save_dir)
 
     # the images (per grid) for this region
