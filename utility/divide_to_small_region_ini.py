@@ -210,6 +210,7 @@ def create_a_region_defined_parafile(template_para_file, subset_id, grid_polys, 
     shp_file_base_name = io_function.get_name_no_ext(all_polygons_labels)
     if all_polygons_labels is not None:
         shp_save_dir = os.path.join(save_dir, sub_id_str + '_vector')
+        io_function.mkdir(shp_save_dir)
         # crop them one by one
         grid_shp_list = []
         for grid, g_id in zip(grid_polys,grid_ids):
