@@ -257,6 +257,9 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
     in_dataset = prepare_dataset(para_file, area_ini,area_save_dir,inf_image_dir, inf_image_or_pattern,
                                  transform=preprocess,test=True)
+    if len(in_dataset) < 1:
+        print('No images for prediction')
+        return
     clip_prompt = parameters.get_string_parameters(para_file,'clip_prompt')
 
     #  read num_workers from para_file
