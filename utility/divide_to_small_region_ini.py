@@ -232,6 +232,10 @@ def divide_large_region_ini_into_subsets_ini(region_ini, region_grid_shp, min_gr
             % (inf_image_dir, inf_image_or_pattern, region_ini))
 
     inf_img_grid_id_list = [get_grid_id_from_path(img_path) for img_path in  inf_img_list ]
+    grid_polys = vector_gpd.read_polygons_gpd(region_grid_shp,b_fix_invalid_polygon=False)
+
+    if len(inf_img_grid_id_list) != len(grid_polys):
+        raise ValueError('the image count (%d) and grid count (%d) is different'%(len(inf_img_grid_id_list), len(grid_polys)))
 
     # divide to sub-regions
     divide_large_region_into_subsets(region_grid_shp, save_dir,  min_grid_count=min_grid_count, max_grid_count=max_grid_count)
@@ -266,7 +270,7 @@ if __name__ == '__main__':
     # test_divide_large_region_into_subsets()
     # sys.exit(0)
 
-    usage = "usage: %prog [options]  big_region_ini "
+    usage = "usage: %prog [options]  big_region_ini grids_shp"
     parser = OptionParser(usage=usage, version="1.0 2024-04-23")
     parser.description = 'Introduction: divide a big region into many small regions (ini) '
 
