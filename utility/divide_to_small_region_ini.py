@@ -142,6 +142,10 @@ def divide_large_region_into_subsets(in_grid_shp, save_dir, min_grid_count=20, m
     visit_np = np.zeros_like(grid_ids_2d, dtype=np.uint8)
     visit_np[ grid_ids_2d == 0] = 1          # marked those data data region as visited
 
+    select_grid_polys_dict = {}
+    selected_gird_ids_dict = {}
+
+
     subset_id = 0
     while True:
         select_grids_shp = os.path.join(save_dir, io_function.get_name_no_ext(in_grid_shp) + '_sub%d' % subset_id + '.shp')
@@ -151,11 +155,16 @@ def divide_large_region_into_subsets(in_grid_shp, save_dir, min_grid_count=20, m
                                                                               grid_ids_2d, visit_np, select_grids_shp,
                                                                               proj=gird_prj)
 
+        select_grid_polys_dict[subset_id] = select_grid_polys
+        selected_gird_ids_dict[subset_id] = selected_gird_ids
+
         # print('subset_id: %d, find %d grids'%(subset_id, len(selected_gird_ids)))
         subset_id += 1
 
         if len(select_grid_polys) < 1:
             break
+
+    return select_grid_polys_dict, selected_gird_ids_dict
 
 
 def test_divide_large_region_into_subsets():
@@ -166,15 +175,13 @@ def test_divide_large_region_into_subsets():
     divide_large_region_into_subsets(grids_shp,save_dir)
 
 
-def create_a_region_defined_parafile(template_para_file, grid_ids_txt, img_list, img_grid_id_list, save_dir=None):
+def create_a_region_defined_parafile(template_para_file, subset_id, grid_polys, grid_ids, img_list, img_grid_id_list, save_dir):
 
     io_function.is_file_exist(template_para_file)
-    if save_dir is None:
-        save_dir = os.path.dirname(grid_ids_txt)
     if os.path.isdir(save_dir) is False:
         io_function.mkdir(save_dir)
 
-    sub_id_str = re.findall(r'sub\d+', os.path.basename(grid_ids_txt))[0]
+    sub_id_str = 'sub%d'%subset_id # re.findall(r'sub\d+', os.path.basename(grid_ids_txt))[0]
 
     new_para_file = os.path.join(save_dir, os.path.basename(io_function.get_name_by_adding_tail(template_para_file, sub_id_str)))
 
@@ -184,8 +191,6 @@ def create_a_region_defined_parafile(template_para_file, grid_ids_txt, img_list,
     # add sub_id_str to area_remark
     area_remark = parameters.get_string_parameters(template_para_file, 'area_remark')
     modify_parameter(new_para_file, 'area_remark', area_remark+'_'+sub_id_str)
-
-    grid_ids = [int(item.strip())  for item in io_function.read_list_from_txt(grid_ids_txt)]
 
     select_img_list = [ img_p for img_p, grid_id in zip(img_list,img_grid_id_list) if grid_id in grid_ids]
 
@@ -199,6 +204,27 @@ def create_a_region_defined_parafile(template_para_file, grid_ids_txt, img_list,
 
     # modify inf_image_dir and inf_image_or_pattern
     modify_parameter(new_para_file, 'inf_image_dir', img_save_dir)
+
+    # crop and modify all_polygons_labels
+    all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(new_para_file,'all_polygons_labels')
+    shp_file_base_name = io_function.get_name_no_ext(all_polygons_labels)
+    if all_polygons_labels is not None:
+        shp_save_dir = os.path.join(save_dir, sub_id_str + '_vector')
+        # crop them one by one
+        grid_shp_list = []
+        for grid, g_id in zip(grid_polys,grid_ids):
+            # print(grid)
+            # g_poly.bounds
+            save_poly_path = os.path.join(shp_save_dir, shp_file_base_name + "_grid%d.gpkg" % g_id)
+            vector_gpd.clip_geometries_ogr2ogr(all_polygons_labels,save_poly_path,grid.bounds,format='GPKG')
+            grid_shp_list.append(save_poly_path)
+
+        save_poly_subset = os.path.join(shp_save_dir, shp_file_base_name + "_%s.gpkg"%sub_id_str % sub_id_str)
+        vector_gpd.merge_vector_files(grid_shp_list,save_poly_subset,format='GPKG')
+
+        # modify all_polygons_labels
+        modify_parameter(new_para_file, 'all_polygons_labels', save_poly_subset)
+
 
     return new_para_file
 
@@ -238,14 +264,20 @@ def divide_large_region_ini_into_subsets_ini(region_ini, region_grid_shp, min_gr
         raise ValueError('the image count (%d) and grid count (%d) is different'%(len(inf_img_grid_id_list), len(grid_polys)))
 
     # divide to sub-regions
-    divide_large_region_into_subsets(region_grid_shp, save_dir,  min_grid_count=min_grid_count, max_grid_count=max_grid_count)
-    grid_ids_txt_list = io_function.get_file_list_by_pattern(save_dir,'*grid_ids.txt')
+    select_grid_polys_dict, selected_gird_ids_dict = \
+        divide_large_region_into_subsets(region_grid_shp, save_dir,  min_grid_count=min_grid_count, max_grid_count=max_grid_count)
+    # grid_ids_txt_list = io_function.get_file_list_by_pattern(save_dir,'*grid_ids.txt')
 
     # create area ini files for each sub-regions
     sub_region_ini_files_list = []
 
-    for grid_id_txt in grid_ids_txt_list:
-        new_area_ini = create_a_region_defined_parafile(region_ini,grid_id_txt, inf_img_list, inf_img_grid_id_list, save_dir)
+    # for grid_id_txt in grid_ids_txt_list:
+    #     new_area_ini = create_a_region_defined_parafile(region_ini,grid_id_txt, inf_img_list, inf_img_grid_id_list, save_dir)
+    #     sub_region_ini_files_list.append(new_area_ini)
+
+    for subset_id in select_grid_polys_dict.keys() :
+        new_area_ini = create_a_region_defined_parafile(region_ini,subset_id,select_grid_polys_dict[subset_id], selected_gird_ids_dict[subset_id],
+                                                        inf_img_list, inf_img_grid_id_list, save_dir)
         sub_region_ini_files_list.append(new_area_ini)
 
     with open('%s_region_ini_files.txt'%os.path.basename(save_dir),'w') as f_obj:
