@@ -269,7 +269,15 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
                     polygon_json = mapping(selected_polygon.envelope)  # shapely.geometry.Polygon([polygon_box])
 
                 # crop image and saved to disk
-                out_image, out_transform = mask(src, [polygon_json], nodata=dstnodata, all_touched=True, crop=True)
+                try:
+                    # when a polygon overlap more than 2 images, it's possible that the polygon only touch a little of an image,
+                    # end in error: Input shapes do not overlap raster.
+                    # so catch this error than move on.
+                    out_image, out_transform = mask(src, [polygon_json], nodata=dstnodata, all_touched=True, crop=True)
+                except ValueError:
+                    basic.outputlogMessage('Input shapes do not overlap raster.\n polygon: %s \n image_path: %s '%(str(polygon_json), image_path))
+                    continue
+
                 non_nodata_loc = np.where(out_image != dstnodata)
                 if non_nodata_loc[0].size < 1 or np.std(out_image[non_nodata_loc]) < 0.0001:
                     basic.outputlogMessage('out_image is total black or white, ignore, %s: %d' % (save_path, k_img))
@@ -468,7 +476,11 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
 def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
                             img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all):
     # output message
-    basic.outputlogMessage('obtaining %dth sub-image and the corresponding label raster' % idx)
+    if idx % 100 == 0:
+        if b_label:
+            print('obtaining %d/%d th sub-image and the corresponding label raster' % (idx, len(polygons_all)))
+        else:
+            print('obtaining %d/%d th sub-image' % (idx, len(polygons_all)))
 
     ## get an image and the corresponding label raster (has errors)
     ## image_array, label_array = get_one_sub_image_label(idx,c_polygon, class_labels[idx], polygons_all, class_labels_all, bufferSize, img_tile_boxes,image_tile_list)
