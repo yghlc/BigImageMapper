@@ -220,7 +220,7 @@ def create_a_region_defined_parafile(template_para_file, subset_id, grid_polys, 
             vector_gpd.clip_geometries_ogr2ogr(all_polygons_labels,save_poly_path,grid.bounds,format='GPKG')
             grid_shp_list.append(save_poly_path)
 
-        save_poly_subset = os.path.join(shp_save_dir, shp_file_base_name + "_%s.gpkg"%sub_id_str % sub_id_str)
+        save_poly_subset = os.path.join(shp_save_dir, shp_file_base_name + "_%s.gpkg"%sub_id_str)
         vector_gpd.merge_vector_files(grid_shp_list,save_poly_subset,format='GPKG')
 
         # modify all_polygons_labels
