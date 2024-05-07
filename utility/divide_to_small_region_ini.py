@@ -155,11 +155,10 @@ def divide_large_region_into_subsets(in_grid_shp, save_dir, min_grid_count=20, m
                                                                               grid_ids_2d, visit_np, select_grids_shp,
                                                                               proj=gird_prj)
 
-        select_grid_polys_dict[subset_id] = select_grid_polys
-        selected_gird_ids_dict[subset_id] = selected_gird_ids
-
         if len(select_grid_polys) < 1:
             break
+        select_grid_polys_dict[subset_id] = select_grid_polys
+        selected_gird_ids_dict[subset_id] = selected_gird_ids
 
         # print('subset_id: %d, find %d grids'%(subset_id, len(selected_gird_ids)))
         subset_id += 1
