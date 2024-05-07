@@ -198,6 +198,9 @@ def create_a_region_defined_parafile(template_para_file, subset_id, grid_polys, 
     io_function.mkdir(img_save_dir)
     for img_path in select_img_list:
         target = os.path.join(img_save_dir, os.path.basename(img_path))
+        if os.path.isfile(target):
+            print('warning, %s already exists, skip'%target)
+            continue
         cmd_str = 'ln -s %s %s'%(img_path, target)
         basic.os_system_exit_code(cmd_str)
 
@@ -205,7 +208,7 @@ def create_a_region_defined_parafile(template_para_file, subset_id, grid_polys, 
     modify_parameter(new_para_file, 'inf_image_dir', img_save_dir)
 
     # crop and modify all_polygons_labels
-    all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(new_para_file,'all_polygons_labels')
+    all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(template_para_file,'all_polygons_labels')
     shp_file_base_name = io_function.get_name_no_ext(all_polygons_labels)
     if all_polygons_labels is not None:
         shp_save_dir = os.path.join(save_dir, sub_id_str + '_vector')
@@ -216,11 +219,17 @@ def create_a_region_defined_parafile(template_para_file, subset_id, grid_polys, 
             # print(grid)
             # g_poly.bounds
             save_poly_path = os.path.join(shp_save_dir, shp_file_base_name + "_grid%d.gpkg" % g_id)
-            vector_gpd.clip_geometries_ogr2ogr(all_polygons_labels,save_poly_path,grid.bounds,format='GPKG')
+            if os.path.isfile(save_poly_path):
+                print('warning, %s exists, skip clipping'%save_poly_path)
+            else:
+                vector_gpd.clip_geometries_ogr2ogr(all_polygons_labels,save_poly_path,grid.bounds,format='GPKG')
             grid_shp_list.append(save_poly_path)
 
         save_poly_subset = os.path.join(shp_save_dir, shp_file_base_name + "_%s.gpkg"%sub_id_str)
-        vector_gpd.merge_vector_files(grid_shp_list,save_poly_subset,format='GPKG')
+        if os.path.isfile(save_poly_subset):
+            print('warning, %s exists, skip merging' % save_poly_subset)
+        else:
+            vector_gpd.merge_vector_files(grid_shp_list,save_poly_subset,format='GPKG')
 
         # modify all_polygons_labels
         modify_parameter(new_para_file, 'all_polygons_labels', save_poly_subset)
