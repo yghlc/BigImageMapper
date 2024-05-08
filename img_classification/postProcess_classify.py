@@ -81,7 +81,7 @@ def postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir):
 
     res_json_path = os.path.join(area_save_dir, os.path.basename(area_save_dir) + '-classify_results.json')
     if os.path.isfile(res_json_path) is False:
-        basic.outputlogMessage('Warning, %s results (a json file) for %s does not exist, skip'%area_ini)
+        basic.outputlogMessage('Warning, %s results (a json file) for %s does not exist, skip'%(res_json_path,area_ini))
         return False
 
     inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
