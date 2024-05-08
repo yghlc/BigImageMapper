@@ -366,7 +366,7 @@ def parallel_prediction_main(para_file,trained_model):
 
         while basic.alive_process_count(sub_tasks) >= maximum_prediction_jobs:
             print(datetime.now(),
-                  '%d jobs are running simultaneously, wait 5 seconds' % basic.alive_process_count(sub_tasks))
+                  '%d jobs are running simultaneously, wait 30 seconds' % basic.alive_process_count(sub_tasks))
             time.sleep(30)  # wait 30 seconds, then check the count of running jobs again
 
         if b_use_multiGPUs:
