@@ -97,7 +97,17 @@ def postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir):
     class_labels_txt = parameters.get_file_path_parameters(para_file,'class_labels')
     class_id_dict = read_label_ids_local(class_labels_txt)
 
-    # group the result on class ids
+    #  count for each class ids
+    all_prediction_count_txt = os.path.join(area_save_dir, 'prediction_count_each_class.txt')
+    total_count = 0
+    with open(all_prediction_count_txt, 'w') as f_obj:
+        for key in class_id_dict.keys():
+            c_id = class_id_dict[key]
+            top1_predict_c = [ [key, res_dict[key]['confidence'][0]] for key in res_dict.keys() if res_dict[key]['pre_labels'][0] == c_id ]
+            f_obj.writelines('%s (id%d) count: %d \n'%(key, c_id, len(top1_predict_c)))
+            total_count += len(top1_predict_c)
+        f_obj.writelines('total count: %d \n' % total_count)
+
 
     # select sample for checking
     class_ids_for_manu_check = parameters.get_string_list_parameters(para_file,'class_ids_for_manu_check')
