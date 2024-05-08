@@ -514,7 +514,8 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
     return sub_image_label_str
 
 
-def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata, brectangle = True, b_label=True,proc_num=1):
+def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata,
+                              brectangle = True, b_label=True,proc_num=1, image_equal_size=None):
     '''
     get sub images (and labels ) from training polygons
     :param t_polygons_shp: training polygon
@@ -525,6 +526,8 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
     :param dstnodata: nodata when save for the output images
     :param brectangle: True: get the rectangle extent of a images.
     :param b_label: True: create the corresponding label images.
+    :param image_equal_size: if set (in meters), then extract the centroid of each polygon, buffer this value to a polygon,
+                                    making each extracted image has the same width and height
     :return:
     '''
 
@@ -547,6 +550,12 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
         class_labels_all = [0]*len(polygons_all)
     # check_polygons_invalidity(polygons_all,t_polygons_shp_all)
 
+    if image_equal_size is not None:
+        if image_equal_size < 0:
+            raise ValueError('image_equal_size is not correct set')
+        basic.outputlogMessage('Converting all polygons to the same size after buffering %f meters'%image_equal_size)
+        center_polygons = [ poly.centroid.buffer(image_equal_size) for poly in center_polygons]
+        basic.outputlogMessage('finished, converted %d polygons to the same size' % len(center_polygons))
 
     img_tile_boxes = get_image_tile_bound_boxes(image_tile_list)
 
@@ -605,6 +614,7 @@ def main(options, args):
 
     b_label_image = options.no_label_image
     process_num = options.process_num
+    image_equal_size = options.image_equal_size
 
     # check training polygons
     assert io_function.is_file_exist(t_polygons_shp)
@@ -656,7 +666,7 @@ def main(options, args):
         pre_name = os.path.splitext(os.path.basename(image_tile_list[0]))[0]
     get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list,
                               saved_dir, pre_name, dstnodata, brectangle=options.rectangle, b_label=b_label_image,
-                              proc_num=process_num)
+                              proc_num=process_num, image_equal_size = image_equal_size)
 
     # move sub images and sub labels to different folders.
 
@@ -692,6 +702,10 @@ if __name__ == "__main__":
     parser.add_option("-p", "--process_num", type=int,
                       action="store", dest="process_num", default=4,
                       help="the process number for parallel computing")
+    parser.add_option("-s", "--image_equal_size", type=float,
+                      action="store", dest="image_equal_size",
+                      help="if set (in meters), then extract the centroid of each polygon, "
+                           "buffer this value to a polygon,making each extracted image has the same width and height ")
 
 
     (options, args) = parser.parse_args()
