@@ -307,6 +307,8 @@ def classify_one_region(area_idx, area_ini, para_file, area_save_dir, gpuid, inf
     # use a specific GPU for prediction, only inference one image
     time0 = time.time()
     if gpuid is not None:
+        #TODO: this doesn't work after torch already be imported,
+        # can work if set CUDA_VISIBLE_DEVICES in the shell
         os.environ['CUDA_VISIBLE_DEVICES'] = str(gpuid)
 
     predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=inf_batch_size)
