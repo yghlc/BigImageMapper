@@ -340,6 +340,7 @@ def parallel_prediction_main(para_file,trained_model):
 
     # loop each inference regions
     sub_tasks = []
+    used_gpu_ids = []
     for area_idx, area_ini in enumerate(multi_inf_regions):
 
         inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
@@ -386,9 +387,16 @@ def parallel_prediction_main(para_file,trained_model):
                 time.sleep(60)  # wait 5 seconds, then check the available GPUs again
                 continue
             # set only the first available visible
-            gpuid = deviceIDs[0]
+            # gpuid = deviceIDs[0]
+
+            # in the case it takes long time to prepare data, tasks need to make sure task equally distributed to different gpus
+            gpu_task_count = [used_gpu_ids.count(id) for id in deviceIDs]
+            min_loc = gpu_task_count.index(min(gpu_task_count))
+            gpuid = deviceIDs[min_loc]
+
             basic.outputlogMessage(
                 '%d: predict region: %s on GPU %d of %s' % (area_idx, area_name_remark_time, gpuid, machine_name))
+            used_gpu_ids.append(gpuid)
         else:
             gpuid = None
             basic.outputlogMessage('%d: predict region: %s on %s' % (area_idx, area_name_remark_time, machine_name))
