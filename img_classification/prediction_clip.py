@@ -383,7 +383,7 @@ def parallel_prediction_main(para_file,trained_model):
                 basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
 
             if len(deviceIDs) < 1:
-                time.sleep(5)  # wait 5 seconds, then check the available GPUs again
+                time.sleep(60)  # wait 5 seconds, then check the available GPUs again
                 continue
             # set only the first available visible
             gpuid = deviceIDs[0]
@@ -439,7 +439,7 @@ def parallel_prediction_main(para_file,trained_model):
             # if 'chpc' in machine_name:
             #     time.sleep(60)  # wait 60 second on ITSC services
             # else:
-            #     time.sleep(10)
+        time.sleep(10)
 
         # copy and backup area ini file
         bak_area_ini = os.path.join(area_save_dir, os.path.basename(io_function.get_name_by_adding_tail(area_ini, 'region')))
