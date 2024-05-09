@@ -39,7 +39,7 @@ def log_string(str):
     print(str)
 
 
-def evaluate(model, test_loader, device, prompt):
+def evaluate(model, test_loader, device, prompt,class_count=10):
     """
     Evaluating the resulting classifier using a given test set loader.
     """
@@ -48,9 +48,11 @@ def evaluate(model, test_loader, device, prompt):
 
     top_probs_1, top_labels_1 = pre_probs.cpu().topk(1, dim=-1)
     top1_accuray = calculate_top_k_accuracy(top_labels_1, gts, k=1)
-
-    top_probs_5, top_labels_5 = pre_probs.cpu().topk(5, dim=-1)
-    top5_accuray = calculate_top_k_accuracy(top_labels_5, gts, k=5)
+    if class_count >=5:
+        top_probs_5, top_labels_5 = pre_probs.cpu().topk(5, dim=-1)
+        top5_accuray = calculate_top_k_accuracy(top_labels_5, gts, k=5)
+    else:
+        top5_accuray = None
 
     return top1_accuray, top5_accuray
 
@@ -184,6 +186,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
     n_batch = 0
     loss = None
     saved_model = None
+    class_count = len(train_loader.dataset.classes)
 
     while n_batch <= nbatches:
         # Training the model
@@ -196,7 +199,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
             if n_batch % 100 == 0:
 
                 # Measuring model test-accuracy
-                top1_test_acc, top5_test_acc = evaluate(model, test_loader, device, prompt)
+                top1_test_acc, top5_test_acc = evaluate(model, test_loader, device, prompt, class_count=class_count)
                 log_string('Evaluation {:03}/{:03}, top1_test_acc: {:.3f}, top5_test_acc: {:.3f}'.
                            format(n_batch,nbatches,top1_test_acc,top5_test_acc))
 
