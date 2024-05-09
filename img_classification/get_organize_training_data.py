@@ -26,7 +26,7 @@ import random
 
 import class_utils
 
-global_slump_class_id_shp={'thawslump':1, 'background':0}
+global_slump_class_id_shp={'thawslump':1, 'others':0}
 main_label_ids = {}
 
 def convert_label_id_to_newSystem(image_labels,class_id_shp):
