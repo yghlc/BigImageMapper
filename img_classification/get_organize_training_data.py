@@ -27,9 +27,9 @@ import random
 import class_utils
 
 global_slump_class_id_shp={'thawslump':1, 'others':0}
-main_label_ids = {}
+# main_label_ids = {}   # this should not set as global variable, otherwise, cause problem when handling multiple regions
 
-def convert_label_id_to_newSystem(image_labels,class_id_shp):
+def convert_label_id_to_newSystem(image_labels,main_label_ids, class_id_shp):
 
     if len(class_id_shp) < 1:
         raise ValueError('class_id_shp is empty')
@@ -62,9 +62,9 @@ def convert_label_id_to_newSystem(image_labels,class_id_shp):
     return image_labels
 
 
-def read_label_ids(label_txt):
-    global main_label_ids
-    main_label_ids = read_label_ids_local(label_txt)
+# def read_label_ids(label_txt):
+#     global main_label_ids
+#     main_label_ids = read_label_ids_local(label_txt)
 
 def read_label_ids_local(label_txt):
     # label_list = [[item.split(',')[0], int(item.split(',')[1])] for item in io_function.read_list_from_txt(label_txt)]
@@ -172,13 +172,12 @@ def read_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_traini
 
     image_labels = [int(item[1]) for item in image_path_labels]
 
-    if len(main_label_ids) < 1:
-        read_label_ids(class_labels_txt_main)
 
     class_id_original = read_label_ids_local(class_labels_txt)
 
     if class_labels_txt_main != class_labels_txt:
-        image_labels = convert_label_id_to_newSystem(image_labels, class_id_original)
+        main_label_ids = read_label_ids_local(class_labels_txt_main)
+        image_labels = convert_label_id_to_newSystem(image_labels, main_label_ids, class_id_original)
 
     if os.path.isfile(patch_list_txt) is False:
         # save the relative path and label to file
@@ -282,15 +281,15 @@ def extract_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_tra
             image_path_list.extend(image_path_list_grid)
             image_labels.extend(image_labels_grid)
 
-    if len(main_label_ids) < 1:
-        class_labels_txt_main = parameters.get_file_path_parameters(para_file, 'class_labels')
-        read_label_ids(class_labels_txt_main)
+    # if len(main_label_ids) < 1:
+    class_labels_txt_main = parameters.get_file_path_parameters(para_file, 'class_labels')
+    main_label_ids = read_label_ids_local(class_labels_txt_main)
 
     if b_convert_label:
         if np.all(np.array(image_labels) == -1):
             basic.outputlogMessage('there is no ground truth in the vector file')
         else:
-            image_labels = convert_label_id_to_newSystem(image_labels, global_slump_class_id_shp)
+            image_labels = convert_label_id_to_newSystem(image_labels, main_label_ids, global_slump_class_id_shp)
 
     if os.path.isfile(patch_list_txt) is False:
         # save the relative path and label to file
@@ -323,10 +322,10 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
     if training_regions is None or len(training_regions) < 1:
         raise ValueError('No training area is set in %s' % para_file)
 
-    # read class name and ids
-    main_class_labels_txt = parameters.get_file_path_parameters(para_file,'class_labels')
-    if len(main_label_ids) < 1:
-        read_label_ids(main_class_labels_txt)
+    # # read class name and ids
+    # main_class_labels_txt = parameters.get_file_path_parameters(para_file,'class_labels')
+    # if len(main_label_ids) < 1:
+    #     read_label_ids(main_class_labels_txt)
 
     image_patch_labels_list_txts = []
     training_data_dir = class_utils.get_training_data_dir(WORK_DIR)
