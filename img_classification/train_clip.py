@@ -52,7 +52,7 @@ def evaluate(model, test_loader, device, prompt,class_count=10):
         top_probs_5, top_labels_5 = pre_probs.cpu().topk(5, dim=-1)
         top5_accuray = calculate_top_k_accuracy(top_labels_5, gts, k=5)
     else:
-        top5_accuray = None
+        top5_accuray = -1.0
 
     return top1_accuray, top5_accuray
 
