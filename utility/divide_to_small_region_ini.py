@@ -274,7 +274,7 @@ def divide_large_region_ini_into_subsets_ini(region_ini, region_grid_shp, min_gr
                                'please check the input grid shp (%s) and area setting (%s)'%
                                (len(inf_img_grid_id_list), len(grid_polys), region_grid_shp,region_ini))
         user_input = input("Do you want to continue? (yes/no): ")
-        if user_input.lower() == "yes":
+        if user_input.lower() in ["yes", "y"]:
             pass
         else:
             sys.exit(0)
