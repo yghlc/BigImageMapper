@@ -109,7 +109,7 @@ def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
 def save_prediction_results(dataset, predict_probs, save_path, k=5):
     if k < 1:
         raise ValueError('k should be larger than 0')
-    top_probs_k, top_labels_k = predict_probs.cpu().topk(5, dim=-1)
+    top_probs_k, top_labels_k = predict_probs.cpu().topk(k, dim=-1)
     top_probs_k = top_probs_k.numpy().squeeze()
     top_labels_k = top_labels_k.numpy().squeeze()
 
@@ -272,9 +272,10 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     pre_probs, ground_truths = run_prediction(model, test_loader, clip_prompt, device)
 
     save_path = os.path.join(area_save_dir, os.path.basename(area_save_dir)+'-classify_results.json' )
-    save_prediction_results(in_dataset,pre_probs, save_path, k=5)
+    save_k = min(5, len(in_dataset.classes))
+    save_prediction_results(in_dataset,pre_probs, save_path, k=save_k)
 
-    top_probs_5, top_labels_5 = pre_probs.cpu().topk(5, dim=-1)
+    top_probs_5, top_labels_5 = pre_probs.cpu().topk(save_k, dim=-1)
     # print(top_probs_5)
     # print(top_labels_5)
 
@@ -289,7 +290,7 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
 
     # top5 accuracy
     top5_acc_save_path = os.path.join(area_save_dir, 'top5_accuracy.txt')
-    calculate_top_k_accuracy(top_labels_5, ground_truths, save_path=top5_acc_save_path, k=5)
+    calculate_top_k_accuracy(top_labels_5, ground_truths, save_path=top5_acc_save_path, k=save_k)
 
 
 
