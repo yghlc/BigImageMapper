@@ -270,7 +270,14 @@ def divide_large_region_ini_into_subsets_ini(region_ini, region_grid_shp, min_gr
     grid_polys = vector_gpd.read_polygons_gpd(region_grid_shp,b_fix_invalid_polygon=False)
 
     if len(inf_img_grid_id_list) != len(grid_polys):
-        raise ValueError('the image count (%d) and grid count (%d) is different'%(len(inf_img_grid_id_list), len(grid_polys)))
+        basic.outputlogMessage('warning, the image count (%d) and grid count (%d) is different\n'
+                               'please check the input grid shp (%s) and area setting (%s)'%
+                               (len(inf_img_grid_id_list), len(grid_polys), region_grid_shp,region_ini))
+        user_input = input("Do you want to continue? (yes/no): ")
+        if user_input.lower() == "yes":
+            pass
+        else:
+            sys.exit(0)
 
     # divide to sub-regions
     select_grid_polys_dict, selected_gird_ids_dict = \
