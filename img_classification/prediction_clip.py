@@ -292,8 +292,11 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     top5_acc_save_path = os.path.join(area_save_dir, 'top5_accuracy.txt')
     calculate_top_k_accuracy(top_labels_5, ground_truths, save_path=top5_acc_save_path, k=save_k)
 
-
-
+    # remove extracted images after predction, to release disk space
+    b_rm_extracted_subImage = parameters.get_bool_parameters_None_if_absence(para_file,'b_rm_extracted_subImage')
+    if b_rm_extracted_subImage is True:
+        for img_p in in_dataset.img_list:
+            io_function.delete_file_or_dir(img_p)
 
 
 
