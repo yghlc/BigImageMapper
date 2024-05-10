@@ -304,7 +304,7 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
             # mosaic files in tmp_saved_files
             mosaic_args_list = ['gdal_merge.py', '-o', save_path,'-n',str(dstnodata),'-a_nodata',str(dstnodata)]
             mosaic_args_list.extend(tmp_saved_files)
-            if basic.exec_command_args_list_one_file(mosaic_args_list,save_path) is False:
+            if basic.exec_command_args_list_one_file(mosaic_args_list,save_path,b_verbal=False) is False:
                 raise IOError('error, obtain a mosaic (%s) failed'%save_path)
 
         # # for test
