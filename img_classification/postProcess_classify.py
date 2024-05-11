@@ -94,19 +94,23 @@ def write_top1_result_into_vector_file(vector_path, res_dict, save_path, column_
         print('Warning, %s already exists, skip'%save_path)
         return
 
+
+    # for some case, a polygon may don't have the corresponding sub-images, then ignore it and set predict id as -1
+    polys = vector_gpd.read_polygons_gpd(vector_path,b_fix_invalid_polygon=False)
+    centroids = [ vector_gpd.get_polygon_centroid(item) for item in polys]
+
+    predict_class_ids = [-1] * len(polys)
+
     # for a key: hillshade_HDLine_grid24872_14030.tif,  "14030" is the index of the polygon in the original shapefile (see get_subImages.py)
-    predict_class_ids = [-1] * len(res_dict.keys())
     for key in res_dict.keys():
         try:
             poly_idx = int(re.findall(r"_([0-9]+)\.", key)[0])
             predict_class_ids[poly_idx] = res_dict[key]['pre_labels'][0]
         except IndexError:
             print('IndexError found in dict %s, with key %s, poly_idx: %d, total count: %d '%(str(res_dict[key]), key, poly_idx, len(predict_class_ids)))
+            print('count of polygons: %d'%len(polys))
         except:
             print('Other errors found in dict %s, with key %s, poly_idx: %d, total count: %d '%(str(res_dict[key]), key, poly_idx, len(predict_class_ids)))
-
-    polys = vector_gpd.read_polygons_gpd(vector_path,b_fix_invalid_polygon=False)
-    centroids = [ vector_gpd.get_polygon_centroid(item) for item in polys]
 
     # add_attributes = {column_name:predict_class_ids}
     # vector_gpd.add_attributes_to_shp(vector_path,add_attributes)
