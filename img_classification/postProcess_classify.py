@@ -84,11 +84,11 @@ def postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir):
         basic.outputlogMessage('Warning, %s results (a json file) for %s does not exist, skip'%(res_json_path,area_ini))
         return False
 
-    inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
-    inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
-    dataset = prepare_dataset(para_file, area_ini,area_save_dir,inf_image_dir, inf_image_or_pattern,
-                                 transform=None,test=True)
-    image_path_list = dataset.img_list
+    # inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
+    # inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
+    # dataset = prepare_dataset(para_file, area_ini,area_save_dir,inf_image_dir, inf_image_or_pattern,
+    #                              transform=None,test=True)
+    # image_path_list = dataset.img_list
     #         res_dict[os.path.basename(i_path)] = { }
     #         res_dict[os.path.basename(i_path)]['confidence'] = probs.tolist()
     #         res_dict[os.path.basename(i_path)]['pre_labels'] = labels.tolist()
@@ -110,11 +110,13 @@ def postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir):
 
 
     # select sample for checking
-    class_ids_for_manu_check = parameters.get_string_list_parameters(para_file,'class_ids_for_manu_check')
-    class_ids_for_manu_check = [ int(item) for item in class_ids_for_manu_check]
-    sel_count = parameters.get_digit_parameters(para_file,'sample_num_per_class','int')
-    for c_id in class_ids_for_manu_check:
-        select_sample_for_manu_check(c_id, area_save_dir, sel_count, class_id_dict, image_path_list, res_dict)
+    # move selection of random samples into prediction step (because after prediciton, these images will be removed)
+
+    # class_ids_for_manu_check = parameters.get_string_list_parameters(para_file,'class_ids_for_manu_check')
+    # class_ids_for_manu_check = [ int(item) for item in class_ids_for_manu_check]
+    # sel_count = parameters.get_digit_parameters(para_file,'sample_num_per_class','int')
+    # for c_id in class_ids_for_manu_check:
+    #     select_sample_for_manu_check(c_id, area_save_dir, sel_count, class_id_dict, image_path_list, res_dict)
 
     #TODO: write results into shapefile
 
