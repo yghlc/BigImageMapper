@@ -21,12 +21,17 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.basic as basic
 import basic_src.io_function as io_function
+import basic_src.map_projection as map_projection
+import datasets.vector_gpd as vector_gpd
 
 # from prediction_clip import prepare_dataset
 from get_organize_training_data import read_label_ids_local
 
 import time
 import random
+
+import re
+import pandas as pd
 
 def get_class_name(class_id, class_id_dict):
     res = [ key for key in class_id_dict.keys() if class_id_dict[key] == class_id]
@@ -73,8 +78,33 @@ def select_sample_for_manu_check(class_id, save_dir, sel_count, class_id_dict, i
     save_json = outpur_dir + '_confidence.json'
     io_function.save_dict_to_txt_json(save_json,top1_confidence_dict)
 
-def write_top1_result_into_vector_file():
-    pass
+def write_top1_result_into_vector_file(vector_path, res_dict, save_path, column_name='preClassID'):
+    '''
+    save the prediciton results (top 1) into vector file
+    :param vector_path:
+    :param res_dict: results in dict
+    :return:
+    '''
+    # res_dict
+    #         res_dict[os.path.basename(i_path)] = { }
+    #         res_dict[os.path.basename(i_path)]['confidence'] = probs.tolist()
+    #         res_dict[os.path.basename(i_path)]['pre_labels'] = labels.tolist()
+
+    # for a key: hillshade_HDLine_grid24872_14030.tif,  "14030" is the index of the polygon in the original shapefile (see get_subImages.py)
+    predict_class_ids = [-1] * len(res_dict.keys())
+    for key in res_dict.keys():
+        poly_idx = int(re.findall(r"_([0-9]+)\.", key)[0])
+        predict_class_ids[poly_idx] = res_dict[key]['pre_labels'][0]
+
+    polys = vector_gpd.read_polygons_gpd(vector_path,b_fix_invalid_polygon=False)
+    centroids = [ vector_gpd.get_polygon_centroid(item) for item in polys]
+
+    # add_attributes = {column_name:predict_class_ids}
+    # vector_gpd.add_attributes_to_shp(vector_path,add_attributes)
+
+    wkt = map_projection.get_raster_or_vector_srs_info_wkt(vector_path)
+    data_pd = pd.DataFrame({'Points': centroids, column_name:predict_class_ids})
+    vector_gpd.save_points_to_file(data_pd,'Points',wkt,save_path)
 
 
 def postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir):
@@ -118,7 +148,12 @@ def postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir):
     # for c_id in class_ids_for_manu_check:
     #     select_sample_for_manu_check(c_id, area_save_dir, sel_count, class_id_dict, image_path_list, res_dict)
 
-    #TODO: write results into shapefile
+    # write results into shapefile
+    all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(area_ini, 'all_polygons_labels')
+    save_shp_path = parameters.get_area_name_remark_time(area_ini) + '-predicted_classID.shp'
+    save_shp_path = os.path.join(area_save_dir, save_shp_path)
+    if all_polygons_labels is not None:
+        write_top1_result_into_vector_file(all_polygons_labels, res_dict, save_shp_path)
 
 
 
