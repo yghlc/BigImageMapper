@@ -34,7 +34,8 @@ from multiprocessing import Process
 # import torch.multiprocessing as Process
 
 from class_utils import RSPatchDataset, get_accuracy_log_path
-from get_organize_training_data import extract_sub_image_labels_one_region, read_sub_image_labels_one_region
+from get_organize_training_data import extract_sub_image_labels_one_region, read_sub_image_labels_one_region, read_label_ids_local
+from postProcess_classify import select_sample_for_manu_check
 
 from tqdm import tqdm
 
@@ -121,6 +122,7 @@ def save_prediction_results(dataset, predict_probs, save_path, k=5):
         res_dict[os.path.basename(i_path)]['pre_labels'] = labels.tolist()
 
     io_function.save_dict_to_txt_json(save_path,res_dict)
+    return res_dict, save_path
 
 
 def test_classification_ucm(model, preprocess):
@@ -273,7 +275,7 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
 
     save_path = os.path.join(area_save_dir, os.path.basename(area_save_dir)+'-classify_results.json' )
     save_k = min(5, len(in_dataset.classes))
-    save_prediction_results(in_dataset,pre_probs, save_path, k=save_k)
+    res_dict, _ = save_prediction_results(in_dataset,pre_probs, save_path, k=save_k)
 
     top_probs_5, top_labels_5 = pre_probs.cpu().topk(save_k, dim=-1)
     # print(top_probs_5)
@@ -292,7 +294,18 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     top5_acc_save_path = os.path.join(area_save_dir, 'top5_accuracy.txt')
     calculate_top_k_accuracy(top_labels_5, ground_truths, save_path=top5_acc_save_path, k=save_k)
 
-    # remove extracted images after predction, to release disk space
+    # select sample for checking
+    # move selection of random samples into prediction step (because after prediciton, these images will be removed)
+    class_ids_for_manu_check = parameters.get_string_list_parameters(para_file,'class_ids_for_manu_check')
+    class_ids_for_manu_check = [ int(item) for item in class_ids_for_manu_check]
+    sel_count = parameters.get_digit_parameters(para_file,'sample_num_per_class','int')
+    class_labels_txt = parameters.get_file_path_parameters(para_file,'class_labels')
+    class_id_dict = read_label_ids_local(class_labels_txt)
+    image_path_list = in_dataset.img_list
+    for c_id in class_ids_for_manu_check:
+        select_sample_for_manu_check(c_id, area_save_dir, sel_count, class_id_dict, image_path_list, res_dict)
+
+    # remove extracted images after prediction, to release disk space
     b_rm_extracted_subImage = parameters.get_bool_parameters_None_if_absence(para_file,'b_rm_extracted_subImage')
     if b_rm_extracted_subImage is True:
         for img_p in in_dataset.img_list:
