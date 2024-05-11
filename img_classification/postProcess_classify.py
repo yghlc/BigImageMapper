@@ -22,7 +22,7 @@ import parameters
 import basic_src.basic as basic
 import basic_src.io_function as io_function
 
-from prediction_clip import prepare_dataset
+# from prediction_clip import prepare_dataset
 from get_organize_training_data import read_label_ids_local
 
 import time
