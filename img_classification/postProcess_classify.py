@@ -90,11 +90,18 @@ def write_top1_result_into_vector_file(vector_path, res_dict, save_path, column_
     #         res_dict[os.path.basename(i_path)]['confidence'] = probs.tolist()
     #         res_dict[os.path.basename(i_path)]['pre_labels'] = labels.tolist()
 
+    if os.path.isfile(save_path):
+        print('Warning, %s already exists, skip'%save_path)
+        return
+
     # for a key: hillshade_HDLine_grid24872_14030.tif,  "14030" is the index of the polygon in the original shapefile (see get_subImages.py)
     predict_class_ids = [-1] * len(res_dict.keys())
     for key in res_dict.keys():
-        poly_idx = int(re.findall(r"_([0-9]+)\.", key)[0])
-        predict_class_ids[poly_idx] = res_dict[key]['pre_labels'][0]
+        try:
+            poly_idx = int(re.findall(r"_([0-9]+)\.", key)[0])
+            predict_class_ids[poly_idx] = res_dict[key]['pre_labels'][0]
+        except ValueError:
+            print('error found in dict %s, with key %s'%(str(res_dict[key]), key))
 
     polys = vector_gpd.read_polygons_gpd(vector_path,b_fix_invalid_polygon=False)
     centroids = [ vector_gpd.get_polygon_centroid(item) for item in polys]
