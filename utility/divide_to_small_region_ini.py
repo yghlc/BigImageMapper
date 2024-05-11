@@ -210,7 +210,7 @@ def create_a_region_defined_parafile(template_para_file, subset_id, grid_polys, 
     # crop and modify all_polygons_labels
     all_polygons_labels = parameters.get_file_path_parameters_None_if_absence(template_para_file,'all_polygons_labels')
     # add orgID, for merging the result later
-    if vector_gpd.is_field_name_in_shp('all_polygons_labels','polyID') is False:
+    if vector_gpd.is_field_name_in_shp(all_polygons_labels,'polyID') is False:
         polys = vector_gpd.read_polygons_gpd(all_polygons_labels,b_fix_invalid_polygon=False)
         orgID_list = list(range(len(polys)))
         vector_gpd.add_attributes_to_shp(all_polygons_labels,{'polyID':orgID_list})
