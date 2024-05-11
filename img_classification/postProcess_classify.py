@@ -100,8 +100,10 @@ def write_top1_result_into_vector_file(vector_path, res_dict, save_path, column_
         try:
             poly_idx = int(re.findall(r"_([0-9]+)\.", key)[0])
             predict_class_ids[poly_idx] = res_dict[key]['pre_labels'][0]
-        except ValueError:
-            print('error found in dict %s, with key %s'%(str(res_dict[key]), key))
+        except IndexError:
+            print('IndexError found in dict %s, with key %s'%(str(res_dict[key]), key))
+        except:
+            print('Other errors found in dict %s, with key %s' % (str(res_dict[key]), key))
 
     polys = vector_gpd.read_polygons_gpd(vector_path,b_fix_invalid_polygon=False)
     centroids = [ vector_gpd.get_polygon_centroid(item) for item in polys]
