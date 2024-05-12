@@ -112,11 +112,14 @@ def write_top1_result_into_vector_file(vector_path, res_dict, save_path, column_
         except:
             print('Other errors found in dict %s, with key %s, poly_idx: %d, total count: %d '%(str(res_dict[key]), key, poly_idx, len(predict_class_ids)))
 
-    # add_attributes = {column_name:predict_class_ids}
-    # vector_gpd.add_attributes_to_shp(vector_path,add_attributes)
+    saved_attributes = {'Points': centroids, column_name:predict_class_ids}
+
+    if vector_gpd.is_field_name_in_shp(vector_path,'polyID'):
+        polyID_list = vector_gpd.read_attribute_values_list(vector_path,'polyID')
+        saved_attributes['polyID'] = polyID_list
 
     wkt = map_projection.get_raster_or_vector_srs_info_wkt(vector_path)
-    data_pd = pd.DataFrame({'Points': centroids, column_name:predict_class_ids})
+    data_pd = pd.DataFrame(saved_attributes)
     vector_gpd.save_points_to_file(data_pd,'Points',wkt,save_path)
 
 
