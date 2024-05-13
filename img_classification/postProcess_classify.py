@@ -122,6 +122,55 @@ def write_top1_result_into_vector_file(vector_path, res_dict, save_path, column_
     data_pd = pd.DataFrame(saved_attributes)
     vector_gpd.save_points_to_file(data_pd,'Points',wkt,save_path)
 
+def merge_result_from_multi_small_regions(para_file,multi_inf_regions):
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    res_dir = os.path.join(parameters.get_directory(para_file, 'inf_output_dir'), expr_name)
+
+    if len(multi_inf_regions) < 1:
+        print('Only one region, skip merging')
+        return
+
+    # got result list
+    merge_save_dir = None
+    shp_list = []
+    count_each_class_txt_list = []
+
+    for area_ini in multi_inf_regions:
+        area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
+        area_save_dir = os.path.join(res_dir, area_name_remark_time)
+        sub_str = re.findall(r"_sub([0-9]+)_", area_name_remark_time)
+        if len(sub_str)< 1:
+            basic.outputlogMessage('warning, the folder name dont contain "sub" string, and may not are the sub-region after division, skip merging ')
+            return
+
+        sub_id = int(sub_str[0])
+        if merge_save_dir is None:
+            merge_save_dir_name = area_name_remark_time.replace('_sub%d_'%sub_id,'_')
+            merge_save_dir = os.path.join(res_dir, merge_save_dir_name)
+            io_function.mkdir(merge_save_dir)
+
+        shp = os.path.join(area_save_dir, area_name_remark_time + '-predicted_classID.shp')
+        count_txt = os.path.join(area_save_dir, 'prediction_count_each_class.txt')
+        shp_list.append(shp)
+        count_each_class_txt_list.append(count_txt)
+
+    # merge shp
+    merge_shp = os.path.join(merge_save_dir, os.path.basename(merge_save_dir) + '-predicted_classID.shp' )
+    vector_gpd.merge_vector_files(shp_list,merge_shp)
+
+    # merge txt
+    class_count = {}
+    for txt in count_each_class_txt_list:
+        txt_lines = io_function.read_list_from_txt(txt)
+        for line in txt_lines:
+            c_name, count = line.split(':')
+            count = int(count.strip() )
+            class_count.setdefault(c_name, []).append(count)
+    save_count_txt = os.path.join(merge_save_dir, 'prediction_count_each_class.txt')
+    with open(save_count_txt, 'w') as f_obj:
+        for key in class_count:
+            f_obj.writelines('%s: %d \n'%(key,sum(class_count[key])))
+
 
 def postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir):
 
@@ -194,6 +243,11 @@ def postProcessing_main(para_file):
         print('%d/%d, post-processing for %s'%(area_idx, len(multi_inf_regions), area_ini))
         postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir)
 
+
+    # merge results for several regions (a large region that were divided into many small one using ./divide_to_small_region_ini.py )
+    b_merge_results_from_regions = parameters.get_bool_parameters_None_if_absence(para_file,'b_merge_results_from_regions')
+    if b_merge_results_from_regions is True:
+        merge_result_from_multi_small_regions(para_file,multi_inf_regions)
 
 
     duration= time.time() - SECONDS
