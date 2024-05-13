@@ -86,7 +86,7 @@ def exec_command_args_list_one_string(args_list):
         outputlogMessage('return codes: ' + str(returncode))
         return False
 
-def exec_command_args_list_one_file(args_list,output,b_verbal=True):
+def exec_command_args_list_one_file(args_list,output,b_verbose=True):
         """
         execute a command string
         Args:
@@ -95,7 +95,7 @@ def exec_command_args_list_one_file(args_list,output,b_verbal=True):
         Returns:
 
         """
-        if b_verbal:
+        if b_verbose:
             outputlogMessage(output_commandString_from_args_list(args_list))
         ps = subprocess.Popen(args_list)
         returncode = ps.wait()
