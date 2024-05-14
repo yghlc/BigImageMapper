@@ -39,6 +39,34 @@ def extract_classification_result_from_multi_sources(in_shp_list, save_path, ext
     io_function.save_dict_to_txt_json('poly_class_ids.json',poly_class_ids)
 
 
+def extract_class_id_results(shp_path, poly_class_ids, extract_class_id=1, occurrence = 4):
+    '''
+    extract the results which detected  as the target multiple time
+    :param shp_path: a shape file contains points and "polyID"
+    :param poly_class_ids: dict containing predicting results
+    :param extract_class_id: the target id
+    :param occurrence: occurrence time
+    :return:
+    '''
+    print(datetime.now(), 'extract results for class: %d' % extract_class_id)
+    sel_poly_ids = [ key for key in poly_class_ids.keys() if poly_class_ids[key].count(extract_class_id) >= occurrence ]
+    sel_poly_class_ids = {key: poly_class_ids[key] for key in sel_poly_ids}
+    save_json = 'poly_class_ids_id%d_occurrence%d.json'%(extract_class_id,occurrence)
+    io_function.save_dict_to_txt_json(save_json, sel_poly_class_ids)
+
+    # read and save shapefile
+    save_shp = 'poly_class_ids_id%d_occurrence%d.shp'%(extract_class_id,occurrence)
+    polyID_list = vector_gpd.read_attribute_values_list(shp_path,'polyID')
+    sel_idxs = [ idx for idx, id in enumerate(polyID_list) if id in sel_poly_ids]
+    vector_gpd.save_shapefile_subset_as(sel_idxs,shp_path,save_shp)
+
+    print(datetime.now(), 'save to %s and %s' % (save_json, save_shp))
+
+def test_extract_class_id_results():
+    shp_path = 'arctic_huang2023_620grids_s2_rgb_2023-predicted_classID.shp'
+    poly_class_ids = io_function.read_dict_from_txt_json('poly_class_ids.json')
+    extract_class_id_results(shp_path, poly_class_ids, extract_class_id=1, occurrence=7)
+
 
 def main(options, args):
 
@@ -52,6 +80,10 @@ def main(options, args):
 
 
 if __name__ == '__main__':
+
+    test_extract_class_id_results()
+    sys.exit(0)
+
     usage = "usage: %prog [options] res_shp1 res_shp2 res_shp3 ...  "
     parser = OptionParser(usage=usage, version="1.0 2024-05-13")
     parser.description = 'Introduction: extract image classification results from multiple sources '
