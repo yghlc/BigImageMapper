@@ -20,7 +20,7 @@ import basic_src.io_function as io_function
 import datasets.vector_gpd as vector_gpd
 
 
-def extract_classification_result_from_multi_sources(in_shp_list, save_path, extract_class_id = 1):
+def extract_classification_result_from_multi_sources(in_shp_list, save_path, extract_class_id=1):
 
     # read
     poly_class_ids = {}
@@ -28,6 +28,7 @@ def extract_classification_result_from_multi_sources(in_shp_list, save_path, ext
         polyIDs = vector_gpd.read_attribute_values_list(shp,'polyID')
         preClassIDs = vector_gpd.read_attribute_values_list(shp, 'preClassID')
         _ = [poly_class_ids.setdefault(pid, []).append(c_id) for pid, c_id in zip(polyIDs,preClassIDs)]
+
 
 
     # save and organize them
@@ -51,11 +52,6 @@ if __name__ == '__main__':
     parser = OptionParser(usage=usage, version="1.0 2024-05-13")
     parser.description = 'Introduction: extract image classification results from multiple sources '
 
-    (options, args) = parser.parse_args()
-    if len(sys.argv) < 2:
-        parser.print_help()
-        sys.exit(2)
-
     parser.add_option("-s", "--save_path",
                       action="store", dest="save_path",
                       help="the file path for saving the results")
@@ -63,5 +59,12 @@ if __name__ == '__main__':
     parser.add_option("-i", "--target_id",
                       action="store", dest="target_id", type=int, default=1,
                       help="the class id want to save")
+
+    (options, args) = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
+
 
     main(options, args)
