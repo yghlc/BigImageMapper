@@ -15,6 +15,7 @@ code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 # import parameters
 # import basic_src.basic as basic
+from datetime import datetime
 import basic_src.io_function as io_function
 # import basic_src.map_projection as map_projection
 import datasets.vector_gpd as vector_gpd
@@ -22,9 +23,12 @@ import datasets.vector_gpd as vector_gpd
 
 def extract_classification_result_from_multi_sources(in_shp_list, save_path, extract_class_id=1):
 
+    print('Input shape file:', in_shp_list)
+
     # read
     poly_class_ids = {}
     for shp in in_shp_list:
+        print(datetime.now(), 'reading %s'%shp)
         polyIDs = vector_gpd.read_attribute_values_list(shp,'polyID')
         preClassIDs = vector_gpd.read_attribute_values_list(shp, 'preClassID')
         _ = [poly_class_ids.setdefault(pid, []).append(c_id) for pid, c_id in zip(polyIDs,preClassIDs)]
