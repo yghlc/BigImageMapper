@@ -51,6 +51,7 @@ def extract_class_id_results(shp_path, poly_class_ids, extract_class_id=1, occur
     print(datetime.now(), 'extract results for class: %d' % extract_class_id)
     sel_poly_ids = [ key for key in poly_class_ids.keys() if poly_class_ids[key].count(extract_class_id) >= occurrence ]
     print(datetime.now(), 'select %d results'%len(sel_poly_ids))
+    # print(sel_poly_ids[:10])
     sel_poly_class_ids = {key: poly_class_ids[key] for key in sel_poly_ids}
     save_json = 'poly_class_ids_id%d_occurrence%d.json'%(extract_class_id,occurrence)
     io_function.save_dict_to_txt_json(save_json, sel_poly_class_ids)
@@ -59,7 +60,8 @@ def extract_class_id_results(shp_path, poly_class_ids, extract_class_id=1, occur
     save_shp = 'poly_class_ids_id%d_occurrence%d.shp'%(extract_class_id,occurrence)
     polyID_list = vector_gpd.read_attribute_values_list(shp_path,'polyID')
     print(datetime.now(), 'read %d polyID '%len(polyID_list))
-    sel_idxs = [ idx for idx, id in enumerate(polyID_list) if id in sel_poly_ids]
+    sel_poly_ids_int = [ int(item) for item in sel_poly_ids ]
+    sel_idxs = [ idx for idx, id in enumerate(polyID_list) if id in sel_poly_ids_int]
     print(datetime.now(), 'select %d polyID ' % len(sel_idxs))
     vector_gpd.save_shapefile_subset_as(sel_idxs,shp_path,save_shp)
 
