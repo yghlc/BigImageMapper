@@ -21,7 +21,7 @@ import basic_src.io_function as io_function
 import datasets.vector_gpd as vector_gpd
 
 
-def extract_classification_result_from_multi_sources(in_shp_list, save_path, extract_class_id=1):
+def extract_classification_result_from_multi_sources(in_shp_list, save_path, extract_class_id=1, occurrence=4):
 
     print('Input shape file:', in_shp_list)
 
@@ -34,9 +34,11 @@ def extract_classification_result_from_multi_sources(in_shp_list, save_path, ext
         _ = [poly_class_ids.setdefault(pid, []).append(c_id) for pid, c_id in zip(polyIDs,preClassIDs)]
 
 
-
     # save and organize them
-    io_function.save_dict_to_txt_json('poly_class_ids.json',poly_class_ids)
+    io_function.save_dict_to_txt_json('poly_class_ids_all.json',poly_class_ids)
+
+    extract_class_id_results(in_shp_list[0], poly_class_ids, extract_class_id=extract_class_id, occurrence=occurrence)
+
 
 
 def extract_class_id_results(shp_path, poly_class_ids, extract_class_id=1, occurrence = 4):
@@ -81,13 +83,15 @@ def main(options, args):
     if save_path is None:
         save_path = 'extracted_results_class_%d.shp'%target_id
 
-    extract_classification_result_from_multi_sources(res_shp_list, save_path)
+    min_occurrence = options.occurrence
+    extract_classification_result_from_multi_sources(res_shp_list, save_path,
+                                                     extract_class_id = target_id,occurrence=min_occurrence)
 
 
 if __name__ == '__main__':
 
-    test_extract_class_id_results()
-    sys.exit(0)
+    # test_extract_class_id_results()
+    # sys.exit(0)
 
     usage = "usage: %prog [options] res_shp1 res_shp2 res_shp3 ...  "
     parser = OptionParser(usage=usage, version="1.0 2024-05-13")
@@ -100,6 +104,10 @@ if __name__ == '__main__':
     parser.add_option("-i", "--target_id",
                       action="store", dest="target_id", type=int, default=1,
                       help="the class id want to save")
+
+    parser.add_option("-m", "--occurrence",
+                      action="store", dest="occurrence", type=int, default=4,
+                      help="minimum of the target ID in multiple observations ")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
