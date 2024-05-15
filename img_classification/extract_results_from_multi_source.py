@@ -183,6 +183,7 @@ def extract_images_for_manu_check(merge_result_shp, res_shp_list, out_dir, sampl
 def main(options, args):
 
     res_shp_list = args
+    res_shp_list = [ os.path.abspath(item) for item in res_shp_list]
     save_path = options.save_path
     target_id = options.target_id
     min_occurrence = options.occurrence
