@@ -32,7 +32,7 @@ def extract_classification_result_from_multi_sources(in_shp_list, save_path, ext
     '''
 
     if os.path.isfile(save_path):
-        print(datetime.now(), '%s already exists, slip' % save_path)
+        print(datetime.now(), '%s already exists, skip' % save_path)
         return
 
     print(datetime.now(), 'Input shape file:', in_shp_list)
