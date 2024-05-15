@@ -14,11 +14,17 @@ from optparse import OptionParser
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 # import parameters
-# import basic_src.basic as basic
+import basic_src.basic as basic
 from datetime import datetime
 import basic_src.io_function as io_function
-# import basic_src.map_projection as map_projection
+import basic_src.map_projection as map_projection
 import datasets.vector_gpd as vector_gpd
+import parameters
+
+# from get_organize_training_data import extract_sub_image_labels_one_region
+import pandas as pd
+
+import random
 
 
 def extract_classification_result_from_multi_sources(in_shp_list, save_path, extract_class_id=1, occurrence=4):
@@ -90,7 +96,88 @@ def extract_class_id_results(shp_path, poly_class_ids, save_path, extract_class_
 def test_extract_class_id_results():
     shp_path = 'arctic_huang2023_620grids_s2_rgb_2023-predicted_classID.shp'
     poly_class_ids = io_function.read_dict_from_txt_json('poly_class_ids.json')
-    extract_class_id_results(shp_path, poly_class_ids, extract_class_id=1, occurrence=7)
+    save_path = 'sel_result.shp'
+    extract_class_id_results(shp_path, poly_class_ids, save_path, extract_class_id=1, occurrence=7)
+
+
+def extract_images_for_one_region(area_ini, out_dir, in_shp):
+
+    get_subImage_script = os.path.join(code_dir, 'datasets', 'get_subImages.py')
+
+    area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
+    extract_img_dir = os.path.join(out_dir, area_name_remark_time + '_images')
+    io_function.mkdir(extract_img_dir)
+    extract_done_indicator = os.path.join(extract_img_dir, 'extract_image_using_vector.done')
+
+    dstnodata = 0
+    buffersize = 1
+    process_num = 8
+    rectangle_ext = 'Yes'
+
+    image_dir = parameters.get_directory(area_ini, 'inf_image_dir')  # inf_image_dir
+    image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')  # inf_image_or_pattern
+
+    # extract_sub_image_labels_one_region(area_save_dir, para_file, area_ini, b_training=False, b_convert_label=False)
+
+    command_string = get_subImage_script + ' -b ' + str(buffersize) + ' -e ' + image_or_pattern + \
+                     ' -o ' + extract_img_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
+                     + ' ' + rectangle_ext + ' --no_label_image '
+    # if each_image_equal_size is not None:
+    #     command_string += ' -s %s  ' % str(each_image_equal_size)
+    command_string += in_shp + ' ' + image_dir
+    if os.path.isfile(extract_done_indicator):
+        basic.outputlogMessage('Warning, sub-images already been extracted, read them directly')
+    else:
+        basic.os_system_exit_code(command_string)
+
+
+
+def extract_images_for_manu_check(merge_result_shp, res_shp_list, out_dir, sample_num = 300):
+
+    io_function.is_file_exist(merge_result_shp)
+    if os.path.isdir(out_dir) is False:
+        io_function.mkdir(out_dir)
+
+    # find region ini files
+    multi_inf_regions = []
+    for res_shp in res_shp_list:
+        res_dir = os.path.dirname(res_shp)
+        ini_files = io_function.get_file_list_by_pattern(res_dir,'*.ini')
+        if len(ini_files) < 1:
+            raise ValueError('there is not area ini files in %s'%res_dir)
+        if len(ini_files) > 1:
+            raise ValueError('there are multiple area ini files in %s' % res_dir)
+        multi_inf_regions.append(ini_files[0])
+
+    # randomly select results
+    polys = vector_gpd.read_polygons_gpd(merge_result_shp,b_fix_invalid_polygon=False)
+    index_list = list(range(len(polys)))
+    if sample_num > len(polys):
+        print('Warning, the set select count (%d) is greater than the total count of results (%d), select all'%(sample_num, len(polys)))
+        sample_num = len(polys)
+    sel_index = random.sample(index_list, sample_num)
+
+    sel_merge_result_shp = os.path.join(out_dir,
+                                        os.path.basename(io_function.get_name_by_adding_tail(merge_result_shp, 'random%d' % sample_num)))
+    if os.path.isfile(sel_merge_result_shp):
+        print('warning, %s exists, skip sampling'%sel_merge_result_shp)
+    else:
+        vector_gpd.save_shapefile_subset_as(sel_index,merge_result_shp, sel_merge_result_shp)
+
+    # buffer to the same size
+    buffer_size = 300
+    sel_merge_result_shp_buff = io_function.get_name_by_adding_tail(sel_merge_result_shp,'buffer%d'%buffer_size)
+    points, polyIDs = vector_gpd.read_polygons_attributes_list(sel_merge_result_shp,'polyID')
+    polys = [item.buffer(buffer_size) for item in  points]
+    data_pd = pd.DataFrame({'Polygons':polys, 'polyID':polyIDs})
+    wkt = map_projection.get_raster_or_vector_srs_info_wkt(sel_merge_result_shp)
+    vector_gpd.save_polygons_to_files(data_pd,'Polygons', wkt, sel_merge_result_shp_buff)
+
+
+    # extract images for each region.
+    for reg_ini in multi_inf_regions:
+        extract_images_for_one_region(reg_ini,out_dir,sel_merge_result_shp_buff)
+
 
 
 def main(options, args):
@@ -105,6 +192,10 @@ def main(options, args):
 
     extract_classification_result_from_multi_sources(res_shp_list, save_path,
                                                      extract_class_id = target_id,occurrence=min_occurrence)
+
+    sample_count = 300
+    extract_img_dir = os.path.basename(save_path) + '_images'
+    extract_images_for_manu_check(save_path,res_shp_list,extract_img_dir,sample_num=sample_count)
 
 
 if __name__ == '__main__':

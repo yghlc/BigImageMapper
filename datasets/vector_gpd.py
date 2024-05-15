@@ -674,13 +674,14 @@ def save_shapefile_subset_as(data_poly_indices, org_shp, save_path,format='ESRI 
 
     save_count = len(data_poly_indices)
     shapefile = gpd.read_file(org_shp)
-    nrow, ncol = shapefile.shape
+    # nrow, ncol = shapefile.shape
 
-    selected_list = [False]*nrow
-    for idx in data_poly_indices:
-        selected_list[idx] = True
+    # selected_list = [False]*nrow
+    # for idx in data_poly_indices:
+    #     selected_list[idx] = True
 
-    shapefile_sub = shapefile[selected_list]
+    # shapefile_sub = shapefile[selected_list]
+    shapefile_sub = shapefile.iloc[data_poly_indices]
     # change format
     guess_format = guess_file_format_extension(save_path)
     if guess_format != format:
