@@ -651,7 +651,7 @@ def save_shapefile_subset_as_valueInlist(org_shp, save_path, field_name, value_l
     '''
     #
     shapefile = gpd.read_file(org_shp)
-    filtered_shapefile = shapefile[field_name].isin(value_list)
+    filtered_shapefile = shapefile[shapefile[field_name].isin(value_list)]
     # change format
     guess_format = guess_file_format_extension(save_path)
     if guess_format != format:
