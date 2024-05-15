@@ -639,6 +639,28 @@ def list_to_dict(list_dict):
                 out_dict[key] = [dict_obj[key]]
     return out_dict
 
+def save_shapefile_subset_as_valueInlist(org_shp, save_path, field_name, value_list, format='ESRI Shapefile'):
+    '''
+    save a subset of vector file based on values in a column (field)
+    :param org_shp: original shapefile
+    :param save_path: save path
+    :param field_name: the file name
+    :param value_list: a list of values, if the value of the column is in this list, then will save the record
+    :param format:
+    :return:
+    '''
+    #
+    shapefile = gpd.read_file(org_shp)
+    filtered_shapefile = shapefile[field_name].isin(value_list)
+    # change format
+    guess_format = guess_file_format_extension(save_path)
+    if guess_format != format:
+        basic.outputlogMessage('warning, the format (%s) associated with file extension is different with the input one (%s)'%
+                               (guess_format,format))
+        format = guess_format
+    filtered_shapefile.to_file(save_path, driver=format)
+    basic.outputlogMessage('save subset (%d geometry) of shapefile to %s'%(len(filtered_shapefile),save_path))
+
 def save_shapefile_subset_as(data_poly_indices, org_shp, save_path,format='ESRI Shapefile'):
     '''
     save subset of shapefile

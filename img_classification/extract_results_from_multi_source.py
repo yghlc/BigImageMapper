@@ -83,14 +83,8 @@ def extract_class_id_results(shp_path, poly_class_ids, save_path, extract_class_
 
     # read and save shapefile
     save_shp = save_path
-    polyID_list = vector_gpd.read_attribute_values_list(shp_path,'polyID')
-    print(datetime.now(), 'read %d polyID '%len(polyID_list))
-    sel_poly_ids_int = [ int(item) for item in sel_poly_ids ]
-    # sel_idxs = [ idx for idx, id in enumerate(polyID_list) if id in sel_poly_ids_int]
-    sel_idxs = [polyID_list.index(sel_id)  for sel_id in sel_poly_ids_int]
-    print(datetime.now(), 'select %d polyID ' % len(sel_idxs))
-    vector_gpd.save_shapefile_subset_as(sel_idxs,shp_path,save_shp)
-
+    sel_poly_ids_int = [int(item) for item in sel_poly_ids]
+    vector_gpd.save_shapefile_subset_as_valueInlist(shp_path,save_shp,'polyID',sel_poly_ids_int)
     print(datetime.now(), 'save to %s and %s' % (save_json, save_shp))
 
 def test_extract_class_id_results():
