@@ -22,44 +22,65 @@ import datasets.vector_gpd as vector_gpd
 
 
 def extract_classification_result_from_multi_sources(in_shp_list, save_path, extract_class_id=1, occurrence=4):
+    '''
+    extract the results which detected as the target multiple time during the multiple observation
+    :param in_shp_list: file list for the multiple observation
+    :param save_path: save path
+    :param extract_class_id: the ID the target class
+    :param occurrence: occurrence of the target during the multiple observation
+    :return:
+    '''
 
-    print('Input shape file:', in_shp_list)
+    if os.path.isfile(save_path):
+        print(datetime.now(), '%s already exists, slip' % save_path)
+        return
 
-    # read
-    poly_class_ids = {}
-    for shp in in_shp_list:
-        print(datetime.now(), 'reading %s'%shp)
-        polyIDs = vector_gpd.read_attribute_values_list(shp,'polyID')
-        preClassIDs = vector_gpd.read_attribute_values_list(shp, 'preClassID')
-        _ = [poly_class_ids.setdefault(pid, []).append(c_id) for pid, c_id in zip(polyIDs,preClassIDs)]
+    print(datetime.now(), 'Input shape file:', in_shp_list)
+    poly_class_ids_all = 'poly_class_ids_all.json'
+
+    if os.path.isfile(poly_class_ids_all):
+        print(datetime.now(), '%s already exists, read them directly'%poly_class_ids_all)
+        poly_class_ids = io_function.read_dict_from_txt_json(poly_class_ids_all)
+    else:
+        # read
+        poly_class_ids = {}
+        for shp in in_shp_list:
+            print(datetime.now(), 'reading %s'%shp)
+            polyIDs = vector_gpd.read_attribute_values_list(shp,'polyID')
+            preClassIDs = vector_gpd.read_attribute_values_list(shp, 'preClassID')
+            _ = [poly_class_ids.setdefault(pid, []).append(c_id) for pid, c_id in zip(polyIDs,preClassIDs)]
+
+        # save and organize them
+        io_function.save_dict_to_txt_json('poly_class_ids_all.json',poly_class_ids)
+
+    extract_class_id_results(in_shp_list[0], poly_class_ids, save_path, extract_class_id=extract_class_id, occurrence=occurrence)
 
 
-    # save and organize them
-    io_function.save_dict_to_txt_json('poly_class_ids_all.json',poly_class_ids)
 
-    extract_class_id_results(in_shp_list[0], poly_class_ids, extract_class_id=extract_class_id, occurrence=occurrence)
-
-
-
-def extract_class_id_results(shp_path, poly_class_ids, extract_class_id=1, occurrence = 4):
+def extract_class_id_results(shp_path, poly_class_ids, save_path, extract_class_id=1, occurrence = 4):
     '''
     extract the results which detected  as the target multiple time
     :param shp_path: a shape file contains points and "polyID"
     :param poly_class_ids: dict containing predicting results
+    :param save_path: the save path for the results
     :param extract_class_id: the target id
     :param occurrence: occurrence time
     :return:
     '''
-    print(datetime.now(), 'extract results for class: %d' % extract_class_id)
-    sel_poly_ids = [ key for key in poly_class_ids.keys() if poly_class_ids[key].count(extract_class_id) >= occurrence ]
-    print(datetime.now(), 'select %d results'%len(sel_poly_ids))
-    # print(sel_poly_ids[:10])
-    sel_poly_class_ids = {key: poly_class_ids[key] for key in sel_poly_ids}
-    save_json = 'poly_class_ids_id%d_occurrence%d.json'%(extract_class_id,occurrence)
-    io_function.save_dict_to_txt_json(save_json, sel_poly_class_ids)
+    save_json = 'poly_class_ids_id%d_occurrence%d.json' % (extract_class_id, occurrence)
+    if os.path.isfile(save_json):
+        print('waring, %s exists, read it directly'%save_json)
+        sel_poly_ids = io_function.read_dict_from_txt_json(save_json)
+    else:
+        print(datetime.now(), 'extract results for class: %d' % extract_class_id)
+        sel_poly_ids = [ key for key in poly_class_ids.keys() if poly_class_ids[key].count(extract_class_id) >= occurrence ]
+        print(datetime.now(), 'select %d results'%len(sel_poly_ids))
+        # print(sel_poly_ids[:10])
+        sel_poly_class_ids = {key: poly_class_ids[key] for key in sel_poly_ids}
+        io_function.save_dict_to_txt_json(save_json, sel_poly_class_ids)
 
     # read and save shapefile
-    save_shp = 'poly_class_ids_id%d_occurrence%d.shp'%(extract_class_id,occurrence)
+    save_shp = save_path
     polyID_list = vector_gpd.read_attribute_values_list(shp_path,'polyID')
     print(datetime.now(), 'read %d polyID '%len(polyID_list))
     sel_poly_ids_int = [ int(item) for item in sel_poly_ids ]
@@ -80,10 +101,11 @@ def main(options, args):
     res_shp_list = args
     save_path = options.save_path
     target_id = options.target_id
-    if save_path is None:
-        save_path = 'extracted_results_class_%d.shp'%target_id
-
     min_occurrence = options.occurrence
+    if save_path is None:
+        save_path = 'extracted_results_classID%d_occurrence%d.shp'%(target_id,min_occurrence)
+
+
     extract_classification_result_from_multi_sources(res_shp_list, save_path,
                                                      extract_class_id = target_id,occurrence=min_occurrence)
 
