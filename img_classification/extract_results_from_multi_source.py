@@ -112,7 +112,7 @@ def extract_images_for_one_region(area_ini, out_dir, in_shp):
     dstnodata = 0
     buffersize = 1
     process_num = 8
-    rectangle_ext = 'Yes'
+    rectangle_ext = '--rectangle'
 
     image_dir = parameters.get_directory(area_ini, 'inf_image_dir')  # inf_image_dir
     image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')  # inf_image_or_pattern
