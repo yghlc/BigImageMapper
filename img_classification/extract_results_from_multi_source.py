@@ -194,7 +194,7 @@ def main(options, args):
                                                      extract_class_id = target_id,occurrence=min_occurrence)
 
     sample_count = 300
-    extract_img_dir = os.path.basename(save_path) + '_images'
+    extract_img_dir = io_function.get_name_no_ext(save_path) + '_sample_%d_images'%sample_count
     extract_images_for_manu_check(save_path,res_shp_list,extract_img_dir,sample_num=sample_count)
 
 
