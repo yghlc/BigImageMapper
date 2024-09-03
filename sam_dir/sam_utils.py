@@ -18,7 +18,12 @@ import numpy as np
 
 # this would import the global environment, not the "datasets" in the local folder
 # there is also another "Dataset" used in torch.utils.data, so rename it to huggingface_Dataset
-from datasets import Dataset as huggingface_Dataset
+try:
+    from datasets import Dataset as huggingface_Dataset
+except:
+    print('Warning, cannot import Dataset from huggingface, may be need to install huggingface library')
+    pass
+
 from PIL import Image
 
 # Save the original sys.path
