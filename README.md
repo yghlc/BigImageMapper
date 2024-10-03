@@ -1,5 +1,5 @@
 # Landuse_DL
-Land use classification or landform delineation from remote sensing images using Deep Learning. 
+Land use classification or landform delineation from big remote sensing imagery using Deep Learning. 
 This repo contains codes for  mapping thermokarst landforms including thermo-erosion gullies and retrogressive thaw slumps.
 
 ## Citation
