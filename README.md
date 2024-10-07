@@ -1,11 +1,11 @@
-# BigImageMapper
+# BigImageMapper (Landuse_DL)
 Land use classification or landform delineation from big remote sensing imagery using Deep Learning. 
 This repo contains codes for  mapping thermokarst landforms in cold regions and others.
 
 ## Citation
 If the scripts here are useful for your project, please consider citing our papers:
 
-The scripts for producing our results in paper [Huang et al. 2020](https://www.sciencedirect.com/science/article/pii/S003442571930553X) 
+The scripts for producing our results in the paper [Huang et al. 2020](https://www.sciencedirect.com/science/article/pii/S003442571930553X) 
 can be found at the [RSE2020paper](https://github.com/yghlc/Landuse_DL/tree/RES2020paper) Branch.
 
 ```
