@@ -101,7 +101,7 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     out_name = os.path.basename(area_save_dir) + '_' + test_id
 
     # get the path of ref_raster before "chdir", otherwise, has problem for relative path
-    img_idx_txt = os.path.join('../', '%d.txt' % img_idx)
+    img_idx_txt = os.path.join(img_save_dir,'../', '%d.txt' % img_idx)
     ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
     ref_raster = os.path.abspath(ref_raster)
 
