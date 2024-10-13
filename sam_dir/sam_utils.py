@@ -37,8 +37,8 @@ import parameters
 # import from an upper level of folder, avoid the conflit with "datasets" from hugging face
 code_dir2 = os.path.abspath(os.path.join(code_dir, '..'))
 sys.path.insert(0, code_dir2)
-# import Landuse_DL.datasets.vector_gpd as vector_gpd
-import Landuse_DL.datasets.raster_io as raster_io
+# import BigImageMapper.datasets.vector_gpd as vector_gpd
+import BigImageMapper.datasets.raster_io as raster_io
 
 # Restore the original sys.path
 sys.path = original_path
