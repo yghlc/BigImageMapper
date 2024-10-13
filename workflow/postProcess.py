@@ -100,6 +100,11 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     img_save_dir = os.path.join(area_save_dir, 'I%d' % img_idx)
     out_name = os.path.basename(area_save_dir) + '_' + test_id
 
+    # get the path of ref_raster before "chdir", otherwise, has problem for relative path
+    img_idx_txt = os.path.join('../', '%d.txt' % img_idx)
+    ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
+    ref_raster = os.path.abspath(ref_raster)
+
     os.chdir(img_save_dir)
 
     # to shapefile
@@ -115,8 +120,6 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
             return None
 
         # in the shapefile, merge those polygons touch each other
-        img_idx_txt = os.path.join('../', '%d.txt' % img_idx)
-        ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
         merge_poly_shp = io_function.get_name_by_adding_tail(out_shp,'merge')
         out_shp = merge_polygon_rasterize(ref_raster,out_shp,out_shp=merge_poly_shp)
 
