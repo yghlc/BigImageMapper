@@ -84,6 +84,7 @@ def prepare_training_data(WORK_DIR, para_file, transform, test=False):
     training_data_dir = class_utils.get_training_data_dir(WORK_DIR)
     merged_training_data_txt = class_utils.get_merged_training_data_txt(training_data_dir, expr_name,len(training_regions))
     merged_training_data_txt_all = io_function.get_name_by_adding_tail(merged_training_data_txt,'all')
+    merged_training_data_txt_notSel = io_function.get_name_by_adding_tail(merged_training_data_txt,'notSel')
     valid_dataset = None
 
     if os.path.isfile(merged_training_data_txt):
@@ -92,8 +93,12 @@ def prepare_training_data(WORK_DIR, para_file, transform, test=False):
         in_dataset = None
         basic.outputlogMessage('Please run img_classification/get_organize_training_data.py first to prepare and organize the training data')
 
-    if os.path.isfile(merged_training_data_txt_all):
-        valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_all, transform, test=test)
+    # if os.path.isfile(merged_training_data_txt_all):
+    #     valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_all, transform, test=test)
+
+    # use the not selected samples for validation
+    if os.path.isfile(merged_training_data_txt_notSel):
+        valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_notSel, transform, test=test)
 
     return in_dataset, valid_dataset
 
@@ -396,6 +401,7 @@ def training_few_shot(para_file, network_ini, WORK_DIR, train_save_dir, device, 
             return None
 
     if valid_dataset is None:
+        basic.outputlogMessage('Warning, the training data and validation are the same')
         valid_dataset = train_dataset
 
     # resume training, need to read the trained model from the disks
