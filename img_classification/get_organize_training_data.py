@@ -75,12 +75,13 @@ def read_label_ids_local(label_txt):
     return label_ids
 
 
-def randomly_select_k_samples_each_classes(image_labels_txt, save_path, sample_count=10):
+def randomly_select_k_samples_each_classes(image_labels_txt, save_path, sample_count=10, b_sep_by_grid=False):
     '''
     randonly select a few samples (k) for each class
     :param image_labels_txt:  all samples, each line contain: image_path class_id
     :param save_path:  save path
     :param sample_count: the count of samples want to select
+    :param b_sep_by_grid: True to separate the training and validation sets by grids
     :return:
     '''
     image_path_list, image_labels = read_image_path_label_from_txt(image_labels_txt)
@@ -115,6 +116,32 @@ def randomly_select_k_samples_each_classes(image_labels_txt, save_path, sample_c
         image_path_list_not_sel.extend(not_sel_class_id_images[key])
         image_labels_not_sel.extend([key]*len(not_sel_class_id_images[key]))
     save_image_path_label_to_txt(image_path_list_not_sel, image_labels_not_sel, save_path_not_sel)
+
+    # in not_sel_class_id_images, saved those not in the same grids of sel_class_id_images as validation data
+    if b_sep_by_grid:
+        select_grids_ids = [class_utils.get_grid_id_from_path(os.path.basename(img_path)) for img_path in image_path_list_sel]
+        not_select_grid_ids = []
+        valid_image_paths = []
+        valid_image_labels = []
+        for i_path, n_label in zip(image_path_list_not_sel,image_labels_not_sel):
+            grid_id = class_utils.get_grid_id_from_path(os.path.basename(i_path))
+            if grid_id in select_grids_ids:
+                continue
+            not_select_grid_ids.append(grid_id)
+            valid_image_paths.append(i_path)
+            valid_image_labels.append(n_label)
+        # save to file
+        save_path_valid = io_function.get_name_by_adding_tail(save_path,'valid')
+        save_image_path_label_to_txt(valid_image_paths, valid_image_labels, save_path_valid)
+        # save the grid information of selected samples and validation sets
+        save_train_valid_info_txt = io_function.get_name_by_adding_tail(save_path, 'tran_valid_grid_info.txt')
+        with open(save_train_valid_info_txt, 'w') as f_obj:
+            f_obj.writelines('The grids for training and validation sets: \n\n')
+            f_obj.writelines('The training set covers %d grids\n'%len(select_grids_ids))
+            f_obj.writelines('The validation set covers %d grids\n'%len(not_select_grid_ids))
+            f_obj.writelines('\n Grids for training set: %s'% ','.join([ str(item) for item in select_grids_ids ]) )
+            f_obj.writelines('\n Grids for validation set: %s'% ','.join([ str(item) for item in not_select_grid_ids ]) )
+
 
 
 
@@ -357,12 +384,15 @@ def get_sub_images_multi_regions_for_training(WORK_DIR, para_file):
     merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts, save_path)
 
     a_few_shot_samp_count = parameters.get_digit_parameters_None_if_absence(para_file,'a_few_shot_samp_count','int')
+    b_sep_train_valid_set_by_grids = parameters.get_bool_parameters_None_if_absence(para_file,'b_sep_train_valid_set_by_grids')
+    if b_sep_train_valid_set_by_grids is None:
+        b_sep_train_valid_set_by_grids = False
     b_a_few_shot_training = parameters.get_bool_parameters(para_file, 'a_few_shot_training')
     if b_a_few_shot_training and a_few_shot_samp_count is not None:
         # backup the original file
         save_path_all_samp = io_function.get_name_by_adding_tail(save_path,'all')
         io_function.copy_file_to_dst(save_path,save_path_all_samp)
-        randomly_select_k_samples_each_classes(save_path_all_samp, save_path,sample_count=a_few_shot_samp_count)
+        randomly_select_k_samples_each_classes(save_path_all_samp, save_path,sample_count=a_few_shot_samp_count, b_sep_by_grid=b_sep_train_valid_set_by_grids)
 
 
     duration= time.time() - SECONDS
