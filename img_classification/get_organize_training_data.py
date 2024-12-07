@@ -142,7 +142,7 @@ def randomly_select_k_samples_each_classes(image_labels_txt, save_path, sample_c
         save_train_valid_info_txt = io_function.get_name_by_adding_tail(save_path, 'tran_valid_grid_info')
         with open(save_train_valid_info_txt, 'w') as f_obj:
             f_obj.writelines('The grids for training and validation sets: \n\n')
-            f_obj.writelines('All the samples covers %d grids\n'%len(grids_ids))
+            f_obj.writelines('All the samples cover %d grids\n'%len(grids_ids))
             f_obj.writelines('The training set covers %d grids\n'%len(select_grids_ids))
             f_obj.writelines('The validation set covers %d grids\n'%len(not_select_grid_ids))
             f_obj.writelines('\nGrids for training set: %s'% ','.join([ str(item) for item in select_grids_ids ]) )
