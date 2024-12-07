@@ -119,6 +119,8 @@ def randomly_select_k_samples_each_classes(image_labels_txt, save_path, sample_c
 
     # in not_sel_class_id_images, saved those not in the same grids of sel_class_id_images as validation data
     if b_sep_by_grid:
+        grids_ids = [class_utils.get_grid_id_from_path(os.path.basename(img_path)) for img_path in image_path_list]
+        grids_ids = list(set(grids_ids))    # keep unique values
         select_grids_ids = [class_utils.get_grid_id_from_path(os.path.basename(img_path)) for img_path in image_path_list_sel]
         select_grids_ids = list(set(select_grids_ids)) # keep unique values
         not_select_grid_ids = []
@@ -140,10 +142,12 @@ def randomly_select_k_samples_each_classes(image_labels_txt, save_path, sample_c
         save_train_valid_info_txt = io_function.get_name_by_adding_tail(save_path, 'tran_valid_grid_info')
         with open(save_train_valid_info_txt, 'w') as f_obj:
             f_obj.writelines('The grids for training and validation sets: \n\n')
+            f_obj.writelines('All the samples covers %d grids\n'%len(grids_ids))
             f_obj.writelines('The training set covers %d grids\n'%len(select_grids_ids))
             f_obj.writelines('The validation set covers %d grids\n'%len(not_select_grid_ids))
-            f_obj.writelines('\n Grids for training set: %s'% ','.join([ str(item) for item in select_grids_ids ]) )
-            f_obj.writelines('\n Grids for validation set: %s'% ','.join([ str(item) for item in not_select_grid_ids ]) )
+            f_obj.writelines('\nGrids for training set: %s'% ','.join([ str(item) for item in select_grids_ids ]) )
+            f_obj.writelines('\nGrids for validation set: %s'% ','.join([ str(item) for item in not_select_grid_ids ]) )
+            f_obj.writelines('\nGrids for all samples set: %s'% ','.join([ str(item) for item in grids_ids ]) )
 
 
 
