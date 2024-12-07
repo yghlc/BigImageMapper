@@ -120,6 +120,7 @@ def randomly_select_k_samples_each_classes(image_labels_txt, save_path, sample_c
     # in not_sel_class_id_images, saved those not in the same grids of sel_class_id_images as validation data
     if b_sep_by_grid:
         select_grids_ids = [class_utils.get_grid_id_from_path(os.path.basename(img_path)) for img_path in image_path_list_sel]
+        select_grids_ids = list(set(select_grids_ids)) # keep unique values
         not_select_grid_ids = []
         valid_image_paths = []
         valid_image_labels = []
@@ -130,11 +131,13 @@ def randomly_select_k_samples_each_classes(image_labels_txt, save_path, sample_c
             not_select_grid_ids.append(grid_id)
             valid_image_paths.append(i_path)
             valid_image_labels.append(n_label)
+
+        not_select_grid_ids = list(set(not_select_grid_ids))    # keep unique values
         # save to file
         save_path_valid = io_function.get_name_by_adding_tail(save_path,'valid')
         save_image_path_label_to_txt(valid_image_paths, valid_image_labels, save_path_valid)
         # save the grid information of selected samples and validation sets
-        save_train_valid_info_txt = io_function.get_name_by_adding_tail(save_path, 'tran_valid_grid_info.txt')
+        save_train_valid_info_txt = io_function.get_name_by_adding_tail(save_path, 'tran_valid_grid_info')
         with open(save_train_valid_info_txt, 'w') as f_obj:
             f_obj.writelines('The grids for training and validation sets: \n\n')
             f_obj.writelines('The training set covers %d grids\n'%len(select_grids_ids))
