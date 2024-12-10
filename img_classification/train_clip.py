@@ -85,6 +85,7 @@ def prepare_training_data(WORK_DIR, para_file, transform, test=False):
     merged_training_data_txt = class_utils.get_merged_training_data_txt(training_data_dir, expr_name,len(training_regions))
     merged_training_data_txt_all = io_function.get_name_by_adding_tail(merged_training_data_txt,'all')
     merged_training_data_txt_notSel = io_function.get_name_by_adding_tail(merged_training_data_txt,'notSel')
+    merged_training_data_txt_valid = io_function.get_name_by_adding_tail(merged_training_data_txt,'valid')
     valid_dataset = None
 
     if os.path.isfile(merged_training_data_txt):
@@ -96,9 +97,14 @@ def prepare_training_data(WORK_DIR, para_file, transform, test=False):
     # if os.path.isfile(merged_training_data_txt_all):
     #     valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_all, transform, test=test)
 
-    # use the not selected samples for validation
-    if os.path.isfile(merged_training_data_txt_notSel):
+    # use *valid.txt for validation, if does not exist, use *notSel.txt, else, use all.txt
+    if os.path.isfile(merged_training_data_txt_valid):
+        valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_valid, transform, test=test)
+    elif os.path.isfile(merged_training_data_txt_notSel):
         valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_notSel, transform, test=test)
+    else:
+        valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_all, transform, test=test)
+
 
     return in_dataset, valid_dataset
 
