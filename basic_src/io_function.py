@@ -439,9 +439,12 @@ def unzip_file(file_path, work_dir):
 
     # decompression file and remove it
     dst_folder = os.path.join(work_dir, file_basename)
-    if os.path.isdir(dst_folder) and len(os.listdir(dst_folder)) > 1:  # on Mac, .DS_Store count one file.
-        basic.outputlogMessage('%s exists and is not empty, skip unpacking' % dst_folder)
-        return dst_folder
+    if os.path.isdir(dst_folder):
+        # on Mac, .DS_Store count one file, ignore all hidden files
+        tmp_list = [ item for item in os.listdir(dst_folder) if item.startswith('.') is False ]
+        if len(tmp_list) > 0:
+            basic.outputlogMessage('%s exists and is not empty, skip unpacking' % dst_folder)
+            return dst_folder
     else:
         mkdir(dst_folder)
     # CommandString = 'tar -xvf  ' + file_tar + ' -C ' + dst_folder
