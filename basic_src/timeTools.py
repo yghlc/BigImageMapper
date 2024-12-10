@@ -9,9 +9,10 @@ add time: 29 December, 2020
 """
 
 import os,sys
-import basic_src.basic as basic
+# import basic_src.basic as basic
 
-from datetime import datetime
+from datetime import datetime,timezone
+from datetime import date, timedelta
 from dateutil.parser import parse
 import re
 
@@ -110,6 +111,30 @@ def group_files_yearmonthDay(demTif_list, diff_days=30):
 
     return file_groups
 
+def NETCDF_DIM_time_2_yearMonth(NETCDF_DIM_time):
+    hours_1900 = int(NETCDF_DIM_time)
+    start = date(1900, 1, 1)
+    delta = timedelta(days=hours_1900/24.0)
+    new_date = start + delta
+    return new_date.strftime('%Y%m')
+
+# this can convert NETCDF_DIM_time to datetime object
+def convert_unix_to_datetime(unix_time):
+    return datetime.utcfromtimestamp(unix_time)
+
+
+def convert_utc_to_local(utc_time, longitude):
+    # convert the UTC time to local time (could be different by the time zone set by different country)
+
+    # Calculate the offset in hours
+    offset_hours = round(longitude / 15.0)
+    # Create a timezone offset
+    offset = timezone(timedelta(hours=offset_hours))
+    # print(offset_hours, offset)
+    # Convert UTC to local time
+    local_time = utc_time.replace(tzinfo=timezone.utc).astimezone(offset)
+    return local_time
+
 def test():
     # out = get_yeardate_yyyymmdd('20170301_10300100655B5A00_1030010066B4AA00.tif')
     out = get_yeardate_yyyymmdd('20201230_10300100655B5A00_1030010066B4AA00.tif')
@@ -117,7 +142,20 @@ def test():
     diffdays = diff_yeardate(out,datetime.now())
     print(diffdays)
 
+def test_2():
+    NETCDF_DIM_valid_time_1 = 1598918400
+    NETCDF_DIM_valid_time_2 = 1601492400
+    # not working
+    # print(NETCDF_DIM_time_2_yearMonth(NETCDF_DIM_valid_time_1))
+    # print(NETCDF_DIM_time_2_yearMonth(NETCDF_DIM_valid_time_2))
+    print(convert_unix_to_datetime(NETCDF_DIM_valid_time_1))
+    print(convert_unix_to_datetime(NETCDF_DIM_valid_time_2))
+
+    print(convert_utc_to_local(convert_unix_to_datetime(NETCDF_DIM_valid_time_1), 120))
+    print(convert_utc_to_local(convert_unix_to_datetime(NETCDF_DIM_valid_time_2), 114))
+
 
 if __name__=='__main__':
-    test()
+    # test()
+    test_2()
     pass
