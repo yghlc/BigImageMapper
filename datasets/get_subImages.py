@@ -41,6 +41,8 @@ from multiprocessing import Pool
 from vector_gpd import convert_image_bound_to_shapely_polygon
 from vector_gpd import get_poly_index_within_extent
 
+import shutil
+
 def get_image_tile_bound_boxes(image_tile_list):
     '''
     get extent of all the images
@@ -318,12 +320,12 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
 
     # rename the file
     if b_keep_org_file_name:
-        new_img_name = '-'.join([ os.path.basename(item) for item in image_list])
+        new_img_name = '-'.join([  io_function.get_name_no_ext(item) for item in image_list])
         if len(new_img_name) > 255:
             basic.outputlogMessage('Warning, the file name for a sub-images, copied from %s are too long, keep the original name'%new_img_name)
         else:
             new_save_path = save_path.replace('ToReplaceSETbyHLC2024Dec9', new_img_name)
-            io_function.move_file_to_dst(save_path,new_save_path,overwrite=True)
+            io_function.move_file_to_dst(save_path,new_save_path,overwrite=True, b_verbose=False)
 
 
     # if it will output a very large image (10000 by 10000 pixels), then raise a error
