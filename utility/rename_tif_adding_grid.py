@@ -66,50 +66,63 @@ def rename_tif_by_adding_correct_gridNum_one_region(region_dir, ref_dir):
 
     print(f"Loaded {len(sub_images_files)} reference .tif files from 'subImages'.")
 
-    # Recursively process all subfolders in the region directory
-    for root, _, files in os.walk(region_dir):
-        for file in files:
-            if file.endswith(".tif"):
-                key = file.split("_")[-1]  # Extract `_number.tif`
-                if key in sub_images_files:
-                    # Paths for the files to compare
-                    old_path = os.path.join(root, file)
-                    ref_file = sub_images_files[key]
-                    ref_path = os.path.join(sub_images_dir, ref_file)
+    # Open a log file to record mismatched files
+    log_file_path = os.path.join(region_dir, "mismatch_log.txt")
+    with open(log_file_path, "w") as log_file:
+        log_file.write("Mismatched Files Log:\n")
 
-                    # Verify if the files are identical
-                    if not are_files_identical(old_path, ref_path):
-                        print(f"Error: Files {file} and {ref_file} are not identical. Aborting.")
-                        sys.exit(1)  # Exit the program
+        # Recursively process all subfolders in the region directory
+        for root, _, files in os.walk(region_dir):
+            for file in files:
+                if file.endswith(".tif"):
+                    key = file.split("_")[-1]  # Extract `_number.tif`
+                    if key in sub_images_files:
+                        # Paths for the files to compare
+                        old_path = os.path.join(root, file)
+                        ref_file = sub_images_files[key]
+                        ref_path = os.path.join(sub_images_dir, ref_file)
 
-                    # Rename the .tif file
-                    new_name = ref_file
-                    new_path = os.path.join(root, new_name)
-                    try:
-                        os.rename(old_path, new_path)
-                        print(f"Renamed: {file} -> {new_name}")
-                    except Exception as e:
-                        print(f"Error renaming {file}: {e}")
+                        # Skip if the filenames are already the same
+                        if file == ref_file:
+                            print(f"Skipping: {file} (already correctly named)")
+                            continue
 
-                    # Update the filenames in .txt files in the same folder
-                    for txt_file in files:
-                        if txt_file.endswith(".txt"):
-                            txt_path = os.path.join(root, txt_file)
-                            try:
-                                with open(txt_path, "r") as f:
-                                    content = f.read()
+                        # Check if the files are identical
+                        if not are_files_identical(old_path, ref_path):
+                            # Log the mismatch
+                            log_file.write(f"Mismatch: {file} and {ref_file}\n")
+                            print(f"Mismatch logged: {file} and {ref_file}")
 
-                                # Replace old filename with new filename
-                                updated_content = content.replace(file, new_name)
+                        # Rename the .tif file
+                        new_name = ref_file
+                        new_path = os.path.join(root, new_name)
+                        try:
+                            os.rename(old_path, new_path)
+                            print(f"Renamed: {file} -> {new_name}")
+                        except Exception as e:
+                            print(f"Error renaming {file}: {e}")
 
-                                with open(txt_path, "w") as f:
-                                    f.write(updated_content)
+                        # Update the filenames in .txt files in the same folder
+                        for txt_file in files:
+                            if txt_file.endswith(".txt"):
+                                txt_path = os.path.join(root, txt_file)
+                                try:
+                                    with open(txt_path, "r") as f:
+                                        content = f.read()
 
-                                print(f"Updated {txt_file}: {file} -> {new_name}")
-                            except Exception as e:
-                                print(f"Error updating {txt_file}: {e}")
-                else:
-                    print(f"No match found in 'subImages' for: {file}")
+                                    # Replace old filename with new filename
+                                    updated_content = content.replace(file, new_name)
+
+                                    with open(txt_path, "w") as f:
+                                        f.write(updated_content)
+
+                                    print(f"Updated {txt_file}: {file} -> {new_name}")
+                                except Exception as e:
+                                    print(f"Error updating {txt_file}: {e}")
+                    else:
+                        print(f"No match found in 'subImages' for: {file}")
+
+    print(f"Mismatch log saved to {log_file_path}")
 
 
 
