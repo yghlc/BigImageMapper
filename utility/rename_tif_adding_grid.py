@@ -117,7 +117,8 @@ def rename_tif_by_adding_correct_gridNum(work_dir, reference_dir):
     regions_dirs = [dir for dir in  os.listdir(work_dir) if os.path.isdir(dir) ]
     for region_dir in regions_dirs:
         print(datetime.now(), f'working on {region_dir}')
-        ref_dir = os.path.join(reference_dir, os.path.basename(region_dir))
+        ref_folder_name = os.path.basename(region_dir).replace('_manu_Sel','')
+        ref_dir = os.path.join(reference_dir, ref_folder_name)
         rename_tif_by_adding_correct_gridNum_one_region(region_dir, ref_dir)
 
 
