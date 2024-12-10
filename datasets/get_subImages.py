@@ -208,7 +208,7 @@ def get_adjacent_polygons(center_polygon, all_polygons, class_int_all, buffer_si
 
     return adjacent_polygon, adjacent_polygon_class
 
-def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle ):
+def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle, b_keep_org_file_name):
     '''
     get a mask image based on a selected polygon, it may cross two image tiles
     :param selected_polygon: selected polygons
@@ -216,6 +216,7 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
     :param image_tile_bounds: the boxes of images in the list
     :param save_path: save path
     :param brectangle: if brectangle is True, crop the raster using bounds, else, use the polygon
+    :param b_keep_org_file_name: if True, will keep the file name from the original image
     :return: True is successful, False otherwise
     '''
     img_resx, img_resy = raster_io.get_xres_yres_file(image_tile_list[0])
@@ -314,6 +315,16 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
         # remove the tmp files
         for tmp_file in tmp_saved_files:
             io_function.delete_file_or_dir(tmp_file)
+
+    # rename the file
+    if b_keep_org_file_name:
+        new_img_name = '-'.join([ os.path.basename(item) for item in image_list])
+        if len(new_img_name) > 255:
+            basic.outputlogMessage('Warning, the file name for a sub-images, copied from %s are too long, keep the original name'%new_img_name)
+        else:
+            new_save_path = save_path.replace('ToReplaceSETbyHLC2024Dec9', new_img_name)
+            io_function.move_file_to_dst(save_path,new_save_path,overwrite=True)
+
 
     # if it will output a very large image (10000 by 10000 pixels), then raise a error
 
@@ -474,7 +485,7 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
 
 
 def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
-                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all):
+                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name):
     # output message
     if idx % 100 == 0:
         if b_label:
@@ -493,11 +504,14 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
     else:
         tail_name = '_%d.tif' % (idx)
 
+    if b_keep_org_file_name:
+        pre_name = 'ToReplaceSETbyHLC2024Dec9'
+
     # get one sub-image based on the buffer areas
     subimg_shortName = os.path.join('subImages', pre_name + tail_name)
     subimg_saved_path = os.path.join(saved_dir, subimg_shortName)
-    if get_sub_image(idx, expansion_polygon, image_tile_list, img_tile_boxes, subimg_saved_path, dstnodata,
-                     brectangle) is False:
+    subimg_saved_path =  get_sub_image(idx, expansion_polygon, image_tile_list, img_tile_boxes, subimg_saved_path, dstnodata, brectangle,b_keep_org_file_name)
+    if subimg_saved_path is False:
         basic.outputlogMessage('Warning, skip the %dth polygon' % idx)
         return None
 
@@ -515,7 +529,7 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
 
 
 def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata,
-                              brectangle = True, b_label=True,proc_num=1, image_equal_size=None):
+                              brectangle = True, b_label=True,proc_num=1, image_equal_size=None, b_keep_org_file_name=False):
     '''
     get sub images (and labels ) from training polygons
     :param t_polygons_shp: training polygon
@@ -528,6 +542,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
     :param b_label: True: create the corresponding label images.
     :param image_equal_size: if set (in meters), then extract the centroid of each polygon, buffer this value to a polygon,
                                     making each extracted image has the same width and height
+    :param b_keep_org_file_name: True: the file name of extracted sub-images contain the filename of original images
     :return:
     '''
 
@@ -568,7 +583,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
             sub_image_label_str = get_one_sub_image_label_parallel(idx, c_polygon, bufferSize, pre_name, pre_name_for_label, c_class_int,
                                              saved_dir, image_tile_list,
-                                             img_tile_boxes, dstnodata, brectangle, b_label, polygons_all, class_labels_all)
+                                             img_tile_boxes, dstnodata, brectangle, b_label, polygons_all, class_labels_all,b_keep_org_file_name)
 
             if sub_image_label_str is not None:
                 list_txt_obj.writelines(sub_image_label_str)
@@ -576,7 +591,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
         parameters_list = [
             (idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
-                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all)
+                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name)
             for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons, class_labels))]
         theadPool = Pool(proc_num)  # multi processes
         results = theadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
@@ -615,6 +630,7 @@ def main(options, args):
     b_label_image = options.no_label_image
     process_num = options.process_num
     image_equal_size = options.image_equal_size
+    b_keep_grid_name = options.b_keep_grid_name
 
     # check training polygons
     assert io_function.is_file_exist(t_polygons_shp)
@@ -666,7 +682,7 @@ def main(options, args):
         pre_name = os.path.splitext(os.path.basename(image_tile_list[0]))[0]
     get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list,
                               saved_dir, pre_name, dstnodata, brectangle=options.rectangle, b_label=b_label_image,
-                              proc_num=process_num, image_equal_size = image_equal_size)
+                              proc_num=process_num, image_equal_size = image_equal_size, b_keep_org_file_name=b_keep_grid_name)
 
     # move sub images and sub labels to different folders.
 
@@ -706,6 +722,9 @@ if __name__ == "__main__":
                       action="store", dest="image_equal_size",
                       help="if set (in meters), then extract the centroid of each polygon, "
                            "buffer this value to a polygon,making each extracted image has the same width and height ")
+    parser.add_option("-k", "--b_keep_grid_name",
+                      action="store_true", dest="b_keep_grid_name",default=False,
+                      help="if set, the file name of sub-images will contain grid info from orignal images")
 
 
     (options, args) = parser.parse_args()

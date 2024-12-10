@@ -242,6 +242,9 @@ def extract_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_tra
     rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
     process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
     each_image_equal_size = parameters.get_digit_parameters_None_if_absence(para_file,'each_image_equal_size','int')
+    b_keep_org_file_name = parameters.get_bool_parameters_None_if_absence(para_file,'b_keep_org_file_name')
+    if b_keep_org_file_name is None:
+        b_keep_org_file_name = False
 
     area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
     patch_list_txt = os.path.join(extract_img_dir, area_name_remark_time + '_patch_list.txt')
@@ -274,6 +277,8 @@ def extract_sub_image_labels_one_region(save_img_dir, para_file, area_ini, b_tra
                          + ' ' + rectangle_ext + ' --no_label_image '
         if each_image_equal_size is not None:
             command_string += ' -s %s  '%str(each_image_equal_size)
+        if b_keep_org_file_name:
+            command_string += ' --b_keep_grid_name '
         command_string += all_polygons_labels + ' ' + image_dir
         if os.path.isfile(extract_done_indicator):
             basic.outputlogMessage('Warning, sub-images already been extracted, read them directly')
