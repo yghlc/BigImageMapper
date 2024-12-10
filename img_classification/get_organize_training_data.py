@@ -145,9 +145,9 @@ def randomly_select_k_samples_each_classes(image_labels_txt, save_path, sample_c
             f_obj.writelines('All the samples cover %d grids\n'%len(grids_ids))
             f_obj.writelines('The training set covers %d grids\n'%len(select_grids_ids))
             f_obj.writelines('The validation set covers %d grids\n'%len(not_select_grid_ids))
-            f_obj.writelines('\nGrids for training set: %s'% ','.join([ str(item) for item in select_grids_ids ]) )
-            f_obj.writelines('\nGrids for validation set: %s'% ','.join([ str(item) for item in not_select_grid_ids ]) )
-            f_obj.writelines('\nGrids for all samples set: %s'% ','.join([ str(item) for item in grids_ids ]) )
+            f_obj.writelines('\n\nGrids for training set: %s'% ','.join([ str(item) for item in select_grids_ids ]) )
+            f_obj.writelines('\n\nGrids for validation set: %s'% ','.join([ str(item) for item in not_select_grid_ids ]) )
+            f_obj.writelines('\n\nGrids for all samples set: %s'% ','.join([ str(item) for item in grids_ids ]) )
 
 
 
