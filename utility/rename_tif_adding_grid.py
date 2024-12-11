@@ -135,7 +135,7 @@ def rename_tif_by_adding_correct_gridNum_one_region(region_dir, ref_dir):
 
                 # Skip if the filenames are already the same
                 if file == ref_file:
-                    print(f"Skipping: {file} (already correctly named)")
+                    # print(f"Skipping: {file} (already correctly named)")
                     continue
 
                 # Check if the files are identical
