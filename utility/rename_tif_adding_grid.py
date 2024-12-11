@@ -15,6 +15,7 @@ import rasterio
 code_dir = os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
 sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
+import basic_src.basic as basic
 
 # def are_files_identical(file1, file2):
 #     """
@@ -81,6 +82,7 @@ def are_files_identical(file1, file2):
             print(f"Differences found between {file1} and {file2}:")
             for diff in differences:
                 print(f"  - {diff}")
+                basic.outputlogMessage(f"  - {diff}")
             return False
 
         return True
