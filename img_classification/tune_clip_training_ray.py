@@ -13,10 +13,6 @@ add time: 11 December, 2024
 import os,sys
 code_dir = os.path.expanduser('~/codes/PycharmProjects/BigImageMapper')
 
-from ray import tune
-from datetime import datetime
-import pandas as pd
-
 sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
 import basic_src.basic as basic
@@ -42,6 +38,19 @@ training_data_dir = os.path.expanduser('~/Data/Arctic/canada_arctic/autoMapping/
 # from hyper_para_ray import get_total_F1score
 
 
+def get_CPU_GPU_counts():
+    import GPUtil
+    # Get all available GPUs
+    gpus = GPUtil.getGPUs()
+    # Get the number of GPUs
+    gpu_count = len(gpus)
+
+    # Get the number of logical CPUs
+    cpu_count = os.cpu_count()
+
+    return cpu_count, gpu_count
+
+
 def modify_parameter(para_file, para_name, new_value):
     parameters.write_Parameters_file(para_file,para_name,new_value)
 
@@ -62,7 +71,7 @@ def trial_dir_string(trial_id):
     # return str(trial)   # should able to have more control on the dirname
     basic.outputlogMessage('trial_id: %s'%trial_id)
     # basic.outputlogMessage('experiment_tag: %s'%experiment_tag)
-    return 'multiArea_deeplabv3P' + str(trial_id)[-6:]  # should not write as [-6:-1], use the last 5 digits + '_'.
+    return 'clip_tuning_' + str(trial_id)[-6:]  # should not write as [-6:-1], use the last 5 digits + '_'.
 
 def get_overall_miou(miou_path):
     import basic_src.io_function as io_function
@@ -157,14 +166,50 @@ def objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training
 
 def training_function(config,checkpoint_dir=None):
     # Hyperparameters
-    lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes = \
-        config["lr"], config["iter_num"],config["batch_size"],config["backbone"],config['buffer_size'],\
-        config['training_data_per'],config['data_augmentation'],config['data_aug_ignore_classes']
+    # lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes = \
+    #     config["lr"], config["iter_num"],config["batch_size"],config["backbone"],config['buffer_size'],\
+    #     config['training_data_per'],config['data_augmentation'],config['data_aug_ignore_classes']
 
-    overall_miou = objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes)
+    # Hyperparameters
+    lr = config["lr"]
+    iter_num = config["iter_num"]
+    batch_size = config["batch_size"]
+    backbone = config["backbone"]
+    buffer_size = config["buffer_size"]
+    training_data_per = config["training_data_per"]
+    data_augmentation = config["data_augmentation"]
+    data_aug_ignore_classes = config["data_aug_ignore_classes"]
+
+    # # Restore from checkpoint if provided
+    # if checkpoint_dir:
+    #     checkpoint_path = os.path.join(checkpoint_dir, "checkpoint.pkl")
+    #     if os.path.exists(checkpoint_path):
+    #         with open(checkpoint_path, "rb") as f:
+    #             checkpoint_data = pickle.load(f)
+    #             print(f"Restored checkpoint: {checkpoint_data}")
+    #             # Restore any state here (e.g., model weights or iteration count)
+
+    # # Perform training (or simulate training here)
+    # overall_miou = objective_overall_miou(
+    #     lr, iter_num, batch_size, backbone, buffer_size,
+    #     training_data_per, data_augmentation, data_aug_ignore_classes
+    # )
+
+    # For debugging, generate a random number to simulate the "overall_miou" metric
+    overall_miou = random.uniform(0, 1)  # Random value between 0 and 1
+    print(f"Generated random overall_miou: {overall_miou}")
+
+
+    # # Save a checkpoint
+    # with tune.checkpoint_dir(step=iter_num) as checkpoint_dir:
+    #     checkpoint_path = os.path.join(checkpoint_dir, "checkpoint.pkl")
+    #     with open(checkpoint_path, "wb") as f:
+    #         pickle.dump({"lr": lr, "iter_num": iter_num}, f)  # Save any necessary state
+
+    # overall_miou = objective_overall_miou(lr, iter_num,batch_size,backbone,buffer_size,training_data_per,data_augmentation,data_aug_ignore_classes)
 
     # Feed the score back back to Tune.
-    tune.report(overall_miou=overall_miou)
+    session.report({"overall_miou": overall_miou})
 
 def stop_function(trial_id, result):
     # it turns out that stop_function it to check weather to run more experiments, not to decide whether run one experiment.
@@ -190,62 +235,84 @@ def main():
     # from utility.eva_report_to_tables import read_accuracy_multi_reports
 
     loc_dir = "./ray_results"
+    storage_path = os.path.abspath(loc_dir)
+    tune_name = "tune_clip_para"
 
-    tune_name = "tune_backbone_para_tesia_v2"
+    # if os.path.isdir(loc_dir):
+    #     io_function.mkdir(loc_dir)
 
-    # try to resume after when through all (some failed), they always complain:
-    # "Trials did not complete", incomplete_trials, so don't resume.
-    file_folders = io_function.get_file_list_by_pattern(os.path.join(loc_dir, tune_name),'*')
-    if len(file_folders) > 1:
-        b_resume = True
-    else:
-        b_resume = False
-    # max_failures = 2,
-    # stop = tune.function(stop_function),
+    # Check if there are existing folders in the tuning directory
+    file_folders = io_function.get_file_list_by_pattern(os.path.join(loc_dir, tune_name), '*')
+    b_resume = len(file_folders) > 1
 
-    analysis = tune.run(
+    # Define the search space (same as before)
+    param_space = {
+        "lr": tune.grid_search([0.007, 0.014, 0.021, 0.28]),
+        "iter_num": tune.grid_search([30000]),  # , 60000, 90000
+        "batch_size": tune.grid_search([8, 16, 32, 48, 96]),
+        "backbone": tune.grid_search(backbones),
+        "buffer_size": tune.grid_search([300]),  # 600
+        "training_data_per": tune.grid_search([0.9]),
+        "data_augmentation": tune.grid_search(['blur,crop,bright,contrast,noise']),
+        'data_aug_ignore_classes': tune.grid_search(['class_0']),
+    }
+
+    cpu_count, gpu_count = get_CPU_GPU_counts()
+    # Wrap the training function with resource requirements
+    trainable = tune.with_resources(
         training_function,
-        # set gpu as 2 (can divide batch size), cpu 24, making it one run one trial each time.
-        resources_per_trial={"gpu": 1, "cpu": 24}, # use three GPUs, 12 CPUs on tesia  # "cpu": 14, don't limit cpu, eval.py will not use all
-        local_dir=loc_dir,
-        name=tune_name,
-        # fail_fast=True,     # Stopping after the first failure
-        log_to_file=("stdout.log", "stderr.log"),     #Redirecting stdout and stderr to files
-        trial_name_creator=tune.function(trial_name_string),
-        trial_dirname_creator=tune.function(trial_dir_string),
-        resume=b_resume,
-        config={
-            "lr": tune.grid_search([0.007, 0.014, 0.021, 0.28]),   # ,0.007, 0.014, 0.028,0.056
-            "iter_num": tune.grid_search([30000]), # , 60000,90000,
-            "batch_size": tune.grid_search([8, 16, 32, 48, 96]), # 8,16,32 16, 32, 64, 128
-            "backbone": tune.grid_search(backbones),
-            "buffer_size": tune.grid_search([300]),     # 600
-            "training_data_per": tune.grid_search([0.9]),   #, 0.8
-            "data_augmentation": tune.grid_search(['blur,crop,bright,contrast,noise']),
-            'data_aug_ignore_classes':tune.grid_search(['class_0'])
-        }
-        
-        )
+        resources={"cpu": cpu_count, "gpu": gpu_count}  # Allocate 24 CPUs and 1 GPU per trial
+    )
 
-    print("Best config: ", analysis.get_best_config(
-        metric="overall_miou", mode="max"))
 
-    # Get a dataframe for analyzing trial results.
-    df = analysis.results_df
-    output_file = 'training_miou_ray_tune_%s.xlsx'%(datetime.now().strftime("%Y%m%d_%H%M%S"))
+    # Configure the Tuner
+    tuner = Tuner(
+        trainable=trainable,
+        param_space=param_space,
+        tune_config=TuneConfig(
+            metric="overall_miou",  # Metric to optimize
+            mode="max",  # Maximize the metric
+            num_samples=1,  # Number of samples (can be tuned as needed)
+            scheduler=ASHAScheduler(),  # ASHA scheduler
+            reuse_actors=b_resume,  # Resume trials if possible
+        ),
+        run_config=RunConfig(
+            storage_path= f"file://{storage_path}",  # Directory to save results
+            name=tune_name,  # Experiment name
+            log_to_file=("stdout.log", "stderr.log"),  # Redirect logs
+            # trial_name_creator=trial_name_string,  # Custom trial name
+            # trial_dirname_creator=trial_dir_string,  # Custom trial directory name
+        ),
+    )
+
+    # Run the tuner
+    results = tuner.fit()
+
+    # Get the best configuration
+    best_result = results.get_best_result(metric="overall_miou", mode="max")
+    print("Best config: ", best_result.config)
+
+    # Get a DataFrame for analyzing trial results
+    df = results.get_dataframe()
+    output_file = f'training_miou_ray_tune_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     with pd.ExcelWriter(output_file) as writer:
-        df.to_excel(writer)         # , sheet_name='accuracy table'
-        # set format
-        # workbook = writer.book
-        # format = workbook.add_format({'num_format': '#0.000'})
-        # acc_talbe_sheet = writer.sheets['accuracy table']
-        # acc_talbe_sheet.set_column('G:I',None,format)
-        print('write trial results to %s' % output_file)
+        df.to_excel(writer)
+        print(f'Wrote trial results to {output_file}')
 
 
 
 if __name__ == '__main__':
-    
+
+    import pandas as pd
+    from datetime import datetime
+    import ray
+    from ray import tune
+    from ray.tune import Tuner, TuneConfig
+    from ray.air import RunConfig, session
+    from ray.tune.schedulers import ASHAScheduler
+    import pickle  # Add this import to use pickle for saving/loading checkpoints
+    import random
+
     curr_dir_before_ray = os.getcwd()
     print('\n\ncurrent folder before ray tune: ', curr_dir_before_ray, '\n\n')
     main()
