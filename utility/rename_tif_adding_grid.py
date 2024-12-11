@@ -130,46 +130,47 @@ def rename_tif_by_adding_correct_gridNum_one_region(region_dir, ref_dir):
             for old_path in tif_list:
                 file = os.path.basename(old_path)
                 key = file.split("_")[-1]  # Extract `_number.tif`
-                ref_file = sub_images_files[key]
-                ref_path = os.path.join(sub_images_dir, ref_file)
+                if key in sub_images_files.keys():
+                    ref_file = sub_images_files[key]
+                    ref_path = os.path.join(sub_images_dir, ref_file)
 
-                # Skip if the filenames are already the same
-                if file == ref_file:
-                    # print(f"Skipping: {file} (already correctly named)")
-                    continue
+                    # Skip if the filenames are already the same
+                    if file == ref_file:
+                        # print(f"Skipping: {file} (already correctly named)")
+                        continue
 
-                # Check if the files are identical
-                if not are_files_identical(old_path, ref_path):
-                    # Log the mismatch
-                    log_file.write(f"Mismatch: {file} and {ref_file}\n")
-                    print(f"Mismatch logged: {file} and {ref_file}")
+                    # Check if the files are identical
+                    if not are_files_identical(old_path, ref_path):
+                        # Log the mismatch
+                        log_file.write(f"Mismatch: {file} and {ref_file}\n")
+                        print(f"Mismatch logged: {file} and {ref_file}")
 
-                # Rename the .tif file
-                new_name = ref_file
-                new_path = os.path.join(sub_dir, new_name)
-                try:
-                    os.rename(old_path, new_path)
-                    print(f"Renamed: {file} -> {new_name}")
-                except Exception as e:
-                    print(f"Error renaming {file}: {e}")
+                    # Rename the .tif file
+                    new_name = ref_file
+                    new_path = os.path.join(sub_dir, new_name)
+                    try:
+                        os.rename(old_path, new_path)
+                        print(f"Renamed: {file} -> {new_name}")
+                    except Exception as e:
+                        print(f"Error renaming {file}: {e}")
 
-                # Update the filenames in .txt files in the same folder
-                for txt_path in patch_list_txt:
-                        try:
-                            with open(txt_path, "r") as f:
-                                content = f.read()
+                    # Update the filenames in .txt files in the same folder
+                    for txt_path in patch_list_txt:
+                            try:
+                                with open(txt_path, "r") as f:
+                                    content = f.read()
 
-                            # Replace old filename with new filename
-                            updated_content = content.replace(file, new_name)
+                                # Replace old filename with new filename
+                                updated_content = content.replace(file, new_name)
 
-                            with open(txt_path, "w") as f:
-                                f.write(updated_content)
+                                with open(txt_path, "w") as f:
+                                    f.write(updated_content)
 
-                            print(f"Updated {txt_path}: {file} -> {new_name}")
-                        except Exception as e:
-                            print(f"Error updating {txt_path}: {e}")
-            else:
-                print(f"No match found in 'subImages' for: {file}")
+                                print(f"Updated {txt_path}: {file} -> {new_name}")
+                            except Exception as e:
+                                print(f"Error updating {txt_path}: {e}")
+                else:
+                    print(f"No match found in 'subImages' for: {file}")
 
         print(f"Mismatch log saved to {log_file_path}")
 
