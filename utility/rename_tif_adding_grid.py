@@ -86,8 +86,8 @@ def are_files_identical(file1, file2):
         return True
     except Exception as e:
         print(f"Error comparing files {file1} and {file2}: {e}")
-        sys.exit(1)
-        # return False
+        # sys.exit(1)
+        return False
 
 
 
@@ -122,7 +122,8 @@ def rename_tif_by_adding_correct_gridNum_one_region(region_dir, ref_dir):
     with open(log_file_path, "w") as log_file:
         log_file.write("Mismatched Files Log:\n")
 
-        sub_dir_list = io_function.os_list_folder_dir(region_dir)
+        # sub_dir_list = io_function.os_list_folder_dir(region_dir)
+        sub_dir_list = [ os.path.join(region_dir,'subImages')]  # only work on subImages
         patch_list_txt = io_function.get_file_list_by_pattern(region_dir, '*patch_list.txt')
         for sub_dir in sub_dir_list:
             tif_list = io_function.get_file_list_by_pattern(sub_dir,'*.tif')
