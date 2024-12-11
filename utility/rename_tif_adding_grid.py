@@ -82,6 +82,7 @@ def are_files_identical(file1, file2):
             print(f"Differences found between {file1} and {file2}:")
             for diff in differences:
                 print(f"  - {diff}")
+                basic.outputlogMessage(f"Differences found between {file1} and {file2}:")
                 basic.outputlogMessage(f"  - {diff}")
             return False
 
