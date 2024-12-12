@@ -11,7 +11,8 @@ add time: 11 December, 2024
 """
 
 import os,sys
-code_dir = os.path.expanduser('~/codes/PycharmProjects/BigImageMapper')
+# code_dir = os.path.expanduser('~/codes/PycharmProjects/BigImageMapper')
+code_dir = os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
 
 sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
