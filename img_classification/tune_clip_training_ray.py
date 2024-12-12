@@ -240,6 +240,8 @@ def main():
             num_samples=1,  # Number of samples (can be tuned as needed)
             scheduler=ASHAScheduler(),  # ASHA scheduler
             reuse_actors=b_resume,  # Resume trials if possible
+            trial_name_creator=trial_name_string,
+            trial_dirname_creator=trial_dir_string
         ),
         run_config=RunConfig(
             storage_path= f"file://{storage_path}",  # Directory to save results
