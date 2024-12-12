@@ -266,7 +266,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
             scheduler.step()
 
 
-            if (n_batch >= nbatches): break
+            if (n_batch > nbatches): break
 
         # Logging results
         current_elapsed_time = time.time() - starting_time
