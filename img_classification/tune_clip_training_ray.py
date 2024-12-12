@@ -10,6 +10,7 @@ email:huanglingcao@gmail.com
 add time: 11 December, 2024
 """
 
+import numpy  # Import numpy first to initialize MKL properly
 import os,sys
 
 import pandas as pd
