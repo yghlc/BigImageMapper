@@ -214,7 +214,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
                 log_string('Evaluation {:03}/{:03}, top1_test_acc: {:.3f}, top5_test_acc: {:.3f}'.
                            format(n_batch,nbatches,top1_test_acc,top5_test_acc))
 
-                if n_batch == 300:
+                if n_batch == nbatches:
                     saved_model = os.path.join(work_dir, "batch_%d_%s.ckpt" % (n_batch,description))
                     log_string("Saved model at: [" + saved_model + "]")
                     state = {
