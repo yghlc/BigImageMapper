@@ -115,11 +115,11 @@ def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_cou
     # check if ray create a new folder because previous run dir already exist.
     # e.g., previous dir: "multiArea_deeplabv3P_00000", new dir: "multiArea_deeplabv3P_00000_ce9a"
     # then read the miou directly
-    pre_work_dir = work_dir[:-5]  # remove something like _ce9a
-    if os.path.isdir(pre_work_dir):
-        accuracy_log = os.path.join(pre_work_dir, 'accuracy_log.txt')
-        top1_acc_class1 = get_top1_accuracy(accuracy_log)
-        return top1_acc_class1
+    # pre_work_dir = work_dir[:-5]  # remove something like _ce9a
+    # if os.path.isdir(pre_work_dir):
+    #     accuracy_log = os.path.join(pre_work_dir, 'accuracy_log.txt')
+    #     top1_acc_class1 = get_top1_accuracy(accuracy_log)
+    #     return top1_acc_class1
 
 
     # change para_file
@@ -139,7 +139,7 @@ def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_cou
     # remove files to save storage
     os.system('rm -rf exp11')
 
-    accuracy_log = os.path.join(pre_work_dir, 'accuracy_log.txt')
+    accuracy_log = os.path.join(work_dir, 'accuracy_log.txt')
     top1_acc_class1 = get_top1_accuracy(accuracy_log)
     return top1_acc_class1
 
