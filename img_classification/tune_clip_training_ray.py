@@ -206,10 +206,14 @@ def main():
     # from utility.eva_report_to_tables import read_accuracy_multi_reports
 
 
+    ray_work_dir = os.path.join(curr_dir_before_ray, 'ray_workdir')
+    if os.path.isdir(ray_work_dir) is False:
+        io_function.mkdir(ray_work_dir)
+
     # add code_dir for all workers
     ray.init(
         runtime_env={"env_vars": {"PYTHONPATH": code_dir},
-                     "working_dir": os.path.join(curr_dir_before_ray, 'ray_workdir')}
+                     "working_dir": ray_work_dir}
     )
 
     loc_dir = "./ray_results"
