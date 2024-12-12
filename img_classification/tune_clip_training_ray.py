@@ -11,10 +11,22 @@ add time: 11 December, 2024
 """
 
 import os,sys
+
+import pandas as pd
+from datetime import datetime
+import ray
+from ray import tune
+from ray.tune import Tuner, TuneConfig
+from ray.air import RunConfig, session
+from ray.tune.schedulers import ASHAScheduler
+import pickle  # Add this import to use pickle for saving/loading checkpoints
+import random
+
+
 # code_dir = os.path.expanduser('~/codes/PycharmProjects/BigImageMapper')
 code_dir = os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
 
-sys.path.insert(0, code_dir)
+sys.path.append(code_dir)
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 import parameters
@@ -39,6 +51,7 @@ def get_CPU_GPU_counts():
 
 
 def modify_parameter(para_file, para_name, new_value):
+    import parameters
     parameters.write_Parameters_file(para_file,para_name,new_value)
 
 
@@ -87,11 +100,7 @@ def copy_ini_train_files(ini_dir, work_dir, para_file):
 
 def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_count):
 
-    sys.path.insert(0, code_dir)
-    sys.path.insert(0, os.path.join(code_dir,'workflow'))   # for some module in workflow folder
-    import basic_src.io_function as io_function
     import parameters
-    import workflow.whole_procedure as whole_procedure
 
 
     para_file = 'main_para.ini'
@@ -157,9 +166,9 @@ def training_function(config,checkpoint_dir=None):
     #     training_data_per, data_augmentation, data_aug_ignore_classes
     # )
 
-    # # For debugging, generate a random number to simulate the "overall_miou" metric
-    # overall_miou = random.uniform(0, 1)  # Random value between 0 and 1
-    # print(f"Generated random overall_miou: {overall_miou}")
+    # For debugging, generate a random number to simulate the "overall_miou" metric
+    # top_1_accuracy = random.uniform(0, 1)  # Random value between 0 and 1
+    # print(f"Generated random top_1_accuracy: {top_1_accuracy}")
 
 
     # # Save a checkpoint
@@ -196,6 +205,12 @@ def main():
     # import workflow.whole_procedure as whole_procedure
     # from utility.eva_report_to_tables import read_accuracy_multi_reports
 
+
+    # add code_dir for all workers
+    ray.init(
+        runtime_env={"env_vars": {"PYTHONPATH": code_dir}}
+    )
+
     loc_dir = "./ray_results"
     storage_path = os.path.abspath(loc_dir)
     tune_name = "tune_clip_para"
@@ -206,9 +221,9 @@ def main():
                                                                           "This is a DEM hillshade of a {}."]
     # a_few_shot_samp_count
     a_few_shot_samp_count_list = [10] # , 50, 100, 200, 300, 600, 1000
-    model_type_list = ['RN50', 'RN101'] # , 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L-14-336px'
+    model_type_list = ['RN50'] # 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L-14-336px'
     train_epoch_num_list = [100]  # , 200, 300, 500
-    base_learning_rate_list = [1e-5, 1e-4, 5e-5]
+    base_learning_rate_list = [1e-5]  # , 1e-4, 5e-5
 
     # Check if there are existing folders in the tuning directory
     file_folders = io_function.get_file_list_by_pattern(os.path.join(loc_dir, tune_name), '*')
@@ -270,15 +285,6 @@ def main():
 
 if __name__ == '__main__':
 
-    import pandas as pd
-    from datetime import datetime
-    import ray
-    from ray import tune
-    from ray.tune import Tuner, TuneConfig
-    from ray.air import RunConfig, session
-    from ray.tune.schedulers import ASHAScheduler
-    import pickle  # Add this import to use pickle for saving/loading checkpoints
-    import random
 
     curr_dir_before_ray = os.getcwd()
     print('\n\ncurrent folder before ray tune: ', curr_dir_before_ray, '\n\n')
