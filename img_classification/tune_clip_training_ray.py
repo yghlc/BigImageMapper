@@ -226,11 +226,11 @@ def main():
                         "This is a sentinel-2 satellite mosiac of a {}.", "This is a DEM difference of a {}."
                                                                           "This is a DEM hillshade of a {}."]
     # a_few_shot_samp_count
-    a_few_shot_samp_count_list = [10] # , 50, 100, 200, 300, 600, 1000
-    model_type_list = ['RN50'] # 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L-14-336px'
+    a_few_shot_samp_count_list = [10, 50, 100, 200, 300, 600, 1000] #
+    model_type_list = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L-14-336px'] #
     # due to the setting in train_clip.py, train_epoch_num must be >= 100, train_epoch_num%100 =0
-    train_epoch_num_list = [100]  # , 200, 300, 500
-    base_learning_rate_list = [1e-5]  # , 1e-4, 5e-5
+    train_epoch_num_list = [100, 200, 300, 500]  #
+    base_learning_rate_list = [1e-5, 1e-4, 5e-5]  #
 
     # Check if there are existing folders in the tuning directory
     file_folders = io_function.get_file_list_by_pattern(os.path.join(loc_dir, tune_name), '*')
