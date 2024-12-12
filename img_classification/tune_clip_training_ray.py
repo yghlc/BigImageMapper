@@ -208,7 +208,8 @@ def main():
 
     # add code_dir for all workers
     ray.init(
-        runtime_env={"env_vars": {"PYTHONPATH": code_dir}}
+        runtime_env={"env_vars": {"PYTHONPATH": code_dir},
+                     "working_dir": os.path.join(curr_dir_before_ray, 'ray_workdir')}
     )
 
     loc_dir = "./ray_results"
