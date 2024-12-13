@@ -137,7 +137,7 @@ def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_cou
     basic.os_system_exit_code('./finetune_clip.sh')
 
     # remove files to save storage
-    # os.system('rm -rf exp11')
+    os.system('rm -rf exp11')
 
     accuracy_log = os.path.join(work_dir, 'accuracy_log.txt')
     top1_acc_class1 = get_top1_accuracy(accuracy_log)
