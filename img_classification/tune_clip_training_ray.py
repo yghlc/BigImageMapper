@@ -222,7 +222,8 @@ def main():
 
     loc_dir = "./ray_results"
     tune_name = "tune_clip_para"
-    storage_path = os.path.join(os.path.abspath(loc_dir), tune_name)
+    # storage_path = os.path.join(os.path.abspath(loc_dir), tune_name)
+    storage_path = os.path.abspath(loc_dir)
 
     # clip_prompt
     clip_prompt_list = ["This is an satellite image of a {}.", "This is an aerial image of a {}.",
@@ -238,7 +239,8 @@ def main():
 
     a_few_shot_samp_count_list = [100] # 10, 50,  , 200, 300, 600, 1000
     # 'ViT-L/14@336px': on ygAlpha (4090D), not enough CUDA memory
-    model_type_list = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14'] # ,
+    #  'RN50x16': on ygAlpha (4090D), not enough CUDA memory after 100 epochs
+    model_type_list = ['RN50', 'RN101', 'RN50x4', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14'] # ,
     # due to the setting in train_clip.py, train_epoch_num must be >= 100, train_epoch_num%100 =0
     train_epoch_num_list = [ 300]  # 100, 200,  , 500
     base_learning_rate_list = [1e-5]  # , 1e-4, 5e-5
