@@ -106,6 +106,10 @@ def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_cou
 
     para_file = 'main_para.ini'
     work_dir = os.getcwd()
+    # change work dir
+    # print(datetime.now(), f'change working dir from { work_dir} to {ray_work_dir}')
+    # work_dir = os.path.join(ray_work_dir,os.path.basename(work_dir))
+    # os.chdir(work_dir)
 
     # create a training folder
     copy_ini_train_files(ini_dir,work_dir,para_file)
@@ -134,7 +138,7 @@ def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_cou
     # copy_training_datas(training_data_dir,work_dir)
 
     # run training
-    basic.os_system_exit_code('./finetune_clip.sh')
+    basic.os_system_exit_code('./finetune_clip.sh > screen_output.txt')
 
     # remove files to save storage
     os.system('rm -rf exp11')
@@ -180,7 +184,7 @@ def training_function(config,checkpoint_dir=None):
 
     top_1_accuracy = objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_count)
 
-    # Feed the score back back to Tune.
+    # Feed the score back to Tune.
     session.report({"top_1_accuracy": top_1_accuracy})
 
 def stop_function(trial_id, result):
@@ -207,7 +211,6 @@ def main():
     # from utility.eva_report_to_tables import read_accuracy_multi_reports
 
 
-    ray_work_dir = os.path.join(curr_dir_before_ray, 'ray_workdir')
     if os.path.isdir(ray_work_dir) is False:
         io_function.mkdir(ray_work_dir)
 
@@ -218,8 +221,8 @@ def main():
     )
 
     loc_dir = "./ray_results"
-    storage_path = os.path.abspath(loc_dir)
     tune_name = "tune_clip_para"
+    storage_path = os.path.join(os.path.abspath(loc_dir), tune_name)
 
     # clip_prompt
     clip_prompt_list = ["This is an satellite image of a {}.", "This is an aerial image of a {}.",
@@ -233,10 +236,10 @@ def main():
     # base_learning_rate_list = [1e-5, 1e-4, 5e-5]  #
 
 
-    a_few_shot_samp_count_list = [10, 50, 100] # , 200, 300, 600, 1000
+    a_few_shot_samp_count_list = [100] # 10, 50,  , 200, 300, 600, 1000
     model_type_list = ['RN50', 'ViT-L/14', 'ViT-L/14@336px'] # , 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16',
     # due to the setting in train_clip.py, train_epoch_num must be >= 100, train_epoch_num%100 =0
-    train_epoch_num_list = [200, 300]  # 100,  , 500
+    train_epoch_num_list = [ 300]  # 100, 200,  , 500
     base_learning_rate_list = [1e-5]  # , 1e-4, 5e-5
 
     # Check if there are existing folders in the tuning directory
@@ -258,28 +261,33 @@ def main():
         resources={"cpu": cpu_count, "gpu": gpu_count}  # Allocate 24 CPUs and 1 GPU per trial
     )
 
-
-    # Configure the Tuner
-    tuner = Tuner(
-        trainable=trainable,
-        param_space=param_space,
-        tune_config=TuneConfig(
-            metric="top_1_accuracy",  # Metric to optimize
-            mode="max",  # Maximize the metric
-            num_samples=1,  # Number of samples (can be tuned as needed)
-            scheduler=ASHAScheduler(),  # ASHA scheduler
-            reuse_actors=b_resume,  # Resume trials if possible
-            trial_name_creator=trial_name_string,
-            trial_dirname_creator=trial_dir_string
-        ),
-        run_config=RunConfig(
-            storage_path= f"file://{storage_path}",  # Directory to save results
-            name=tune_name,  # Experiment name
-            log_to_file=("stdout.log", "stderr.log"),  # Redirect logs
-            # trial_name_creator=trial_name_string,  # Custom trial name
-            # trial_dirname_creator=trial_dir_string,  # Custom trial directory name
-        ),
-    )
+    if os.path.isdir(storage_path):
+        print(f"Resuming from previous session at {storage_path}")
+        tuner = Tuner.restore(storage_path,
+                              trainable=trainable)
+    else:
+        print("Starting a new session")
+        # Configure the Tuner
+        tuner = Tuner(
+            trainable=trainable,
+            param_space=param_space,
+            tune_config=TuneConfig(
+                metric="top_1_accuracy",  # Metric to optimize
+                mode="max",  # Maximize the metric
+                num_samples=1,  # Number of samples (can be tuned as needed)
+                scheduler=ASHAScheduler(),  # ASHA scheduler
+                reuse_actors=b_resume,  # Resume trials if possible
+                trial_name_creator=trial_name_string,
+                trial_dirname_creator=trial_dir_string
+            ),
+            run_config=RunConfig(
+                storage_path= f"file://{storage_path}",  # Directory to save results
+                name=tune_name,  # Experiment name
+                log_to_file=("stdout.log", "stderr.log"),  # Redirect logs
+                # trial_name_creator=trial_name_string,  # Custom trial name
+                # trial_dirname_creator=trial_dir_string,  # Custom trial directory name
+            ),
+        )
 
     # Run the tuner
     results = tuner.fit()
@@ -302,5 +310,6 @@ if __name__ == '__main__':
 
     curr_dir_before_ray = os.getcwd()
     print('\n\ncurrent folder before ray tune: ', curr_dir_before_ray, '\n\n')
+    ray_work_dir = os.path.join(curr_dir_before_ray, 'ray_workdir')
     main()
 

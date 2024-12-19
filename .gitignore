@@ -13,6 +13,8 @@ planetlabs_notebooks
 working_dir
 *.txt
 *.tar.gz
+.DS_Store
+
 
 # Pycharm folder
 .idea
