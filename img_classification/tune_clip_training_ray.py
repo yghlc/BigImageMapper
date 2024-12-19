@@ -90,6 +90,24 @@ def get_top1_accuracy(accuracy_log):
             break
     return class_1_accuracy
 
+def count_lines(filepath):
+    with open(filepath, "r") as file:
+        return sum(1 for _ in file)
+
+def get_train_valid_samp_count(workdir):
+    tmp_list = io_function.get_file_list_by_pattern_ls(workdir,'training_data/*_regions.txt')
+    if len(tmp_list) != 1:
+        raise IOError(f'not one *_regions.txt in {workdir}/training_data')
+    train_txt = tmp_list[0]
+    tmp_list = io_function.get_file_list_by_pattern_ls(workdir,'training_data/*_regions_valid.txt')
+    if len(tmp_list) != 1:
+        raise IOError(f'not one *_regions_valid.txt in {workdir}/training_data')
+    valid_txt = tmp_list[0]
+
+    train_samp_count = count_lines(train_txt)
+    valid_samp_count = count_lines(valid_txt)
+    return train_samp_count, valid_samp_count
+
 
 def copy_ini_train_files(ini_dir, work_dir, para_file):
 
@@ -145,7 +163,8 @@ def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_cou
 
     accuracy_log = os.path.join(work_dir, 'accuracy_log.txt')
     top1_acc_class1 = get_top1_accuracy(accuracy_log)
-    return top1_acc_class1
+    train_count, valid_count = get_train_valid_samp_count(work_dir)
+    return top1_acc_class1, train_count, valid_count
 
 
 def training_function(config,checkpoint_dir=None):
@@ -182,10 +201,10 @@ def training_function(config,checkpoint_dir=None):
     #     with open(checkpoint_path, "wb") as f:
     #         pickle.dump({"lr": lr, "iter_num": iter_num}, f)  # Save any necessary state
 
-    top_1_accuracy = objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_count)
+    top_1_accuracy, train_count, valid_count = objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_count)
 
     # Feed the score back to Tune.
-    session.report({"top_1_accuracy": top_1_accuracy})
+    session.report({"top_1_accuracy": top_1_accuracy, 'train_count':train_count, 'valid_count':valid_count })
 
 def stop_function(trial_id, result):
     # it turns out that stop_function it to check weather to run more experiments, not to decide whether run one experiment.
