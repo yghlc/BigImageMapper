@@ -211,14 +211,14 @@ def main():
     # from utility.eva_report_to_tables import read_accuracy_multi_reports
 
 
-    if os.path.isdir(ray_work_dir) is False:
-        io_function.mkdir(ray_work_dir)
+    # if os.path.isdir(ray_work_dir) is False:
+    #     io_function.mkdir(ray_work_dir)
 
     # add code_dir for all workers
     ray.init(
-        runtime_env={"env_vars": {"PYTHONPATH": code_dir},
-                     "working_dir": ray_work_dir}
+        runtime_env={"env_vars": {"PYTHONPATH": code_dir}}
     )
+    #                      "working_dir": ray_work_dir
 
     loc_dir = "./ray_results"
     tune_name = "tune_clip_para"
@@ -237,7 +237,8 @@ def main():
 
 
     a_few_shot_samp_count_list = [100] # 10, 50,  , 200, 300, 600, 1000
-    model_type_list = ['RN50', 'ViT-L/14', 'ViT-L/14@336px'] # , 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16',
+    # 'ViT-L/14@336px': on ygAlpha (4090D), not enough CUDA memory
+    model_type_list = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14'] # ,
     # due to the setting in train_clip.py, train_epoch_num must be >= 100, train_epoch_num%100 =0
     train_epoch_num_list = [ 300]  # 100, 200,  , 500
     base_learning_rate_list = [1e-5]  # , 1e-4, 5e-5
