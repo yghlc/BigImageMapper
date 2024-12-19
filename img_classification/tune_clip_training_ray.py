@@ -238,13 +238,13 @@ def main():
     # base_learning_rate_list = [1e-5, 1e-4, 5e-5]  #
 
 
-    a_few_shot_samp_count_list = [100] # 10, 50,  , 200, 300, 600, 1000
+    a_few_shot_samp_count_list = [ 10, 50,100, 200, 300, 600, 1000] #
     # 'ViT-L/14@336px': on ygAlpha (4090D), not enough CUDA memory
     #  'RN50x16': on ygAlpha (4090D), not enough CUDA memory after 100 epochs
     model_type_list = ['RN50', 'RN101', 'RN50x4', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14'] # ,
     # due to the setting in train_clip.py, train_epoch_num must be >= 100, train_epoch_num%100 =0
-    train_epoch_num_list = [ 300]  # 100, 200,  , 500
-    base_learning_rate_list = [1e-5]  # , 1e-4, 5e-5
+    train_epoch_num_list = [100, 200,  300, 500]  #
+    base_learning_rate_list = [1e-5, 1e-4, 5e-5]  #
 
     # Check if there are existing folders in the tuning directory
     file_folders = io_function.get_file_list_by_pattern(os.path.join(loc_dir, tune_name), '*')
