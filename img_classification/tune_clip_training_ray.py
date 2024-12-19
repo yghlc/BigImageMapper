@@ -224,6 +224,7 @@ def main():
     tune_name = "tune_clip_para"
     # storage_path = os.path.join(os.path.abspath(loc_dir), tune_name)
     storage_path = os.path.abspath(loc_dir)
+    result_dir = os.path.join(storage_path,tune_name)
 
     # clip_prompt
     clip_prompt_list = ["This is an satellite image of a {}.", "This is an aerial image of a {}.",
@@ -264,9 +265,9 @@ def main():
         resources={"cpu": cpu_count, "gpu": gpu_count}  # Allocate 24 CPUs and 1 GPU per trial
     )
 
-    if os.path.isdir(storage_path):
-        print(f"Resuming from previous session at {storage_path}")
-        tuner = Tuner.restore(storage_path,
+    if os.path.isdir(result_dir):
+        print(f"Resuming from previous session at {result_dir}")
+        tuner = Tuner.restore(result_dir,
                               trainable=trainable)
     else:
         print("Starting a new session")
