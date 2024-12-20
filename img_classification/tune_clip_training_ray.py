@@ -277,7 +277,12 @@ def main():
         "samp_count": tune.grid_search(a_few_shot_samp_count_list),  # a_few_shot_samp_count
     }
 
+    # set cpu and gpu count
     cpu_count, gpu_count = get_CPU_GPU_counts()
+    if gpu_count > 1:
+        gpu_count = 1   #
+    if cpu_count > 8:
+        cpu_count = 8
     # Wrap the training function with resource requirements
     trainable = tune.with_resources(
         training_function,
