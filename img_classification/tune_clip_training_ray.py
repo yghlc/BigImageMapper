@@ -81,14 +81,19 @@ def get_top1_accuracy(accuracy_log):
 
     # Initialize variable to store the result
     class_1_accuracy = None
+    top1_accuracy = None
 
     # Loop through the lines in reverse order
     for line in reversed(lines):
         if "class: 1, accuracy (top-1)" in line:
             # Extract the accuracy value after the last ":"
             class_1_accuracy = float(line.split(":")[-1].strip())
+        if "top 1 accuracy:" in line:
+            top1_accuracy  = float(line.split(":")[-1].strip())
+
+        if class_1_accuracy is not None and top1_accuracy is not None:
             break
-    return class_1_accuracy
+    return class_1_accuracy, top1_accuracy
 
 def count_lines(filepath):
     with open(filepath, "r") as file:
@@ -162,9 +167,9 @@ def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_cou
     os.system('rm -rf exp11')
 
     accuracy_log = os.path.join(work_dir, 'accuracy_log.txt')
-    top1_acc_class1 = get_top1_accuracy(accuracy_log)
+    top1_acc_class1, top1_acc = get_top1_accuracy(accuracy_log)
     train_count, valid_count = get_train_valid_samp_count(work_dir)
-    return top1_acc_class1, train_count, valid_count
+    return top1_acc_class1, top1_acc, train_count, valid_count
 
 
 def training_function(config,checkpoint_dir=None):
@@ -201,10 +206,10 @@ def training_function(config,checkpoint_dir=None):
     #     with open(checkpoint_path, "wb") as f:
     #         pickle.dump({"lr": lr, "iter_num": iter_num}, f)  # Save any necessary state
 
-    top_1_accuracy, train_count, valid_count = objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_count)
+    top_1_acc_c1, top1_acc, train_count, valid_count = objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_count)
 
     # Feed the score back to Tune.
-    session.report({"top_1_accuracy": top_1_accuracy, 'train_count':train_count, 'valid_count':valid_count })
+    session.report({"top_1_accuracy": top1_acc, 'top1_acc_c1':top_1_acc_c1, 'train_count':train_count, 'valid_count':valid_count })
 
 def stop_function(trial_id, result):
     # it turns out that stop_function it to check weather to run more experiments, not to decide whether run one experiment.
