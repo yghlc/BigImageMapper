@@ -34,6 +34,8 @@ import torch.optim as optim
 import logging
 logger = logging.getLogger("Model")
 
+import math
+
 def log_string(str):
     logger.info(str)
     print(str)
@@ -192,7 +194,7 @@ def run_training_model(work_dir, network_ini, train_dataset, valid_dataset,promp
     tstart = time.time()
 
     log_string("Starting training...")
-    log_string("Number of batches: [%d]" % (len(train_loader.dataset) / batch_size))
+    log_string("Number of batches: [%d]" % math.ceil(len(train_loader.dataset) / batch_size))
 
     n_batch = 0
     loss = None
