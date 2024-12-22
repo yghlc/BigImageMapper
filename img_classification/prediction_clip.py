@@ -212,11 +212,15 @@ def run_prediction(model, test_loader,prompt, device):
     pre_probs = []
     gts = []
     with torch.no_grad():
-        cnt = 0
+
         for data in tqdm(test_loader):
             images, targets, _ = data
             images = images.to(device)
             targets = targets.to(device).squeeze()
+
+            if targets.ndim == 0:
+                basic.outputlogMessage('error: targets.ndim == 0, print(targets.ndim, targets.size(), targets.tolist())')
+                continue
 
             image_features = model.encode_image(images)
 
