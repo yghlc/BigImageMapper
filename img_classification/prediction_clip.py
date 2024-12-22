@@ -219,7 +219,7 @@ def run_prediction(model, test_loader,prompt, device):
             targets = targets.to(device).squeeze()
 
             if targets.ndim == 0:
-                basic.outputlogMessage('error: targets.ndim == 0, print(targets.ndim, targets.size(), targets.tolist())')
+                basic.outputlogMessage(f"error: targets.ndim == 0, ndim: {targets.ndim}, size: {targets.size()}, value: {targets.tolist()}")
                 continue
 
             image_features = model.encode_image(images)
