@@ -32,7 +32,7 @@ import basic_src.io_function as io_function
 import basic_src.basic as basic
 import parameters
 
-
+machine_name = os.uname()[1]
 
 # template para (contain para_files)
 ini_dir=os.path.expanduser('~/Data/slump_demdiff_classify/ini_files')
@@ -340,7 +340,7 @@ def main():
 
     # Get a DataFrame for analyzing trial results
     df = results.get_dataframe()
-    output_file = f'training_top1_acc_ray_tune_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    output_file = f'top1_acc_ray_tune_{machine_name}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     with pd.ExcelWriter(output_file) as writer:
         df.to_excel(writer)
         print(f'Wrote trial results to {output_file}')
