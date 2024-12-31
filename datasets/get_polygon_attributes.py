@@ -256,7 +256,7 @@ def calculate_gully_information(gullies_shp):
     # parameter 3 the same as parameter 1 to overwrite the input file
 
     # add width/height (suppose height greater than width)
-    width_height_list = operation_obj.get_shape_records_value(gullies_shp,attributes=['WIDTH','HEIGHT'])
+    width_height_list = operation_obj.get_shape_records_value(gullies_shp,attributes=['rWIDTH','rHEIGHT'])
     if width_height_list is not False:
         ratio = []
         for width_height in width_height_list:

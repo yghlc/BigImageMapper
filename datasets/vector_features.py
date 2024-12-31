@@ -178,10 +178,10 @@ class shape_opeation(object):
         # add the info to shapefile
         # attr_list = [field_name, 'N', 24, 6]
         # w.fields.append(attr_list)
-        w.field('AREA', fieldType="N", size="24",decimal=6)
-        w.field('PERIMETER', fieldType="N", size="24", decimal=6)
-        w.field('WIDTH', fieldType="N", size="24", decimal=6)
-        w.field('HEIGHT', fieldType="N", size="24", decimal=6)
+        w.field('rAREA', fieldType="N", size="24",decimal=6)
+        w.field('rPERIMETER', fieldType="N", size="24", decimal=6)
+        w.field('rWIDTH', fieldType="N", size="24", decimal=6)
+        w.field('rHEIGHT', fieldType="N", size="24", decimal=6)
 
         # save the buffer area (polygon)
         pyshp_polygons = [shape_from_shapely_to_pyshp(shapely_polygon, keep_holes=True) for shapely_polygon in
