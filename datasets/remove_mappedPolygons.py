@@ -72,11 +72,22 @@ def remove_polygons_main(polygons_shp, output, para_file):
     if area_thr is not None:
         rm_area_save_shp = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmArea')
         if remove_polygons(polygons_shp, 'INarea', area_thr, b_smaller, rm_area_save_shp) is False:
-            basic.outputlogMessage("error, removing polygons based on size failed")
+            basic.outputlogMessage("error, removing polygons based on size (minimum_area) failed")
         else:
             polygons_shp = rm_area_save_shp
     else:
-        basic.outputlogMessage('warning, minimum_area is absent in the para file, skip removing polygons based on areas')
+        basic.outputlogMessage('warning, minimum_area is absent in the para file, skip removing polygons based on minimum_area')
+
+    max_area_thr = parameters.get_digit_parameters_None_if_absence(para_file,'maximum_area','int')
+    b_smaller = False
+    if max_area_thr is not None:
+        rm_area_save_shp2 = io_function.get_name_by_adding_tail(polygons_shp_backup, 'rmAreaLarger')
+        if remove_polygons(polygons_shp, 'INarea', max_area_thr, b_smaller, rm_area_save_shp2) is False:
+            basic.outputlogMessage("error, removing polygons based on size (maximum_area) failed")
+        else:
+            polygons_shp = rm_area_save_shp2
+    else:
+        basic.outputlogMessage('warning, maximum_area is absent in the para file, skip removing polygons based on maximum_area')
 
     # remove  polygons based on slope information
     # slope_small_thr = 2
