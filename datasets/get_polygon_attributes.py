@@ -378,7 +378,10 @@ def add_polygon_attributes(input, output, para_file, data_para_file):
     b_calculate_shape_info = parameters.get_bool_parameters_None_if_absence(para_file,'b_calculate_shape_info')
     if b_calculate_shape_info:
         # remove "_shapeInfo.shp" to make it calculate shape information again
-        os.system('rm *_shapeInfo.shp')
+        shapeinfo = io_function.get_name_by_adding_tail(output, 'shapeInfo')
+        if os.path.isfile(shapeinfo):
+            io_function.delete_shape_file(shapeinfo)
+        # os.system('rm *_shapeInfo.shp')
         if calculate_gully_information(output) is False:
             return False
 
