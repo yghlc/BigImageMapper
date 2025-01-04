@@ -9,6 +9,7 @@ authors: Huang Lingcao
 email:huanglingcao@gmail.com
 add time: 11 December, 2024
 """
+import shutil
 
 import numpy  # Import numpy first to initialize MKL properly
 import os,sys
@@ -121,6 +122,23 @@ def copy_ini_train_files(ini_dir, work_dir, para_file):
     for ini in ini_list:
         io_function.copy_file_to_dst(os.path.join(ini_dir, ini ), os.path.join(work_dir,ini), overwrite=True)
 
+def copy_training_data(data_dir, work_dir):
+    source_folder = os.path.join(data_dir, 'training_data')
+    destination_folder = os.path.join(work_dir,'training_data')
+    if os.path.isdir(source_folder):
+        try:
+            shutil.copytree(source_folder, destination_folder)
+            print(f"Folder copied successfully from {source_folder} to {destination_folder}")
+        except FileNotFoundError:
+            print(f"Error: The source folder '{source_folder}' does not exist.")
+        except PermissionError:
+            print("Error: Permission denied.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+    else:
+        raise IOError(f'cannot copy_training_data as {copy_training_data} does not exist')
+
+
 
 def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_count):
 
@@ -136,6 +154,8 @@ def objective_top_1_accuracy(lr, train_epoch_nums,model_type,a_few_shot_samp_cou
 
     # create a training folder
     copy_ini_train_files(ini_dir,work_dir,para_file)
+
+    copy_training_data(ini_dir, work_dir)   # copy training data
 
     exp_name = parameters.get_string_parameters(para_file, 'expr_name')
 
@@ -256,18 +276,19 @@ def main():
                                                                           "This is a DEM hillshade of a {}."]
     # all paramaters
     # a_few_shot_samp_count_list = [10, 50, 100, 200, 300, 600, 1000] #
-    # model_type_list = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L/14@336px'] #
-    # # due to the setting in train_clip.py, train_epoch_num must be >= 100, train_epoch_num%100 =0
-    # train_epoch_num_list = [100, 200, 300, 500]  #
-    # base_learning_rate_list = [1e-5, 1e-4, 5e-5]  #
+    a_few_shot_samp_count_list = [150] #
+    model_type_list = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L/14@336px'] #
+    # due to the setting in train_clip.py, train_epoch_num must be >= 100, train_epoch_num%100 =0
+    train_epoch_num_list = [100, 200, 300, 500]  #
+    base_learning_rate_list = [1e-5, 1e-4, 5e-5]  #
 
     ##############################################################
-    ## only test a_few_shot_samp_count
-    a_few_shot_samp_count_list = [item for item in range(10, 1001, 10)]  # [10, 50, 100, 200, 300, 600, 1000]
-    model_type_list = ['ViT-L/14'] #
-    # due to the setting in train_clip.py, train_epoch_num must be >= 100, train_epoch_num%100 =0
-    train_epoch_num_list = [300]  #
-    base_learning_rate_list = [1e-5]  #
+    # ## only test a_few_shot_samp_count
+    # a_few_shot_samp_count_list = [item for item in range(10, 1001, 10)]  # [10, 50, 100, 200, 300, 600, 1000]
+    # model_type_list = ['ViT-L/14'] #
+    # # due to the setting in train_clip.py, train_epoch_num must be >= 100, train_epoch_num%100 =0
+    # train_epoch_num_list = [300]  #
+    # base_learning_rate_list = [1e-5]  #
 
 
     # a_few_shot_samp_count_list = [ 10, 50,100, 200, 300, 600, 1000] #
