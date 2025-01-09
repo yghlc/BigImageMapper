@@ -117,6 +117,8 @@ def write_top1_result_into_vector_file(vector_path, res_dict, save_path, column_
     if vector_gpd.is_field_name_in_shp(vector_path,'polyID'):
         polyID_list = vector_gpd.read_attribute_values_list(vector_path,'polyID')
         saved_attributes['polyID'] = polyID_list
+    else:
+        saved_attributes['polyID'] = list(range(len(polys)))
 
     wkt = map_projection.get_raster_or_vector_srs_info_wkt(vector_path)
     data_pd = pd.DataFrame(saved_attributes)
