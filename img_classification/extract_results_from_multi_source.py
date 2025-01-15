@@ -165,7 +165,7 @@ def extract_images_for_manu_check(merge_result_shp, res_shp_list, out_dir, sampl
         vector_gpd.save_shapefile_subset_as(sel_index,merge_result_shp, sel_merge_result_shp)
 
     # buffer to the same size
-    buffer_size = 300
+    buffer_size = 500
     sel_merge_result_shp_buff = io_function.get_name_by_adding_tail(sel_merge_result_shp,'buffer%d'%buffer_size)
     points, polyIDs = vector_gpd.read_polygons_attributes_list(sel_merge_result_shp,'polyID')
     polys = [item.buffer(buffer_size) for item in  points]
