@@ -169,10 +169,15 @@ def extract_images_for_manu_check(merge_result_shp, res_shp_list, out_dir, sampl
     sel_merge_result_shp_buff = io_function.get_name_by_adding_tail(sel_merge_result_shp,'buffer%d'%buffer_size)
     points, polyIDs = vector_gpd.read_polygons_attributes_list(sel_merge_result_shp,'polyID')
     polys = [item.buffer(buffer_size) for item in  points]
-    data_pd = pd.DataFrame({'Polygons':polys, 'polyID':polyIDs})
+    validate = [None]*len(polyIDs)
+    remark = [None] * len(polyIDs)
+    data_pd = pd.DataFrame({'Polygons':polys, 'polyID':polyIDs, 'validate':validate, 'remark':remark})
     wkt = map_projection.get_raster_or_vector_srs_info_wkt(sel_merge_result_shp)
     vector_gpd.save_polygons_to_files(data_pd,'Polygons', wkt, sel_merge_result_shp_buff)
 
+    # reprj to EPSG:4326
+    sel_merge_result_shp_buff_epsg4326 = io_function.get_name_by_adding_tail(sel_merge_result_shp_buff, 'epsg4326')
+    map_projection.transforms_vector_srs(sel_merge_result_shp_buff,' EPSG:4326', sel_merge_result_shp_buff_epsg4326)
 
     # extract images for each region.
     for reg_ini in multi_inf_regions:
