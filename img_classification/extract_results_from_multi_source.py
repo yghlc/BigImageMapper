@@ -187,16 +187,22 @@ def main(options, args):
     save_path = options.save_path
     target_id = options.target_id
     min_occurrence = options.occurrence
+    sample_count = options.sample_count
+    repeat_times = options.repeat_times
+
     if save_path is None:
-        save_path = 'extracted_results_classID%d_occurrence%d.shp'%(target_id,min_occurrence)
+        save_path = 'classID%d_occurrence%d.shp'%(target_id,min_occurrence)
 
 
     extract_classification_result_from_multi_sources(res_shp_list, save_path,
                                                      extract_class_id = target_id,occurrence=min_occurrence)
 
-    sample_count = 300
-    extract_img_dir = io_function.get_name_no_ext(save_path) + '_sample_%d_images'%sample_count
-    extract_images_for_manu_check(save_path,res_shp_list,extract_img_dir,sample_num=sample_count)
+    # sample_count = 300
+    datetime_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+    for repeat in range(repeat_times):
+        extract_img_dir = (io_function.get_name_no_ext(save_path) +
+                           '_%s_R%d_%dsample_Imgs'%(datetime_str, repeat+1, sample_count))
+        extract_images_for_manu_check(save_path,res_shp_list,extract_img_dir,sample_num=sample_count)
 
 
 if __name__ == '__main__':
@@ -219,6 +225,16 @@ if __name__ == '__main__':
     parser.add_option("-m", "--occurrence",
                       action="store", dest="occurrence", type=int, default=4,
                       help="minimum of the target ID in multiple observations ")
+
+    parser.add_option("-c", "--sample_count",
+                      action="store", dest="sample_count", type=int, default=300,
+                      help="the total sample count to save")
+
+    parser.add_option("-r", "--repeat_times",
+                      action="store", dest="repeat_times", type=int, default=5,
+                      help="the times to repeating the save random samples for validation")
+
+
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
