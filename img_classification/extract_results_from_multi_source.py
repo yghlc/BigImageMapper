@@ -190,15 +190,16 @@ def main(options, args):
     sample_count = options.sample_count
     repeat_times = options.repeat_times
 
+    # datetime_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+    datetime_str = datetime.now().strftime('%m%d%H') # only include month, day, hour
     if save_path is None:
-        save_path = 'classID%d_occurrence%d.shp'%(target_id,min_occurrence)
+        save_path = 'classID%d_occurrence%d_%s.shp'%(target_id,min_occurrence,datetime_str)
 
 
     extract_classification_result_from_multi_sources(res_shp_list, save_path,
                                                      extract_class_id = target_id,occurrence=min_occurrence)
 
     # sample_count = 300
-    datetime_str = datetime.now().strftime('%Y%m%d_%H%M%S')
     for repeat in range(repeat_times):
         extract_img_dir = (io_function.get_name_no_ext(save_path) +
                            '_%s_R%d_%dsample_Imgs'%(datetime_str, repeat+1, sample_count))
