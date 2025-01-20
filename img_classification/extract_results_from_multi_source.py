@@ -202,7 +202,7 @@ def main(options, args):
     # sample_count = 300
     for repeat in range(repeat_times):
         extract_img_dir = (io_function.get_name_no_ext(save_path) +
-                           '_%s_R%d_%dsample_Imgs'%(datetime_str, repeat+1, sample_count))
+                           '_R%d_%dsample_Imgs'%(repeat+1, sample_count))
         extract_images_for_manu_check(save_path,res_shp_list,extract_img_dir,sample_num=sample_count)
 
 
