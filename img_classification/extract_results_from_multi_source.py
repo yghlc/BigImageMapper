@@ -193,7 +193,7 @@ def main(options, args):
     # datetime_str = datetime.now().strftime('%Y%m%d_%H%M%S')
     datetime_str = datetime.now().strftime('%m%d%H') # only include month, day, hour
     if save_path is None:
-        save_path = 'classID%d_occurrence%d_%s.shp'%(target_id,min_occurrence,datetime_str)
+        save_path = 'classID%d_occur%d_%s.shp'%(target_id,min_occurrence,datetime_str)
 
 
     extract_classification_result_from_multi_sources(res_shp_list, save_path,
