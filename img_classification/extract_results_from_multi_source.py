@@ -132,7 +132,7 @@ def extract_images_for_one_region(area_ini, out_dir, in_shp):
 
 
 
-def extract_images_for_manu_check(merge_result_shp, res_shp_list, out_dir, sample_num = 300):
+def extract_images_for_manu_check(merge_result_shp, res_shp_list, out_dir, sample_num = 300, repeat_idx=1):
 
     io_function.is_file_exist(merge_result_shp)
     if os.path.isdir(out_dir) is False:
@@ -158,7 +158,7 @@ def extract_images_for_manu_check(merge_result_shp, res_shp_list, out_dir, sampl
     sel_index = random.sample(index_list, sample_num)
 
     sel_merge_result_shp = os.path.join(out_dir,
-                                        os.path.basename(io_function.get_name_by_adding_tail(merge_result_shp, 'random%d' % sample_num)))
+        os.path.basename(io_function.get_name_by_adding_tail(merge_result_shp, 'R%d_random%d' % (repeat_idx,sample_num))))
     if os.path.isfile(sel_merge_result_shp):
         print('warning, %s exists, skip sampling'%sel_merge_result_shp)
     else:
