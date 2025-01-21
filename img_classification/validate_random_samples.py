@@ -74,7 +74,7 @@ def split_shapefile(input_shp, count_per_group=200, output_dir='./'):
         group_gdf = gdf.iloc[start_idx:end_idx]
 
         # Generate the output filepath
-        output_path = os.path.join(output_dir, base_name+f"_G{i + 1}_{len(group_gdf)}S.shp")
+        output_path = os.path.join(output_dir, base_name+f"_g{i + 1}_{len(group_gdf)}s.shp")
 
         # Save the group to a shapefile
         group_gdf.to_file(output_path)
