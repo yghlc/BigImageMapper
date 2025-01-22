@@ -194,6 +194,7 @@ def main(options, args):
     min_occurrence = options.occurrence
     sample_count = options.sample_count
     repeat_times = options.repeat_times
+    get_random_samples = options.no_random_samples
 
     # datetime_str = datetime.now().strftime('%Y%m%d_%H%M%S')
     datetime_str = datetime.now().strftime('%m%d%H') # only include month, day, hour
@@ -204,11 +205,12 @@ def main(options, args):
     extract_classification_result_from_multi_sources(res_shp_list, save_path,
                                                      extract_class_id = target_id,occurrence=min_occurrence)
 
-    # sample_count = 300
-    for repeat in range(repeat_times):
-        extract_img_dir = (io_function.get_name_no_ext(save_path) +
-                           '_R%d_%dsample_Imgs'%(repeat+1, sample_count))
-        extract_images_for_manu_check(save_path,res_shp_list,extract_img_dir,sample_num=sample_count,repeat_idx=repeat+1)
+    if get_random_samples:
+        # sample_count = 300
+        for repeat in range(repeat_times):
+            extract_img_dir = (io_function.get_name_no_ext(save_path) +
+                               '_R%d_%dsample_Imgs'%(repeat+1, sample_count))
+            extract_images_for_manu_check(save_path,res_shp_list,extract_img_dir,sample_num=sample_count,repeat_idx=repeat+1)
 
 
 if __name__ == '__main__':
@@ -239,6 +241,10 @@ if __name__ == '__main__':
     parser.add_option("-r", "--repeat_times",
                       action="store", dest="repeat_times", type=int, default=5,
                       help="the times to repeating the save random samples for validation")
+
+    parser.add_option("-n", "--no_random_samples",
+                      action="store_false", dest="no_random_samples",default=True,
+                      help="Default is to extact some random samples for checking, but setting this will not extract samples")
 
 
 
