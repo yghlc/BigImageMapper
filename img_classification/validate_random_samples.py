@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Filename: validate_random_samples.py 
 """
-introduction: pre-processing and post-processign of random samples
+introduction: pre-processing and post-processing of random samples
 
 authors: Huang Lingcao
 email:huanglingcao@gmail.com
@@ -90,6 +90,34 @@ def get_unique_sample_for_validation(shp_list, save_path, unique_column='polyID'
     save_dir = io_function.get_name_no_ext(save_path) + '_groups'
     split_shapefile(save_path,count_per_group,save_dir)
 
+def validate_against_existing_results(existing_data, in_shp_list, radius=500):
+    '''
+    validate the results in shapefile against some exist results, if the location match, set it as Yes, otherwise, do nothing
+    if the location match within 2*radius, then set it as true
+    :param existing_data:
+    :param in_shp_list:
+    :param radius:
+    :return:
+    '''
+
+    # read the existing data, convert to points
+
+
+    # validate input shapefile list
+
+
+    pass
+
+
+def test_validate_against_existing_results():
+    existing_data = os.path.expanduser('~/Data/published_data/Yili_Yang_etal_ARTS_The-Arctic-Retrogressive-Thaw-Slumps-Data-Set/'
+                                       'ARTS_main_dataset_v.2.1.0.gpkg')
+
+    shp_dir = os.path.expanduser('~/Data/slump_demdiff_classify/clip_classify/merge_classify_result_v2/classID1_occur7_012110_Sel_merge_groups')
+    group_shp_list = io_function.get_file_list_by_pattern(shp_dir, '*.shp')
+
+    validate_against_existing_results(existing_data, group_shp_list)
+
 
 def main(options, args):
     res_shp_list = args
@@ -101,7 +129,7 @@ def main(options, args):
         # pre-processing task, remove duplciates, and split them into different groups
         get_unique_sample_for_validation(res_shp_list, save_path, count_per_group=count_each_group)
     else:
-        # post-processing, copy the validated result to original shapfiles
+        # post-processing, copy the validated result to original shapefiles
         # to add
         pass
 
