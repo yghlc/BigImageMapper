@@ -191,6 +191,7 @@ def get_raster_or_vector_srs_info(spatial_data,format):
         print(result)
         tmp = result.split('\n')
         result = tmp[2]
+    result = result.strip()
 
     return result
 
