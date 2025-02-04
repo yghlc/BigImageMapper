@@ -306,10 +306,11 @@ def meters_to_degrees_onEarth(distance):
 
 if __name__=='__main__':
 
+    # solve this by "conda install gdal -c conda-forge"
     try:
         from osgeo import ogr, osr, gdal
     except:
-        sys.exit('ERROR: cannot find GDAL/OGR modules')
+        raise IOError('ERROR: cannot find GDAL/OGR modules')
 
     length = len(sys.argv)
     if length == 6:
