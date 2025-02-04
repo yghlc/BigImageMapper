@@ -19,6 +19,8 @@ from datetime import datetime
 import basic_src.io_function as io_function
 import basic_src.map_projection as map_projection
 import datasets.vector_gpd as vector_gpd
+import shapely
+from shapely.strtree import STRtree
 
 import geopandas as gpd
 import pandas as pd
@@ -66,6 +68,7 @@ def split_shapefile(input_shp, count_per_group=200, output_dir='./'):
     os.makedirs(output_dir, exist_ok=True)
 
     base_name = io_function.get_name_no_ext(input_shp)
+    save_file_list = []
 
     # Split the GeoDataFrame into groups and save each group as a shapefile
     for i in range(num_groups):
@@ -79,8 +82,10 @@ def split_shapefile(input_shp, count_per_group=200, output_dir='./'):
         # Save the group to a shapefile
         group_gdf.to_file(output_path)
         basic.outputlogMessage(f"Saved group {i + 1} with {len(group_gdf)} features to: {output_path}")
+        save_file_list.append(output_path)
 
     basic.outputlogMessage(f"Splitting complete! Total groups created: {num_groups}")
+    return save_file_list
 
 
 def get_unique_sample_for_validation(shp_list, save_path, unique_column='polyID', count_per_group=200):
@@ -88,7 +93,8 @@ def get_unique_sample_for_validation(shp_list, save_path, unique_column='polyID'
     merge_shapefiles_remove_duplicates(shp_list,save_path,unique_column=unique_column)
 
     save_dir = io_function.get_name_no_ext(save_path) + '_groups'
-    split_shapefile(save_path,count_per_group,save_dir)
+    split_shp_list = split_shapefile(save_path,count_per_group,save_dir)
+    return split_shp_list
 
 def validate_against_existing_results(existing_data, in_shp_list, radius=500):
     '''
@@ -101,12 +107,68 @@ def validate_against_existing_results(existing_data, in_shp_list, radius=500):
     '''
 
     # read the existing data, convert to points
+    geometries, train_class = vector_gpd.read_polygons_attributes_list(existing_data,'TrainClass',b_fix_invalid_polygon=False)
+    print(f'read {len(geometries)} features')
+    geometries_pos = [item for item, tclass in zip(geometries,train_class) if tclass=='Positive']
+    print(f'read {len(geometries_pos)} positive features')
+    # print(geometries_pos[0])
+    geom_pos_centrioid_list = [ vector_gpd.get_polygon_centroid(item) for item in geometries_pos]
+    print(f'read {len(geom_pos_centrioid_list)} point features')
+    geom_pos_circle_list = [item.buffer(radius) for item in geom_pos_centrioid_list]
 
+    # exist_prj = map_projection.get_raster_or_vector_srs_info_proj4(existing_data)
+    exist_prj = map_projection.get_raster_or_vector_srs_info_epsg(existing_data)
+    # print(exist_prj)
+
+    ## save for checking
+    # save_circle_dict = {'id': [item+1 for item in range(len(geom_pos_circle_list))], "Polygon": geom_pos_circle_list}
+    # save_pd = pd.DataFrame(save_circle_dict)
+    # ref_prj = map_projection.get_raster_or_vector_srs_info_proj4(existing_data)
+    # vector_gpd.save_polygons_to_files(save_pd, 'Polygon', ref_prj, 'geom_circles.shp')
+
+    # build a tree
+    tree = STRtree(geom_pos_circle_list)
 
     # validate input shapefile list
+    for idx, in_shp in enumerate(in_shp_list):
+        validate_count = 0
+        already_count = 0
+        print(datetime.now(), f'({idx + 1}/{len(in_shp_list)})validate points in {os.path.basename(in_shp)}')
+
+        # check the projection
+        in_shp_prj = map_projection.get_raster_or_vector_srs_info_epsg(in_shp)
+        # print(in_shp_prj)
+
+        if exist_prj != in_shp_prj:
+            # raise ValueError(f'the map projection is different between {existing_data} and {in_shp_prj}')
+            basic.outputlogMessage(f'Warning, repoject the shapefile {os.path.basename(in_shp)} to {exist_prj}')
+            in_geometries = vector_gpd.read_shape_gpd_to_NewPrj(in_shp,exist_prj)
+            validates = vector_gpd.read_attribute_values_list(in_shp, 'validate')
+        else:
+            in_geometries, validates = vector_gpd.read_polygons_attributes_list(in_shp, 'validate',
+                                                                                b_fix_invalid_polygon=False)
+
+        # check one by one
+        for p_idx, (geom, check) in enumerate(zip(in_geometries,validates)):
+            # if validate results already there, then skip
+            if check is not None:
+                already_count += 1
+                continue
+            # inter_or_touch_list = vector_gpd.find_adjacent_polygons(geom,geom_pos_circle_list,Rtree=tree)
+            # print(geom)
+            # print(geom_pos_circle_list[0])
+            inter_or_touch_list =  tree.query(geom)
+            # print(inter_or_touch_list)
+            if len(inter_or_touch_list) > 0:
+                validates[p_idx] = 'Yes-auto'
+                validate_count += 1
+
+        print(f'validate {validate_count}+{already_count},(total: {len(in_geometries)}) points in {os.path.basename(in_shp)}')
 
 
-    pass
+        # save the results into the shapefile
+        vector_gpd.add_attributes_to_shp(in_shp,{'validate':validates})
+
 
 
 def test_validate_against_existing_results():
@@ -116,6 +178,10 @@ def test_validate_against_existing_results():
     shp_dir = os.path.expanduser('~/Data/slump_demdiff_classify/clip_classify/merge_classify_result_v2/classID1_occur7_012110_Sel_merge_groups')
     group_shp_list = io_function.get_file_list_by_pattern(shp_dir, '*.shp')
 
+    print(datetime.now(), 'existing data:', existing_data)
+    print(datetime.now(), 'group_shp_list:')
+    [print(item) for item in group_shp_list]
+
     validate_against_existing_results(existing_data, group_shp_list)
 
 
@@ -124,10 +190,15 @@ def main(options, args):
     res_shp_list = [os.path.abspath(item) for item in res_shp_list]
     save_path = options.save_path
     count_each_group = options.count_per_group
+    existing_data = options.existing_data
 
     if save_path is not None:
         # pre-processing task, remove duplciates, and split them into different groups
-        get_unique_sample_for_validation(res_shp_list, save_path, count_per_group=count_each_group)
+        shp_file_list = get_unique_sample_for_validation(res_shp_list, save_path, count_per_group=count_each_group)
+
+        if existing_data is not None:
+            validate_against_existing_results(existing_data, shp_file_list)
+
     else:
         # post-processing, copy the validated result to original shapefiles
         # to add
@@ -137,6 +208,8 @@ def main(options, args):
 
 
 if __name__ == '__main__':
+    # test_validate_against_existing_results()
+    # sys.exit(0)
 
     usage = "usage: %prog [options] random1.shp random2.shp random3.shp ... "
     parser = OptionParser(usage=usage, version="1.0 2025-01-20")
@@ -145,6 +218,10 @@ if __name__ == '__main__':
     parser.add_option("-s", "--save_path",
                       action="store", dest="save_path",
                       help="the file path for saving the results")
+
+    parser.add_option("-e", "--existing_data",
+                      action="store", dest="existing_data",
+                      help="the file path of existing data")
 
     parser.add_option("-c", "--count_per_group",
                       action="store", dest="count_per_group", type=int, default=200,
