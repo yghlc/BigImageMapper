@@ -191,6 +191,10 @@ def copy_validated_res_2_original_shapefile(org_shp_list, group_shp_folder,key_c
     # read and combine these shapefiles
     split_gdfs = [gpd.read_file(split_file) for split_file in valid_shp_list]
     combined_split_gdf = gpd.GeoDataFrame(pd.concat(split_gdfs, ignore_index=True))
+    # save to file for checking
+    combine_save_name = group_shp_folder.replace('_groups','')
+    combined_split_gdf.to_file(f"{combine_save_name}_U.gpkg",driver='GPKG')
+
     # Filter combined_split_gdf to only include rows with valid (non-null) `validate`
     valid_split_gdf = combined_split_gdf[combined_split_gdf["validate"].notnull()]
     print(f'validated records:{len(valid_split_gdf)}, total: {len(combined_split_gdf)} records')
