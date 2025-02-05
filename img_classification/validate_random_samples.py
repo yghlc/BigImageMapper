@@ -198,7 +198,7 @@ def copy_validated_res_2_original_shapefile(org_shp_list, group_shp_folder,key_c
     for s_idx, o_shp in enumerate(org_shp_list):
         print(f'{s_idx+1}/{len(org_shp_list)}, copying results for {os.path.basename(o_shp)}')
         original_gdf = gpd.read_file(o_shp)
-        output_shp = io_function.get_name_by_adding_tail(o_shp,'updated')
+        output_shp = io_function.get_name_by_adding_tail(o_shp,'U')
         # Merge the original GeoDataFrame with the valid split data on the key column
         updated_gdf = original_gdf.merge(valid_split_gdf[[key_column, "validate", "remark"]],
                                          on=key_column,
