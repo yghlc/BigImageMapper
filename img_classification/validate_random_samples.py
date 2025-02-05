@@ -184,6 +184,41 @@ def test_validate_against_existing_results():
 
     validate_against_existing_results(existing_data, group_shp_list)
 
+def copy_validated_res_2_original_shapefile(org_shp_list, group_shp_folder,key_column="polyID"):
+    # copy the validated results in split groups back to the origianl shapefile
+    valid_shp_list = io_function.get_file_list_by_pattern(group_shp_folder,'*.shp')
+
+    # read and combine these shapefiles
+    split_gdfs = [gpd.read_file(split_file) for split_file in valid_shp_list]
+    combined_split_gdf = gpd.GeoDataFrame(pd.concat(split_gdfs, ignore_index=True))
+    # Filter combined_split_gdf to only include rows with valid (non-null) `validate`
+    valid_split_gdf = combined_split_gdf[combined_split_gdf["validate"].notnull()]
+    print(f'validated records:{len(valid_split_gdf)}, total: {len(combined_split_gdf)} records')
+
+    for s_idx, o_shp in enumerate(org_shp_list):
+        print(f'{s_idx+1}/{len(org_shp_list)}, copying results for {os.path.basename(o_shp)}')
+        original_gdf = gpd.read_file(o_shp)
+        output_shp = io_function.get_name_by_adding_tail(o_shp,'updated')
+        # Merge the original GeoDataFrame with the valid split data on the key column
+        updated_gdf = original_gdf.merge(valid_split_gdf[[key_column, "validate", "remark"]],
+                                         on=key_column,
+                                         how="left",
+                                         suffixes=("", "_updated"))
+        # Track the number of updated records (where `validate_updated` is not null)
+        updated_count = updated_gdf["validate_updated"].notnull().sum()
+
+        # Update the original columns with the new values only for records where `validate` is not null
+        updated_gdf["validate"] = updated_gdf["validate_updated"].combine_first(updated_gdf["validate"])
+        updated_gdf["remark"] = updated_gdf["remark_updated"].combine_first(updated_gdf["remark"])
+
+        # Drop the temporary "_updated" columns
+        updated_gdf = updated_gdf.drop(columns=["validate_updated", "remark_updated"])
+
+        # Save the updated GeoDataFrame to a new shapefile
+        updated_gdf.to_file(output_shp)
+        print(f"Updated {updated_count} records and saved saved to: {os.path.basename(output_shp)}")
+
+
 
 def main(options, args):
     res_shp_list = args
@@ -191,6 +226,7 @@ def main(options, args):
     save_path = options.save_path
     count_each_group = options.count_per_group
     existing_data = options.existing_data
+    group_shp_folder = options.group_shp_folder
 
     if save_path is not None:
         # pre-processing task, remove duplciates, and split them into different groups
@@ -199,12 +235,12 @@ def main(options, args):
         if existing_data is not None:
             validate_against_existing_results(existing_data, shp_file_list)
 
-    else:
+    elif group_shp_folder is not None:
         # post-processing, copy the validated result to original shapefiles
-        # to add
+        copy_validated_res_2_original_shapefile(res_shp_list,group_shp_folder)
         pass
-
-    pass
+    else:
+        basic.outputlogMessage('Do nothing, please check if you set the argument correctly')
 
 
 if __name__ == '__main__':
@@ -226,6 +262,10 @@ if __name__ == '__main__':
     parser.add_option("-c", "--count_per_group",
                       action="store", dest="count_per_group", type=int, default=200,
                       help="the sample count for each group")
+
+    parser.add_option("-f", "--group_shp_folder",
+                      action="store", dest="group_shp_folder",
+                      help="the folder containing the valiated results")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
