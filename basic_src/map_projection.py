@@ -190,7 +190,12 @@ def get_raster_or_vector_srs_info(spatial_data,format):
     if result.find('Confidence') >= 0:  # new GDAL, with
         print(result)
         tmp = result.split('\n')
-        result = tmp[2]
+        for aa in tmp:
+            if aa.find('Confidence') >= 0:
+                continue
+            if len(aa) > 2:
+                result = aa
+                break
     result = result.strip()
 
     return result
