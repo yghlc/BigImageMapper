@@ -27,6 +27,7 @@ from trainingPolys_to_prompts import extract_representative_point_from_polygons,
 
 import cv2
 from skimage import measure
+from multiprocessing import Pool
 
 def merge_txts_into_one(txt_list, save_path=None):
     if isinstance(txt_list, list) is False:
@@ -204,12 +205,29 @@ def extract_prompts_from_dem_diff(area_ini, prompt_type, prompt_save_folder, max
 
     prompt_save_list = []
 
-    for idx, dem_diff_file in enumerate(dem_diff_file_list):
-        basic.outputlogMessage('%d/%d, getting prompts from a DEM diff file'%(idx+1, len(dem_diff_file_list)))
-        prompt_save_path = get_prompts_from_one_dem_diff(dem_diff_file, prompt_type,prompt_save_folder,
-                                                         max_points_one_region,b_representative=b_representative,
-                                                         dem_diff_thread_m = dem_diff_thread_m)
+    # it's not good to set process_num_for_get_prompt in the area files, but setting in main ini will cause many chnage
+    # this parameters only need to set when there are many files in a region (hlc, Feb 9, 2025)
+    process_num = parameters.get_digit_parameters_None_if_absence(area_ini,'process_num_for_get_prompt','int')
+    if process_num is None:
+        process_num = 1
+    if process_num == 1:
+        for idx, dem_diff_file in enumerate(dem_diff_file_list):
+            basic.outputlogMessage('%d/%d, getting prompts from a DEM diff file'%(idx+1, len(dem_diff_file_list)))
+            prompt_save_path = get_prompts_from_one_dem_diff(dem_diff_file, prompt_type,prompt_save_folder,
+                                                             max_points_one_region,b_representative=b_representative,
+                                                             dem_diff_thread_m = dem_diff_thread_m)
         prompt_save_list.append(prompt_save_path)
+    elif process_num > 1:
+        theadPool = Pool(process_num)  # multi processes
+        parameters_list = [ (dem_diff_file, prompt_type,prompt_save_folder,
+                            max_points_one_region,b_representative,dem_diff_thread_m)
+                            for idx, dem_diff_file in enumerate(dem_diff_file_list)]
+        results = theadPool.starmap(get_prompts_from_one_dem_diff, parameters_list)  # need python3
+        for res in results:
+            prompt_save_list.append(res)
+        theadPool.close()
+    else:
+        raise ValueError('Wrong process number %s ' % str(process_num))
 
     return prompt_save_list
 
