@@ -161,6 +161,9 @@ def get_prompts_from_one_dem_diff(demD_file, prompt_type, prompt_save_folder, ma
 
     # post-processing based on the polygons
     polygons = vector_gpd.read_polygons_gpd(bin_shp_path,b_fix_invalid_polygon=False)
+    if len(polygons) < 1:
+        basic.outputlogMessage(f'Warning, no prompts for {demD_file}')
+        return None
     vector_gpd.add_attributes_to_shp(bin_shp_path, {'id': [item + 1 for item in range(len(polygons))] ,'class_int': [1]*len(polygons),
                                                     'poly_area':[poly.area for poly in polygons]})
 
