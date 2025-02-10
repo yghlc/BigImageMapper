@@ -54,7 +54,7 @@ def merge_prompts_same_type_into_one(prompts_txt_list, save_path=None):
         return prompts_txt_list[0]
 
     # need to use *.shp (not *.gpkg) because in "sam_predict.py", need to check file names end with .shp
-    # prmopts are points or boxes, so, it should be easy to keep file size small than 2 GB
+    # prmopts are points or boxes, so, it should be easy to keep file size smaller than 2 GB
     print(save_path)
     prompt_point_path = save_path.replace('.txt', '_point.shp')
     prompt_box_path = save_path.replace('.txt', '_box.shp')
