@@ -535,9 +535,12 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
         prompts_an_image_list = None
     else:
         prompt_type_list = prompt_type.split('+')
-        prompt_path = parameters.get_file_path_parameters_None_if_absence(area_ini, 'prompt_path')
+        prompt_path = parameters.get_file_path_parameters(area_ini, 'prompt_path')
 
         prompts_list = io_function.read_list_from_txt(prompt_path)
+        if 'No-Prompts' in prompts_list[0]:
+            basic.outputlogMessage(f'Warning, No-Prompts for {area_ini}, skip')
+            return
 
         # in the case when each prompt type has multiple (>1) vector files, making things complicated.
         # so, when generating prompts for each region, merge these prompts into one file
