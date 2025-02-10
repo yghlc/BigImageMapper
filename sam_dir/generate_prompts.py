@@ -164,7 +164,8 @@ def get_prompts_from_one_dem_diff(demD_file, prompt_type, prompt_save_folder, ma
     polygons = vector_gpd.read_polygons_gpd(bin_shp_path,b_fix_invalid_polygon=False)
     if len(polygons) < 1:
         basic.outputlogMessage(f'Warning, no prompts for {demD_file}')
-        return None
+        io_function.save_list_to_txt(prompt_save_path,['No-Prompts'])
+        return prompt_save_path
     vector_gpd.add_attributes_to_shp(bin_shp_path, {'id': [item + 1 for item in range(len(polygons))] ,'class_int': [1]*len(polygons),
                                                     'poly_area':[poly.area for poly in polygons]})
 
@@ -216,7 +217,7 @@ def extract_prompts_from_dem_diff(area_ini, prompt_type, prompt_save_folder, max
             prompt_save_path = get_prompts_from_one_dem_diff(dem_diff_file, prompt_type,prompt_save_folder,
                                                              max_points_one_region,b_representative=b_representative,
                                                              dem_diff_thread_m = dem_diff_thread_m)
-        prompt_save_list.append(prompt_save_path)
+            prompt_save_list.append(prompt_save_path)
     elif process_num > 1:
         theadPool = Pool(process_num)  # multi processes
         parameters_list = [ (dem_diff_file, prompt_type,prompt_save_folder,
