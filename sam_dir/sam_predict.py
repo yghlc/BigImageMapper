@@ -620,6 +620,7 @@ def parallel_segment_main(para_file):
     # loop each inference regions
     sub_tasks = []
     for area_idx, area_ini in enumerate(multi_inf_regions):
+        basic.outputlogMessage(f'({area_idx+1}/{len(multi_inf_regions)}) working on {area_ini}')
 
         area_name = parameters.get_string_parameters(area_ini, 'area_name')
         area_remark = parameters.get_string_parameters(area_ini, 'area_remark')
