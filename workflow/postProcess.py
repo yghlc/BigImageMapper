@@ -275,6 +275,9 @@ def postProcess(para_file,inf_post_note, b_skip_getshp=False,test_id=None):
                         continue
                     result_shp_list.append(os.path.join(WORK_DIR,out_shp))
                     map_raster_list.append(out_raster)
+                if len(result_shp_list) < 1:
+                    basic.outputlogMessage(f'Warning, No results for {area_ini}')
+                    continue
                 # merge shapefiles
                 if merge_shape_files(result_shp_list,merged_shp) is False:
                     continue
