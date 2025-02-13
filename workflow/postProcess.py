@@ -106,17 +106,17 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     img_save_dir = os.path.join(area_save_dir, 'I%d' % img_idx)
     out_name = os.path.basename(area_save_dir) + '_' + test_id
 
-    # get the path of ref_raster before "chdir", otherwise, has problem for relative path
-    img_idx_txt = os.path.join(img_save_dir,'../', '%d.txt' % img_idx)
-    ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
-    ref_raster = os.path.abspath(ref_raster)
-
     # in SAM prediction results, if no prompts for a region, then, no folder. Feb 13, 2025
     if os.path.isdir(img_save_dir):
         os.chdir(img_save_dir)
     else:
         basic.outputlogMessage(f'Warning, {img_save_dir} does not exists, NO inference results')
         return None
+
+    # get the path of ref_raster before "chdir", otherwise, has problem for relative path
+    img_idx_txt = os.path.join(img_save_dir,'../', '%d.txt' % img_idx)
+    ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
+    ref_raster = os.path.abspath(ref_raster)
 
     # to shapefile
     out_shp = 'I%d' % img_idx + '_' + out_name + '.shp'
