@@ -16,6 +16,7 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.map_projection as map_projection
 import basic_src.io_function as io_function
+import basic_src.basic as basic
 
 sys.path.insert(0, os.path.join(code_dir, 'datasets'))
 from merge_shapefiles import merge_shape_files
@@ -58,7 +59,12 @@ def inf_results_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     img_save_dir = os.path.join(area_save_dir, 'I%d' % img_idx)
     out_name = os.path.basename(area_save_dir) + '_' + test_id
 
-    os.chdir(img_save_dir)
+    # in SAM prediction results, if no prompts for a region, then, no folder. Feb 13, 2025
+    if os.path.isdir(img_save_dir):
+        os.chdir(img_save_dir)
+    else:
+        basic.outputlogMessage(f'Warning, {img_save_dir} does not exists, NO inference results')
+        return None, None
 
     merged_tif = 'I%d'%img_idx + '_' + out_name + '.tif'
     if os.path.isfile(merged_tif):
@@ -105,7 +111,12 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
     ref_raster = os.path.abspath(ref_raster)
 
-    os.chdir(img_save_dir)
+    # in SAM prediction results, if no prompts for a region, then, no folder. Feb 13, 2025
+    if os.path.isdir(img_save_dir):
+        os.chdir(img_save_dir)
+    else:
+        basic.outputlogMessage(f'Warning, {img_save_dir} does not exists, NO inference results')
+        return None
 
     # to shapefile
     out_shp = 'I%d' % img_idx + '_' + out_name + '.shp'
