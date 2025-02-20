@@ -269,7 +269,7 @@ if __name__ == '__main__':
 
     parser.add_option("-f", "--group_shp_folder",
                       action="store", dest="group_shp_folder",
-                      help="the folder containing the valiated results")
+                      help="the folder containing the validated results")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
