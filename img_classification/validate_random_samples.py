@@ -199,6 +199,7 @@ def copy_validated_res_2_original_shapefile(org_shp_list, group_shp_folder,key_c
     valid_split_gdf = combined_split_gdf[combined_split_gdf["validate"].notnull()]
     print(f'validated records:{len(valid_split_gdf)}, total: {len(combined_split_gdf)} records')
 
+    save_shp_list = []
     for s_idx, o_shp in enumerate(org_shp_list):
         print(f'{s_idx+1}/{len(org_shp_list)}, copying results for {os.path.basename(o_shp)}')
         original_gdf = gpd.read_file(o_shp)
@@ -221,6 +222,54 @@ def copy_validated_res_2_original_shapefile(org_shp_list, group_shp_folder,key_c
         # Save the updated GeoDataFrame to a new shapefile
         updated_gdf.to_file(output_shp)
         print(f"Updated {updated_count} records and saved saved to: {os.path.basename(output_shp)}")
+        save_shp_list.append(output_shp)
+
+    return save_shp_list
+
+def output_statistic_info(shp_file_list,output_xlsx=None):
+    # output statistic information
+
+    combined_stats = pd.Series(dtype='int')  # For combined statistics
+    all_stats = []  # List to collect statistics for each shapefile
+
+    for shapefile in shp_file_list:
+        print(f"Processing: {shapefile}")
+
+        # Load the shapefile into a GeoDataFrame
+        gdf = gpd.read_file(shapefile)
+
+        # Ensure the "validate" column exists
+        if "validate" not in gdf.columns:
+            print(f"Warning: 'validate' column not found in {shapefile}. Skipping.")
+            continue
+
+        # Convert all values in "validate" to uppercase, including NaN (fill with "EMPTY" for clarity)
+        gdf["validate"] = gdf["validate"].fillna("EMPTY").str.upper()
+
+        # Get value counts for the "validate" column
+        stats = gdf["validate"].value_counts()
+
+        # Add to the combined statistics
+        combined_stats = combined_stats.add(stats, fill_value=0)
+
+        # Store statistics for this shapefile
+        shapefile_name = os.path.basename(shapefile)
+        stats_df = stats.rename(shapefile_name)
+        all_stats.append(stats_df)
+
+    # Convert combined statistics to a DataFrame row and add it to the list
+    combined_stats = combined_stats.astype(int)
+    all_stats.append(combined_stats.rename("Combined"))
+
+    # Concatenate all statistics into a single DataFrame
+    stats_df = pd.concat(all_stats, axis=1).fillna(0).astype(int).T
+
+    # Save the DataFrame to an Excel file
+    stats_df.to_excel(output_xlsx, index=True)
+    print(f"Statistics saved to: {output_xlsx}")
+
+    return stats_df
+
 
 
 
@@ -228,6 +277,7 @@ def main(options, args):
     res_shp_list = args
     res_shp_list = [os.path.abspath(item) for item in res_shp_list]
     save_path = options.save_path
+    save_xlsx = options.save_xlsx
     count_each_group = options.count_per_group
     existing_data = options.existing_data
     group_shp_folder = options.group_shp_folder
@@ -241,7 +291,8 @@ def main(options, args):
 
     elif group_shp_folder is not None:
         # post-processing, copy the validated result to original shapefiles
-        copy_validated_res_2_original_shapefile(res_shp_list,group_shp_folder)
+        updated_shp_list = copy_validated_res_2_original_shapefile(res_shp_list,group_shp_folder)
+        output_statistic_info(updated_shp_list, output_xlsx=save_xlsx)
         pass
     else:
         basic.outputlogMessage('Do nothing, please check if you set the argument correctly')
@@ -258,6 +309,11 @@ if __name__ == '__main__':
     parser.add_option("-s", "--save_path",
                       action="store", dest="save_path",
                       help="the file path for saving the results")
+
+    parser.add_option("-x", "--save_xlsx",
+                      action="store", dest="save_xlsx",
+                      help="the file path for saving the statistic tables")
+
 
     parser.add_option("-e", "--existing_data",
                       action="store", dest="existing_data",
