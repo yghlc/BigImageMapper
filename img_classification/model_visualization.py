@@ -51,7 +51,7 @@ class CustomSmoothGradCAMpp(SmoothGradCAMpp):
         self.hook_handles.append(output.register_hook(partial(self._store_grad, idx=idx)))
 
 
-def heatmap_clip_one_figure(model, preprocess, device, img_path, text_prompt, save_fig=None):
+def heatmap_clip_one_figure(model, preprocess, device, img_path, text_prompts, save_fig=None):
     # Set the model to full precision (float32)
     model.float()
 
@@ -59,7 +59,7 @@ def heatmap_clip_one_figure(model, preprocess, device, img_path, text_prompt, sa
     image = preprocess(Image.open(img_path).convert("RGB")).unsqueeze(0).to(device)
 
     # Tokenize the text prompt
-    text_inputs = clip.tokenize([text_prompt]).to(device)
+    text_inputs = clip.tokenize(text_prompts).to(device)
 
     # Compute image and text features
     with torch.no_grad():
@@ -94,10 +94,10 @@ def heatmap_clip_one_figure(model, preprocess, device, img_path, text_prompt, sa
       # Convert activation map to numpy for normalization
     activation_map_np = activation_map[0].squeeze(0).cpu().numpy()
 
-    # Normalize the heatmap using the 95th percentile
-    percentile_95 = np.percentile(activation_map_np, 95)
-    activation_map_np = np.clip(activation_map_np, 0, percentile_95)  # Clip values at 95th percentile
-    activation_map_np /= activation_map_np.max() + 1e-8  # Normalize to [0, 1]
+    # # Normalize the heatmap using the 95th percentile
+    # percentile_95 = np.percentile(activation_map_np, 95)
+    # activation_map_np = np.clip(activation_map_np, 0, percentile_95)  # Clip values at 95th percentile
+    # activation_map_np /= activation_map_np.max() + 1e-8  # Normalize to [0, 1]
 
     # Convert normalized heatmap to a PIL image
     heatmap = to_pil_image(activation_map_np, mode='F')
@@ -140,6 +140,12 @@ def test_heatmap_clip_one_figure():
     # Convert the model to full precision (float32)
     # model.float()
 
+    # text_prompts = ["Photo of a tiger cat","Photo of a dog", "Photo of a car", "Photo of a tree",
+    #                 "Photo of a person", "Photo of a building", "Photo of a mountain", "Photo of a river"]
+
+    text_prompts = ["a tiger cat","a dog", "a car", "a tree",
+                    "a person", "a building", "a mountain", "a river"]
+
     # input_img_path = "Screenshot_slump_canada.png"
     # save_fig = "heatmap_slump_overlay.png"
     # text_prompt = "satellite image of a landslide"
@@ -152,7 +158,7 @@ def test_heatmap_clip_one_figure():
 
     input_img_path = "n02123159_tiger_cat.JPEG"
     save_fig = "heatmap_tiger_cat_overlay.png"
-    text_prompt = "Photo of a tiger cat"
+    
 
     # Generate heatmap
     heatmap_clip_one_figure(
@@ -160,7 +166,7 @@ def test_heatmap_clip_one_figure():
         preprocess=preprocess,
         device=device,
         img_path=input_img_path,
-        text_prompt=text_prompt,
+        text_prompts=text_prompts,
         save_fig=save_fig
     )
 
