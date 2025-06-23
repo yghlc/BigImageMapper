@@ -367,7 +367,8 @@ def main():
     # test_heatmap_clip_one_figure()
     
     # tSNE_visualiztion()
-    test_tSNE_CLIP_visualization(device)
+    # test_tSNE_CLIP_visualization(device)
+    tSNE_CLIP_S2_slump_images(device)
 
     pass
 
