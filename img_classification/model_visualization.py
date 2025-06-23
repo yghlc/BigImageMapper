@@ -319,7 +319,7 @@ def main():
     # test_heatmap_clip_one_figure()
     
     # tSNE_visualiztion()
-    test_tSNE_CLIP_visual_encode_UCM(device)
+    test_tSNE_CLIP_visualization(device)
 
     pass
 
