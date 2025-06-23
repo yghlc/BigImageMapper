@@ -236,6 +236,8 @@ def test_tSNE_CLIP_visual_encode_UCM(device):
         text_features = model.encode_text(text_tokens).float()
         text_features /= text_features.norm(dim=-1, keepdim=True)
 
+    text_features_np = text_features.cpu().numpy()
+    print('text_features_np.shape:', text_features_np.shape)  # text_features_np
 
     # randomly read ten images
     image_txt = os.path.join(data_dir,'all.txt')
