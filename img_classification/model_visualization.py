@@ -196,7 +196,17 @@ def tSNE_visualiztion(in_features, class_labels, perplexity=30, n_components=2, 
     # Get unique classes and assign a color to each class
     unique_classes = np.unique(class_labels)
     num_classes = len(unique_classes)
-    colors = plt.cm.get_cmap('tab10', num_classes)  # Use a colormap for up to 10 classes (extend if needed)
+    # Assign the most distinct colors for small numbers of classes
+    if num_classes <= 3:
+        # Predefined distinct colors for 2 or 3 classes
+        predefined_colors = ['red', 'blue', 'green']
+        colors = {class_label: predefined_colors[i] for i, class_label in enumerate(unique_classes)}
+    else:
+        # Use a colormap for larger numbers of classes
+        colormap = plt.cm.get_cmap('tab10', num_classes)  # Tab10 colormap
+        colors = {class_label: colormap(i) for i, class_label in enumerate(unique_classes)}
+
+    # colors = plt.cm.get_cmap('tab10', num_classes)  # Use a colormap for up to 10 classes (extend if needed)
 
     # Create a scatter plot with color coding by class
     plt.figure(figsize=(10, 8))
