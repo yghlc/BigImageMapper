@@ -232,6 +232,7 @@ def cal_clip_text_features(model,label_list_txt,text_des_template="This is a sat
 
     class_labels = [item.split(',')[0] for item in io_function.read_list_from_txt(label_list_txt)]
     text_descriptions = [text_des_template.format(label) for label in class_labels]
+    # print(text_descriptions)
     text_tokens = clip.tokenize(text_descriptions).cuda()
 
     # process text
@@ -250,6 +251,8 @@ def cal_clip_image_features(model,preprocess, image_class_txt, image_folder=None
     image_list = [item.split() for item in io_function.read_list_from_txt(image_class_txt)]
 
     if image_folder is not None:
+        # for item in image_list:
+        #     print(item[0])
         image_path_list = [os.path.join(image_folder, item[0]) for item in image_list]
     else:
         image_path_list = [item[0] for item in image_list]
@@ -286,7 +289,7 @@ def tSNE_CLIP_UCM_dataset(device):
     # read images
     image_txt = os.path.join(data_dir, 'all.txt')
     image_folder = os.path.join(data_dir, 'Images')
-    image_features_np, image_class_list = cal_clip_image_features(model,preprocess,label_list_txt,image_folder=image_folder)
+    image_features_np, image_class_list = cal_clip_image_features(model,preprocess,image_txt,image_folder=image_folder)
 
     # tSNE_visualiztion
     for perplexity in range(5, 51, 5):
