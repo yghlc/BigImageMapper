@@ -28,6 +28,16 @@ import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
+def load_clip_model(device,model_type='ViT-B/32',trained_model=None):
+    model, preprocess = clip.load(model_type, device=device)
+    # load trained model
+    if trained_model is not None:
+        if os.path.isfile(trained_model):
+            checkpoint = torch.load(open(trained_model, 'rb'), map_location="cpu")
+            model.load_state_dict(checkpoint['state_dict'])
+
+    return model, preprocess
+
 
 # Custom Grad-CAM class to handle tuple outputs
 class CustomSmoothGradCAMpp(SmoothGradCAMpp):
@@ -219,15 +229,14 @@ def tSNE_visualiztion(in_features, class_labels, perplexity=30, n_components=2, 
     plt.close()
 
 
-
-def test_tSNE_CLIP_visual_encode_UCM(device):
-
+def tSNE_CLIP_UCM_dataset(device):
     data_dir = os.path.expanduser('~/Data/image_classification/UCMerced_LandUse')
-    model, preprocess = clip.load("ViT-B/32", device=device)
+
+    model, preprocess = load_clip_model(device)
 
     # read classes info
-    label_list_txt = os.path.join(data_dir,'label_list.txt')
-    class_labels = [item.split(',')[0] for item in io_function.read_list_from_txt(label_list_txt) ]
+    label_list_txt = os.path.join(data_dir, 'label_list.txt')
+    class_labels = [item.split(',')[0] for item in io_function.read_list_from_txt(label_list_txt)]
     text_descriptions = [f"This is a satellite image of a {label}" for label in class_labels]
     text_tokens = clip.tokenize(text_descriptions).cuda()
 
@@ -240,14 +249,14 @@ def test_tSNE_CLIP_visual_encode_UCM(device):
     print('text_features_np.shape:', text_features_np.shape)  # text_features_np
 
     # randomly read ten images
-    image_txt = os.path.join(data_dir,'all.txt')
-    image_list = [ item.split() for item in io_function.read_list_from_txt(image_txt)]
-    image_path_list = [ os.path.join(data_dir,'Images', item[0]) for item in image_list]
-    image_class_list = [ int(item[1]) for item in image_list]
-    print("image_class_list size:",len(image_class_list))
+    image_txt = os.path.join(data_dir, 'all.txt')
+    image_list = [item.split() for item in io_function.read_list_from_txt(image_txt)]
+    image_path_list = [os.path.join(data_dir, 'Images', item[0]) for item in image_list]
+    image_class_list = [int(item[1]) for item in image_list]
+    print("image_class_list size:", len(image_class_list))
 
     images = []
-    #sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
+    # sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
     sel_index = [item for item in range(len(image_path_list))]
     for idx in sel_index:
         image = Image.open(image_path_list[idx]).convert("RGB")
@@ -256,9 +265,9 @@ def test_tSNE_CLIP_visual_encode_UCM(device):
     with torch.no_grad():
         image_features = model.encode_image(image_input).float()
         image_features /= image_features.norm(dim=-1, keepdim=True)
-    
+
     image_features_np = image_features.cpu().numpy()
-    print('image_features_np.shape:',image_features_np.shape) # image_features_np
+    print('image_features_np.shape:', image_features_np.shape)  # image_features_np
 
     # tSNE_visualiztion
     for perplexity in range(5, 51, 5):
@@ -270,6 +279,14 @@ def test_tSNE_CLIP_visual_encode_UCM(device):
             perplexity=perplexity,
             save_fig=save_fig
         )
+
+
+def test_tSNE_CLIP_visualization(device):
+
+    # t-SNE visualization of features extracted by the visual encoder network from the UCM
+    tSNE_CLIP_UCM_dataset(device)
+
+
     
 
 
