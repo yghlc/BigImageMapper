@@ -303,6 +303,32 @@ def tSNE_CLIP_UCM_dataset(device):
         )
 
 
+def tSNE_CLIP_S2_slump_images(device):
+    data_dir = os.path.expanduser('~/Data/slump_demdiff_classify/clip_classify/training_data_exp12')
+    model, preprocess = load_clip_model(device)
+
+    # read classes info
+    label_list_txt = os.path.expanduser('~/Data/slump_demdiff_classify/label_list_merge_v4.txt')
+    text_features_np = cal_clip_text_features(model, label_list_txt)
+
+    # read images
+    image_txt = os.path.join(data_dir, 'merge_training_data_for_exp12_from_10_regions_all.txt')
+    image_features_np, image_class_list = cal_clip_image_features(model, preprocess, image_txt,
+                                                                  image_folder=None)
+
+    # tSNE_visualiztion
+    for perplexity in range(5, 51, 5):
+        print(f"Running t-SNE with perplexity={perplexity}")
+        save_fig = f'tsne_UCM_clip_vis_perpl_{perplexity}.png'
+        tSNE_visualiztion(
+            in_features=image_features_np,
+            class_labels=image_class_list,
+            perplexity=perplexity,
+            save_fig=save_fig
+        )
+
+
+
 def test_tSNE_CLIP_visualization(device):
 
     # t-SNE visualization of features extracted by the visual encoder network from the UCM
