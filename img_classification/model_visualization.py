@@ -228,16 +228,10 @@ def tSNE_visualiztion(in_features, class_labels, perplexity=30, n_components=2, 
     # Clear the figure to save memory if this function is called multiple times
     plt.close()
 
+def cal_clip_text_features(model,label_list_txt,text_des_template="This is a satellite image of a {}"):
 
-def tSNE_CLIP_UCM_dataset(device):
-    data_dir = os.path.expanduser('~/Data/image_classification/UCMerced_LandUse')
-
-    model, preprocess = load_clip_model(device)
-
-    # read classes info
-    label_list_txt = os.path.join(data_dir, 'label_list.txt')
     class_labels = [item.split(',')[0] for item in io_function.read_list_from_txt(label_list_txt)]
-    text_descriptions = [f"This is a satellite image of a {label}" for label in class_labels]
+    text_descriptions = [text_des_template.format(label) for label in class_labels]
     text_tokens = clip.tokenize(text_descriptions).cuda()
 
     # process text
@@ -248,10 +242,18 @@ def tSNE_CLIP_UCM_dataset(device):
     text_features_np = text_features.cpu().numpy()
     print('text_features_np.shape:', text_features_np.shape)  # text_features_np
 
-    # randomly read ten images
-    image_txt = os.path.join(data_dir, 'all.txt')
-    image_list = [item.split() for item in io_function.read_list_from_txt(image_txt)]
-    image_path_list = [os.path.join(data_dir, 'Images', item[0]) for item in image_list]
+    return text_features_np
+
+
+def cal_clip_image_features(model,preprocess, image_class_txt, image_folder=None):
+
+    image_list = [item.split() for item in io_function.read_list_from_txt(image_class_txt)]
+
+    if image_folder is not None:
+        image_path_list = [os.path.join(image_folder, item[0]) for item in image_list]
+    else:
+        image_path_list = [item[0] for item in image_list]
+
     image_class_list = [int(item[1]) for item in image_list]
     print("image_class_list size:", len(image_class_list))
 
@@ -268,6 +270,23 @@ def tSNE_CLIP_UCM_dataset(device):
 
     image_features_np = image_features.cpu().numpy()
     print('image_features_np.shape:', image_features_np.shape)  # image_features_np
+
+    return image_features_np, image_class_list
+
+
+def tSNE_CLIP_UCM_dataset(device):
+    data_dir = os.path.expanduser('~/Data/image_classification/UCMerced_LandUse')
+
+    model, preprocess = load_clip_model(device)
+
+    # read classes info
+    label_list_txt = os.path.join(data_dir, 'label_list.txt')
+    text_features_np = cal_clip_text_features(model, label_list_txt)
+
+    # read images
+    image_txt = os.path.join(data_dir, 'all.txt')
+    image_folder = os.path.join(data_dir, 'Images')
+    image_features_np, image_class_list = cal_clip_image_features(model,preprocess,label_list_txt,image_folder=image_folder)
 
     # tSNE_visualiztion
     for perplexity in range(5, 51, 5):
