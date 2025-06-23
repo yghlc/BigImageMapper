@@ -170,6 +170,107 @@ def test_heatmap_clip_one_figure():
         save_fig=save_fig
     )
 
+
+def tSNE_visualiztion(in_features, class_labels, perplexity=30, n_components=2, learning_rate='auto', init='pca',
+                      save_fig=None):
+    import numpy as np
+    from sklearn.manifold import TSNE
+
+    X_embedded = TSNE(n_components=n_components, learning_rate=learning_rate,
+                    init=init, perplexity=perplexity).fit_transform(in_features)
+    print(X_embedded.shape)
+
+    # plot it X_embedded
+    print(f"t-SNE output shape: {X_embedded.shape}")
+
+    # Get unique classes and assign a color to each class
+    unique_classes = np.unique(class_labels)
+    num_classes = len(unique_classes)
+    colors = plt.cm.get_cmap('tab10', num_classes)  # Use a colormap for up to 10 classes (extend if needed)
+
+    # Create a scatter plot with color coding by class
+    plt.figure(figsize=(10, 8))
+    for i, class_label in enumerate(unique_classes):
+        # Get indices of the samples belonging to the current class
+        class_indices = [idx for idx, label in enumerate(class_labels) if label == class_label]
+        plt.scatter(
+            X_embedded[class_indices, 0],  # t-SNE dim 1 for the current class
+            X_embedded[class_indices, 1],  # t-SNE dim 2 for the current class
+            c=[colors(i)],  # Assign color for the current class
+            label=class_label,  # Use the class label for legend
+            alpha=0.6,
+            edgecolors='k'
+        )
+
+    # Add legend, titles, and labels
+    plt.title("t-SNE Visualization of Image Features by Class", fontsize=16)
+    plt.xlabel("t-SNE Dimension 1", fontsize=12)
+    plt.ylabel("t-SNE Dimension 2", fontsize=12)
+    plt.legend(title="Classes", fontsize=10, loc="best")
+    plt.grid(alpha=0.5)
+
+    # Save the plot
+    if save_fig is None:
+        save_fig = "tsne_visualization.png"
+    plt.savefig(save_fig, dpi=200, bbox_inches='tight')
+    print(f"t-SNE plot saved to {save_fig}")
+
+    # Clear the figure to save memory if this function is called multiple times
+    plt.close()
+
+
+
+def test_tSNE_CLIP_visual_encode_UCM(device):
+
+    data_dir = os.path.expanduser('~/Data/image_classification/UCMerced_LandUse')
+    model, preprocess = clip.load("ViT-B/32", device=device)
+
+    # read classes info
+    label_list_txt = os.path.join(data_dir,'label_list.txt')
+    class_labels = [item.split(',')[0] for item in io_function.read_list_from_txt(label_list_txt) ]
+    text_descriptions = [f"This is a satellite image of a {label}" for label in class_labels]
+    text_tokens = clip.tokenize(text_descriptions).cuda()
+
+    # process text
+    with torch.no_grad():
+        text_features = model.encode_text(text_tokens).float()
+        text_features /= text_features.norm(dim=-1, keepdim=True)
+
+
+    # randomly read ten images
+    image_txt = os.path.join(data_dir,'all.txt')
+    image_list = [ item.split() for item in io_function.read_list_from_txt(image_txt)]
+    image_path_list = [ os.path.join(data_dir,'Images', item[0]) for item in image_list]
+    image_class_list = [ int(item[1]) for item in image_list]
+    print("image_class_list size:",len(image_class_list))
+
+    images = []
+    #sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
+    sel_index = [item for item in range(len(image_path_list))]
+    for idx in sel_index:
+        image = Image.open(image_path_list[idx]).convert("RGB")
+        images.append(preprocess(image))
+    image_input = torch.tensor(np.stack(images)).cuda()
+    with torch.no_grad():
+        image_features = model.encode_image(image_input).float()
+        image_features /= image_features.norm(dim=-1, keepdim=True)
+    
+    image_features_np = image_features.cpu().numpy()
+    print('image_features_np.shape:',image_features_np.shape) # image_features_np
+
+    # tSNE_visualiztion
+    for perplexity in range(5, 51, 5):
+        print(f"Running t-SNE with perplexity={perplexity}")
+        save_fig = f'tsne_UCM_clip_vis_perpl_{perplexity}.png'
+        tSNE_visualiztion(
+            in_features=image_features_np,
+            class_labels=image_class_list,
+            perplexity=perplexity,
+            save_fig=save_fig
+        )
+    
+
+
 def heatmap_clip_classification(WORK_DIR, para_file, device, img_path, trained_model=None, save_fig=None):
 
     network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
@@ -194,9 +295,12 @@ def heatmap_clip_classification(WORK_DIR, para_file, device, img_path, trained_m
 
 def main():
     # Load the model and preprocess function
-    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    test_heatmap_clip_one_figure()
+    # test_heatmap_clip_one_figure()
+    
+    # tSNE_visualiztion()
+    test_tSNE_CLIP_visual_encode_UCM(device)
 
     pass
 

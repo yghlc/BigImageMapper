@@ -5,6 +5,8 @@ __pycache__/
 
 *.tif
 *.png
+*.jpg
+*.JPEG
 *.csv
 test.sh
 *.xlsx
