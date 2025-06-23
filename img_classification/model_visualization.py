@@ -273,6 +273,7 @@ def cal_clip_image_features(model,preprocess, image_class_txt, image_folder=None
     images = []
     # sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
     sel_index = [item for item in range(len(image_path_list))]
+    # sel_index = [item for item in range(len(image_path_list)-6000)]
     for idx in sel_index:
         image = Image.open(image_path_list[idx]).convert("RGB")
         images.append(preprocess(image))
@@ -315,7 +316,13 @@ def tSNE_CLIP_UCM_dataset(device):
 
 def tSNE_CLIP_S2_slump_images(device):
     data_dir = os.path.expanduser('~/Data/slump_demdiff_classify/clip_classify/training_data_exp12')
-    model, preprocess = load_clip_model(device)
+    model_dir = os.path.expanduser('~/Data/slump_demdiff_classify/clip_classify/exp12')
+
+    # model, preprocess = load_clip_model(device)
+
+    trained_model = os.path.join(model_dir, 'model_RN50x4_exp12.ckpt')
+    model_type = 'RN50x4'  # or 'ViT-B/32', 'RN50', etc.
+    model, preprocess = load_clip_model(device, model_type=model_type, trained_model=trained_model)
 
     # read classes info
     label_list_txt = os.path.expanduser('~/Data/slump_demdiff_classify/label_list_merge_v4.txt')
@@ -329,7 +336,7 @@ def tSNE_CLIP_S2_slump_images(device):
     # tSNE_visualiztion
     for perplexity in range(5, 51, 5):
         print(f"Running t-SNE with perplexity={perplexity}")
-        save_fig = f'tsne_UCM_clip_vis_perpl_{perplexity}.png'
+        save_fig = f'tsne_S2_slump_clip_vis_perpl_{perplexity}.png'
         tSNE_visualiztion(
             in_features=image_features_np,
             class_labels=image_class_list,
