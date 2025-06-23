@@ -216,7 +216,7 @@ def tSNE_visualiztion(in_features, class_labels, perplexity=30, n_components=2, 
         plt.scatter(
             X_embedded[class_indices, 0],  # t-SNE dim 1 for the current class
             X_embedded[class_indices, 1],  # t-SNE dim 2 for the current class
-            c=[colors(i)],  # Assign color for the current class
+            c=[colors[i]],  # Assign color for the current class
             label=class_label,  # Use the class label for legend
             alpha=0.6,
             edgecolors='k'
