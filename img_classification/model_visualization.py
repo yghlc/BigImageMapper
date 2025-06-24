@@ -28,6 +28,42 @@ import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
+from torch.utils.data import Dataset, DataLoader
+
+# Custom Dataset Class
+class ImageDataset(Dataset):
+    def __init__(self, image_paths, image_classes, preprocess):
+        """
+        Initialize the dataset.
+
+        Args:
+            image_paths (list): List of image file paths.
+            image_classes (list): List of class labels corresponding to the images.
+            preprocess (callable): Preprocessing function for images (e.g., CLIP preprocess).
+        """
+        self.image_paths = image_paths
+        self.image_classes = image_classes
+        self.preprocess = preprocess
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        """
+        Get an item from the dataset.
+
+        Args:
+            idx (int): Index of the item.
+
+        Returns:
+            tuple: A tuple containing the preprocessed image and its class label.
+        """
+        image_path = self.image_paths[idx]
+        label = self.image_classes[idx]
+        image = Image.open(image_path).convert("RGB")
+        image = self.preprocess(image)  # Apply preprocessing
+        return image, label
+
 def load_clip_model(device,model_type='ViT-B/32',trained_model=None):
     model, preprocess = clip.load(model_type, device=device)
     # load trained model
@@ -256,34 +292,63 @@ def cal_clip_text_features(model,label_list_txt,text_des_template="This is a sat
     return text_features_np
 
 
-def cal_clip_image_features(model,preprocess, image_class_txt, image_folder=None):
+def cal_clip_image_features(model,preprocess, image_class_txt, image_folder=None,batch_size=256,num_workers=8):
+    """
+        Calculate CLIP image features using a DataLoader for batch-wise processing.
 
+        Args:
+            model: The CLIP model.
+            preprocess: The preprocessing pipeline for the CLIP model.
+            image_class_txt (str): Path to the text file containing image paths and class labels.
+            image_folder (str): Optional folder containing the images.
+            batch_size (int): Batch size for DataLoader.
+            num_workers (int): Number of workers for DataLoader.
+
+        Returns:
+            tuple: Numpy array of image features and a list of class labels.
+        """
+    # Read image paths and class labels from the text file
     image_list = [item.split() for item in io_function.read_list_from_txt(image_class_txt)]
 
+    # Resolve full paths to images if a folder is specified
     if image_folder is not None:
-        # for item in image_list:
-        #     print(item[0])
         image_path_list = [os.path.join(image_folder, item[0]) for item in image_list]
     else:
         image_path_list = [item[0] for item in image_list]
 
+    # Extract class labels
     image_class_list = [int(item[1]) for item in image_list]
     print("image_class_list size:", len(image_class_list))
 
-    images = []
-    # sel_index = [0, 10, 100, 200, 300, 500, 700, 900, 1000,1500, 2000]
-    sel_index = [item for item in range(len(image_path_list))]
-    # sel_index = [item for item in range(len(image_path_list)-6000)]
-    for idx in sel_index:
-        image = Image.open(image_path_list[idx]).convert("RGB")
-        images.append(preprocess(image))
-    image_input = torch.tensor(np.stack(images)).cuda()
-    with torch.no_grad():
-        image_features = model.encode_image(image_input).float()
-        image_features /= image_features.norm(dim=-1, keepdim=True)
+    # Initialize the custom dataset
+    dataset = ImageDataset(image_path_list, image_class_list, preprocess)
 
-    image_features_np = image_features.cpu().numpy()
-    print('image_features_np.shape:', image_features_np.shape)  # image_features_np
+    # Initialize the DataLoader
+    dataloader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,  # No need to shuffle for feature extraction
+        num_workers=num_workers,
+        pin_memory=True
+    )
+
+    # Process images in batches and calculate features
+    image_features_list = []
+    with torch.no_grad():  # Disable gradient computation
+        for batch_idx, (images, _) in enumerate(dataloader):
+            print(f"Processing batch {batch_idx + 1}/{len(dataloader)}")
+            # Move images to GPU (or appropriate device)
+            image_input = images.cuda(non_blocking=True)
+            # Calculate image features
+            image_features = model.encode_image(image_input).float()
+            # Normalize the features
+            image_features /= image_features.norm(dim=-1, keepdim=True)
+            # Append features to the list
+            image_features_list.append(image_features.cpu().numpy())
+
+    # Concatenate all features into a single numpy array
+    image_features_np = np.concatenate(image_features_list, axis=0)
+    print('image_features_np.shape:', image_features_np.shape)
 
     return image_features_np, image_class_list
 
