@@ -404,7 +404,7 @@ def tSNE_CLIP_S2_slump_images(device):
         trained_model_name = model_type
 
     # tSNE_visualiztion
-    for perplexity in range(5, 1001, 5):
+    for perplexity in range(5, 201, 5):
         print(f"Running t-SNE with perplexity={perplexity}, {trained_model}, model_type={model_type}")
         save_fig = f'tsne_S2_clip_{trained_model_name}_perpl_{perplexity}.png'
         tSNE_visualiztion(
