@@ -398,10 +398,15 @@ def tSNE_CLIP_S2_slump_images(device):
     image_features_np, image_class_list = cal_clip_image_features(model, preprocess, image_txt,
                                                                   image_folder=None)
 
+    if trained_model is not None:
+        trained_model_name = io_function.get_name_no_ext(trained_model)
+    else:
+        trained_model_name = model_type
+
     # tSNE_visualiztion
-    for perplexity in range(5, 51, 5):
-        print(f"Running t-SNE with perplexity={perplexity}")
-        save_fig = f'tsne_S2_slump_clip_vis_perpl_{perplexity}.png'
+    for perplexity in range(5, 1001, 5):
+        print(f"Running t-SNE with perplexity={perplexity}, {trained_model}, model_type={model_type}")
+        save_fig = f'tsne_S2_clip_{trained_model_name}_perpl_{perplexity}.png'
         tSNE_visualiztion(
             in_features=image_features_np,
             class_labels=image_class_list,
