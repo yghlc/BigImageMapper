@@ -2,7 +2,7 @@ import os, glob
 all_list = []
 all_label = []
 
-data_root = os.path.expanduser('~/Data/image_classification/EuroSAT')
+data_root = os.path.expanduser('~/Data/public_data_AI/EuroSAT')
 
 all_classes = sorted(os.listdir(os.path.join(data_root, 'EuroSAT_RGB')))
 # on Mac, there is a hidden file
