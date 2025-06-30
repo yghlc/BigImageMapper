@@ -64,13 +64,16 @@ class ImageDataset(Dataset):
         image = self.preprocess(image)  # Apply preprocessing
         return image, label
 
-def load_clip_model(device,model_type='ViT-B/32',trained_model=None):
+def load_clip_model(device,model_type='ViT-B/32',trained_model=None, b_with_state_dict=True):
     model, preprocess = clip.load(model_type, device=device)
     # load trained model
     if trained_model is not None:
         if os.path.isfile(trained_model):
             checkpoint = torch.load(open(trained_model, 'rb'), map_location="cpu")
-            model.load_state_dict(checkpoint['state_dict'])
+            if b_with_state_dict:
+                model.load_state_dict(checkpoint['state_dict'])
+            else:
+                model.load_state_dict(checkpoint,strict=True)
 
     return model, preprocess
 
@@ -385,9 +388,16 @@ def tSNE_CLIP_S2_slump_images(device):
 
     # model, preprocess = load_clip_model(device)
 
-    trained_model = os.path.join(model_dir, 'model_RN50x4_exp12.ckpt')
-    model_type = 'RN50x4'  # or 'ViT-B/32', 'RN50', etc.
-    model, preprocess = load_clip_model(device, model_type=model_type, trained_model=trained_model)
+    # trained_model = os.path.join(model_dir, 'model_RN50x4_exp12.ckpt')
+    # model_type = 'RN50x4'  # or 'ViT-B/32', 'RN50', etc.
+    # model, preprocess = load_clip_model(device, model_type=model_type, trained_model=trained_model)
+
+
+    # trained_model = "/home/hlc/Data/models_deeplearning/SenCLIP/SenCLIP_AttPoolPerImg_RN50.ckpt"
+    # model_type = 'RN50' 
+    trained_model = "/home/hlc/Data/models_deeplearning/SenCLIP/SenCLIP_AttPoolPerImg_ViTB32.ckpt"
+    model_type = 'ViT-B/32' 
+    model, preprocess = load_clip_model(device, model_type=model_type, trained_model=trained_model, b_with_state_dict=False)
 
     # read classes info
     label_list_txt = os.path.expanduser('~/Data/slump_demdiff_classify/label_list_merge_v4.txt')
@@ -404,7 +414,7 @@ def tSNE_CLIP_S2_slump_images(device):
         trained_model_name = model_type
 
     # tSNE_visualiztion
-    for perplexity in range(5, 201, 5):
+    for perplexity in range(5, 201, 10):
         print(f"Running t-SNE with perplexity={perplexity}, {trained_model}, model_type={model_type}")
         save_fig = f'tsne_S2_clip_{trained_model_name}_perpl_{perplexity}.png'
         tSNE_visualiztion(
@@ -615,17 +625,17 @@ def main():
     # image_path = 'Screenshot_slump_canada.png'
     # image_caption = "satellite image of a landslide"
 
-    image_path = 'intersection88.tif'
-    image_caption = 'intersection'
-    image_caption = 'the satellite image of intersection'
+    # image_path = 'intersection88.tif'
+    # image_caption = 'intersection'
+    # image_caption = 'the satellite image of intersection'
 
-    save_fig = f'heatmap_{image_caption}.jpg'
-    CLIP_GradCAM_Visualization(image_path, image_caption, clip_model='RN50', saliency_layer='layer4',save_fig=save_fig)
+    # save_fig = f'heatmap_{image_caption}.jpg'
+    # CLIP_GradCAM_Visualization(image_path, image_caption, clip_model='RN50', saliency_layer='layer4',save_fig=save_fig)
 
     
     # tSNE_visualiztion()
     # test_tSNE_CLIP_visualization(device)
-    # tSNE_CLIP_S2_slump_images(device)
+    tSNE_CLIP_S2_slump_images(device)
 
     pass
 
