@@ -23,7 +23,7 @@ def convert_tif_to_a_png_file(input_tif, save_path):
 
 def get_new_json_for_html(input_json, save_img_dir='display_PNG', save_json='display.json'):
     img_description_dict = io_function.read_dict_from_txt_json(input_json)
-    if os.path.isdir(save_img_dir):
+    if os.path.isdir(save_img_dir) is False:
         io_function.mkdir(save_img_dir)
     save_dict = {}
     for img_path in img_description_dict.keys():
