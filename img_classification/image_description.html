@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Gallery</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+    }
+    h1 {
+      text-align: center;
+      margin: 20px;
+      color: #333;
+    }
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      padding: 20px;
+    }
+    .gallery-item {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      overflow: hidden;
+      text-align: center;
+    }
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .gallery-item .description {
+      padding: 10px;
+      font-size: 16px;
+      color: #333;
+    }
+    .error {
+      text-align: center;
+      color: red;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Gallery</h1>
+  <div class="gallery" id="gallery"></div>
+  <div class="error" id="error" style="display: none;">Failed to load the JSON file.</div>
+
+  <script>
+    // Path to the JSON file
+    const jsonFilePath = "display.json";
+
+    // Get the gallery container and error message element
+    const gallery = document.getElementById('gallery');
+    const errorElement = document.getElementById('error');
+
+    // Fetch and process the JSON file
+    fetch(jsonFilePath)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Generate HTML for each image and description
+        for (const [path, description] of Object.entries(data)) {
+          const item = document.createElement('div');
+          item.className = 'gallery-item';
+
+          const img = document.createElement('img');
+          img.src = path;
+          img.alt = description;
+
+          const desc = document.createElement('div');
+          desc.className = 'description';
+          desc.textContent = description;
+
+          item.appendChild(img);
+          item.appendChild(desc);
+          gallery.appendChild(item);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching JSON:', error);
+        errorElement.style.display = 'block';
+      });
+  </script>
+</body>
+</html>

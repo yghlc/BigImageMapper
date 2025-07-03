@@ -3,6 +3,9 @@
 """
 introduction: to display many tiny images and their labels or description in a html file (open in browser)
 
+# in the same folder of the html file, start "python3 -m http.server", then open the html file in: http://127.0.0.1:8000/image_description.html
+# "image_description.html" need to change if the filename changed.
+
 authors: Huang Lingcao
 email:huanglingcao@gmail.com
 add time: 03 July, 2025
