@@ -44,7 +44,7 @@ if __name__ == '__main__':
     parser = OptionParser(usage=usage, version="1.0 2024-04-26")
     parser.description = 'Introduction: extract sub-images and sub-labels '
 
-    parser.add_option("-h", "--template_html",
+    parser.add_option("-t", "--template_html",
                       action="store", dest="template_html", default='image_description.html',
                       help="the template of the html file")
 
