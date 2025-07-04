@@ -12,8 +12,10 @@ import os,sys
 from optparse import OptionParser
 
 import torch
+import torch.nn.functional as F
 import skimage.io as io
 import PIL.Image
+import numpy as np
 
 from model_visualization import load_clip_model
 
@@ -40,7 +42,7 @@ def get_image_path_list(input, file_extension='.tif'):
 
     return image_path_list
 
-def get_img_features(image_path_list, model, preprocess, device):
+def get_img_features(image_path_list, model, preprocess, device, b_numpy=False):
     """obtain the feature (vector) of images in latent space"""
 
     feature_list = []
@@ -53,13 +55,19 @@ def get_img_features(image_path_list, model, preprocess, device):
             image = preprocess(pil_image).unsqueeze(0).to(device)
 
             image_feature = model.encode_image(image).to(device, dtype=torch.float32)
-            print(image_feature.shape)
-            image_feature_np = image_feature.cpu().numpy().squeeze() 
-            print(f'feature shape: {image_feature_np.shape}, dtype: {image_feature_np.dtype}')
-            print(f'feature min: {image_feature_np.min()}, max: {image_feature_np.max()}, mean: {image_feature_np.mean()}')
+            # print(image_feature.shape)
+            if b_numpy:
+                image_feature_np = image_feature.cpu().numpy().squeeze()
+                print(f'feature shape: {image_feature_np.shape}, dtype: {image_feature_np.dtype}')
+                print(f'feature min: {image_feature_np.min()}, max: {image_feature_np.max()}, mean: {image_feature_np.mean()}')
             feature_list.append(image_feature_np)
 
-    return feature_list
+    if b_numpy:
+        return np.stack(feature_list)
+    else:
+        return torch.stack(feature_list)
+
+
 
 
 def dimension_reduction(feature_list, method='PCA', n_components=2):
@@ -90,7 +98,57 @@ def plot_feature(reduced_features, output_file='reduced_features.png'):
     plt.savefig(output_file)
     plt.close()
 
+
+def calculate_similarity_matrix(ref_image_features, search_image_features, b_normalize=False, b_scale100=False, apply_softmax=False):
+    """
+    Calculate the similarity matrix between reference images and search images.
+
+    Args:
+        ref_image_features (torch.Tensor): A tensor of shape (n, feature_dim) representing features of n reference images.
+        search_image_features (torch.Tensor): A tensor of shape (m, feature_dim) representing features of m search images.
+        apply_softmax (bool): Whether to apply the softmax function to the similarity scores.
+
+    Returns:
+        torch.Tensor: A similarity matrix of shape (n, m), where each element (i, j) represents the similarity
+                      between the i-th reference image and the j-th search image.
+    """
+    # Ensure the inputs are normalized (common for cosine similarity)
+    if b_normalize:
+        ref_image_features = F.normalize(ref_image_features, p=2, dim=1)  # Normalize along rows (L2 norm)
+        search_image_features = F.normalize(search_image_features, p=2, dim=1)
+
+    # Calculate the similarity matrix using matrix multiplication
+    similarity_matrix = ref_image_features @ search_image_features.T  # Shape: (n, m)
+
+    # Scale the similarity (optional, often used in models like CLIP)
+    if b_scale100:
+        similarity_matrix *= 100.0
+
+    # Apply softmax along the columns (optional)
+    if apply_softmax:
+        similarity_matrix = F.softmax(similarity_matrix, dim=-1)  # Normalize along the last dimension (columns)
+
+    return similarity_matrix
+
+
+def test_calculate_similarity_matrix():
+    ref_image_list = get_image_path_list('image_list_10.txt')
+    search_image_list = get_image_path_list('image_list_10.txt')
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    clip_model, preprocess = load_clip_model(device, model_type='ViT-B/32', trained_model=None)
+
+    ref_img_features = get_img_features(ref_image_list,clip_model,preprocess,device)
+    search_img_features = get_img_features(search_image_list,clip_model,preprocess,device)
+
+    similar_matrix = calculate_similarity_matrix(ref_img_features,search_img_features)
+    print(similar_matrix)
+
+
 def main(options, args):
+
+    test_calculate_similarity_matrix()
+    sys.exit(1)
 
     image_list = get_image_path_list(args[0])
     trained_model = options.trained_model
