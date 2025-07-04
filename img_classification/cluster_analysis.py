@@ -54,13 +54,13 @@ def get_img_features(image_path_list, model, preprocess, device, b_numpy=False):
             pil_image = PIL.Image.fromarray(image)
             image = preprocess(pil_image).unsqueeze(0).to(device)
 
-            image_feature = model.encode_image(image).to(device, dtype=torch.float32)
+            image_feature = model.encode_image(image).to(device, dtype=torch.float32).squeeze()  # shape: (feature_dim,)
             # print(image_feature.shape)
             if b_numpy:
-                image_feature_np = image_feature.cpu().numpy().squeeze()
-                print(f'feature shape: {image_feature_np.shape}, dtype: {image_feature_np.dtype}')
-                print(f'feature min: {image_feature_np.min()}, max: {image_feature_np.max()}, mean: {image_feature_np.mean()}')
-            feature_list.append(image_feature_np)
+                image_feature = image_feature.cpu().numpy()
+                print(f'feature shape: {image_feature.shape}, dtype: {image_feature.dtype}')
+                print(f'feature min: {image_feature.min()}, max: {image_feature.max()}, mean: {image_feature.mean()}')
+            feature_list.append(image_feature)
 
     if b_numpy:
         return np.stack(feature_list)
@@ -139,10 +139,14 @@ def test_calculate_similarity_matrix():
     clip_model, preprocess = load_clip_model(device, model_type='ViT-B/32', trained_model=None)
 
     ref_img_features = get_img_features(ref_image_list,clip_model,preprocess,device)
+    print(f'ref_img_features shape: {ref_img_features.shape}, dtype: {ref_img_features.dtype}')
     search_img_features = get_img_features(search_image_list,clip_model,preprocess,device)
+    print(f'search_img_features shape: {search_img_features.shape}, dtype: {search_img_features.dtype}')
 
-    similar_matrix = calculate_similarity_matrix(ref_img_features,search_img_features)
-    print(similar_matrix)
+    similar_matrix = calculate_similarity_matrix(ref_img_features,search_img_features,b_normalize=True,b_scale100=True,apply_softmax=True)  # print(similar_matrix.cpu().numpy())
+    # # Print the matrix with a specific format (2 decimal places)
+    for row in similar_matrix.cpu().numpy():
+        print(" ".join(f"{value:.2f}" for value in row))
 
 
 def main(options, args):
