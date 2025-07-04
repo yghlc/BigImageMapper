@@ -35,15 +35,49 @@ def get_new_json_for_html(input_json, save_img_dir='display_PNG', save_json='dis
         save_dict[png_path] = img_description_dict[img_path]
     io_function.save_dict_to_txt_json(save_json,save_dict)
 
+def multi_image_to_png_files(image_list, save_dir):
+    if os.path.isdir(save_dir) is False:
+        io_function.mkdir(save_dir)
+    save_path_list = []
+    for idx, img_path in enumerate(image_list):
+        png_path = os.path.join(save_dir, io_function.get_name_no_ext(img_path) + '.png')
+        convert_tif_to_a_png_file(img_path, png_path)
+        save_path_list.append(png_path)
+    return save_path_list
+
+def files_for_display_similarity_matrix(reference_image_txt, search_image_txt, similarity_matrix_txt=None):
+    #  const referenceImagesFile = 'reference_images.txt';
+    #  const searchImagesFile = 'search_images.txt';
+    #  const similarityMatrixFile = 'similarity_matrix.txt';
+
+    ref_img_list = io_function.read_list_from_txt(reference_image_txt)
+    search_img_list = io_function.read_list_from_txt(search_image_txt)
+
+    ref_png_list = multi_image_to_png_files(ref_img_list, 'reference_images_PNG')
+    io_function.save_list_to_txt('reference_images.txt',ref_png_list)
+
+    search_png_list = multi_image_to_png_files(search_img_list, 'search_image_images_PNG')
+    io_function.save_list_to_txt('search_images.txt',search_png_list)
+
+
 
 def main(options, args):
-    get_new_json_for_html(args[0])
 
-    pass
+    # for the image description
+    if len(args)==1 and args[0].endswith('.json'):
+        get_new_json_for_html(args[0])
+        return
+
+    # for similarity matrix
+    if len(args) == 2 and args[0].endswith('.txt') and args[1].endswith('.txt'):
+        files_for_display_similarity_matrix(args[0], args[1])
+        return
+
+    print('Do nothing, please check the input')
 
 
 if __name__ == '__main__':
-    usage = "usage: %prog [options] image_description.json "
+    usage = "usage: %prog [options] image_description.json OR ref_image_list.txt search_image_list.txt "
     parser = OptionParser(usage=usage, version="1.0 2024-04-26")
     parser.description = 'Introduction: extract sub-images and sub-labels '
 
