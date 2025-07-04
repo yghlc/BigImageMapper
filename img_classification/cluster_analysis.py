@@ -146,7 +146,7 @@ def test_calculate_similarity_matrix():
     similar_matrix = calculate_similarity_matrix(ref_img_features,search_img_features,b_normalize=True,b_scale100=True,apply_softmax=True)  # print(similar_matrix.cpu().numpy())
     # # Print the matrix with a specific format (2 decimal places)
     for row in similar_matrix.cpu().numpy():
-        print(" ".join(f"{value:.2f}" for value in row))
+        print("\t".join(f"{value:.2f}" for value in row))
 
 
 def main(options, args):
