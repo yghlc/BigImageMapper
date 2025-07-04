@@ -13,8 +13,13 @@ git clone git@github.com:yghlc/segment-anything-largeImage.git
 cd segment-anything;
 pip install -e .
 
+
+# SAM 2 model
+# git clone https://github.com/facebookresearch/sam2.git && cd sam2
+# pip install -e .
+
 # other packages
-conda install -c conda-forge rasterio
+conda install -c conda-forge rasterio       # Downgrading sqlite3 may lead to error
 conda install -c conda-forge scikit-image   # use conda to avoid some dependency problem
 pip install GPUtil psutil
 pip install pycocotools matplotlib onnxruntime onnx
