@@ -24,6 +24,11 @@ from lightning.pytorch.loggers import TensorBoardLogger
 from lightning.pytorch.callbacks import ModelCheckpoint
 
 
+import matplotlib.pyplot as plt
+import h5py
+
+All_BANDS = Landslide4SenseNonGeo.all_band_names
+
 def get_data_module(data_dir, image_bands, batch_size=16,num_workers=8):
 
     transforms = [
@@ -50,7 +55,7 @@ def get_data_module(data_dir, image_bands, batch_size=16,num_workers=8):
 
     return data_module
 
-def get_deeplearning_model(image_bands, learning_rate, weight_decay, b_freeze_backbone=False, head_dropout=0.1):
+def get_deeplearning_model(image_bands, learning_rate=1.0e-4, weight_decay=0.1, b_freeze_backbone=False, head_dropout=0.1):
 
     backbone_args = dict(
         backbone_pretrained=True,
@@ -143,15 +148,90 @@ def fine_tune_PrithviEO_for_segment(dl_model, data_module, EPOCHS, OUT_DIR, task
 
     return checkpoint_callback, trainer
 
-def predict_PrithviEO_for_segment(dl_model, image_path, ckpt_path=None):
+
+def load_image_h5(image_path):
+    with h5py.File(image_path, "r") as f:
+        img = f["img"][:]
+    return img
+
+from albumentations import Resize
+from albumentations.pytorch.transforms import ToTensorV2
+
+
+# Preprocess the image
+def preprocess_image(img, bands):
+    # Extract the required bands
+    band_indices = [All_BANDS.index(band) for band in bands]
+    img_bands = img[band_indices, :, :]
+
+    # Normalize the image (if required)
+    img_bands = img_bands / 255.0  # Assuming the data is in the range [0, 255]
+
+    # Resize the image to match the model input size
+    transform = Resize(224, 224)
+    transformed = transform(image=img_bands.transpose(1, 2, 0))
+    img_resized = transformed["image"]
+
+    # Convert to tensor
+    to_tensor = ToTensorV2()
+    img_tensor = to_tensor(image=img_resized)["image"]
+
+    return img_tensor.unsqueeze(0)  # Add batch dimension
+
+
+# Run inference
+
+def predict_image(model, img_tensor):
+    print(f"Input tensor dtype: {img_tensor.dtype}")
+    img_tensor = img_tensor.to(torch.float32) 
+    with torch.no_grad():
+        outputs = model(img_tensor)
+        print(outputs)
+        preds = torch.argmax(outputs.output, dim=1).squeeze(0).cpu().numpy()
+        print("preds:",preds)
+    return preds
+
+
+# Visualize the image and prediction
+def visualize_results(original_img, prediction_mask):
+    plt.figure(figsize=(10, 5))
+
+    # Original image (select RGB channels for visualization)
+    plt.subplot(1, 2, 1)
+    plt.title("Original Image (RGB)")
+    rgb_img = original_img[[All_BANDS.index("RED"), All_BANDS.index("GREEN"), All_BANDS.index("BLUE")], :, :].transpose(1, 2, 0)
+    plt.imshow(rgb_img)
+    plt.axis("off")
+
+    # Prediction mask
+    plt.subplot(1, 2, 2)
+    plt.title("Predicted Mask")
+    plt.imshow(prediction_mask, cmap="jet")
+    plt.axis("off")
+
+    plt.tight_layout()
+    plt.savefig("prediction_results.png")
+    # plt.show()
+
+
+def predict_PrithviEO_for_segment(dl_model, image_path, image_bands, ckpt_path=None):
     """
     Predict using the fine-tuned PrithviEO model for segmentation tasks.
     """
-    if ckpt_path is not None:
-        dl_model = dl_model.load_from_checkpoint(ckpt_path)
+    # if ckpt_path is not None:
+    #     dl_model = dl_model.load_from_checkpoint(ckpt_path)
 
-    # Set the model to evaluation mode
-    dl_model.eval()
+    # # Set the model to evaluation mode
+    # dl_model.eval()
+    original_image = load_image_h5(image_path)
+    img_tensor = preprocess_image(original_image, bands=image_bands)
+    print(f"Image shape after preprocessing: {img_tensor.shape}")
+
+    # Run prediction
+    prediction = predict_image(dl_model, img_tensor)
+
+    # Visualize results
+    visualize_results(original_image, prediction)
 
 
     pass
@@ -186,16 +266,28 @@ def test_fine_tune_PrithviEO_for_segment():
 def test_predict_PrithviEO_for_segment():
 
     image_bands = ["BLUE", "GREEN", "RED", "NIR_BROAD", "SWIR_1", "SWIR_2"]
+    CKPT_PATH = './map_landslide/checkpoints/best-checkpoint-epoch=09-val_loss=0.00.ckpt'
+    image_path = os.path.expanduser('~/Data/public_data_AI/Landslide4Sense/TestData/img/image_374.h5')
+    mask_path = os.path.expanduser('~/Data/public_data_AI/Landslide4Sense/TestData/mask/mask_374.h5')
 
-    dl_model = get_deeplearning_model(image_bands,learning_rate,weight_decay, b_freeze_backbone=FREEZE_BACKBONE,head_dropout=head_dropout)
+
+    # ckpt_path = 
+    dl_model = SemanticSegmentationTask.load_from_checkpoint(CKPT_PATH, map_location=torch.device('cpu'))
+    dl_model.eval()
+    # dl_model = dl_model.to(torch.float32)
+    # print(dl_model)
+
+    predict_PrithviEO_for_segment(dl_model, image_path, image_bands, ckpt_path=None)
+
+    
 
     pass
 
 
 def main():
 
-    test_fine_tune_PrithviEO_for_segment()
-    # test_predict_PrithviEO_for_segment()
+    # test_fine_tune_PrithviEO_for_segment()
+    test_predict_PrithviEO_for_segment()
 
     pass
 
