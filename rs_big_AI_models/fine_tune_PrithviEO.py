@@ -50,7 +50,7 @@ def get_data_module(data_dir, image_bands, batch_size=16,num_workers=8):
 
     return data_module
 
-def get_deeplearning_model(image_bands,learning_rate, weight_decay, b_freeze_backbone=False, head_dropout=0.1):
+def get_deeplearning_model(image_bands, learning_rate, weight_decay, b_freeze_backbone=False, head_dropout=0.1):
 
     backbone_args = dict(
         backbone_pretrained=True,
@@ -143,7 +143,7 @@ def fine_tune_PrithviEO_for_segment(dl_model, data_module, EPOCHS, OUT_DIR, task
 
 
 def test_fine_tune_PrithviEO_for_segment():
-    DATASET_PATH = os.path.expanduser("~/codes/github_public_repositories/Prithvi-EO-2.0/examples/data")
+    DATASET_PATH = os.path.expanduser("~/Data/public_data_AI/Landslide4Sense/data")
     image_bands = ["BLUE", "GREEN", "RED", "NIR_BROAD", "SWIR_1", "SWIR_2"]
 
     # set up data loader
@@ -158,9 +158,9 @@ def test_fine_tune_PrithviEO_for_segment():
     head_dropout = 0.1
     dl_model = get_deeplearning_model(image_bands,learning_rate,weight_decay, b_freeze_backbone=FREEZE_BACKBONE,head_dropout=head_dropout)
 
-    task_name = 'landslide'
+    task_name = 'map_landslide'
     OUT_DIR = './'
-    EPOCHS = 10
+    EPOCHS = 100
     fine_tune_PrithviEO_for_segment(dl_model, data_module, EPOCHS, OUT_DIR, task_name)
 
 
