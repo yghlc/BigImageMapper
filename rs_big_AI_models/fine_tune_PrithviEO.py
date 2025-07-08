@@ -54,7 +54,7 @@ def get_deeplearning_model(image_bands, learning_rate, weight_decay, b_freeze_ba
 
     backbone_args = dict(
         backbone_pretrained=True,
-        backbone="prithvi_eo_v2_600_tl",
+        backbone="prithvi_eo_v2_300",
         # prithvi_eo_v2_300, prithvi_eo_v2_300_tl, prithvi_eo_v2_600, prithvi_eo_v2_600_tl
         backbone_bands=image_bands,
         backbone_num_frames=1,
@@ -128,7 +128,7 @@ def fine_tune_PrithviEO_for_segment(dl_model, data_module, EPOCHS, OUT_DIR, task
     trainer = pl.Trainer(
         accelerator="auto",
         strategy="auto",
-        devices="auto",
+        devices=1,
         precision="bf16-mixed",
         num_nodes=1,
         logger=logger,
@@ -141,6 +141,21 @@ def fine_tune_PrithviEO_for_segment(dl_model, data_module, EPOCHS, OUT_DIR, task
 
     trainer.fit(dl_model, datamodule=data_module)
 
+    return checkpoint_callback, trainer
+
+def predict_PrithviEO_for_segment(dl_model, image_path, ckpt_path=None):
+    """
+    Predict using the fine-tuned PrithviEO model for segmentation tasks.
+    """
+    if ckpt_path is not None:
+        dl_model = dl_model.load_from_checkpoint(ckpt_path)
+
+    # Set the model to evaluation mode
+    dl_model.eval()
+
+
+    pass
+    # return predictions
 
 def test_fine_tune_PrithviEO_for_segment():
     DATASET_PATH = os.path.expanduser("~/Data/public_data_AI/Landslide4Sense/data")
@@ -152,7 +167,7 @@ def test_fine_tune_PrithviEO_for_segment():
     data_module = get_data_module(DATASET_PATH,image_bands,batch_size=batch_size, num_workers=num_workers)
 
     # setting up deep learning model
-    learning_rate = 0.4
+    learning_rate = 1.0e-4
     weight_decay = 0.1
     FREEZE_BACKBONE = False
     head_dropout = 0.1
@@ -160,13 +175,27 @@ def test_fine_tune_PrithviEO_for_segment():
 
     task_name = 'map_landslide'
     OUT_DIR = './'
-    EPOCHS = 100
-    fine_tune_PrithviEO_for_segment(dl_model, data_module, EPOCHS, OUT_DIR, task_name)
+    EPOCHS = 10
+    check_point, trainer = fine_tune_PrithviEO_for_segment(dl_model, data_module, EPOCHS, OUT_DIR, task_name)
+
+    ckpt_path = check_point.best_model_path
+
+    # Test results
+    test_results = trainer.test(dl_model, datamodule=data_module, ckpt_path=ckpt_path)
+
+def test_predict_PrithviEO_for_segment():
+
+    image_bands = ["BLUE", "GREEN", "RED", "NIR_BROAD", "SWIR_1", "SWIR_2"]
+
+    dl_model = get_deeplearning_model(image_bands,learning_rate,weight_decay, b_freeze_backbone=FREEZE_BACKBONE,head_dropout=head_dropout)
+
+    pass
 
 
 def main():
 
     test_fine_tune_PrithviEO_for_segment()
+    # test_predict_PrithviEO_for_segment()
 
     pass
 
