@@ -63,6 +63,34 @@ def check_remove_None_geometries(geometries, gpd_dataframe, file_path=None):
     # return geometries again after droping some rows
     return gpd_dataframe.geometry.values
 
+
+def check_remove_None_geometries_file(input_file, output_file):
+    """
+        Reads a geospatial file, removes rows with None geometries, and saves the cleaned file.
+
+        :param input_file: Path to the input file (GeoJSON, Shapefile, etc.).
+        :param output_file: Path to save the output file with cleaned geometries.
+        :return: None
+        """
+    # Read the input file into a GeoDataFrame
+    gpd_dataframe = gpd.read_file(input_file)
+
+    # Find rows with None geometries
+    none_geometry_indices = gpd_dataframe[gpd_dataframe.geometry.isna()].index
+
+    # Log and remove None geometries
+    if len(none_geometry_indices) > 0:
+        print(f"Warning: Found {len(none_geometry_indices)} None geometries. Removing them...")
+
+        # Drop rows with None geometries
+        gpd_dataframe.drop(none_geometry_indices, inplace=True)
+    else:
+        print("No None geometries found. No changes made.")
+
+    # Save the cleaned GeoDataFrame to the output file
+    gpd_dataframe.to_file(output_file)
+    print(f"Cleaned file saved to: {output_file}")
+
 def guess_file_format_extension(file_path):
     _, extension = os.path.splitext(file_path)
     if extension.lower() == '.gpkg':  # GPKG
@@ -135,9 +163,9 @@ def read_lines_gpd(lines_shp):
 def read_lines_attributes_list(polygon_shp, field_nameS):
     return read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygon=False)
 
-def find_one_line_intersect_Polygon(polygon, line_list, line_check_list):
+def find_one_line_intersect_Polygon(polygon, line_list, line_check_list,b_line_only_one_poly):
     for idx, (line, b_checked) in enumerate(zip(line_list,line_check_list)):
-        if b_checked:
+        if b_checked and b_line_only_one_poly:
             continue
         if polygon.intersection(line).is_empty is False:
             line_check_list[idx] = True
@@ -273,6 +301,35 @@ def read_attribute_values_list(polygon_shp, field_name):
     else:
         basic.outputlogMessage('Warning: %s not in the shape file, will return None'%field_name)
         return None
+
+def read_attribute_values_list_2d(polygon_shp, field_nameS):
+    '''
+    read attribute value (list)
+    :param polygon_shp:
+    :param field_nameS: a string file name or a list of field_name
+    :return: attributes
+    '''
+    shapefile = gpd.read_file(polygon_shp)
+
+    # read attributes
+    if isinstance(field_nameS, str):  # only one field name
+        if field_nameS in shapefile.keys():
+            attribute_values = shapefile[field_nameS]
+            return attribute_values.tolist()
+        else:
+            basic.outputlogMessage('Warning: %s not in the shape file, get None' % field_nameS)
+            return None
+    elif isinstance(field_nameS, list):  # a list of field name
+        attribute_2d = []
+        for field_name in field_nameS:
+            if field_name in shapefile.keys():
+                attribute_values = shapefile[field_name]
+                attribute_2d.append(attribute_values.tolist())
+            else:
+                basic.outputlogMessage('Warning: %s not in the shape file, get None' % field_nameS)
+                attribute_2d.append(None)
+
+        return attribute_2d
 
 def is_field_name_in_shp(polygon_shp, field_name):
     '''
@@ -599,25 +656,33 @@ def calculate_polygon_shape_info(polygon_shapely):
     shape_info['INarea'] = polygon_shapely.area
     shape_info['INperimete']  = polygon_shapely.length
 
-    # circularity
-    circularity = (4 * math.pi *  polygon_shapely.area / polygon_shapely.length** 2)
-    shape_info['circularit'] = circularity
-
-    minimum_rotated_rectangle = polygon_shapely.minimum_rotated_rectangle
-
-    points = list(minimum_rotated_rectangle.boundary.coords)
-    point1 = Point(points[0])
-    point2 = Point(points[1])
-    point3 = Point(points[2])
-    width = point1.distance(point2)
-    height = point2.distance(point3)
-
-    shape_info['WIDTH'] = width
-    shape_info['HEIGHT'] = height
-    if width > height:
-        shape_info['ratio_w_h'] = height / width
+    if polygon_shapely.is_empty:
+        shape_info['circularit'] = 0
     else:
-        shape_info['ratio_w_h'] = width / height
+        # circularity
+        circularity = (4 * math.pi *  polygon_shapely.area / polygon_shapely.length** 2)
+        shape_info['circularit'] = circularity
+
+    if polygon_shapely.is_empty:
+        shape_info['WIDTH'] = 0
+        shape_info['HEIGHT'] = 0
+        shape_info['ratio_w_h'] = 0
+    else:
+        minimum_rotated_rectangle = polygon_shapely.minimum_rotated_rectangle
+
+        points = list(minimum_rotated_rectangle.boundary.coords)
+        point1 = Point(points[0])
+        point2 = Point(points[1])
+        point3 = Point(points[2])
+        width = point1.distance(point2)
+        height = point2.distance(point3)
+
+        shape_info['WIDTH'] = width
+        shape_info['HEIGHT'] = height
+        if width > height:
+            shape_info['ratio_w_h'] = height / width
+        else:
+            shape_info['ratio_w_h'] = width / height
 
     #added number of holes
     if polygon_shapely.geom_type == 'Polygon':
