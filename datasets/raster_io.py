@@ -18,6 +18,7 @@ from rasterio.coords import BoundingBox
 from rasterio.mask import mask
 from rasterio.features import rasterize
 from rasterio.features import shapes
+from rasterio.transform import from_origin
 
 import skimage.measure
 import time
@@ -241,6 +242,39 @@ def get_max_min_histogram_percent_oneband(data, bin_count, min_percent=0.01, max
     return found_min, found_max, hist, bin_edges
 
 
+def get_location_value_attribute(raster_path,x,y,is_pixel_xy=False, attribute_name=None, band_idx=None,
+                                 b_verbose = False):
+    """
+    get the image value of given location(x,y) in bandindex
+    Args:
+        imagepath:the image path which the information query
+        x:x value
+        y:y value
+        is_pixel_xy: True for pixel coordinate
+        attribute_name: the name of attribute want to get
+        bandindex:the band_idx of band want to query, if it's None, then get values for all band
+
+    Returns:the certain value (float) of given location, also attribute of band in band_idx
+    """
+    att_values = None
+    with rasterio.open(raster_path) as src:
+        indexes = src.indexes
+        if band_idx is None:
+            band_idx = indexes
+
+        if is_pixel_xy is True:
+            x, y = pixel_xy_to_geo_xy(x,y,src.transform)
+            if b_verbose:
+                print('getting values at location for %d bands: '%len(band_idx), x,y)
+
+        # if set masked=True, it will return a mask array, to check if a point outside the raster.
+        values = [item for item in src.sample([(x,y)], indexes=band_idx)]
+        if attribute_name is not None:
+            att_values = [src.tags(idx)[attribute_name] for idx in band_idx ]
+        return values[0].tolist(), att_values
+
+
+
 def set_nodata_to_raster_metadata(raster_path, nodata):
     # modifiy the nodata value in the metadata
     cmd_str = 'gdal_edit.py -a_nodata %s  %s' % (str(nodata), raster_path)
@@ -450,6 +484,49 @@ def save_numpy_array_to_rasterfile(numpy_array, save_path, ref_raster, format='G
         print('save to %s'%save_path)
 
     return True
+
+
+def save_numpy_array_to_rasterfile_noCRS(numpy_array, save_path, format='GTiff',verbose=True):
+    # save a numpy to file, the numpy has the same projection and extent with ref_raster, without map projection
+
+    if numpy_array.ndim == 2:
+        band_count = 1
+        height,width = numpy_array.shape
+        # reshape to 3 dim, to write the disk
+        numpy_array = numpy_array.reshape(band_count, height, width)
+    elif numpy_array.ndim == 3:
+        band_count, height,width = numpy_array.shape
+    else:
+        raise ValueError('only accept ndim is 2 or 3')
+
+    dt = np.dtype(numpy_array.dtype)
+
+    if verbose:
+        print('dtype:', dt.name)
+        print(numpy_array.dtype)
+        print('band_count,height,width',band_count,height,width)
+        # print('saved numpy_array.shape',numpy_array.shape)
+
+    transform = from_origin(0, 0, 1, 1)  # Origin at (0, 0), pixel size (1x1)
+    # Save the array as a TIFF file
+    with rasterio.open(
+            save_path,
+            'w',
+            driver=format,
+            height=numpy_array.shape[1],  # Height (rows)
+            width=numpy_array.shape[2],  # Width (columns)
+            count=numpy_array.shape[0],  # Number of bands (3 for RGB)
+            dtype=numpy_array.dtype,  # Data type of the array
+            transform=transform  # Basic transform (no projection)
+    ) as dst:
+        dst.write(numpy_array)  # Write all bands
+
+    if verbose:
+        print('save to %s'%save_path)
+
+    return True
+
+
 
 def image_numpy_allBands_to_8bit_hist(img_np_allbands, min_max_values=None, per_min=0.01, per_max=0.99, bin_count = 10000, src_nodata=None, dst_nodata=None):
 
@@ -884,6 +961,46 @@ def write_colormaps(raster_path, color_map_dict):
         # assert cmap[1] == (0, 0, 255, 255)
 
     return True
+
+def read_metadata_bands(raster_path, attribute_name, band_idx=None ):
+    with rasterio.open(raster_path) as src:
+        indexes = src.indexes
+        if band_idx is None:
+            band_idx = indexes
+
+        if attribute_name is not None:
+            att_values = [src.tags(idx)[attribute_name] for idx in band_idx ]
+        return att_values
+
+def add_metadata_to_bands(raster_path, meta_name, meta_values):
+
+    # update the raster file
+    with rasterio.open(raster_path,mode='r+') as src:
+
+        band_count = src.count
+        if band_count != len(meta_values):
+            raise ValueError('The number of band account (%d) and values (%d) does not match'%(band_count, len(meta_values)))
+
+        for idx in range(band_count):
+            src.update_tags(idx+1, **{meta_name:meta_values[idx]})
+
+def set_band_description(raster_path, band_description_list, band_idx=None):
+    # set band name (band description) for each band
+    # band_description_list (a list) for the band descriptions
+    # band_idx, the band index need to set, also a list (first band is 1, not 0)
+
+    # update the raster file
+    with rasterio.open(raster_path,mode='r+') as src:
+        indexes = src.indexes
+        if band_idx is None:
+            band_idx = indexes
+
+        if len(band_description_list) != len(band_idx):
+            raise ValueError('The count of band descriptions (%d) and indexes (%d) is different'%(len(band_description_list), len(band_idx)))
+
+        for ii, b_idx in enumerate(band_idx):
+            src.set_band_description(b_idx, band_description_list[ii])
+
 
 def trim_nodata_region(img_path, save_path,nodata=0, tmp_dir='./'):
     # crop the nodata region of a raster
