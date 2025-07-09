@@ -263,6 +263,9 @@ def test_fine_tune_PrithviEO_for_segment():
     # Test results
     test_results = trainer.test(dl_model, datamodule=data_module, ckpt_path=ckpt_path)
 
+    predict_output = trainer.predict(dl_model, datamodule=data_module, ckpt_path=ckpt_path)
+    print("predict_output:", predict_output)
+
 def test_predict_PrithviEO_for_segment():
 
     image_bands = ["BLUE", "GREEN", "RED", "NIR_BROAD", "SWIR_1", "SWIR_2"]
@@ -286,8 +289,8 @@ def test_predict_PrithviEO_for_segment():
 
 def main():
 
-    # test_fine_tune_PrithviEO_for_segment()
-    test_predict_PrithviEO_for_segment()
+    test_fine_tune_PrithviEO_for_segment()
+    # test_predict_PrithviEO_for_segment()
 
     pass
 
