@@ -20,6 +20,9 @@ from shapely.geometry import Polygon
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely import ops
+from shapely.geometry import GeometryCollection
+from shapely.ops import unary_union
+
 from shapely.strtree import STRtree
 import geopandas as gpd
 from shapely.geometry import Point
@@ -1183,6 +1186,18 @@ def get_surrounding_polygons(in_polygons,buffer_size):
     surround_polys = [exp_poly.difference(poly) for exp_poly, poly in zip(expansion_polygons,polygons)]
 
     return surround_polys
+
+def merge_multi_geometries(geometry_list):
+    # Merge geometries using unary_union
+    merged_geometry = unary_union(GeometryCollection(geometry_list))
+
+    # # Check if the result is already a single geometry
+    # if isinstance(merged_geometry, GeometryCollection):
+    #     return merged_geometry  # Return as is if it's a collection
+    # else:
+    #     return merged_geometry  # Return a single merged geometry
+    # ouutside this function, to check if it's a single geometry or GeometryCollection
+    return merged_geometry
 
 def merge_vector_files(file_list, save_path,format='ESRI Shapefile'):
 
