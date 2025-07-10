@@ -908,13 +908,17 @@ def polygons_to_a_MultiPolygon(polygon_list):
 
 def MultiPolygon_to_polygons(idx, multiPolygon, attributes=None):
     ''''''
+    if version.parse(shapely.__version__) >= version.parse("2.0.0"):
+        geometry_values = multiPolygon.geoms
+    else:
+        geometry_values = multiPolygon
 
     if multiPolygon.geom_type == 'GeometryCollection':
         polygons = []
         # print(multiPolygon)
         # geometries = list(multiPolygon)
         # print(geometries)
-        for geometry in multiPolygon:
+        for geometry in geometry_values:
             # print(geometry)
             if geometry.geom_type == 'Polygon':
                 polygons.append(geometry)
@@ -924,7 +928,7 @@ def MultiPolygon_to_polygons(idx, multiPolygon, attributes=None):
                 basic.outputlogMessage("Warning, abandon a %s derived from the %d th polygon "%(geometry.geom_type,idx))
 
     elif multiPolygon.geom_type == 'MultiPolygon':
-        polygons = list(multiPolygon)
+        polygons = list(geometry_values)
     elif multiPolygon.geom_type == 'Polygon':
         polygons = [multiPolygon]
     else:
