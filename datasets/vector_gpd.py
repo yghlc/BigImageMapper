@@ -41,6 +41,7 @@ from datetime import datetime
 from multiprocessing import Pool
 
 from packaging import version
+import networkx as nx
 
 def check_remove_None_geometries(geometries, gpd_dataframe, file_path=None):
     # Missing and empty geometries, find None geometry, then remove them
@@ -1158,6 +1159,169 @@ def find_adjacent_polygons_from_sub(c_polygon_idx, polygon_list,polygon_boxes,  
     adj_poly_idxs = [polygon_list.index(item) for item in adj_polygons]
     return c_polygon_idx, adj_polygons, adj_poly_idxs
 
+
+def split_large_group_iterative(group, polygon_list, group_max_area, b_verbose=False):
+    """
+    Splits a group of polygons into smaller subgroups iteratively if the merged area exceeds the max area.
+
+    Parameters:
+        group (list): Indices of polygons in the group.
+        polygon_list (list): List of all polygons.
+        group_max_area (float): Maximum area allowed for each subgroup.
+
+    Returns:
+        list of lists: Smaller groups where each group's merged area is below the max area.
+    """
+
+    final_subgroups = []
+
+    merged_polygon = unary_union([polygon_list[i] for i in group])
+    if merged_polygon.area > group_max_area:
+        # build a graph
+        group_polygons = [ polygon_list[i] for i in group ]
+        tree = STRtree(group_polygons)
+
+        # Create a small graph for overlaps within the input group
+        G = nx.Graph()
+        G.add_nodes_from(range(len(group_polygons)))
+
+        for i, poly in enumerate(group_polygons):
+            potential_overlaps = tree.query(poly)
+
+            for j in potential_overlaps:
+                if i >= j:
+                    continue
+                # Calculate intersection area
+                intersection_area = poly.intersection(group_polygons[j]).area
+                if intersection_area > 0:
+                    G.add_edge(i, j, weight=intersection_area)
+
+        # Sort edges by weight, descending, sorted_edges is a list
+        sorted_edges = sorted(G.edges(data=True), key=lambda x: x[2]['weight'], reverse=True)
+        # print(sorted_edges)
+        # print(type(sorted_edges))
+        # for item in sorted_edges:
+        #     print(item)
+
+        # Iteratively find subgroups that meet the area constraint
+        sub_group_list = []
+        while G.number_of_nodes() > 0:
+            # Start with the edge with the highest weight
+            if not sorted_edges:
+                break  # Exit if no edges are left
+            n1, n2, data = sorted_edges.pop(0)
+            # print(n1, n2, data)
+            G.remove_edge(n1, n2)
+
+            # Create an initial group with the two nodes
+            a_group = {n1, n2}
+            merged_poly = unary_union([group_polygons[i] for i in a_group])
+            merged_poly_area = merged_poly.area
+
+            while merged_poly_area <= group_max_area:
+                if not sorted_edges:
+                    break
+                found_valid_edge = False
+                for idx, (u, v, data) in enumerate(sorted_edges):
+                    if u in a_group or v in a_group:
+                        found_valid_edge = True
+                        a_group.update([u,v])
+                        _ = sorted_edges.pop(idx)
+                        G.remove_edge(u, v)
+                        break
+                if found_valid_edge is False:
+                    break
+                merged_poly = unary_union([group_polygons[i] for i in a_group])
+                merged_poly_area = merged_poly.area
+
+            sub_group_list.append(a_group)
+
+            # remove nodes
+            # isolated_nodes = [node for node in G.nodes if G.degree(node) == 0]
+            G.remove_nodes_from(list(a_group))
+            # update sorted_edges
+            sorted_edges = sorted(G.edges(data=True), key=lambda x: x[2]['weight'], reverse=True)
+
+        # convert polygons index from group_polygons to polygon_list
+        for sub_group in sub_group_list:
+            final_subgroups.append([group[item] for item in sub_group])
+
+        if b_verbose:
+            print(group)
+            print(f'divide a group (size {len(group)}) into {len(final_subgroups)} sub-groups')
+            print(final_subgroups)
+
+    else:
+        final_subgroups.append(group)
+
+
+    return final_subgroups
+
+def group_overlap_polygons(polygon_list, overlap_threshold=10000, group_max_area=50000,b_verbose=False):
+    """
+       Groups polygons that overlap by at least a specified intersection area and limits the size of each group.
+
+       Parameters:
+           polygon_list (list of shapely.geometry.Polygon): List of polygons to group.
+           overlap_threshold (float): Minimum intersection area to consider two polygons as overlapping.
+           group_max_area (float): Maximum area allowed for merged groups. Groups exceeding this will be split.
+
+       Returns:
+           list of lists: Groups of polygons where each group contains indices of overlapping polygons,
+                          and no group exceeds the specified maximum area.
+       """
+
+    # Handle empty input
+    if not polygon_list:
+        return []
+
+    # Ensure all polygons are valid
+    if not all(poly.is_valid for poly in polygon_list):
+        raise ValueError("All polygons in the list must be valid Shapely geometries.")
+
+    # Build spatial index
+    tree = STRtree(polygon_list)
+
+    # Create graph
+    G = nx.Graph()
+    G.add_nodes_from(range(len(polygon_list)))
+
+    # Check overlaps
+    for i, poly in enumerate(polygon_list):
+        # Query nearby polygons
+        potential_overlaps = tree.query(poly)
+
+        for j in potential_overlaps:
+            if i >= j:  # Avoid duplicate comparisons
+                continue
+
+            # Calculate intersection area
+            intersection_area = poly.intersection(polygon_list[j]).area
+
+            # Add edge if overlap exceeds threshold
+            if intersection_area >= overlap_threshold:
+                G.add_edge(i, j)
+
+    # Find connected components (initial groups)
+    initial_groups = list(nx.connected_components(G))
+    print(datetime.now(), 'Done: getting initial groups')
+
+    # Process each group to ensure it meets the area constraint
+    final_groups = []
+    for group in initial_groups:
+        # print(group)
+        group = sorted(list(map(int, group)))  # Convert set to list for easier handling
+        # print(group)
+        if len(group) < 2:
+            final_groups.append(group)
+        else:
+            # to check and split if the group is too large
+            final_groups.extend(split_large_group_iterative(group, polygon_list, group_max_area,b_verbose=b_verbose))
+
+        # testing
+        # break
+
+    return final_groups
 
 def build_adjacent_map_of_polygons(polygons_list, process_num = 1):
     """

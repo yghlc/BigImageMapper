@@ -23,6 +23,8 @@ import basic_src.map_projection as map_projection
 import basic_src.io_function as io_function
 
 from shapely.geometry import GeometryCollection
+import math
+from datetime import datetime
 
 def merge_geometries(uID, geometry_list):
     if len(geometry_list) < 0:
@@ -81,7 +83,7 @@ def merge_geometry_with_the_same_UID(geometries,train_class,uID_list):
 def save_to_a_gpkg_file(save_attributes, wkt_string, output):
     polygon_df = pd.DataFrame(save_attributes)
     vector_gpd.save_polygons_to_files(polygon_df, 'Polygons', wkt_string, output, format='GPKG')
-    print(f'saved to {output}')
+    print(datetime.now(), f'saved to {output}')
 
 def save_original_geometries(geometries, train_class_int, id_list, uIDs, wkt_string, save_path):
     geometry_type = [ item.geom_type for item in geometries]
@@ -121,6 +123,43 @@ def convert_MultiPolygon_to_polygons(geometries_list, train_class):
 
     return output_list
 
+def group_overlap_circles(geom_circle_list,overlap_thr, max_group_area):
+
+    group_list = vector_gpd.group_overlap_polygons(geom_circle_list,overlap_threshold=overlap_thr,
+                                                   group_max_area=max_group_area, b_verbose=False)
+
+    print(f'Overlap grouping: group {len(geom_circle_list)} polygons into {len(group_list)} groups')
+    # print(group_list[0])
+    # print(group_list[1])
+    # print(group_list[2])
+    # print(group_list[3])
+    # group_ids = [item+1  for item in range(len(group_list))]
+    return group_list
+
+
+def save_group_merged_polygons(group_list, geom_circle_list,id_list, train_class_int, wkt_string, output):
+
+    merged_circles = []
+    merged_id_list = []
+    train_class_list = []
+    b_class_all_same_list = []
+    for a_group in group_list:
+        circles = [geom_circle_list[item] for item in a_group]
+        merged_circles.append(vector_gpd.merge_multi_geometries(circles))
+        merged_id_list.append( ','.join([ str(id_list[item]) for item in a_group  ]) )
+        sub_train_class_int =  [train_class_int[item] for item in a_group]
+        train_class_list.append( ','.join([ str(item) for item in sub_train_class_int]) )
+
+        all_same = len(set(sub_train_class_int)) == 1
+        b_class_all_same = 'Yes' if all_same else 'No'
+        b_class_all_same_list.append(b_class_all_same)
+
+    save_attributes = {'Polygons': merged_circles, 'merged_id':merged_id_list, 'merged_class':train_class_list,
+                       'class_same':b_class_all_same_list}
+    save_to_a_gpkg_file(save_attributes, wkt_string, output)
+
+
+
 def ARTS_to_classInt_polygons(input,output,buff_radius=500):
     # read the existing data, convert to points
     geometries, train_class = vector_gpd.read_polygons_attributes_list(input, 'TrainClass',
@@ -150,6 +189,15 @@ def ARTS_to_classInt_polygons(input,output,buff_radius=500):
     save_polyons_attributes = {'Polygons':geom_circle_list, 'id': id_list, 'UID':m_uIDs, 'class_int':train_class_int}
     wkt_string = map_projection.get_raster_or_vector_srs_info_proj4(input)
     save_to_a_gpkg_file(save_polyons_attributes,wkt_string, output)
+
+
+    # group overlap circles and merged them, for slilitating
+    overla_thr = 0.3*math.pi * (buff_radius ** 2)  # if more than 30% overlap, group them
+    max_group_area = 3*math.pi * (buff_radius ** 2)
+    group_list = group_overlap_circles(geom_circle_list,overla_thr, max_group_area)
+    output_group = io_function.get_name_by_adding_tail(output,'groupMerge')
+    save_group_merged_polygons(group_list,geom_circle_list, id_list, train_class_int,wkt_string,output_group)
+
 
     # save positive and negative circles separately
     output_class_1 = io_function.get_name_by_adding_tail(output,'c1')
