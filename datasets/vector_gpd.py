@@ -1160,7 +1160,7 @@ def find_adjacent_polygons_from_sub(c_polygon_idx, polygon_list,polygon_boxes,  
     return c_polygon_idx, adj_polygons, adj_poly_idxs
 
 
-def split_large_group_iterative(group, polygon_list, group_max_area, b_verbose=False):
+def split_large_group_iterative(group, polygon_list, overlap_threshold, group_max_area, b_verbose=False):
     """
     Splits a group of polygons into smaller subgroups iteratively if the merged area exceeds the max area.
 
@@ -1193,7 +1193,7 @@ def split_large_group_iterative(group, polygon_list, group_max_area, b_verbose=F
                     continue
                 # Calculate intersection area
                 intersection_area = poly.intersection(group_polygons[j]).area
-                if intersection_area > 0:
+                if intersection_area > overlap_threshold:
                     G.add_edge(i, j, weight=intersection_area)
 
         # Sort edges by weight, descending, sorted_edges is a list
@@ -1316,7 +1316,7 @@ def group_overlap_polygons(polygon_list, overlap_threshold=10000, group_max_area
             final_groups.append(group)
         else:
             # to check and split if the group is too large
-            final_groups.extend(split_large_group_iterative(group, polygon_list, group_max_area,b_verbose=b_verbose))
+            final_groups.extend(split_large_group_iterative(group, polygon_list, overlap_threshold, group_max_area,b_verbose=b_verbose))
 
         # testing
         # break

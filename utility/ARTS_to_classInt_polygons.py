@@ -143,6 +143,7 @@ def save_group_merged_polygons(group_list, geom_circle_list,id_list, train_class
     merged_id_list = []
     train_class_list = []
     b_class_all_same_list = []
+    class_int_list = []
     for a_group in group_list:
         circles = [geom_circle_list[item] for item in a_group]
         merged_circles.append(vector_gpd.merge_multi_geometries(circles))
@@ -150,12 +151,17 @@ def save_group_merged_polygons(group_list, geom_circle_list,id_list, train_class
         sub_train_class_int =  [train_class_int[item] for item in a_group]
         train_class_list.append( ','.join([ str(item) for item in sub_train_class_int]) )
 
-        all_same = len(set(sub_train_class_int)) == 1
-        b_class_all_same = 'Yes' if all_same else 'No'
-        b_class_all_same_list.append(b_class_all_same)
+        unique_classes = list(set(sub_train_class_int))
+        if len(unique_classes) == 1:
+            b_class_all_same_list.append('Yes')
+            class_int_list.append(unique_classes[0])
+        else:
+            b_class_all_same_list.append('No')
+            class_int_list.append(-1)
+
 
     save_attributes = {'Polygons': merged_circles, 'merged_id':merged_id_list, 'merged_class':train_class_list,
-                       'class_same':b_class_all_same_list}
+                       'same_class':b_class_all_same_list, 'class_int':class_int_list}
     save_to_a_gpkg_file(save_attributes, wkt_string, output)
 
 
