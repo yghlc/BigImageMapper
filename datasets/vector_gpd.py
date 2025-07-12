@@ -17,6 +17,7 @@ import shapely
 from shapely.geometry import mapping # transform to GeJSON format
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
+from shapely.geometry import box
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely import ops
@@ -1431,6 +1432,82 @@ def merge_multi_geometries(geometry_list):
     #     return merged_geometry  # Return a single merged geometry
     # ouutside this function, to check if it's a single geometry or GeometryCollection
     return merged_geometry
+
+def split_polygon_by_grids(polygon, grid_size_x=5000, grid_size_y=5000, min_grid_wh=500):
+    """
+    Splits a polygon into smaller grids of size grid_size_x × grid_size_y meters,
+    and merges small clipped grid cells (width/height < min_grid_wh) into the previous valid grid cell.
+
+    Parameters:
+        polygon: The input Shapely polygon to split.
+        grid_size_x: The width of each grid cell in meters (default is 5000m).
+        grid_size_y: The height of each grid cell in meters (default is 5000m).
+        min_grid_wh: Minimum width and height for a grid cell in meters (default is 500m).
+
+    Returns:
+        list: A list of clipped polygons (Shapely Polygon objects).
+
+    Raises:
+        ValueError: If merged cells do not result in a single Polygon or if `min_grid_wh`
+                    is incorrectly configured relative to `grid_size_x` and `grid_size_y`.
+    """
+    # Get the bounds of the polygon (minx, miny, maxx, maxy)
+    minx, miny, maxx, maxy = polygon.bounds
+
+    # Create the grid cells
+    grid_cells = []
+    previous_cell = None  # To store the previous valid grid cell
+    x = minx
+    while x < maxx:
+        y = miny
+        while y < maxy:
+            # Create a grid cell with dimensions grid_size_x × grid_size_y
+            grid_cell = box(x, y, x + grid_size_x, y + grid_size_y)
+
+            # Clip the grid cell to the polygon
+            grid_cell_clipped = polygon.intersection(grid_cell)
+
+            # Check if the clipped grid cell is valid
+            if not grid_cell_clipped.is_empty:
+                # Get the bounds of the clipped grid cell
+                clipped_minx, clipped_miny, clipped_maxx, clipped_maxy = grid_cell_clipped.bounds
+                clipped_width = clipped_maxx - clipped_minx
+                clipped_height = clipped_maxy - clipped_miny
+
+                # Check if the clipped cell is too small
+                if clipped_width < min_grid_wh or clipped_height < min_grid_wh:
+                    # Merge with the previous cell if it exists
+                    if previous_cell is not None:
+                        merged_cell = previous_cell.union(grid_cell_clipped)
+
+                        # Ensure the merged cell is a single Polygon
+                        if not isinstance(merged_cell, Polygon):
+                            raise ValueError(
+                                f"Merged result of grid_cell_clipped {grid_cell_clipped} and "
+                                f"previous_cell {previous_cell} does not result in a single Polygon."
+                            )
+
+                        # Replace the previous cell with the merged cell
+                        grid_cells[-1] = merged_cell
+                        previous_cell = merged_cell  # Update the previous cell
+
+                    else:
+                        # Raise a ValueError if no valid previous cell exists to merge with
+                        raise ValueError(
+                            f"Please check the settings of grid_size_x: {grid_size_x}, grid_size_y: {grid_size_y}, "
+                            f"and min_grid_wh: {min_grid_wh}. The min_grid_wh should be significantly smaller than "
+                            f"the grid width/height (grid_size_x/grid_size_y)."
+                        )
+                else:
+                    # Add the valid grid cell to the result
+                    grid_cells.append(grid_cell_clipped)
+                    previous_cell = grid_cell_clipped  # Update the previous cell
+
+            y += grid_size_y
+        x += grid_size_x
+
+    return grid_cells
+
 
 def merge_vector_files(file_list, save_path,format='ESRI Shapefile'):
 

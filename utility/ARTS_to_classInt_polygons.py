@@ -137,19 +137,22 @@ def group_overlap_circles(geom_circle_list,overlap_thr, max_group_area):
     return group_list
 
 
-def save_group_merged_polygons(group_list, geom_circle_list,id_list, train_class_int, wkt_string, output):
+def save_group_merged_polygons(group_list, geom_circle_list,id_list, train_class_int, wkt_string, output, poly_max_w=3000, poly_max_height=3000):
 
     merged_circles = []
     merged_id_list = []
     train_class_list = []
     b_class_all_same_list = []
     class_int_list = []
-    for a_group in group_list:
+    group_id_list = []
+
+    for idx, a_group in enumerate(group_list):
         circles = [geom_circle_list[item] for item in a_group]
-        merged_circles.append(vector_gpd.merge_multi_geometries(circles))
+
         merged_id_list.append( ','.join([ str(id_list[item]) for item in a_group  ]) )
-        sub_train_class_int =  [train_class_int[item] for item in a_group]
+        sub_train_class_int = [train_class_int[item] for item in a_group]
         train_class_list.append( ','.join([ str(item) for item in sub_train_class_int]) )
+        group_id_list.append(idx+1)
 
         unique_classes = list(set(sub_train_class_int))
         if len(unique_classes) == 1:
@@ -159,8 +162,30 @@ def save_group_merged_polygons(group_list, geom_circle_list,id_list, train_class
             b_class_all_same_list.append('No')
             class_int_list.append(-1)
 
+        a_merged_circle = vector_gpd.merge_multi_geometries(circles)
+        ### if the merged circle is too large, then split it by grids ###
+        # Get the bounds of the clipped grid cell
+        poly_minx, poly_miny, poly_maxx, poly_maxy = a_merged_circle.bounds
+        poly_width = poly_maxx - poly_minx
+        poly_height = poly_maxy - poly_miny
+        if poly_width > poly_max_w or poly_height > poly_max_height:
+            split_polygons = vector_gpd.split_polygon_by_grids(a_merged_circle,poly_max_w,poly_max_height,min_grid_wh=500)
+            for s_i, s_poly in enumerate(split_polygons):
+                merged_circles.append(s_poly)
+                # adding attributes: attribute and polygons should have the same length
+                if s_i > 0:
+                    merged_id_list.append('')
+                    train_class_list.append('')
+                    b_class_all_same_list.append('')
+                    group_id_list.append(group_id_list[-1])
+                    class_int_list.append(class_int_list[-1])
 
-    save_attributes = {'Polygons': merged_circles, 'merged_id':merged_id_list, 'merged_class':train_class_list,
+        else:
+            merged_circles.append(a_merged_circle)
+
+    u_id_list = [ idx+1 for idx in range(len(merged_circles))]
+
+    save_attributes = {'Polygons': merged_circles, 'uid':u_id_list ,'gid': group_id_list, 'merged_id':merged_id_list, 'merged_class':train_class_list,
                        'same_class':b_class_all_same_list, 'class_int':class_int_list}
     save_to_a_gpkg_file(save_attributes, wkt_string, output)
 
@@ -200,9 +225,12 @@ def ARTS_to_classInt_polygons(input,output,buff_radius=500):
     # group overlap circles and merged them, for slilitating
     overla_thr = 0.3*math.pi * (buff_radius ** 2)  # if more than 30% overlap, group them
     max_group_area = 3*math.pi * (buff_radius ** 2)
+    poly_max_width = 3000
+    poly_max_height = 3000
     group_list = group_overlap_circles(geom_circle_list,overla_thr, max_group_area)
     output_group = io_function.get_name_by_adding_tail(output,'groupMerge')
-    save_group_merged_polygons(group_list,geom_circle_list, id_list, train_class_int,wkt_string,output_group)
+    save_group_merged_polygons(group_list,geom_circle_list, id_list, train_class_int,wkt_string,output_group,
+                               poly_max_w=poly_max_width, poly_max_height=poly_max_height)
 
 
     # save positive and negative circles separately
