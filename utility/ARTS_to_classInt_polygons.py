@@ -169,7 +169,7 @@ def save_group_merged_polygons(group_list, geom_circle_list,id_list, train_class
         poly_width = poly_maxx - poly_minx
         poly_height = poly_maxy - poly_miny
         if poly_width > poly_max_w or poly_height > poly_max_height:
-            split_polygons = vector_gpd.split_polygon_by_grids(a_merged_circle,poly_max_w,poly_max_height,min_grid_wh=500)
+            split_polygons = vector_gpd.split_polygon_by_grids(a_merged_circle,poly_max_w,poly_max_height,min_grid_wh=200)
             for s_i, s_poly in enumerate(split_polygons):
                 merged_circles.append(s_poly)
                 # adding attributes: attribute and polygons should have the same length
@@ -230,8 +230,8 @@ def ARTS_to_classInt_polygons(input,output,buff_radius=500):
     overla_thr = 0.1 
     max_group_area = 3000*math.pi * (buff_radius ** 2)
 
-    poly_max_width = 3000
-    poly_max_height = 3000
+    poly_max_width = 2000
+    poly_max_height = 2000
     group_list = group_overlap_circles(geom_circle_list,overla_thr, max_group_area)
     output_group = io_function.get_name_by_adding_tail(output,'groupMerge')
     save_group_merged_polygons(group_list,geom_circle_list, id_list, train_class_int,wkt_string,output_group,
