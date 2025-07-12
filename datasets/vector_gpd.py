@@ -1465,7 +1465,7 @@ def split_polygon_by_grids(polygon, grid_size_x=5000, grid_size_y=5000, min_grid
         x += grid_size_x
         row += 1
 
-    # Step 2: Calculate intersections and decide which to keep
+    # Step 2: Calculate intersections and keep non empty intersections
     intersections = {}  # Store valid intersections by (row, col)
     for (row, col), grid_cell in grid_cells.items():
         # Calculate the intersection
@@ -1474,14 +1474,7 @@ def split_polygon_by_grids(polygon, grid_size_x=5000, grid_size_y=5000, min_grid
         # Skip empty intersections
         if intersection.is_empty:
             continue
-
-        # If the intersection is not a single Polygon, keep the original grid cell
-        if not isinstance(intersection, Polygon):
-            basic.outputlogMessage(f"Warning: Intersection: {intersection} at (row={row}, col={col}) is not a single Polygon. Keeping the grid cell.")
-            intersections[(row, col)] = grid_cell
-        else:
-            # Otherwise, keep the valid intersection
-            intersections[(row, col)] = intersection
+        intersections[(row, col)] = intersection
 
     # Step 3: Handle small cells by merging with neighbors
     results = {}  # Final list of polygons
@@ -1501,20 +1494,29 @@ def split_polygon_by_grids(polygon, grid_size_x=5000, grid_size_y=5000, min_grid
                     continue
                 
                 neighbor_cell = intersections[neighbor]
-                merged_cell = intersection.union(neighbor_cell)
-                if isinstance(merged_cell, Polygon):
-                    merged = True
+                merged_cell = intersection.union(neighbor_cell).buffer(1)  # Use buffer to fix potential issues with invalid geometries
+                # if isinstance(merged_cell, Polygon):
+                #     merged = True
                     # merge the intersection with the neighbor
-                    results[neighbor] = merged_cell
-                    break
+                results[neighbor] = merged_cell
+                break
+                    # basic.outputlogMessage("Merged a intersection to its neighbor")
+                    # break
             
-            # If no neighbor is found to merge, abandon this intersection
-            if not merged:
-                basic.outputlogMessage(f"Warning: Intersection at (row={row}, col={col}) is too small and cannot be merged with neighbors. Abandoning it: {intersection}.")
+            # # If no neighbor is found to merge, abandon this intersection
+            # if not merged:
+            #     basic.outputlogMessage(f"Warning: Intersection at (row={row}, col={col}) is too small and cannot be merged with neighbors."
+            #                            f" Abandoning it: {intersection}.")
 
         else:
             # If the intersection is valid and not too small, add it to the results
             results[(row, col)] = intersection
+    
+    # Step 4: If the intersection is not a single Polygon, keep the original grid cell
+    for (row, col), intersection in results.items():
+        if not isinstance(intersection, Polygon):
+            basic.outputlogMessage(f"Warning: Intersection: {intersection} at (row={row}, col={col}) is not a single Polygon. Keeping the grid cell.")
+            results[(row, col)] = grid_cells[(row, col)]
 
 
     return results.values()  # Return the list of resulting polygons
