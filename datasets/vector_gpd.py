@@ -1436,7 +1436,7 @@ def merge_multi_geometries(geometry_list):
 def split_polygon_by_grids(polygon, grid_size_x=5000, grid_size_y=5000, min_grid_wh=500):
     """
     Splits a polygon into smaller grids of size grid_size_x × grid_size_y meters,
-    and merges small clipped grid cells (width/height < min_grid_wh) into the previous valid grid cell.
+    and processes intersections, merging small cells on the edges into their direct neighbors.
 
     Parameters:
         polygon: The input Shapely polygon to split.
@@ -1445,68 +1445,79 @@ def split_polygon_by_grids(polygon, grid_size_x=5000, grid_size_y=5000, min_grid
         min_grid_wh: Minimum width and height for a grid cell in meters (default is 500m).
 
     Returns:
-        list: A list of clipped polygons (Shapely Polygon objects).
-
-    Raises:
-        ValueError: If merged cells do not result in a single Polygon or if `min_grid_wh`
-                    is incorrectly configured relative to `grid_size_x` and `grid_size_y`.
+        list: A list of resulting polygons after splitting and merging (Shapely Polygon objects).
     """
     # Get the bounds of the polygon (minx, miny, maxx, maxy)
     minx, miny, maxx, maxy = polygon.bounds
 
-    # Create the grid cells
-    grid_cells = []
-    previous_cell = None  # To store the previous valid grid cell
+    # Step 1: Generate all grid boxes and assign them row/column numbers
+    grid_cells = {}  # Dictionary to store grid cells by their (row, col) keys
+    row = 0
     x = minx
     while x < maxx:
+        col = 0
         y = miny
         while y < maxy:
-            # Create a grid cell with dimensions grid_size_x × grid_size_y
-            grid_cell = box(x, y, x + grid_size_x, y + grid_size_y)
-
-            # Clip the grid cell to the polygon
-            grid_cell_clipped = polygon.intersection(grid_cell)
-
-            # Check if the clipped grid cell is valid
-            if not grid_cell_clipped.is_empty:
-                # Get the bounds of the clipped grid cell
-                clipped_minx, clipped_miny, clipped_maxx, clipped_maxy = grid_cell_clipped.bounds
-                clipped_width = clipped_maxx - clipped_minx
-                clipped_height = clipped_maxy - clipped_miny
-
-                # Check if the clipped cell is too small
-                if clipped_width < min_grid_wh or clipped_height < min_grid_wh:
-                    # Merge with the previous cell if it exists
-                    if previous_cell is not None:
-                        merged_cell = previous_cell.union(grid_cell_clipped)
-
-                        # Ensure the merged cell is a single Polygon
-                        if not isinstance(merged_cell, Polygon):
-                            raise ValueError(
-                                f"Merged result of grid_cell_clipped {grid_cell_clipped} and "
-                                f"previous_cell {previous_cell} does not result in a single Polygon."
-                            )
-
-                        # Replace the previous cell with the merged cell
-                        grid_cells[-1] = merged_cell
-                        previous_cell = merged_cell  # Update the previous cell
-
-                    else:
-                        # Raise a ValueError if no valid previous cell exists to merge with
-                        raise ValueError(
-                            f"Please check the settings of grid_size_x: {grid_size_x}, grid_size_y: {grid_size_y}, "
-                            f"and min_grid_wh: {min_grid_wh}. The min_grid_wh should be significantly smaller than "
-                            f"the grid width/height (grid_size_x/grid_size_y)."
-                        )
-                else:
-                    # Add the valid grid cell to the result
-                    grid_cells.append(grid_cell_clipped)
-                    previous_cell = grid_cell_clipped  # Update the previous cell
-
+            # Create a grid cell with given row and column
+            grid_cells[(row, col)] = box(x, y, x + grid_size_x, y + grid_size_y)
             y += grid_size_y
+            col += 1
         x += grid_size_x
+        row += 1
 
-    return grid_cells
+    # Step 2: Calculate intersections and decide which to keep
+    intersections = {}  # Store valid intersections by (row, col)
+    for (row, col), grid_cell in grid_cells.items():
+        # Calculate the intersection
+        intersection = polygon.intersection(grid_cell)
+
+        # Skip empty intersections
+        if intersection.is_empty:
+            continue
+
+        # If the intersection is not a single Polygon, keep the original grid cell
+        if not isinstance(intersection, Polygon):
+            basic.outputlogMessage(f"Warning: Intersection: {intersection} at (row={row}, col={col}) is not a single Polygon. Keeping the grid cell.")
+            intersections[(row, col)] = grid_cell
+        else:
+            # Otherwise, keep the valid intersection
+            intersections[(row, col)] = intersection
+
+    # Step 3: Handle small cells by merging with neighbors
+    results = {}  # Final list of polygons
+    for (row, col), intersection in intersections.items():
+        # Get the bounds of the intersection
+        minx, miny, maxx, maxy = intersection.bounds
+        width = maxx - minx
+        height = maxy - miny
+
+        # Check if the intersection is too small
+        if width < min_grid_wh or height < min_grid_wh:
+            # Merge with left or right neighbors first
+            merged = False
+            neighbors = [(row, col - 1), (row, col + 1), (row - 1, col), (row + 1, col)]  # Left, right, up, down neighbors
+            for neighbor in neighbors:
+                if neighbor not in intersections.keys():    # if outside the extent of all grid cells
+                    continue
+                
+                neighbor_cell = intersections[neighbor]
+                merged_cell = intersection.union(neighbor_cell)
+                if isinstance(merged_cell, Polygon):
+                    merged = True
+                    # merge the intersection with the neighbor
+                    results[neighbor] = merged_cell
+                    break
+            
+            # If no neighbor is found to merge, abandon this intersection
+            if not merged:
+                basic.outputlogMessage(f"Warning: Intersection at (row={row}, col={col}) is too small and cannot be merged with neighbors. Abandoning it: {intersection}.")
+
+        else:
+            # If the intersection is valid and not too small, add it to the results
+            results[(row, col)] = intersection
+
+
+    return results.values()  # Return the list of resulting polygons
 
 
 def merge_vector_files(file_list, save_path,format='ESRI Shapefile'):

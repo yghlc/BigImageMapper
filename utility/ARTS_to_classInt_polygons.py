@@ -223,8 +223,13 @@ def ARTS_to_classInt_polygons(input,output,buff_radius=500):
 
 
     # group overlap circles and merged them, for slilitating
-    overla_thr = 0.3*math.pi * (buff_radius ** 2)  # if more than 30% overlap, group them
-    max_group_area = 3*math.pi * (buff_radius ** 2)
+    # overla_thr = 0.3*math.pi * (buff_radius ** 2)  # if more than 30% overlap, group them
+    # max_group_area = 3*math.pi * (buff_radius ** 2)
+
+    # group all connecting circles, if they are too large, split them by grids
+    overla_thr = 0.1 
+    max_group_area = 3000*math.pi * (buff_radius ** 2)
+
     poly_max_width = 3000
     poly_max_height = 3000
     group_list = group_overlap_circles(geom_circle_list,overla_thr, max_group_area)
