@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Filename: display_webpage.py 
+# Filename: display_image_des_webpage.py
 """
 introduction: to display many tiny images and their labels or description in a html file (open in browser)
 
