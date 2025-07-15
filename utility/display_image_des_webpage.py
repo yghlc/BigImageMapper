@@ -19,7 +19,7 @@ sys.path.insert(0, code_dir)
 # import parameters
 import basic_src.basic as basic
 import basic_src.io_function as io_function
-import raster_io
+import datasets.raster_io as raster_io
 
 def convert_tif_to_a_png_file(input_tif, save_path):
     cmd_str = f'gdal_translate -of PNG {input_tif} {save_path}'
