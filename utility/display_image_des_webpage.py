@@ -89,7 +89,7 @@ def display_images_values_s2(image_value_json, rgb_bands=[1,2,3], img_dir=None, 
                                                 nodata=0,format='PNG',verbose=False)
         valid_percent = img_value_dict[img_path][0]
         entropy = img_value_dict[img_path][1]
-        save_dict[png_path] = f"v_perc_%={valid_percent:.1f}, entropy={entropy:.3f}" # str(img_value_dict[img_path])
+        save_dict[png_path] = f"v_perc={valid_percent:.1f}%, entropy={entropy:.3f}" # str(img_value_dict[img_path])
 
     io_function.save_dict_to_txt_json(save_json, save_dict)
 
