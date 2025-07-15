@@ -76,6 +76,16 @@ def display_images_values_s2(image_value_json, rgb_bands=[1,2,3], img_dir=None, 
     if b_sorted:
         img_value_dict = dict(sorted(img_value_dict.items(), key=lambda item: item[1][1]))
 
+    #TODO: change to visualizton to 0-2000 ? for sentinel-2 images? as orignally used in the visualiztion
+    sr_min = 0
+    sr_max = 1600
+
+    first_img = img_value_dict.keys()[0]
+    height, width, band_count, dtype = raster_io.get_height_width_bandnum_dtype(first_img)
+    if band_count==3 and dtype=="uint8":
+        basic.outputlogMessage(f"Warning, look like the original image already three bands and 8bit, change sr_max ({sr_max}) to 255 ")
+        sr_max = 255
+
     save_dict = {}
     for img_path in tqdm(img_value_dict.keys(), desc='Images to RGB PNG'):
         png_path = os.path.join(save_img_dir, io_function.get_name_no_ext(img_path) + '.png')
@@ -85,8 +95,7 @@ def display_images_values_s2(image_value_json, rgb_bands=[1,2,3], img_dir=None, 
             img_path_2 = img_path
 
         # for sentinel-2 images
-        #TODO: change to visualizton to 0-2000 ? for sentinel-2 images?
-        raster_io.convert_images_to_rgb_8bit_np(img_path_2,save_path=png_path,rgb_bands=rgb_bands,sr_min=0,sr_max=1600,
+        raster_io.convert_images_to_rgb_8bit_np(img_path_2,save_path=png_path,rgb_bands=rgb_bands,sr_min=sr_min,sr_max=sr_max,
                                                 nodata=0,format='PNG',verbose=False)
         valid_percent = img_value_dict[img_path][0]
         entropy = img_value_dict[img_path][1]
