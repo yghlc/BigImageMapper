@@ -76,7 +76,7 @@ def display_images_values_s2(image_value_json, rgb_bands=[1,2,3], img_dir=None, 
     save_dict = {}
     for img_path in img_value_dict.keys():
         png_path = os.path.join(save_img_dir, io_function.get_name_no_ext(img_path) + '.png')
-        if img_path is not None:
+        if img_dir is not None:
             img_path = os.path.join(img_dir,img_path)
 
         # for sentinel-2 images
