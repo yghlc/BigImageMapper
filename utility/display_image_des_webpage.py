@@ -71,9 +71,10 @@ def display_images_values_s2(image_value_json, rgb_bands=[1,2,3], img_dir=None, 
     if os.path.isdir(save_img_dir) is False:
         io_function.mkdir(save_img_dir)
 
+    # each values contains two elements: [valid_percent, entropy ]
     # Sort the dictionary by its values (ascending)
     if b_sorted:
-        img_value_dict = dict(sorted(img_value_dict.items(), key=lambda item: item[1]))
+        img_value_dict = dict(sorted(img_value_dict.items(), key=lambda item: item[1][1]))
 
     save_dict = {}
     for img_path in tqdm(img_value_dict.keys(), desc='Images to RGB PNG'):
@@ -86,7 +87,9 @@ def display_images_values_s2(image_value_json, rgb_bands=[1,2,3], img_dir=None, 
         # for sentinel-2 images
         raster_io.convert_images_to_rgb_8bit_np(img_path_2,save_path=png_path,rgb_bands=rgb_bands,sr_min=0,sr_max=1600,
                                                 nodata=0,format='PNG',verbose=False)
-        save_dict[png_path] = str(img_value_dict[img_path])
+        valid_percent = img_value_dict[img_path][0]
+        entropy = img_value_dict[img_path][1]
+        save_dict[png_path] = f"v_perc_%={valid_percent:.1f}, entropy={entropy:.3f}" # str(img_value_dict[img_path])
 
     io_function.save_dict_to_txt_json(save_json, save_dict)
 
