@@ -14,6 +14,8 @@ add time: 03 July, 2025
 import os,sys
 from optparse import OptionParser
 
+from tqdm import tqdm
+
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 # import parameters
@@ -74,15 +76,16 @@ def display_images_values_s2(image_value_json, rgb_bands=[1,2,3], img_dir=None, 
         img_value_dict = dict(sorted(img_value_dict.items(), key=lambda item: item[1]))
 
     save_dict = {}
-    for img_path in img_value_dict.keys():
+    for img_path in tqdm(img_value_dict.keys(), desc='Images to RGB PNG'):
         png_path = os.path.join(save_img_dir, io_function.get_name_no_ext(img_path) + '.png')
         if img_dir is not None:
-            img_path = os.path.join(img_dir,img_path)
+            img_path_2 = os.path.join(img_dir,img_path)
+        else:
+            img_path_2 = img_path
 
         # for sentinel-2 images
-        raster_io.convert_images_to_rgb_8bit_np(img_path,save_path=png_path,rgb_bands=rgb_bands,sr_min=0,sr_max=1600,
+        raster_io.convert_images_to_rgb_8bit_np(img_path_2,save_path=png_path,rgb_bands=rgb_bands,sr_min=0,sr_max=1600,
                                                 nodata=0,format='PNG',verbose=False)
-        convert_tif_to_a_png_file(img_path, png_path)
         save_dict[png_path] = str(img_value_dict[img_path])
 
     io_function.save_dict_to_txt_json(save_json, save_dict)
