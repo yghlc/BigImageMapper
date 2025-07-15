@@ -80,7 +80,8 @@ def display_images_values_s2(image_value_json, rgb_bands=[1,2,3], img_dir=None, 
     sr_min = 0
     sr_max = 1600
 
-    first_img = img_value_dict.keys()[0]
+    first_img = next(iter(img_value_dict))
+    first_img = os.path.join(img_dir, first_img) if img_dir else first_img
     height, width, band_count, dtype = raster_io.get_height_width_bandnum_dtype(first_img)
     if band_count==3 and dtype=="uint8":
         basic.outputlogMessage(f"Warning, look like the original image already three bands and 8bit, change sr_max ({sr_max}) to 255 ")
