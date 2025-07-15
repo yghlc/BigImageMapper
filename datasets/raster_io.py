@@ -96,7 +96,7 @@ def get_image_bound_box(file_path, buffer=None):
             return new_box_obj
         return raster_bounds
 
-def get_valid_pixel_count(image_path):
+def get_valid_pixel_count(image_path,nodata_user=None):
     """
     get the count of valid pixels (exclude no_data pixel)
     assume that the nodata value already be set
@@ -117,7 +117,8 @@ def get_valid_pixel_count(image_path):
         assert len(set(src.block_shapes)) == 1   # check have identically blocked bands
         # for i, shape in enumerate(src.block_shapes,start=1):    # output shape
         #     print((i, shape))
-        nodata = src.nodata
+        # nodata = src.nodata
+        nodata = src.nodata if src.nodata is not None else nodata_user
         # print(nodata)
         if nodata is None:
             raise ValueError('nodata is not set in %s, cannot tell valid pixel' % image_path)
@@ -156,7 +157,7 @@ def get_valid_pixel_count(image_path):
     # print('valid_pixel_count, total_count, time cost', valid_pixel_count, oneband_data.size, time.time() - t0)
     # return valid_pixel_count, oneband_data.size
 
-def get_valid_pixel_percentage(image_path,total_pixel_num=None, progress=None):
+def get_valid_pixel_percentage(image_path,total_pixel_num=None, progress=None, nodata=None):
     """
     get the percentage of valid pixels (exclude no_data pixel)
     assume that the nodata value already be set
@@ -170,7 +171,7 @@ def get_valid_pixel_percentage(image_path,total_pixel_num=None, progress=None):
     """
     if progress is not None:
         print(progress)
-    valid_pixel_count, total_count = get_valid_pixel_count(image_path)
+    valid_pixel_count, total_count = get_valid_pixel_count(image_path,nodata_user=nodata)
     if total_pixel_num is None:
         total_pixel_num =total_count
 
@@ -179,11 +180,12 @@ def get_valid_pixel_percentage(image_path,total_pixel_num=None, progress=None):
         print(progress, 'Done')
     return valid_per
 
-def get_valid_percent_shannon_entropy(image_path,log_base=10,nodata_input=0):
+def get_valid_percent_shannon_entropy(image_path,log_base=10,nodata_input=0, b_verbose=False):
     oneband_data, nodata = read_raster_one_band_np(image_path, band=1)
     if nodata is None:
         # raise ValueError('nodata is not set in %s, cannot tell valid pixel'%image_path)
-        print('warning, nodata is not set in %s, will use %s'%(image_path, str(nodata_input)))
+        if b_verbose:
+            print('warning, nodata is not set in %s, will use %s'%(image_path, str(nodata_input)))
         nodata = nodata_input
 
     valid_loc = np.where(oneband_data != nodata)
@@ -593,7 +595,7 @@ def image_numpy_allBands_to_8bit(img_np_allbands, scales, src_nodata=None, dst_n
         else:
             nodata_loc = np.where(img_np_allbands==src_nodata)
     band_count, height, width = img_np_allbands.shape
-    print(band_count, height, width)
+    # print(band_count, height, width)
     # if we input multiple scales, it should has the same size the band count
     if len(scales) > 1 and len(scales) != band_count:
         raise ValueError('The number of scales is not the same with band account')
@@ -1033,6 +1035,90 @@ def trim_nodata_region(img_path, save_path,nodata=0, tmp_dir='./'):
     # basic.os_system_exit_code(cmd_str)
 
     return save_path
+
+def convert_images_to_rgb_8bit_np(img_path,save_path=None,rgb_bands=[1,2,3], sr_min=0, sr_max=2000, nodata=0, format='GTiff',verbose=False):
+    ### convert an image to 8bit and keep the RGB bands, using Numpy
+
+    if save_path is None:
+        save_path = io_function.get_name_by_adding_tail(img_path,'rgb_8bit')
+    if os.path.isfile(save_path):
+        print(f'{save_path} already exists, skip')
+        return
+
+    img_np_allbands, src_nodata = read_raster_all_bands_np(img_path)
+    img_shape = img_np_allbands.shape
+    # print(img_np_allbands.shape, src_nodata)
+    # if more than three bands
+    if img_shape[0] > 3:
+        img_np_allbands = img_np_allbands[[ item-1 for item in rgb_bands] ,:,:]
+    # need to handle band number less than 3
+
+    # print(img_np_allbands.shape, src_nodata)
+
+    # scales = (src_min src_max dst_min dst_max)
+    scales = [(sr_min, sr_max, 1, 255)]
+
+
+    # print('input scale (src_min src_max dst_min dst_max): ' + str(scales))
+    img_array_8bit = image_numpy_allBands_to_8bit(img_np_allbands, scales, src_nodata=src_nodata,
+                                                            dst_nodata=nodata)
+
+    # min_percent = 0.02
+    # max_percent = 0.98
+    # min_max_value = None
+    # hist_bin_count = 1000
+    # img_array_8bit = image_numpy_allBands_to_8bit_hist(img_np_allbands, min_max_value,
+    #                                                              per_min=min_percent,
+    #                                                              per_max=max_percent, bin_count=hist_bin_count,
+    #                                                              src_nodata=src_nodata,
+    #                                                              dst_nodata=nodata)
+
+    save_numpy_array_to_rasterfile(img_array_8bit, save_path, img_path, format=format,
+                                                    nodata=nodata, compress='lzw', tiled='yes', bigtiff='if_safer', verbose=verbose)
+
+    return save_path
+
+
+def convert_images_to_rgb_8bit_gdal(img_path,save_path=None,rgb_bands=[1,2,3], sr_min=0, sr_max=2000, nodata=None, format='GTiff'):
+    ### convert an image to 8bit and keep the RGB bands, using gdal_translate, for large images
+    # filename_no_ext
+    if save_path is None:
+        save_path = io_function.get_name_by_adding_tail(img_path,'rgb_8bit')
+
+    if os.path.isfile(save_path):
+        print(f'{save_path} already exists, skip')
+        return
+
+    # extract  rgb bands
+    save_path_rgb = io_function.get_name_by_adding_tail(img_path,'rgb')
+    cmd_str = f'gdal_translate -b {rgb_bands[0]} -b {rgb_bands[1]} -b {rgb_bands[2]} -of VRT {img_path} {save_path_rgb}'
+    basic.os_system_exit_code(cmd_str)
+
+
+    # to 8bit
+    # save_8bit = io_function.get_name_by_adding_tail(save_path_rgb,'8bit')
+    # use fix min and max to make the color be consistent to sentinel-images
+    src_min = sr_min
+    src_max = sr_max
+    dst_min = 1  # 0 is the nodata, so set as 1
+    dst_max = 255
+    # format: "-of VRT"  or "-of GTiff"  or "-of PNG" (for web display)
+    cmd_str = f'gdal_translate -ot Byte -scale {src_min} {src_max} {dst_min} {dst_max} -of {format} {save_path_rgb} {save_path}'  # -of VRT
+
+    basic.os_system_exit_code(cmd_str)
+
+    # set nodata
+    if nodata is not None:
+        # gdal_edit.py -a_nodata 0  ${fin_output}
+        cmd_str = f'gdal_edit.py -a_nodata {nodata}  {save_path}'
+        basic.os_system_exit_code(cmd_str)
+
+    io_function.delete_file_or_dir(save_path_rgb)
+
+    return save_path
+
+
+
 
 def main():
     pass

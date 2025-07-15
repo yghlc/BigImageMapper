@@ -19,6 +19,7 @@ sys.path.insert(0, code_dir)
 # import parameters
 import basic_src.basic as basic
 import basic_src.io_function as io_function
+import raster_io
 
 def convert_tif_to_a_png_file(input_tif, save_path):
     cmd_str = f'gdal_translate -of PNG {input_tif} {save_path}'
@@ -49,6 +50,7 @@ def files_for_display_similarity_matrix(reference_image_txt, search_image_txt, s
     #  const referenceImagesFile = 'reference_images.txt';
     #  const searchImagesFile = 'search_images.txt';
     #  const similarityMatrixFile = 'similarity_matrix.txt';
+    # see html file (display_image_similarity.html) in ~/Data/slump_demdiff_classify/clip_classify/image_text_cluster on ygAlpha
 
     ref_img_list = io_function.read_list_from_txt(reference_image_txt)
     search_img_list = io_function.read_list_from_txt(search_image_txt)
@@ -60,12 +62,43 @@ def files_for_display_similarity_matrix(reference_image_txt, search_image_txt, s
     io_function.save_list_to_txt('search_images.txt',search_png_list)
 
 
+def display_images_values_s2(image_value_json, rgb_bands=[1,2,3], img_dir=None, save_img_dir='display_PNG', save_json='display.json',b_sorted=True):
+    # convert images to 8 bit RGB and values to their description, then save to json file,
+    # for displaying many images in a webpage
+    img_value_dict = io_function.read_dict_from_txt_json(image_value_json)
+    if os.path.isdir(save_img_dir) is False:
+        io_function.mkdir(save_img_dir)
+
+    # Sort the dictionary by its values (ascending)
+    if b_sorted:
+        img_value_dict = dict(sorted(img_value_dict.items(), key=lambda item: item[1]))
+
+    save_dict = {}
+    for img_path in img_value_dict.keys():
+        png_path = os.path.join(save_img_dir, io_function.get_name_no_ext(img_path) + '.png')
+        if img_path is not None:
+            img_path = os.path.join(img_dir,img_path)
+
+        # for sentinel-2 images
+        raster_io.convert_images_to_rgb_8bit_np(img_path,save_path=png_path,rgb_bands=rgb_bands,sr_min=0,sr_max=1600,
+                                                nodata=0,format='PNG',verbose=False)
+        convert_tif_to_a_png_file(img_path, png_path)
+        save_dict[png_path] = str(img_value_dict[img_path])
+
+    io_function.save_dict_to_txt_json(save_json, save_dict)
+
+
+
 
 def main(options, args):
 
     # for the image description
     if len(args)==1 and args[0].endswith('.json'):
-        get_new_json_for_html(args[0])
+        if options.to_rgb_8bit:
+            display_images_values_s2(args[0], rgb_bands=[1, 2, 3], img_dir=options.image_dir, save_img_dir='display_PNG',
+                                     save_json='display.json', b_sorted=True)
+        else:
+            get_new_json_for_html(args[0])
         return
 
     # for similarity matrix
@@ -78,12 +111,20 @@ def main(options, args):
 
 if __name__ == '__main__':
     usage = "usage: %prog [options] image_description.json OR ref_image_list.txt search_image_list.txt "
-    parser = OptionParser(usage=usage, version="1.0 2024-04-26")
-    parser.description = 'Introduction: extract sub-images and sub-labels '
+    parser = OptionParser(usage=usage, version="1.0 2025-07-03")
+    parser.description = 'Introduction: display many images and corresponding lable/description in a webpage '
 
     parser.add_option("-t", "--template_html",
                       action="store", dest="template_html", default='image_description.html',
                       help="the template of the html file")
+
+    parser.add_option("-d", "--image_dir",
+                      action="store", dest="image_dir",
+                      help="the root directory of all images")
+
+    parser.add_option("", "--to_rgb_8bit",
+                      action="store_true", dest="to_rgb_8bit",default=False,
+                      help="indicate if the input is sentinel-2 and need to convert to 8 bit RGB")
 
     (options, args) = parser.parse_args()
     if len(sys.argv) < 2:
