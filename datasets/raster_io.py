@@ -21,6 +21,7 @@ from rasterio.features import shapes
 from rasterio.transform import from_origin
 
 import skimage.measure
+from scipy.stats import entropy as scipy_entropy
 import time
 #Color interpretation https://rasterio.readthedocs.io/en/latest/topics/color.html
 from rasterio.enums import ColorInterp
@@ -180,6 +181,28 @@ def get_valid_pixel_percentage(image_path,total_pixel_num=None, progress=None, n
         print(progress, 'Done')
     return valid_per
 
+def get_valid_pixel_percentage_np(image_np, nodata=0):
+    valid_loc = np.where(image_np != nodata)
+    valid_pixel_count = valid_loc[0].size
+    total_count = image_np.size
+    # if total_count == 0:
+    #     return 0.0
+    valid_per = 100.0 * valid_pixel_count / total_count
+    return valid_per
+
+def get_shannon_entropy_np(image_np, log_base=10, b_verbose=False):
+    # if not (image_np.dtype == np.uint8 or image_np.dtype==np.int8):
+    #     print(f'Warning, The data type is {image_np.dtype}, not 8-bit. Shannon entropy could be misleading.')
+    # entropy = skimage.measure.shannon_entropy(image_np, base=log_base)
+
+    # using bin 256 to handle both 8 bit and 16 bit or float images.
+    image_hist,_ = np.histogram(image_np.flatten(), bins=256)
+    # Filter out zero probabilities (as log(0) is undefined)
+    image_hist = image_hist[image_hist > 0]
+    entropy = scipy_entropy(image_hist,base=log_base)
+
+    return entropy
+
 def get_valid_percent_shannon_entropy(image_path,log_base=10,nodata_input=0, b_verbose=False):
     oneband_data, nodata = read_raster_one_band_np(image_path, band=1)
     if nodata is None:
@@ -188,12 +211,9 @@ def get_valid_percent_shannon_entropy(image_path,log_base=10,nodata_input=0, b_v
             print('warning, nodata is not set in %s, will use %s'%(image_path, str(nodata_input)))
         nodata = nodata_input
 
-    valid_loc = np.where(oneband_data != nodata)
-    valid_pixel_count = valid_loc[0].size
-    total_count = oneband_data.size
+    valid_per = get_valid_pixel_percentage_np(oneband_data, nodata=nodata)
 
-    valid_per = 100.0 * valid_pixel_count / total_count
-    entropy = skimage.measure.shannon_entropy(oneband_data, base=log_base)
+    entropy = get_shannon_entropy_np(oneband_data,log_base=log_base)
 
     return valid_per, entropy
 
