@@ -255,17 +255,30 @@ def group_prompt_points_boxes(points_pixel_list, class_values, group_ids,input_b
     return group_prompts_all
 
 def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch_h, overlay_x, overlay_y,
-                        batch_size=1, min_area=10, max_area=40000, prompts=None, finetune_m=None):
+                        batch_size=1, min_area=10, max_area=40000, prompts=None, finetune_m=None,sam_version='1'):
 
     # for each region, after SAM, its area (in pixel) should be within [min_area, max_area],
     # otherwise, remove it
 
-    from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
+    # sam_version: "1" or sam, "2" for "sam2"
+    if sam_version == '1':
+        from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
+    elif sam_version == '2':
+        from sam2.build_sam import build_sam2
+        from sam2.sam2_image_predictor import SAM2ImagePredictor
+    else:
+        raise ValueError(f'unknown on support sam version: {sam_version}')
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     if finetune_m is None:
         basic.outputlogMessage('loading a checkpoint: %s'%model)
-        sam = sam_model_registry[model_type](checkpoint=model)
+        if sam_version == '1':
+            sam = sam_model_registry[model_type](checkpoint=model)
+        elif sam_version == '2':
+            sam = build_sam2(model_type, model, device=device)
+        else:
+            pass
     else:
         # load the trained model
         from fine_tune_sam import ModelSAM
@@ -292,10 +305,21 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
         if overlay_x > 0 or overlay_y >0:
             raise ValueError('For everything mode, overlay_x and overlay_y should be zero')
         # segment everything
-        mask_generator = SamAutomaticMaskGenerator(sam, output_mode="coco_rle")  # "binary_mask" take a lot of memory
+        if sam_version=='1':
+            mask_generator = SamAutomaticMaskGenerator(sam, output_mode="coco_rle")  # "binary_mask" take a lot of memory
+        elif sam_version == '2':
+            mask_generator = SAM2AutomaticMaskGenerator(sam, output_mode="coco_rle")
+        else:
+            pass
     else:
         # only segment targets
-        mask_generator = SamPredictor(sam)
+        if sam_version == '1':
+            mask_generator = SamPredictor(sam)
+        elif sam_version == '2':
+            mask_generator = SAM2ImagePredictor(sam)
+        else:
+            pass
+
 
         # read prompts
         for p_path in prompts:
@@ -524,7 +548,14 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
     sam_mask_max_area = sam_mask_max_area/(xres**2)
 
     model = parameters.get_file_path_parameters(network_ini,'checkpoint')
-    model_type = parameters.get_string_parameters(network_ini,'model_type')
+    sam_version = parameters.get_string_parameters(network_ini, 'sam_version')
+    if sam_version == '1':
+        model_type = parameters.get_string_parameters(network_ini,'model_type')
+    elif sam_version == '2':
+        model_type = parameters.get_file_path_parameters(network_ini, 'model_type') # it's the config file
+    else:
+        raise ValueError(f'unknown on support sam version: {sam_version}')
+
     finedtuned_model = parameters.get_file_path_parameters_None_if_absence(network_ini,'finedtuned_model')
 
     # prepare prompts (points or boxes)
@@ -575,7 +606,8 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
     out = segment_rs_image_sam(image_path, save_dir, model, model_type,
                                patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size,
                                min_area=sam_mask_min_area, max_area=sam_mask_max_area,
-                               prompts=prompts_an_image_list,finetune_m=finedtuned_model)
+                               prompts=prompts_an_image_list,finetune_m=finedtuned_model,
+                               sam_version=sam_version)
 
 def segment_one_image_sam(para_file, area_ini, image_path, img_save_dir, inf_list_file, gpuid):
 
