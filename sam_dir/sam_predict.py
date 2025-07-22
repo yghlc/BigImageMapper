@@ -342,13 +342,18 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     # print('input image: height, width, band_num, date_type',height, width, band_num, date_type)
     xres, yres = raster_io.get_xres_yres_file(image_path)
 
+    b_use_memory = True
+    if height* width > 50000*50000:  # 10000*10000 is a threshold, can be changed
+        b_use_memory = False
+
     # read the entire image
-    entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
-    entire_img_data = entire_img_data.transpose(1, 2, 0)  # to opencv format  # in HWC uint8 format
-    # # # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
-    # entire_img_data = entire_img_data[..., ::-1].copy() # no need, hlc July 9, 2023. in amg.py, they use cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    entire_height, entire_width, band_num = entire_img_data.shape
-    print("entire_height, entire_width, band_num", entire_height, entire_width, band_num)
+    if b_use_memory:
+        entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
+        entire_img_data = entire_img_data.transpose(1, 2, 0)  # to opencv format  # in HWC uint8 format
+        # # # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
+        # entire_img_data = entire_img_data[..., ::-1].copy() # no need, hlc July 9, 2023. in amg.py, they use cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        entire_height, entire_width, band_num = entire_img_data.shape
+        print("entire_height, entire_width, band_num", entire_height, entire_width, band_num)
     if band_num not in [1, 3]:
         raise ValueError('only accept one band or three band images')
 
@@ -368,8 +373,11 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     for p_idx, a_patch in enumerate(image_patches):
         t0 = time.time()
         # get width, height, and band_num of a patch, then create a darknet image.
-        # img_data, nodata = raster_io.read_raster_all_bands_np(image_path, boundary=patches_sameSize[0])
-        # img_data = img_data.transpose(1, 2, 0)
+        if b_use_memory:
+            image = copy_one_patch_image_data(a_patch, entire_img_data)
+        else:
+            image, nodata = raster_io.read_raster_all_bands_np(image_path, boundary=a_patch)
+            image = image.transpose(1, 2, 0)
         # height, width, band_num = img_data.shape
         # if band_num not in [1, 3]:
         #     raise ValueError('only accept one band or three band images')
@@ -378,7 +386,6 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
         file_name = "I%d_%d" % (0, p_idx)
         save_path = os.path.join(save_dir, file_name + '.tif')
 
-        image = copy_one_patch_image_data(a_patch, entire_img_data)
         if prompts is None:
             masks = mask_generator.generate(image)
             masks = [item for item in masks  if item['area'] >= min_area and item['area'] <= max_area]    # remove big and small region
