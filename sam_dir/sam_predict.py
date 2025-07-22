@@ -568,7 +568,10 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
         prompt_type_list = prompt_type.split('+')
         prompt_path = parameters.get_file_path_parameters(area_ini, 'prompt_path')
 
-        prompts_list = io_function.read_list_from_txt(prompt_path)
+        if prompt_path.endswith('.txt'):
+            prompts_list = io_function.read_list_from_txt(prompt_path)
+        else:
+            prompts_list = [prompt_path]
         if 'No-Prompts' in prompts_list[0]:
             basic.outputlogMessage(f'Warning, No-Prompts for {area_ini}, skip')
             return
