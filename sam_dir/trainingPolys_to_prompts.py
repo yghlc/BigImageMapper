@@ -59,10 +59,6 @@ def sample_points_from_polygons(polygons_path, save_path, max_point_each_poly=10
                              'poly_id':poly_ids,
                                'points':points_list,
                                'class_int':point_classes})
-    # format = vector_gpd.guess_file_format_extension(save_path)
-    # change the format to .shp, as this is needed in sam_predict.py
-    if save_path.endswith('.shp') is False:
-        save_path = os.path.splitext(save_path)[0] + ".shp"
     vector_gpd.save_points_to_file(point_df,'points',wkt_string,save_path)
 
 
@@ -73,6 +69,9 @@ def extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_p
         basic.outputlogMessage('training polygons is not set in %s'%os.path.abspath(area_ini))
         return None
     point_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'points')))
+    # change the format to .shp, as this is needed in sam_predict.py
+    if point_save_path.endswith('.shp') is False:
+        point_save_path = os.path.splitext(point_save_path)[0] + ".shp"
     if os.path.isfile(point_save_path):
         basic.outputlogMessage('%s already exists, skipping sampling points'%point_save_path)
         return point_save_path
@@ -93,10 +92,6 @@ def polygon_to_boxes(polygons_path, save_path):
                            'poly_id': id_list,
                              'boxes': boxes,
                              'class_int': class_values})
-    # format = vector_gpd.guess_file_format_extension(save_path)
-    # change the format to .shp, as this is needed in sam_predict.py
-    if save_path.endswith('.shp') is False:
-        save_path = os.path.splitext(save_path)[0] + ".shp"
     vector_gpd.save_points_to_file(box_df, 'boxes', wkt_string, save_path)
 
 def extract_boxes_from_polygons(area_ini, prompt_save_folder):
@@ -106,6 +101,9 @@ def extract_boxes_from_polygons(area_ini, prompt_save_folder):
         basic.outputlogMessage('training polygons is not set in %s' % os.path.abspath(area_ini))
         return None
     box_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'boxes')))
+    # change the format to .shp, as this is needed in sam_predict.py
+    if box_save_path.endswith('.shp') is False:
+        box_save_path = os.path.splitext(box_save_path)[0] + ".shp"
 
     if os.path.isfile(box_save_path):
         basic.outputlogMessage('%s already exists, skipping extracting boxes'%box_save_path)
@@ -124,10 +122,6 @@ def extract_representative_point_from_polygons(polygons_path, save_path):
                            'poly_id': id_list,
                            'points': points,
                            'class_int': class_values})
-    # format = vector_gpd.guess_file_format_extension(save_path)
-    # change the format to .shp, as this is needed in sam_predict.py
-    if save_path.endswith('.shp') is False:
-        save_path = os.path.splitext(save_path)[0] + ".shp"
     vector_gpd.save_points_to_file(box_df, 'points', wkt_string, save_path)
 
 def trainingPolygons_to_prompt_main(para_file):
