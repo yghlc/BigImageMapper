@@ -570,6 +570,7 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
 
         if prompt_path.endswith('.txt'):
             prompts_list = io_function.read_list_from_txt(prompt_path)
+            prompts_list = [os.path.join(os.path.dirname(prompt_path), item)  for item in prompts_list]
         else:
             prompts_list = [prompt_path]
         if 'No-Prompts' in prompts_list[0]:
@@ -589,10 +590,8 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
                 if tmp.endswith('%s.shp'%p_type):
                     prompts_list_new.append(tmp)
         prompts_list = prompts_list_new
-        prompts_list = [os.path.join(os.path.dirname(prompt_path), item)  for item in prompts_list]
 
         prompts_an_image_list = []
-
         for p_path in prompts_list:
             #TODO: after crop, the number of points and boxes may not the same
             if p_path.endswith('point.shp'):
