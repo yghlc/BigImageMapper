@@ -776,6 +776,9 @@ def save_polygons_to_files(data_frame, geometry_name, wkt_string, save_path,form
     # data_frame[geometry_name] = data_frame[geometry_name].apply(wkt.loads)
     poly_df = gpd.GeoDataFrame(data_frame, geometry=geometry_name)
     poly_df.crs = wkt_string # or poly_df.crs = {'init' :'epsg:4326'}
+    if format=='ESRI Shapefile' and save_path.endswith('.shp') is False:
+        save_path = os.path.splitext(save_path)[0] + ".shp"
+
     poly_df.to_file(save_path, driver=format)
 
     return True
