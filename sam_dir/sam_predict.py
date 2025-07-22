@@ -381,6 +381,9 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
         # height, width, band_num = img_data.shape
         # if band_num not in [1, 3]:
         #     raise ValueError('only accept one band or three band images')
+        if np.std(image[0]) < 0.0001:
+            print(f'Patch ({p_idx}/{patch_count}), shape: {image[0].shape} is black or white, ignore')
+            continue
 
         # save file name
         file_name = "I%d_%d" % (0, p_idx)
