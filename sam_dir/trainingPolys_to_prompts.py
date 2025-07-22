@@ -68,7 +68,7 @@ def extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_p
     if training_polygon_shp is None:
         basic.outputlogMessage('training polygons is not set in %s'%os.path.abspath(area_ini))
         return None
-    point_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'points')))
+    point_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'point')))
     # change the format to .shp, as this is needed in sam_predict.py
     if point_save_path.endswith('.shp') is False:
         point_save_path = os.path.splitext(point_save_path)[0] + ".shp"
@@ -100,7 +100,7 @@ def extract_boxes_from_polygons(area_ini, prompt_save_folder):
     if training_polygon_shp is None:
         basic.outputlogMessage('training polygons is not set in %s' % os.path.abspath(area_ini))
         return None
-    box_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'boxes')))
+    box_save_path = os.path.join(prompt_save_folder, os.path.basename(io_function.get_name_by_adding_tail(training_polygon_shp,'box')))
     # change the format to .shp, as this is needed in sam_predict.py
     if box_save_path.endswith('.shp') is False:
         box_save_path = os.path.splitext(box_save_path)[0] + ".shp"
