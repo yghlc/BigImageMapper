@@ -59,8 +59,11 @@ def sample_points_from_polygons(polygons_path, save_path, max_point_each_poly=10
                              'poly_id':poly_ids,
                                'points':points_list,
                                'class_int':point_classes})
-    format = vector_gpd.guess_file_format_extension(save_path)
-    vector_gpd.save_points_to_file(point_df,'points',wkt_string,save_path, format=format)
+    # format = vector_gpd.guess_file_format_extension(save_path)
+    # change the format to .shp, as this is needed in sam_predict.py
+    if save_path.endswith('.shp') is False:
+        save_path = os.path.splitext(save_path)[0] + ".shp"
+    vector_gpd.save_points_to_file(point_df,'points',wkt_string,save_path)
 
 
 def extract_points_from_polygons(area_ini, prompt_save_folder, max_points_from_polygon,b_representative=False):
@@ -90,8 +93,11 @@ def polygon_to_boxes(polygons_path, save_path):
                            'poly_id': id_list,
                              'boxes': boxes,
                              'class_int': class_values})
-    format = vector_gpd.guess_file_format_extension(save_path)
-    vector_gpd.save_points_to_file(box_df, 'boxes', wkt_string, save_path, format=format)
+    # format = vector_gpd.guess_file_format_extension(save_path)
+    # change the format to .shp, as this is needed in sam_predict.py
+    if save_path.endswith('.shp') is False:
+        save_path = os.path.splitext(save_path)[0] + ".shp"
+    vector_gpd.save_points_to_file(box_df, 'boxes', wkt_string, save_path)
 
 def extract_boxes_from_polygons(area_ini, prompt_save_folder):
 
@@ -118,8 +124,11 @@ def extract_representative_point_from_polygons(polygons_path, save_path):
                            'poly_id': id_list,
                            'points': points,
                            'class_int': class_values})
-    format = vector_gpd.guess_file_format_extension(save_path)
-    vector_gpd.save_points_to_file(box_df, 'points', wkt_string, save_path, format=format)
+    # format = vector_gpd.guess_file_format_extension(save_path)
+    # change the format to .shp, as this is needed in sam_predict.py
+    if save_path.endswith('.shp') is False:
+        save_path = os.path.splitext(save_path)[0] + ".shp"
+    vector_gpd.save_points_to_file(box_df, 'points', wkt_string, save_path)
 
 def trainingPolygons_to_prompt_main(para_file):
     print("training Polygons (semantic segmentation) to Prompts (points or boxes)")
