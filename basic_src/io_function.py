@@ -65,36 +65,34 @@ def delete_file_or_dir(path):
 
     return True
 
-def is_file_exist_subfolder(folder, file_name,bsub_folder=True):
+def is_file_exist_subfolder(folder, file_name, bsub_folder=True):
     """
-    determine whether the file_path is a in a folder or its subfolder
+    Determine whether the file is in the specified folder or its subfolders.
+
     Args:
-        file_name: the file name
+        folder (str): The root folder to search.
+        file_name (str): The file name to search for.
+        bsub_folder (bool): If True, search subfolders as well; otherwise, check only the given folder.
 
-    Returns:True if file path, False otherwise
-
+    Returns:
+        str: The absolute path of the file if found.
+        bool: False if the file is not found.
     """
-    if os.path.isfile(os.path.join(folder,file_name)):
-        return os.path.join(folder,file_name)
+    # Check if the folder exists
+    if not os.path.isdir(folder):
+        raise IOError(f"Input error: directory '{folder}' is invalid.")
 
-    if bsub_folder is False:
-        return False
+    # Check only the current folder
+    if not bsub_folder:
+        file_path = os.path.join(folder, file_name)
+        return file_path if os.path.isfile(file_path) else False
 
-    sub_folders = [os.path.join(folder,item) for item in os.listdir(folder)]
-    sub_folders = [item for item in sub_folders if os.path.isdir(item)]
+    # Search the folder and its subfolders
+    for root, _, files in os.walk(folder):
+        if file_name in files:
+            return os.path.join(root, file_name)
 
-    while len(sub_folders) > 0:
-        current_sear_dir = sub_folders[0]
-        t_path = os.path.join(current_sear_dir, file_name)
-        if os.path.isfile(t_path):
-            return t_path
-
-        file_names = [ os.path.join(current_sear_dir,item) for item in os.listdir(current_sear_dir)]
-        dir_paths = [item for item in file_names if os.path.isdir(item)]
-        sub_folders.extend(dir_paths)
-
-        sub_folders.pop(0)
-
+    # File not found
     return False
 
 
@@ -164,52 +162,48 @@ def os_list_folder_files(top_dir):
         return False
     return list_files
 
-def get_file_list_by_ext(ext,folder,bsub_folder):
+def get_file_list_by_ext(ext, folder, bsub_folder):
     """
-
     Args:
-        ext: extension name of files want to find, can be string for a single extension or list for multi extension
-        eg. '.tif'  or ['.tif','.TIF']
-        folder:  This is the directory, which needs to be explored.
-        bsub_folder: True for searching sub folder, False for searching current folder only
+        ext: Extension name(s) of files to find, can be a string for a single extension or a list for multiple extensions,
+             e.g., '.tif' or ['.tif', '.TIF']
+        folder: The directory to explore.
+        bsub_folder: True for searching subdirectories, False for searching the current directory only.
 
-    Returns: a list with the files abspath ,eg. ['/user/data/1.tif','/user/data/2.tif']
-    Notes: if input error, it will exit the program
+    Returns:
+        A list with the absolute paths of matching files, e.g., ['/user/data/1.tif', '/user/data/2.tif']
+
+    Notes:
+        If input is invalid, it will raise an appropriate error.
     """
-
-    extension = []
+    # Ensure extensions are in a list
     if isinstance(ext, str):
-        extension.append(ext)
+        extensions = [ext.lower()]
     elif isinstance(ext, list):
-        extension = ext
+        extensions = [e.lower() for e in ext]
     else:
-        raise ValueError('input extension type is not correct')
-    if os.path.isdir(folder) is False:
-        raise IOError('input error, directory %s is invalid'%folder)
-    if isinstance(bsub_folder,bool) is False:
-        raise ValueError('input error, bsub_folder must be a bool value')
+        raise ValueError("Input extension type must be a string or a list of strings.")
 
+    # Check if the folder exists and is a directory
+    if not os.path.isdir(folder):
+        raise IOError(f"Input error: directory '{folder}' is invalid.")
+
+    # Ensure bsub_folder is a boolean
+    if not isinstance(bsub_folder, bool):
+        raise ValueError("Input error: bsub_folder must be a boolean value.")
+
+    # Use os.walk if searching subdirectories, else only list the current directory
     files = []
-    sub_folders = []
-    sub_folders.append(folder)
-
-    while len(sub_folders) > 0:
-        current_sear_dir = sub_folders[0]
-        file_names = os.listdir(current_sear_dir)
-        file_names = [os.path.join(current_sear_dir,item) for item in file_names]
-        for str_file in file_names:
-            if os.path.isdir(str_file):
-                sub_folders.append(str_file)
-                continue
-            ext_name = os.path.splitext(str_file)[1]
-            for temp in extension:
-                if ext_name == temp:
-                    # files.append(os.path.abspath(os.path.join(current_sear_dir,str_file)))
-                    files.append(str_file)
-                    break
-        if bsub_folder is False:
-            break
-        sub_folders.pop(0)
+    if bsub_folder:
+        for root, _, filenames in os.walk(folder):
+            for file in filenames:
+                if os.path.splitext(file)[1].lower() in extensions:
+                    files.append(os.path.join(root, file))
+    else:
+        for file in os.listdir(folder):
+            file_path = os.path.join(folder, file)
+            if os.path.isfile(file_path) and os.path.splitext(file)[1].lower() in extensions:
+                files.append(file_path)
 
     return files
 
