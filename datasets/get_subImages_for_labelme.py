@@ -27,6 +27,8 @@ import json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
 import get_subImages
 
+from shapely.geometry import Polygon, MultiPolygon
+
 # def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle ):
 
 def get_one_sub_image_json_file(idx, center_polygon, c_class_int,class_names, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle,
@@ -48,7 +50,7 @@ def get_one_sub_image_json_file(idx, center_polygon, c_class_int,class_names, im
 
     # get the sub images.
     expansion_polygon = center_polygon.buffer(bufferSize)
-    get_subImages.get_sub_image(idx, expansion_polygon, image_tile_list,image_tile_bounds,save_path,dstnodata,brectangle)
+    get_subImages.get_sub_image(idx, expansion_polygon, image_tile_list,image_tile_bounds,save_path,dstnodata,brectangle, False)
 
     #
     save_josn_path = os.path.splitext(save_path)[0] + '.json'
@@ -71,11 +73,18 @@ def get_one_sub_image_json_file(idx, center_polygon, c_class_int,class_names, im
         # convert to pixel coordinates
         for poly, class_int in zip(adj_polygons, adj_polygons_class):
             # print('polygon:', poly, class_int)
-            x, y = poly.exterior.coords.xy
+            x, y = [], []
+            if isinstance(poly, Polygon):
+                x, y = poly.exterior.coords.xy
+            elif isinstance(poly, MultiPolygon):
+                for sub_poly in poly.geoms:  # Iterate over individual Polygons
+                    x_s, y_s = sub_poly.exterior.coords.xy
+                    x.extend(x_s)
+                    y.extend(y_s)
             pixel_xs, pixel_ys = raster_io.geo_xy_to_pixel_xy(x,y,transform)
             # print(pixel_xs,pixel_ys)
 
-            points = [ [xx,yy] for xx,yy in zip(pixel_xs,  pixel_ys) ]
+            points = [ [int(xx),int(yy)] for xx,yy in zip(pixel_xs,  pixel_ys) ]
             object_name = class_names[class_int]
             object = {'label':object_name}
             object['points'] = points
@@ -88,9 +97,7 @@ def get_one_sub_image_json_file(idx, center_polygon, c_class_int,class_names, im
         labelme_json['imageWidth'] = src.width
         labelme_json['imagePath'] = os.path.basename(save_path)
 
-        json_data = json.dumps(labelme_json, indent=2)
-        with open(save_josn_path, "w") as f_obj:
-            f_obj.write(json_data)
+        io_function.save_dict_to_txt_json(save_josn_path,labelme_json)
 
     return save_path, save_josn_path
 
@@ -236,7 +243,7 @@ def main(options, args):
         bufferSize = options.bufferSize
         dstnodata = options.dstnodata
         b_rectangle = options.rectangle
-        class_names = ['rts']
+        class_names = ['others','rts']
 
         get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, image_pattern,class_names, bufferSize, dstnodata, saved_dir,b_rectangle, process_num)
     else:
