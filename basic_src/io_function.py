@@ -125,7 +125,8 @@ def is_folder_exist(folder_path):
         return True
     else:
         basic.outputlogMessage("Folder : %s not exist"%os.path.abspath(folder_path))
-        return False
+        raise IOError("Folder : %s not exist"%os.path.abspath(folder_path))
+        # return False
 
 
 def os_list_folder_dir(top_dir):
