@@ -12,6 +12,12 @@ from optparse import OptionParser
 
 from multiprocessing import Pool
 
+code_dir = os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
+sys.path.insert(0, code_dir)
+import raster_io as raster_io
+import vector_gpd as vector_gpd
+import basic_src.io_function as io_function
+
 def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj_overlay_y=0):
     """
     get the subset windows of each patch
@@ -83,6 +89,63 @@ def sliding_window(image_width,image_height, patch_w,patch_h,adj_overlay_x=0,adj
         patch_boundary = patch_boundary_unique
 
     return patch_boundary
+
+def a_patch_to_polygon(patch,geo_transform):
+    # patch: (xoff, yoff ,xsize, ysize)
+    minX, minY, maxX, maxY = patch[0], patch[1], patch[0]+patch[2], patch[1]+patch[3]
+    geo_xs, geo_ys = raster_io.pixel_xy_to_geo_xy_list([minY, maxY], [minX, maxX], geo_transform)
+    polygon = vector_gpd.convert_image_bound_to_shapely_polygon([geo_xs[0], geo_ys[0], geo_xs[1], geo_ys[1]])
+    return polygon
+
+def get_valid_patches_on_a_big_image(image_patches, image_path, img_valid_ext, b_return_idx = False):
+    # for a big image (such as cover the entire Arctic), get form mosaic, some (even a lot) portions of them
+    # are nodata (invalid). Valid regions are saved in "img_valid_ext",
+    # only to keep the image_patches that overlap with the vlaid regions
+
+    # image patches   to polygons
+    geo_transform = raster_io.get_transform_from_file(image_path)
+    projection_crs = raster_io.get_projection(image_path,format='epsg')
+    patch_polygons = [ a_patch_to_polygon(patch,geo_transform) for patch in image_patches]  # (minX, minY, maxX, maxY)
+
+
+    result = vector_gpd.polygons_overlap_another_group_in_file(patch_polygons,projection_crs,img_valid_ext,b_return_idx)
+    print(f'Selected {len(result)} image patch from {len(image_patches)} ones')
+    if b_return_idx:
+        select_patches = [image_patches[idx] for idx in result]
+        return select_patches
+    else:
+        save_patch = io_function.get_name_by_adding_tail(image_path,'selPatch')
+        save_patch = os.path.basename(os.path.splitext(save_patch)[0] + ".gpkg")    # save to current path
+        result.to_file(save_patch)
+        return save_patch
+
+
+def test_get_valid_patches_on_a_big_image():
+    data_dir = os.path.expanduser('~/Data/slump_demdiff_classify/pan_Arctic/s2_gee/ARTS-v3_1_0')
+    image_path = os.path.join(data_dir,'ARTS-v3_1_0_4bands_S2_SR_HARMONIZED_20230701_2023830_images.vrt')
+    img_valid_ext = os.path.join(data_dir,'ARTS-v3_1_0_4bands_S2_SR_HARMONIZED_20230701_2023830_images_imgExt.gpkg')
+
+    height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(image_path)
+    patch_w = 1000
+    patch_h = 1000
+    overlay_x = 100
+    overlay_y = 100
+    image_patches = sliding_window(width, height, patch_w, patch_h, adj_overlay_x=overlay_x, adj_overlay_y=overlay_y)
+
+    b_return_idx = True # for testing, comparsion.
+    res = get_valid_patches_on_a_big_image(image_patches,image_path,img_valid_ext,b_return_idx=b_return_idx)
+
+    # for testing
+    if b_return_idx:
+        import geopandas as gpd
+        geo_transform = raster_io.get_transform_from_file(image_path)
+        projection_crs = raster_io.get_projection(image_path, format='epsg')
+        patch_polygons = [a_patch_to_polygon(patch, geo_transform) for patch in res]  # (minX, minY, maxX, maxY)
+        sel_patch_gpd = gpd.GeoDataFrame({'geometry': patch_polygons})
+        sel_patch_gpd.set_crs(epsg=projection_crs, inplace=True)
+        sel_patch_gpd.to_file('sel_patch_from_idx.gpkg')
+
+
 
 def get_one_patch(input, index, patch,output_dir,out_format,extension,pre_name):
     # print information
@@ -201,6 +264,10 @@ def main(options, args):
     pass
 
 if __name__ == "__main__":
+
+    # test_get_valid_patches_on_a_big_image()
+    # sys.exit(0)
+
     usage = "usage: %prog [options] image_path"
     parser = OptionParser(usage=usage, version="1.0 2017-7-15")
     parser.description = 'Introduction: split a large image to many separate parts '

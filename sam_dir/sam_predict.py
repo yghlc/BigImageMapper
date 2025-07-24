@@ -255,7 +255,7 @@ def group_prompt_points_boxes(points_pixel_list, class_values, group_ids,input_b
     return group_prompts_all
 
 def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch_h, overlay_x, overlay_y,
-                        batch_size=1, min_area=10, max_area=40000, prompts=None, finetune_m=None,sam_version='1'):
+                        batch_size=1, min_area=10, max_area=40000, prompts=None, finetune_m=None,sam_version='1', valid_img_extent=None):
 
     # for each region, after SAM, its area (in pixel) should be within [min_area, max_area],
     # otherwise, remove it
@@ -366,6 +366,8 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
     # divide the image the many small patches, then calculate one by one, solving memory issues.
     image_patches = split_image.sliding_window(width, height, patch_w, patch_h, adj_overlay_x=overlay_x,
                                                adj_overlay_y=overlay_y)
+    if valid_img_extent is not None:
+        image_patches = split_image.get_valid_patches_on_a_big_image(image_patches,image_path,valid_img_extent, b_return_idx=True)
     # patch boundary: (xoff,yoff ,xsize, ysize)
     patch_count = len(image_patches)
     total_seg_count = 0
@@ -572,6 +574,7 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
     # prepare prompts (points or boxes)
     prompt_type = parameters.get_string_parameters_None_if_absence(para_file, 'prompt_type')
     # print('Debug, prompt_type', prompt_type)
+    valid_img_extent = parameters.get_file_path_parameters_None_if_absence(area_ini,'inf_image_valid_extent')
 
     if prompt_type is None:
         prompts_an_image_list = None
@@ -620,7 +623,7 @@ def segment_remoteSensing_image(para_file, area_ini, image_path, save_dir, netwo
                                patch_w, patch_h, overlay_x, overlay_y, batch_size=batch_size,
                                min_area=sam_mask_min_area, max_area=sam_mask_max_area,
                                prompts=prompts_an_image_list,finetune_m=finedtuned_model,
-                               sam_version=sam_version)
+                               sam_version=sam_version, valid_img_extent=valid_img_extent)
 
 def segment_one_image_sam(para_file, area_ini, image_path, img_save_dir, inf_list_file, gpuid):
 

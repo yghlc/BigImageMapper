@@ -1732,6 +1732,35 @@ def clip_geometries_ogr2ogr(input_path, save_path, bounds, format='ESRI Shapefil
     else:
         return None
 
+def polygons_overlap_another_group_in_file(polygon_list, projection, ref_shp, b_return_idx=False):
+    # Create GeoDataFrame from the input polygon list
+    group1 = gpd.GeoDataFrame({'geometry': polygon_list})
+    group1.set_crs(epsg=projection, inplace=True)  # Set CRS from input projection
+    # e.g.
+    # group1.set_crs(epsg=4326, inplace=True)  # Set CRS to WGS84 (latitude/longitude)
+
+    # Read the reference shapefile
+    group2 = gpd.read_file(ref_shp)
+
+    # Check and align CRS if needed
+    if group1.crs != group2.crs:
+        print('Warning: CRS in group 1 (%s) and group 2 (%s) is different. Re-projecting group 2 to %s.'
+              % (group1.crs, group2.crs, group1.crs))
+        group2 = group2.to_crs(group1.crs)
+
+    # Perform spatial join to find overlapping or touching geometries
+    overlap_touch = gpd.sjoin(group1, group2, how='inner', predicate='intersects')
+
+    # Remove duplicate geometries in the result
+    overlap_touch = overlap_touch.drop_duplicates(subset=['geometry'])
+
+    if b_return_idx:
+        # Return the indices of the overlapping polygons in the original list
+        overlapping_indices = overlap_touch.index.to_list()
+        return overlapping_indices
+
+    # Return the overlapping geometries as a GeoDataFrame
+    return overlap_touch
 
 def geometries_overlap_another_group(input_shp, ref_shp, how='intersection'):
     # using geopandas to find geometries in "input_shp" that overlap any geometries in "ref_shp"
