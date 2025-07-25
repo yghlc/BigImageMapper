@@ -209,7 +209,8 @@ def get_adjacent_polygons(center_polygon, all_polygons, class_int_all, buffer_si
 
     return adjacent_polygon, adjacent_polygon_class
 
-def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle, b_keep_org_file_name):
+def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle, b_keep_org_file_name,
+                  out_format='GTiff'):
     '''
     get a mask image based on a selected polygon, it may cross two image tiles
     :param selected_polygon: selected polygons
@@ -251,7 +252,7 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
 
             # test: save it to disk
             out_meta = src.meta.copy()
-            out_meta.update({"driver": "GTiff",
+            out_meta.update({"driver": out_format,
                              "height": out_image.shape[1],
                              "width": out_image.shape[2],
                              "transform": out_transform,
@@ -288,7 +289,7 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
                 tmp_saved = os.path.splitext(save_path)[0] +'_%d'%k_img + os.path.splitext(save_path)[1]
                 # test: save it to disk
                 out_meta = src.meta.copy()
-                out_meta.update({"driver": "GTiff",
+                out_meta.update({"driver": out_format,
                                  "height": out_image.shape[1],
                                  "width": out_image.shape[2],
                                  "transform": out_transform,
@@ -491,7 +492,7 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
 
 
 def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
-                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name):
+                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name,out_format):
     # output message
     if idx % 100 == 0:
         if b_label:
@@ -505,10 +506,13 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
     sub_image_label_str = None
     # get buffer area
     expansion_polygon = c_polygon.buffer(bufferSize)
+
+    extension = raster_io.get_file_extension(out_format)
+
     if b_label:
-        tail_name = '_%d_class_%d.tif' % (idx, c_class_int)
+        tail_name = f'_{idx}_class_{c_class_int}{extension}'
     else:
-        tail_name = '_%d.tif' % (idx)
+        tail_name = f'_{idx}{extension}'
 
     if b_keep_org_file_name:
         pre_name = 'ToReplaceSETbyHLC2024Dec9'
@@ -535,7 +539,8 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
 
 
 def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata,
-                              brectangle = True, b_label=True,proc_num=1, image_equal_size=None, b_keep_org_file_name=False):
+                              brectangle = True, b_label=True,proc_num=1, image_equal_size=None, b_keep_org_file_name=False,
+                              out_format='GTiff'):
     '''
     get sub images (and labels ) from training polygons
     :param t_polygons_shp: training polygon
@@ -589,7 +594,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
             sub_image_label_str = get_one_sub_image_label_parallel(idx, c_polygon, bufferSize, pre_name, pre_name_for_label, c_class_int,
                                              saved_dir, image_tile_list,
-                                             img_tile_boxes, dstnodata, brectangle, b_label, polygons_all, class_labels_all,b_keep_org_file_name)
+                                             img_tile_boxes, dstnodata, brectangle, b_label, polygons_all, class_labels_all,b_keep_org_file_name,out_format)
 
             if sub_image_label_str is not None:
                 list_txt_obj.writelines(sub_image_label_str)
@@ -597,7 +602,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
         parameters_list = [
             (idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
-                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name)
+                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name,out_format)
             for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons, class_labels))]
         theadPool = Pool(proc_num)  # multi processes
         results = theadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
@@ -637,6 +642,7 @@ def main(options, args):
     process_num = options.process_num
     image_equal_size = options.image_equal_size
     b_keep_grid_name = options.b_keep_grid_name
+    out_format = options.out_format
 
     # check training polygons
     assert io_function.is_file_exist(t_polygons_shp)
@@ -688,7 +694,8 @@ def main(options, args):
         pre_name = os.path.splitext(os.path.basename(image_tile_list[0]))[0]
     get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list,
                               saved_dir, pre_name, dstnodata, brectangle=options.rectangle, b_label=b_label_image,
-                              proc_num=process_num, image_equal_size = image_equal_size, b_keep_org_file_name=b_keep_grid_name)
+                              proc_num=process_num, image_equal_size = image_equal_size,
+                              b_keep_org_file_name=b_keep_grid_name, out_format=out_format)
 
     # move sub images and sub labels to different folders.
 
@@ -731,6 +738,9 @@ if __name__ == "__main__":
     parser.add_option("-k", "--b_keep_grid_name",
                       action="store_true", dest="b_keep_grid_name",default=False,
                       help="if set, the file name of sub-images will contain grid info from orignal images")
+    parser.add_option("-t", "--out_format",
+                      action="store", dest="out_format",default='GTIFF',
+                      help="the format of output images, GTIFF, PNG, JPEG, VRT, etc")
 
 
     (options, args) = parser.parse_args()

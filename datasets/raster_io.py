@@ -43,6 +43,20 @@ def get_driver_format(file_path):
     with rasterio.open(file_path) as src:
         return src.driver
 
+def get_file_extension(raster_format):
+    if raster_format.upper() == 'PNG':
+        extension = '.png'
+    elif raster_format.upper() == 'GTIFF':  # GTiff
+        extension = '.tif'
+    elif raster_format.upper() == 'JPEG':  # jpg
+        extension = '.jpg'
+    elif raster_format.upper() == 'VRT':
+        extension = '.vrt'
+    else:
+        raise ValueError(f"unknown output format: {raster_format}")
+    return extension
+
+
 def get_projection(file_path, format=None):
     # https://rasterio.readthedocs.io/en/latest/api/rasterio.crs.html
     # convert the different type, to epsg, proj4, and wkt
