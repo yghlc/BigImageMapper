@@ -118,6 +118,7 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     # img_idx_txt = os.path.join(img_save_dir,'../', '%d.txt' % img_idx)
     ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
     ref_raster = os.path.abspath(ref_raster)
+    height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(ref_raster)
 
     # to shapefile
     out_shp = 'I%d' % img_idx + '_' + out_name + '.shp'
@@ -131,9 +132,13 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
             os.chdir(curr_dir)
             return None
 
-        # in the shapefile, merge those polygons touch each other
-        merge_poly_shp = io_function.get_name_by_adding_tail(out_shp,'merge')
-        out_shp = merge_polygon_rasterize(ref_raster,out_shp,out_shp=merge_poly_shp)
+        if height*width > 50000*50000:
+            basic.outputlogMessage(f'Warning, skip merging polygons touch each other using rasterize, '
+                                   f'as the image is too large ({height} by {width}), please use Shapely if necessary')
+        else:
+            # in the shapefile, merge those polygons touch each other
+            merge_poly_shp = io_function.get_name_by_adding_tail(out_shp,'merge')
+            out_shp = merge_polygon_rasterize(ref_raster,out_shp,out_shp=merge_poly_shp)
 
     os.chdir(curr_dir)
     out_shp_path = os.path.join(img_save_dir, out_shp)
