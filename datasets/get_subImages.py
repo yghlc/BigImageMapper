@@ -209,6 +209,17 @@ def get_adjacent_polygons(center_polygon, all_polygons, class_int_all, buffer_si
 
     return adjacent_polygon, adjacent_polygon_class
 
+
+def get_polygon_extent_same_size(geometries, buffer_size):
+    # if image_equal_size (buffer size, in meters) is set,get image with the same size, by
+    # (1) get the centroid of each polygon, then buffer to the same size
+    if buffer_size <= 0:
+        raise ValueError(f'image_equal_size: {buffer_size} is not correct set')
+    basic.outputlogMessage('Converting all polygons to the same size after buffering %f meters' % buffer_size)
+    center_polygons = [poly.centroid.buffer(buffer_size) for poly in geometries]
+    basic.outputlogMessage(f'finished, converted {len(center_polygons)} polygons to the same size')
+    return center_polygons
+
 def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle, b_keep_org_file_name,
                   out_format='GTiff'):
     '''
@@ -577,11 +588,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
     # check_polygons_invalidity(polygons_all,t_polygons_shp_all)
 
     if image_equal_size is not None:
-        if image_equal_size < 0:
-            raise ValueError('image_equal_size is not correct set')
-        basic.outputlogMessage('Converting all polygons to the same size after buffering %f meters'%image_equal_size)
-        center_polygons = [ poly.centroid.buffer(image_equal_size) for poly in center_polygons]
-        basic.outputlogMessage('finished, converted %d polygons to the same size' % len(center_polygons))
+        center_polygons = get_polygon_extent_same_size(center_polygons,image_equal_size)
 
     img_tile_boxes = get_image_tile_bound_boxes(image_tile_list)
 
