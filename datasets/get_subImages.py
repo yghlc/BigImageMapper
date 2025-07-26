@@ -643,7 +643,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 def main(options, args):
 
     t_polygons_shp = args[0]
-    image_folder = args[1]   # folder for store image tile (many split block of a big image)
+    image_folder_or_path = args[1]   # folder for store image tile (many split block of a big image)
 
     b_label_image = options.no_label_image
     process_num = options.process_num
@@ -665,9 +665,13 @@ def main(options, args):
 
     # get image tile list
     # image_tile_list = io_function.get_file_list_by_ext(options.image_ext, image_folder, bsub_folder=False)
-    image_tile_list = io_function.get_file_list_by_pattern(image_folder,options.image_ext)
+    if os.path.isdir(image_folder_or_path):
+        image_tile_list = io_function.get_file_list_by_pattern(image_folder_or_path,options.image_ext)
+    else:
+        assert io_function.is_file_exist(image_folder_or_path)
+        image_tile_list = [image_folder_or_path]
     if len(image_tile_list) < 1:
-        raise IOError('error, failed to get image tiles in folder %s'%image_folder)
+        raise IOError('error, failed to get image tiles in folder %s'%image_folder_or_path)
 
     check_projection_rasters(image_tile_list)   # it will raise errors if found problems
 
@@ -709,7 +713,7 @@ def main(options, args):
 
 
 if __name__ == "__main__":
-    usage = "usage: %prog [options] training_polygons image_folder"
+    usage = "usage: %prog [options] training_polygons image_folder_or_path"
     parser = OptionParser(usage=usage, version="1.0 2019-9-26")
     parser.description = 'Introduction: get sub Images (and Labels) from training polygons directly, without gdal_rasterize. ' \
                          'The image and shape file should have the same projection.'
