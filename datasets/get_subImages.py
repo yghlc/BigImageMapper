@@ -593,9 +593,9 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
             return None
 
     if b_label:
-        sub_image_label_str = os.path.basename(subimg_saved_path) + ":" + os.path.basename(sublabel_saved_path) + '\n'
+        sub_image_label_str = os.path.relpath(subimg_saved_path) + ":" + os.path.relpath(sublabel_saved_path) + '\n'
     else:
-        sub_image_label_str = os.path.basename(subimg_saved_path) + '\n'
+        sub_image_label_str = os.path.relpath(subimg_saved_path) + '\n'
     return sub_image_label_str
 
 
