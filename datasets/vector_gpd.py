@@ -403,6 +403,15 @@ def get_polygon_bounding_box(polygon):
     # return the bounding box of a shapely polygon (minx, miny, maxx, maxy)
     return polygon.bounds
 
+
+def get_polygon_centroid_lat_lon(in_shp):
+    geometries = read_shape_gpd_to_NewPrj(in_shp,'EPSG:4326')
+    # Get centroids and extract (lat, lon)
+    centroids = geometries.centroid
+    lat_lon_list = [(pt.y, pt.x) for pt in centroids]
+    return lat_lon_list
+
+
 def get_polygon_centroid(polygon):
     # return the geometric center of a polygon
     return polygon.centroid

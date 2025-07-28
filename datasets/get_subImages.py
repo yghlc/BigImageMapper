@@ -28,6 +28,7 @@ from rasterio.features import rasterize
 from shapely.geometry import mapping # transform to GeJSON format
 
 import geopandas as gpd
+import geo_index_h3
 
 import math
 import numpy as np
@@ -39,6 +40,7 @@ from multiprocessing import Pool
 
 from vector_gpd import convert_image_bound_to_shapely_polygon
 from vector_gpd import get_poly_index_within_extent
+from vector_gpd import get_polygon_centroid_lat_lon
 
 import shutil
 
@@ -219,6 +221,33 @@ def get_polygon_extent_same_size(geometries, buffer_size):
     center_polygons = [poly.centroid.buffer(buffer_size) for poly in geometries]
     basic.outputlogMessage(f'finished, converted {len(center_polygons)} polygons to the same size')
     return center_polygons
+
+def get_save_file_path(saved_dir, pre_name,tail_name, b_label, lat=None,lon=None,
+                       res=14, file_ext='.tif', h3_filename = False):
+    # get the file save path
+    # if h3_filename is True, polygon, prj_crs should be set, otherwise, could be set as None
+    # if h3_filename is False, pre_name,tail_name should be set,otherwise, could be set as None
+    mid_dir = 'subImages'
+    if b_label:
+        mid_dir = 'subLabels'
+
+    if h3_filename:
+        # # this would likely slow, because the following is repreated for each sub-iimage
+        # transformer = Transformer.from_crs(prj_crs, "EPSG:4326", always_xy=True)
+        # centroid = polygon.centroid
+        # lon_proj, lat_proj = centroid.x, centroid.y
+        # lon, lat = transformer.transform(lon_proj, lat_proj)
+
+        root_dir = os.path.join(saved_dir, mid_dir)
+        subimg_saved_path = geo_index_h3.get_folder_file_save_path(root_dir, lat, lon, res=res, extension=file_ext)
+        subimg_dir = os.path.dirname(subimg_saved_path)
+        if not os.path.exists(subimg_dir):
+            os.makedirs(subimg_dir, exist_ok=True)
+        return subimg_saved_path
+
+    else:
+        subimg_saved_path = os.path.join(saved_dir, mid_dir, pre_name + tail_name)
+        return subimg_saved_path
 
 def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle, b_keep_org_file_name,
                   out_format='GTiff'):
@@ -503,7 +532,8 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
 
 
 def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
-                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name,out_format):
+                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name,
+                                     out_format,h3_filename,c_lat=None, c_lon=None):
     # output message
     if idx % 100 == 0:
         if b_label:
@@ -519,6 +549,9 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
     expansion_polygon = c_polygon.buffer(bufferSize)
 
     extension = raster_io.get_file_extension(out_format)
+    # print(c_lat, c_lon)
+    h3_res = [2, 6, 10, 14]
+    # h3_res = 14
 
     if b_label:
         tail_name = f'_{idx}_class_{c_class_int}{extension}'
@@ -529,29 +562,42 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
         pre_name = 'ToReplaceSETbyHLC2024Dec9'
 
     # get one sub-image based on the buffer areas
-    subimg_shortName = os.path.join('subImages', pre_name + tail_name)
-    subimg_saved_path = os.path.join(saved_dir, subimg_shortName)
+    subimg_saved_path = get_save_file_path(saved_dir,pre_name, tail_name, b_label, lat=c_lat,lon=c_lon,
+                                           res=h3_res, file_ext=extension, h3_filename=h3_filename)
+    #
+    # subimg_shortName = os.path.join('subImages', pre_name + tail_name)
+    # subimg_saved_path = os.path.join(saved_dir, subimg_shortName)
+    # if h3_filename:
+    #     subimg_saved_path = os.path.join(saved_dir, geo_index_h3.get_folder_file_save_path())
+
     subimg_saved_path =  get_sub_image(idx, expansion_polygon, image_tile_list, img_tile_boxes, subimg_saved_path, dstnodata, brectangle,b_keep_org_file_name)
     if subimg_saved_path is False:
         basic.outputlogMessage('Warning, skip the %dth polygon' % idx)
         return None
 
     # based on the sub-image, create the corresponding vectors
-    sublabel_shortName = os.path.join('subLabels', pre_name_for_label + tail_name)
-    sublabel_saved_path = os.path.join(saved_dir, sublabel_shortName)
+    sublabel_saved_path = get_save_file_path(saved_dir,pre_name_for_label, tail_name, b_label, lat=c_lat,lon=c_lon,
+                                           res=h3_res, file_ext=extension, h3_filename=h3_filename)
+    # sublabel_shortName = os.path.join('subLabels', pre_name_for_label + tail_name)
+    # sublabel_saved_path = os.path.join(saved_dir, sublabel_shortName)
+    # if h3_filename:
+    #     subimg_saved_path = os.path.join(saved_dir, geo_index_h3.get_folder_file_save_path())
     if b_label:
         if get_sub_label(idx, subimg_saved_path, c_polygon, c_class_int, polygons_all, class_labels_all, bufferSize,
                          brectangle, sublabel_saved_path) is False:
             basic.outputlogMessage('Warning, get the label raster for %dth polygon failed' % idx)
             return None
 
-    sub_image_label_str = subimg_shortName + ":" + sublabel_shortName + '\n'
+    if b_label:
+        sub_image_label_str = os.path.basename(subimg_saved_path) + ":" + os.path.basename(sublabel_saved_path) + '\n'
+    else:
+        sub_image_label_str = os.path.basename(subimg_saved_path) + '\n'
     return sub_image_label_str
 
 
 def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list, saved_dir, pre_name, dstnodata,
                               brectangle = True, b_label=True,proc_num=1, image_equal_size=None, b_keep_org_file_name=False,
-                              out_format='GTiff'):
+                              out_format='GTiff', h3_filename=False):
     '''
     get sub images (and labels ) from training polygons
     :param t_polygons_shp: training polygon
@@ -572,6 +618,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
     # read polygons
     t_shapefile = gpd.read_file(t_polygons_shp)
     center_polygons = t_shapefile.geometry.values
+    c_lat_lon_list = get_polygon_centroid_lat_lon(t_polygons_shp)
     if b_label:
         class_labels = t_shapefile['class_int'].tolist()
     else:
@@ -601,7 +648,8 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
             sub_image_label_str = get_one_sub_image_label_parallel(idx, c_polygon, bufferSize, pre_name, pre_name_for_label, c_class_int,
                                              saved_dir, image_tile_list,
-                                             img_tile_boxes, dstnodata, brectangle, b_label, polygons_all, class_labels_all,b_keep_org_file_name,out_format)
+                                             img_tile_boxes, dstnodata, brectangle, b_label, polygons_all, class_labels_all,b_keep_org_file_name,
+                                             out_format,h3_filename, c_lat=c_lat_lon_list[idx][0],c_lon=c_lat_lon_list[idx][1])
 
             if sub_image_label_str is not None:
                 list_txt_obj.writelines(sub_image_label_str)
@@ -609,7 +657,8 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
         parameters_list = [
             (idx,c_polygon, bufferSize,pre_name, pre_name_for_label,c_class_int,saved_dir, image_tile_list,
-                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name,out_format)
+                            img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name,
+                            out_format,h3_filename,c_lat_lon_list[idx][0],c_lat_lon_list[idx][1])
             for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons, class_labels))]
         theadPool = Pool(proc_num)  # multi processes
         results = theadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
@@ -650,6 +699,7 @@ def main(options, args):
     image_equal_size = options.image_equal_size
     b_keep_grid_name = options.b_keep_grid_name
     out_format = options.out_format
+    h3_filename = options.h3_filename
 
     # check training polygons
     assert io_function.is_file_exist(t_polygons_shp)
@@ -706,7 +756,7 @@ def main(options, args):
     get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, image_tile_list,
                               saved_dir, pre_name, dstnodata, brectangle=options.rectangle, b_label=b_label_image,
                               proc_num=process_num, image_equal_size = image_equal_size,
-                              b_keep_org_file_name=b_keep_grid_name, out_format=out_format)
+                              b_keep_org_file_name=b_keep_grid_name, out_format=out_format, h3_filename=h3_filename)
 
     # move sub images and sub labels to different folders.
 
@@ -752,6 +802,9 @@ if __name__ == "__main__":
     parser.add_option("-t", "--out_format",
                       action="store", dest="out_format",default='GTIFF',
                       help="the format of output images, GTIFF, PNG, JPEG, VRT, etc")
+    parser.add_option("", "--h3_filename",
+                      action="store_true", dest="h3_filename",default=False,
+                      help="if set, it will generate H3 cell ID as filename")
 
 
     (options, args) = parser.parse_args()
