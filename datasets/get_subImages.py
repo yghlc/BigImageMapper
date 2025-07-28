@@ -227,9 +227,6 @@ def get_save_file_path(saved_dir, pre_name,tail_name, b_label, lat=None,lon=None
     # get the file save path
     # if h3_filename is True, polygon, prj_crs should be set, otherwise, could be set as None
     # if h3_filename is False, pre_name,tail_name should be set,otherwise, could be set as None
-    mid_dir = 'subImages'
-    if b_label:
-        mid_dir = 'subLabels'
 
     if h3_filename:
         # # this would likely slow, because the following is repreated for each sub-iimage
@@ -237,8 +234,10 @@ def get_save_file_path(saved_dir, pre_name,tail_name, b_label, lat=None,lon=None
         # centroid = polygon.centroid
         # lon_proj, lat_proj = centroid.x, centroid.y
         # lon, lat = transformer.transform(lon_proj, lat_proj)
-
-        root_dir = os.path.join(saved_dir, mid_dir)
+        if b_label:
+            root_dir = os.path.join(saved_dir, 'subLabels')
+        else:
+            root_dir = saved_dir
         subimg_saved_path = geo_index_h3.get_folder_file_save_path(root_dir, lat, lon, res=res, extension=file_ext)
         subimg_dir = os.path.dirname(subimg_saved_path)
         if not os.path.exists(subimg_dir):
@@ -246,6 +245,9 @@ def get_save_file_path(saved_dir, pre_name,tail_name, b_label, lat=None,lon=None
         return subimg_saved_path
 
     else:
+        mid_dir = 'subImages'
+        if b_label:
+            mid_dir = 'subLabels'
         subimg_saved_path = os.path.join(saved_dir, mid_dir, pre_name + tail_name)
         return subimg_saved_path
 
@@ -665,6 +667,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
         for res in results:
             if res is not None:
                 list_txt_obj.writelines(res)
+        theadPool.close()
     else:
         raise ValueError('Wrong process number: %s'%(proc_num))
 

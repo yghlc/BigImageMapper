@@ -19,10 +19,12 @@ import parameters
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 from datasets import raster_io
+from datasets import vector_gpd
 
 import geopandas as gpd
 import rasterio
 import json
+from tqdm import tqdm
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
 import get_subImages
@@ -106,7 +108,8 @@ def get_one_sub_image_json_file(idx, center_polygon, c_class_int,class_names, im
 
 
 def get_sub_images_and_json_files(polygons_shp, class_names,bufferSize, image_tile_list,
-                              saved_dir, pre_name, dstnodata, out_format, brectangle=True, proc_num=1,image_equal_size=None):
+                              saved_dir, pre_name, dstnodata, out_format, brectangle=True, proc_num=1,
+                                  image_equal_size=None,h3_filename=False):
     '''
     get sub-images and corresponding josn file (labelme)
     :param polygons_shp:
@@ -123,6 +126,7 @@ def get_sub_images_and_json_files(polygons_shp, class_names,bufferSize, image_ti
     # read polygons
     t_shapefile = gpd.read_file(polygons_shp)
     center_polygons = t_shapefile.geometry.values
+    c_lat_lon_list =  vector_gpd.get_polygon_centroid_lat_lon(polygons_shp)
     if 'class_int' in t_shapefile.keys():
         class_labels = t_shapefile['class_int'].tolist()
     else:
@@ -136,13 +140,21 @@ def get_sub_images_and_json_files(polygons_shp, class_names,bufferSize, image_ti
     img_tile_boxes = get_subImages.get_image_tile_bound_boxes(image_tile_list)
 
     proc_num = min(1, proc_num) # for test, current version.
+    h3_res = [2, 6, 10, 14]
+    # print(h3_filename)
     extension = raster_io.get_file_extension(out_format)
     # go through each polygon
     if proc_num == 1:
-        for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons,class_labels)):
-            save_path = os.path.join(saved_dir,pre_name + f'_sub_{idx}{extension}')
+        for idx, (c_polygon, c_class_int) in tqdm(enumerate(zip(center_polygons,class_labels)), total=len(center_polygons)):
+            if h3_filename:
+                save_path = get_subImages.get_save_file_path(saved_dir, None,None,False,
+                                                 lat=c_lat_lon_list[idx][0],lon=c_lat_lon_list[idx][1],res=h3_res,
+                                                file_ext=extension,h3_filename=h3_filename)
+            else:
+                save_path = os.path.join(saved_dir,pre_name + f'_sub_{idx}{extension}')
             tif_path, json_path = get_one_sub_image_json_file(idx, c_polygon, c_class_int, class_names, image_tile_list, img_tile_boxes, save_path,
-                                dstnodata, brectangle, bufferSize, polygons_all, class_labels_all, out_format)
+                                dstnodata, brectangle, bufferSize, polygons_all, class_labels_all,
+                                out_format)
 
     elif proc_num > 1:
         pass
@@ -153,13 +165,14 @@ def get_sub_images_and_json_files(polygons_shp, class_names,bufferSize, image_ti
         #     for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons,class_labels))]
         # theadPool = Pool(proc_num)  # multi processes
         # results = theadPool.starmap(get_one_sub_image_json_file, parameters_list)  # need python3
+        theadPool.close()
     else:
         raise ValueError('Wrong process number: %s'%(proc_num))
 
 
 
 def get_sub_images_pixel_json_files(polygons_shp,image_folder_or_path,image_pattern,class_names, bufferSize,dstnodata,
-                                    saved_dir,b_rectangle,process_num, out_format,image_equal_size=None):
+                                    saved_dir,b_rectangle,process_num, out_format,image_equal_size=None,h3_filename=False):
 
     # check training polygons
     assert io_function.is_file_exist(polygons_shp)
@@ -188,15 +201,16 @@ def get_sub_images_pixel_json_files(polygons_shp,image_folder_or_path,image_patt
     if get_subImages.get_projection_proj4(polygons_shp).strip() == '+proj=longlat +datum=WGS84 +no_defs':
         bufferSize = get_subImages.meters_to_degress_onEarth(bufferSize)
 
-    pre_name = os.path.splitext(os.path.basename(image_tile_list[0]))[0]
 
-    saved_dir = os.path.join(saved_dir, pre_name+ '_subImages')
+    pre_name = os.path.splitext(os.path.basename(image_tile_list[0]))[0]
+    if h3_filename is False:
+        saved_dir = os.path.join(saved_dir, pre_name+ '_subImages')
     if os.path.isdir(saved_dir) is False:
         io_function.mkdir(saved_dir)
 
     get_sub_images_and_json_files(polygons_shp,class_names, bufferSize, image_tile_list,
                               saved_dir, pre_name, dstnodata, out_format, brectangle=b_rectangle, proc_num=process_num,
-                                  image_equal_size=image_equal_size)
+                                  image_equal_size=image_equal_size,h3_filename=h3_filename)
 
 
 def test_get_sub_images_pixel_json_files():
@@ -218,7 +232,7 @@ def test_get_sub_images_pixel_json_files():
 
 
 def get_sub_images_from_prediction_results(para_file,polygons_shp,image_folder_or_path,image_pattern,saved_dir,out_format,
-                                           image_equal_size=None):
+                                           image_equal_size=None,h3_filename=False):
 
     class_names = parameters.get_string_list_parameters(para_file,'object_names')
 
@@ -233,7 +247,8 @@ def get_sub_images_from_prediction_results(para_file,polygons_shp,image_folder_o
     process_num = parameters.get_digit_parameters(para_file,'process_num', 'int')
 
     get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, image_pattern, class_names, bufferSize,
-                                    dstnodata, saved_dir, b_rectangle, process_num, out_format, image_equal_size=image_equal_size)
+                                    dstnodata, saved_dir, b_rectangle, process_num, out_format,
+                                    image_equal_size=image_equal_size,h3_filename=h3_filename)
 
     pass
 
@@ -247,6 +262,8 @@ def main(options, args):
     para_file = options.para_file
     out_format = options.out_format
     image_equal_size = options.image_equal_size
+    h3_filename = options.h3_filename
+    print('h3_filenamez:',h3_filename)
 
     if para_file is None:
         process_num = options.process_num
@@ -256,13 +273,14 @@ def main(options, args):
         class_names = ['others','rts']
 
         get_sub_images_pixel_json_files(polygons_shp, image_folder_or_path, image_pattern,class_names, bufferSize,
-                                        dstnodata, saved_dir,b_rectangle, process_num, out_format, image_equal_size=image_equal_size)
+                                        dstnodata, saved_dir,b_rectangle, process_num, out_format,
+                                        image_equal_size=image_equal_size, h3_filename=h3_filename)
     else:
         polygons_shp = args[0]
         image_folder_or_path = args[1]  # folder for store image tile (many split block of a big image)
 
         get_sub_images_from_prediction_results(para_file,polygons_shp,image_folder_or_path,image_pattern,saved_dir,out_format,
-                                               image_equal_size=image_equal_size)
+                                               image_equal_size=image_equal_size, h3_filename=h3_filename)
 
 
 
@@ -299,6 +317,9 @@ if __name__ == '__main__':
                       action="store", dest="image_equal_size",
                       help="if set (in meters), then extract the centroid of each polygon, "
                            "buffer this value to a polygon,making each extracted image has the same width and height ")
+    parser.add_option("", "--h3_filename",
+                      action="store_true", dest="h3_filename",default=False,
+                      help="if set, it will generate H3 cell ID as filename")
 
     (options, args) = parser.parse_args()
     # print(options.no_label_image)
