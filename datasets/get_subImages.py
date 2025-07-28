@@ -572,7 +572,8 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
     # if h3_filename:
     #     subimg_saved_path = os.path.join(saved_dir, geo_index_h3.get_folder_file_save_path())
 
-    subimg_saved_path =  get_sub_image(idx, expansion_polygon, image_tile_list, img_tile_boxes, subimg_saved_path, dstnodata, brectangle,b_keep_org_file_name)
+    subimg_saved_path =  get_sub_image(idx, expansion_polygon, image_tile_list, img_tile_boxes, subimg_saved_path,
+                                       dstnodata, brectangle,b_keep_org_file_name,out_format=out_format)
     if subimg_saved_path is False:
         basic.outputlogMessage('Warning, skip the %dth polygon' % idx)
         return None
