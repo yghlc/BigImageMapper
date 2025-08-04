@@ -37,11 +37,11 @@ def random_divide_to_groups(file_list, num_each_group=100):
 
 def copy_files(file_list, save_dir,group_id_str):
     for file in file_list:
-        io_function.copyfiletodir(file, save_dir)
+        io_function.copyfiletodir(file, save_dir, b_verbose=False)
 
 def move_files(file_list, save_dir,group_id_str):
     for file in file_list:
-        io_function.movefiletodir(file, save_dir)
+        io_function.movefiletodir(file, save_dir, b_verbose=False)
 
 def organize_files_to_diff_folders(file_groups, save_dir='./random_groups', b_copy=False):
     if os.path.isdir(save_dir) is False:

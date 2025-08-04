@@ -319,7 +319,7 @@ def get_name_by_adding_tail(basename,tail):
     return text[0]+'_'+tail+text[1]
 
 
-def copy_file_to_dst(file_path, dst_name, overwrite=False):
+def copy_file_to_dst(file_path, dst_name, overwrite=False, b_verbose=True):
     """
     copy file to a destination file
     Args:
@@ -351,7 +351,8 @@ def copy_file_to_dst(file_path, dst_name, overwrite=False):
         basic.outputlogMessage('copy file failed, from %s to %s.'%(file_path,dst_name))
         return False
     else:
-        basic.outputlogMessage('copy file success: '+ file_path)
+        if b_verbose:
+            basic.outputlogMessage('copy file success: '+ file_path)
         return True
 
 
@@ -389,7 +390,7 @@ def move_file_to_dst(file_path, dst_name,overwrite=False, b_verbose=True):
         basic.outputlogMessage('move file or folder failed, from %s to %s.'%(file_path,dst_name))
         return False
 
-def movefiletodir(file_path, dir_name,overwrite=False):
+def movefiletodir(file_path, dir_name,overwrite=False, b_verbose=True):
     """
     move file to a destination folder
     Args:
@@ -401,9 +402,9 @@ def movefiletodir(file_path, dir_name,overwrite=False):
 
     """
     dst_name =  os.path.join(dir_name,os.path.split(file_path)[1])
-    return move_file_to_dst(file_path,dst_name, overwrite=overwrite)
+    return move_file_to_dst(file_path,dst_name, overwrite=overwrite, b_verbose=b_verbose)
 
-def copyfiletodir(file_path, dir_name,overwrite=False):
+def copyfiletodir(file_path, dir_name,overwrite=False, b_verbose=True):
     """
     copy file to a destination folder
     Args:
@@ -415,7 +416,7 @@ def copyfiletodir(file_path, dir_name,overwrite=False):
 
     """
     dst_name =  os.path.join(dir_name,os.path.split(file_path)[1])
-    return copy_file_to_dst(file_path,dst_name,overwrite=overwrite)
+    return copy_file_to_dst(file_path,dst_name,overwrite=overwrite, b_verbose=b_verbose)
 
 def unzip_file(file_path, work_dir):
     '''
