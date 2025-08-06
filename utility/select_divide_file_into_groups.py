@@ -85,6 +85,10 @@ def main(options, args):
         return
 
     file_list = io_function.get_file_list_by_ext(file_ext,data_folder,bsub_folder=True)
+    if len(file_list) < 1:
+        print(f'No files in {data_folder} with extension: {file_ext}')
+        return
+    print(f'found {len(file_list)} in {data_folder} with extension: {file_ext}')
 
     if res_isolated_h3 is not None:
         file_list = select_spatial_isolated_files(file_list,res_isolated_h3,thr_neighbour_grid)
