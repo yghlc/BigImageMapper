@@ -90,6 +90,11 @@ def save_original_geometries(geometries, train_class_int, id_list, uIDs, wkt_str
     save_attributes = {'Polygons': geometries, 'id': id_list, 'UID': uIDs, 'geom_type':geometry_type, 'class_int': train_class_int}
     save_to_a_gpkg_file(save_attributes, wkt_string, save_path)
 
+def save_original_geometries_buffer(geometries, train_class_int, id_list, uIDs, wkt_string, save_path, buffer=100):
+    geometry_type = [ item.geom_type for item in geometries]
+    geometries = [item.buffer(buffer) for item in geometries]
+    save_attributes = {'Polygons': geometries, 'id': id_list, 'UID': uIDs, 'geom_type':geometry_type, 'class_int': train_class_int}
+    save_to_a_gpkg_file(save_attributes, wkt_string, save_path)
 
 def save_bounding_boxes(geometries, train_class_int, id_list, uIDs, wkt_string, save_path):
 
@@ -249,6 +254,13 @@ def ARTS_to_classInt_polygons(input,output,buff_radius=500):
     save_original_geometries(m_geometries,train_class_int,id_list,m_uIDs,wkt_string,output_orginal_polys)
     output_orginal_polys_c1 = io_function.get_name_by_adding_tail(output_orginal_polys,'c1')
     vector_gpd.save_shapefile_subset_as_valueInlist(output_orginal_polys, output_orginal_polys_c1, 'class_int', [1], format='GPKG')
+
+    # save original polygons or points after buffer 100
+    buffer_size = 100
+    output_orginal_polys_buffer = io_function.get_name_by_adding_tail(output, f'org_b{buffer_size}')
+    save_original_geometries_buffer(m_geometries,train_class_int,id_list,m_uIDs,wkt_string,output_orginal_polys_buffer, buffer=buffer_size)
+    output_orginal_polys_buffer_c1 = io_function.get_name_by_adding_tail(output_orginal_polys_buffer,'c1')
+    vector_gpd.save_shapefile_subset_as_valueInlist(output_orginal_polys_buffer, output_orginal_polys_buffer_c1, 'class_int', [1], format='GPKG')
 
     # save bounding boxes for original polygons
     output_bounding_box = io_function.get_name_by_adding_tail(output,'box')
