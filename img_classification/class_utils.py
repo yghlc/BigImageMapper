@@ -30,7 +30,8 @@ class RSPatchDataset(Dataset):
         self.img_list = image_path_list
         self.labels = image_labels
 
-        label_list = [[item.split(',')[0], int(item.split(',')[1])] for item in io_function.read_list_from_txt(label_txt)]
+        # tmp = item.rsplit(',', 1)  # Split into two parts using the last comma
+        label_list = [[item.rsplit(',', 1)[0], int(item.rsplit(',', 1)[1])] for item in io_function.read_list_from_txt(label_txt)]
         # arr_t = np.array(label_list).T
         label_list = np.array(label_list).T.tolist()    # switch the row and column
         self.transform = transform
