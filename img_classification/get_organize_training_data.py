@@ -70,7 +70,8 @@ def read_label_ids_local(label_txt):
     # label_list = [[item.split(',')[0], int(item.split(',')[1])] for item in io_function.read_list_from_txt(label_txt)]
     label_ids = {}
     for item in io_function.read_list_from_txt(label_txt):
-        tmp = item.split(',')
+        # tmp = item.split(',')
+        tmp = item.rsplit(',', 1)   # Split into two parts using the last comma
         label_ids[tmp[0].lower()] = int(tmp[1]) # change to lower case
     return label_ids
 
