@@ -367,16 +367,21 @@ def parallel_prediction_main(para_file,trained_model):
     for area_idx, area_ini in enumerate(multi_inf_regions):
 
         inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
+        inf_image_patch_labels_txt = parameters.get_file_path_parameters_None_if_absence(area_ini,
+                                                'inf_image_patch_labels')
 
-        # it is ok consider a file name as pattern and pass it the following functions to get file list
-        inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
-
-        inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir, inf_image_or_pattern)
-        img_count = len(inf_img_list)
-        if img_count < 1:
-            raise ValueError(
-                'No image for inference, please check inf_image_dir (%s) and inf_image_or_pattern (%s) in %s'
-                % (inf_image_dir, inf_image_or_pattern, area_ini))
+        if inf_image_patch_labels_txt is not None:
+            print('Parameter: inf_image_patch_labels_txt  is set, will read data from it for prediction')
+            # img_label_list = io_function.read_list_from_txt(inf_image_patch_labels_txt)
+        else:
+            # it is ok consider a file name as pattern and pass it the following functions to get file list
+            inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
+            inf_img_list = io_function.get_file_list_by_pattern(inf_image_dir, inf_image_or_pattern)
+            img_count = len(inf_img_list)
+            if img_count < 1:
+                raise ValueError(
+                    'No image for inference, please check inf_image_dir (%s) and inf_image_or_pattern (%s) in %s'
+                    % (inf_image_dir, inf_image_or_pattern, area_ini))
 
         area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
         area_save_dir = os.path.join(outdir, area_name_remark_time)
