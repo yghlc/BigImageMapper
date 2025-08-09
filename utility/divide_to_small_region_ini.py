@@ -129,11 +129,27 @@ def find_sub_regions(grid_polys, grid_ids, min_grid_count, max_grid_count, grid_
         save_selected_girds_and_ids(selected_gird_id_list, select_grid_polys, proj, save_path)
     return select_grid_polys, selected_gird_id_list
 
-def divide_large_region_into_subsets(in_grid_shp, save_dir, min_grid_count=20, max_grid_count=200):
+def divide_large_region_into_subsets(in_grid_shp, save_dir, min_grid_count=20, max_grid_count=200,inf_img_grid_id_list=None):
 
     gird_prj = map_projection.get_raster_or_vector_srs_info_proj4(in_grid_shp)
     # read grids
     grid_polys, grid_ids = vector_gpd.read_polygons_attributes_list(in_grid_shp,'cell_id')
+    if len(inf_img_grid_id_list) != len(grid_polys):
+        print(f'the image count ({len(inf_img_grid_id_list)}) and grid count ({len(grid_polys)}) is different, will work on the intersection')
+        # select the intersection
+        intersection_ids = set(grid_ids) & set(inf_img_grid_id_list)
+        # Filter polygons and ids to keep only those in the intersection
+        filtered_grid_polys = []
+        filtered_grid_ids = []
+        for poly, gid in zip(grid_polys, grid_ids):
+            if gid in intersection_ids:
+                filtered_grid_polys.append(poly)
+                filtered_grid_ids.append(gid)
+        # Replace the originals
+        grid_polys = filtered_grid_polys
+        grid_ids = filtered_grid_ids
+        print(f'Filtered to {len(grid_polys)} grids matching available images')
+
     # print(grid_ids)
     # burn into a np array
     grid_ids_2d = raster_io.burn_polygons_to_a_raster(grid_20_id_raster, grid_polys, grid_ids, None, date_type='int32')
@@ -287,7 +303,8 @@ def divide_large_region_ini_into_subsets_ini(region_ini, region_grid_shp, min_gr
 
     # divide to sub-regions
     select_grid_polys_dict, selected_gird_ids_dict = \
-        divide_large_region_into_subsets(region_grid_shp, save_dir,  min_grid_count=min_grid_count, max_grid_count=max_grid_count)
+        divide_large_region_into_subsets(region_grid_shp, save_dir,  min_grid_count=min_grid_count, max_grid_count=max_grid_count,
+                                         inf_img_grid_id_list=inf_img_grid_id_list)
     # grid_ids_txt_list = io_function.get_file_list_by_pattern(save_dir,'*grid_ids.txt')
 
     # create area ini files for each sub-regions
