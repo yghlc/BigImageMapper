@@ -520,6 +520,9 @@ def main(options, args):
     para_file = args[0]
     trained_model = options.trained_model
 
+    if len(trained_model) > 1 and os.path.isfile(trained_model) is False:
+        raise IOError(f'trained_model: {trained_model} is set but do not exist, please check. Note ~, *, ? are not supported')
+
     parallel_prediction_main(para_file, trained_model)
 
 
