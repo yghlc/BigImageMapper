@@ -235,13 +235,9 @@ def run_prediction(model, test_loader,prompt, device):
     return pre_probs, gts
 
 
-def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=16,gpuid=None):
+def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=16):
 
-    if gpuid is not None:
-        cuda_str = f"cuda:{gpuid}"
-    else:
-        cuda_str = 'cuda'
-    device = cuda_str if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load(model_type,device=device)
 
     # load trained model
@@ -337,7 +333,7 @@ def classify_one_region(area_idx, area_ini, para_file, area_save_dir, gpuid, inf
         # can work if set CUDA_VISIBLE_DEVICES in the shell
         os.environ['CUDA_VISIBLE_DEVICES'] = str(gpuid)
 
-    predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=inf_batch_size, gpuid=gpuid)
+    predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=inf_batch_size)
 
     duration = time.time() - time0
     os.system('echo "$(date): time cost of inference for image in %s: %.2f seconds">>"time_cost.txt"' % (inf_list_file, duration))
