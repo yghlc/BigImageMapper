@@ -244,6 +244,7 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     if os.path.isfile(trained_model):
         checkpoint = torch.load(open(trained_model, 'rb'), map_location="cpu")
         model.load_state_dict(checkpoint['state_dict'])
+        basic.outputlogMessage(f'Loaded trained model: {trained_model}')
 
     if device == "cpu":
         model.eval()
