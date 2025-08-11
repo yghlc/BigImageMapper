@@ -169,7 +169,7 @@ def get_prompts_from_one_dem_diff(demD_file, prompt_type, prompt_save_folder, ma
     vector_gpd.add_attributes_to_shp(bin_shp_path, {'id': [item + 1 for item in range(len(polygons))] ,'class_int': [1]*len(polygons),
                                                     'poly_area':[poly.area for poly in polygons]})
 
-    # more post-processing based for polygons????
+    #TODO: more post-processing based for polygons????
     # remove small and big polygons?
 
     prompt_point_path = prompt_save_path.replace('.txt', '_point.shp')
