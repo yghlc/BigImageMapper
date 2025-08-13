@@ -216,7 +216,10 @@ def run_prediction(model, test_loader,prompt, device):
         for data in tqdm(test_loader):
             images, targets, _ = data
             images = images.to(device)
-            targets = targets.to(device).squeeze()
+            if targets.ndim > 1:
+                targets = targets.to(device).squeeze()
+            else:
+                targets = targets.to(device)
 
             if targets.ndim == 0:
                 basic.outputlogMessage(f"error: targets.ndim == 0, ndim: {targets.ndim}, size: {targets.size()}, value: {targets.tolist()}")
