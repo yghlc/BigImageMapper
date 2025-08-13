@@ -182,8 +182,8 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
     class_labels = parameters.get_file_path_parameters(para_file,'class_labels')
     if extract_img_dir is None:
         extract_img_dir = os.path.join(os.getcwd(),'image_patches', os.path.basename(area_save_dir))
-        if os.path.isdir(extract_img_dir) is False:
-            io_function.mkdir(extract_img_dir)
+    if os.path.isdir(extract_img_dir) is False:
+        io_function.mkdir(extract_img_dir)
 
     if area_data_type == 'image_patch':
         image_path_list, image_labels, _ =  read_sub_image_labels_one_region(extract_img_dir,para_file,area_ini,b_training= not test)
@@ -260,10 +260,11 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     print("Vocab size:", vocab_size)
 
     # run image classification
+    inf_extract_img_dir = parameters.get_directory_None_if_absence(para_file,'inf_extract_img_dir')
     inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
     inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
     in_dataset = prepare_dataset(para_file, area_ini,area_save_dir,inf_image_dir, inf_image_or_pattern,
-                                 transform=preprocess,test=True)
+                                 transform=preprocess,test=True,extract_img_dir=inf_extract_img_dir)
     if len(in_dataset) < 1:
         print('No images for prediction')
         return
