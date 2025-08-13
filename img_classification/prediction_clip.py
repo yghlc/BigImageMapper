@@ -261,7 +261,8 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
 
     # run image classification
     inf_extract_img_dir = parameters.get_directory_None_if_absence(para_file,'inf_extract_img_dir')
-    inf_extract_img_dir = os.path.join(inf_extract_img_dir, os.path.basename(area_save_dir))
+    if inf_extract_img_dir is not None:
+        inf_extract_img_dir = os.path.join(inf_extract_img_dir, os.path.basename(area_save_dir))
     inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
     inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
     in_dataset = prepare_dataset(para_file, area_ini,area_save_dir,inf_image_dir, inf_image_or_pattern,
