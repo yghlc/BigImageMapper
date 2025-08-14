@@ -58,14 +58,14 @@ def select_sample_for_manu_check(class_id, save_dir, sel_count, class_id_dict, i
 
     # save
     class_name = get_class_name(class_id, class_id_dict)
-    outpur_dir = os.path.join(save_dir, '%s_id%d_random_%d_samples'%(class_name, class_id, len(top1_image_name)))
+    outpur_dir = os.path.join(save_dir, 'id%d_%s_random_%d_samples'%(class_id, class_name, len(top1_image_name)))
     # remove it if already exist, then save new randomly saved one
     if os.path.isdir(outpur_dir):
         io_function.delete_file_or_dir(outpur_dir)
     io_function.mkdir(outpur_dir)
 
     # save the file name of all samples to txt
-    top1_predict_all_txt = os.path.join(save_dir, '%s_id%d_all_samples.txt'%(class_name, class_id))
+    top1_predict_all_txt = os.path.join(save_dir, 'id%d_%s_all_samples.txt'%(class_id, class_name))
     top1_predict_str = ['%s %f'%(item[0], item[1]) for item in top1_predict]
     io_function.save_list_to_txt(top1_predict_all_txt, top1_predict_str)
 
