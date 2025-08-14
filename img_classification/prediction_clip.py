@@ -111,8 +111,8 @@ def save_prediction_results(dataset, predict_probs, save_path, k=5):
     if k < 1:
         raise ValueError('k should be larger than 0')
     top_probs_k, top_labels_k = predict_probs.cpu().topk(k, dim=-1)
-    top_probs_k = top_probs_k.numpy().squeeze() if top_probs_k.ndim > 1 else top_probs_k.numpy()
-    top_labels_k = top_labels_k.numpy().squeeze() if top_labels_k.ndim > 1 else top_probs_k.numpy()
+    top_probs_k = top_probs_k.numpy().squeeze() if top_probs_k.ndim > 2 else top_probs_k.numpy()
+    top_labels_k = top_labels_k.numpy().squeeze() if top_labels_k.ndim > 2 else top_labels_k.numpy()
 
     # save to a json file
     res_dict = {}
