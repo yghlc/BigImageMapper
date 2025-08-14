@@ -190,6 +190,9 @@ def postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir):
     #         res_dict[os.path.basename(i_path)]['confidence'] = probs.tolist()
     #         res_dict[os.path.basename(i_path)]['pre_labels'] = labels.tolist()
     res_dict = io_function.read_dict_from_txt_json(res_json_path)
+    if res_dict is None:
+        raise IOError(f'the size of file: {res_json_path} is zero, may need to re-run the prediction,'
+                      f'please run "ls -lhS grid*/*-classify_results.json > tmp_json" to check these files')
 
     class_labels_txt = parameters.get_file_path_parameters(para_file,'class_labels')
     class_id_dict = read_label_ids_local(class_labels_txt)
