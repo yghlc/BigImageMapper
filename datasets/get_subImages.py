@@ -539,6 +539,8 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
                                      out_format,h3_filename,c_lat=None, c_lon=None):
     # output message
     if idx % 100 == 0:
+        #TODO: "len(polygons_all)" is not correct, it should be "len(center_polygons)" but were not pass to this function.
+        # also, most case, "len(polygons_all)" and "len(center_polygons)" are the same
         if b_label:
             print('obtaining %d/%d th sub-image and the corresponding label raster' % (idx, len(polygons_all)))
         else:
