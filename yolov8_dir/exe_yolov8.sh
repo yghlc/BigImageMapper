@@ -42,14 +42,14 @@ echo "$(date): time cost of preparing training data: ${duration} seconds">>"time
 
 
 ################################################
-## run within ultralytics environment (name: pytorch)
-conda run --no-capture-output -n pytorch bash -c "${eo_dir}/yolov8_dir/pre_yolov8_yaml.py ${para_file}"
+## run within ultralytics environment
+${eo_dir}/yolov8_dir/pre_yolov8_yaml.py ${para_file}
 ## training 
-conda run --no-capture-output -n pytorch bash -c "yolo cfg=yolov8_conf.yaml"
+yolo cfg=yolov8_conf.yaml
 
 ### prediction
 rm -r multi_inf_results || true
-conda run --no-capture-output -n pytorch bash -c "${eo_dir}/yolov8_dir/predict_yolov8.py ${para_file}"
+${eo_dir}/yolov8_dir/predict_yolov8.py ${para_file}
 ################################################
 
 
