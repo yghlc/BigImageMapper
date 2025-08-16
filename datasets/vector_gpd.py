@@ -288,18 +288,27 @@ def add_attributes_to_shp(shp_path, add_attributes,save_as=None,format='ESRI Sha
         return shapefile.to_file(shp_path, driver=format)
 
 
-def read_attribute_values_list(polygon_shp, field_name):
+def read_attribute_values_list(polygon_shp, field_name, out_dtype=None):
     '''
-    read the attribute value to a list
-    :param polygon_shp:
-    :param field_name:
-    :return: a list containing the attribute values
-    '''
+    Read the attribute values from a shapefile column into a list.
 
+    :param polygon_shp: Path to the shapefile.
+    :param field_name: The column name to read.
+    :param out_dtype: Target data type for the output values (e.g., int, float, str).
+    :return: A list containing the attribute values (converted if out_dtype is specified), or None if field is missing.
+    '''
     shapefile = gpd.read_file(polygon_shp)
+
     if field_name in shapefile.keys():
         attribute_values = shapefile[field_name]
-        return attribute_values.tolist()
+        # Convert to target dtype if specified
+        if out_dtype is not None:
+            converted_values = attribute_values.astype(out_dtype)
+            # Optionally, convert NaN to None
+            result_list = [v if pd.notnull(v) else None for v in converted_values]
+            return result_list
+        else:
+            return attribute_values.tolist()
     else:
         basic.outputlogMessage('Warning: %s not in the shape file, will return None'%field_name)
         return None
