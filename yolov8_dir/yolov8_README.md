@@ -7,10 +7,13 @@ Please following the instruction at [YOLOv8](https://github.com/ultralytics/ultr
 to install Python and create a conda environment (name: pytorch). 
 
 ```
-# In the conda environment, install the forked version
-git clone https://github.com/yghlc/ultralytics.git
-cd ultralytics
-pip install -e '.[dev]'
+## In the conda environment, install the forked version
+#git clone https://github.com/yghlc/ultralytics.git
+#cd ultralytics
+#pip install -e '.[dev]'
+
+# Install the ultralytics package from PyPI
+pip install ultralytics
 
 # other packages
 conda install -c conda-forge rasterio

@@ -16,8 +16,8 @@ set -eE -o functrace
 # the main parameter files
 para_file=main_para.ini
 
-# Landuse_DL scripts dir
-eo_dir=~/codes/PycharmProjects/Landuse_DL
+# BigImageMapper scripts dir
+eo_dir=~/codes/PycharmProjects/BigImageMapper
 
 ################################################
 SECONDS=0
