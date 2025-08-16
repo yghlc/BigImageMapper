@@ -40,7 +40,7 @@ from multiprocessing import Pool
 
 from vector_gpd import convert_image_bound_to_shapely_polygon
 from vector_gpd import get_poly_index_within_extent
-from vector_gpd import get_polygon_centroid_lat_lon
+from vector_gpd import get_polygon_centroid_lat_lon, read_polygons_gpd, read_attribute_values_list
 
 import shutil
 
@@ -620,20 +620,18 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
 
     # read polygons
-    t_shapefile = gpd.read_file(t_polygons_shp)
-    center_polygons = t_shapefile.geometry.values
+    center_polygons = read_polygons_gpd(t_polygons_shp, b_fix_invalid_polygon=True)
     c_lat_lon_list = get_polygon_centroid_lat_lon(t_polygons_shp)
     if b_label:
-        class_labels = t_shapefile['class_int'].tolist()
+        class_labels =  read_attribute_values_list(t_polygons_shp,'class_int')
     else:
         class_labels = [0]*len(center_polygons)
     # check_polygons_invalidity(center_polygons,t_polygons_shp)
 
     # read the full set of training polygons, used this one to produce the label images
-    t_shapefile_all = gpd.read_file(t_polygons_shp_all)
-    polygons_all = t_shapefile_all.geometry.values
+    polygons_all = read_polygons_gpd(t_polygons_shp_all,b_fix_invalid_polygon=True)
     if b_label:
-        class_labels_all = t_shapefile_all['class_int'].tolist()
+        class_labels_all = read_attribute_values_list(t_polygons_shp_all,'class_int')
     else:
         class_labels_all = [0]*len(polygons_all)
     # check_polygons_invalidity(polygons_all,t_polygons_shp_all)
