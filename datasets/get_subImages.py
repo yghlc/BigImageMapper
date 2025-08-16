@@ -565,7 +565,7 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
         pre_name = 'ToReplaceSETbyHLC2024Dec9'
 
     # get one sub-image based on the buffer areas
-    subimg_saved_path = get_save_file_path(saved_dir,pre_name, tail_name, b_label, lat=c_lat,lon=c_lon,
+    subimg_saved_path = get_save_file_path(saved_dir,pre_name, tail_name, False, lat=c_lat,lon=c_lon,
                                            res=h3_res, file_ext=extension, h3_filename=h3_filename)
     #
     # subimg_shortName = os.path.join('subImages', pre_name + tail_name)
