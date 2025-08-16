@@ -628,13 +628,17 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
         class_labels = [0]*len(center_polygons)
     # check_polygons_invalidity(center_polygons,t_polygons_shp)
 
-    # read the full set of training polygons, used this one to produce the label images
-    polygons_all = read_polygons_gpd(t_polygons_shp_all,b_fix_invalid_polygon=True)
-    if b_label:
-        class_labels_all = read_attribute_values_list(t_polygons_shp_all,'class_int')
+    if t_polygons_shp_all==t_polygons_shp:
+        polygons_all = center_polygons
+        class_labels_all= class_labels
     else:
-        class_labels_all = [0]*len(polygons_all)
-    # check_polygons_invalidity(polygons_all,t_polygons_shp_all)
+        # read the full set of training polygons, used this one to produce the label images
+        polygons_all = read_polygons_gpd(t_polygons_shp_all,b_fix_invalid_polygon=True)
+        if b_label:
+            class_labels_all = read_attribute_values_list(t_polygons_shp_all,'class_int')
+        else:
+            class_labels_all = [0]*len(polygons_all)
+        # check_polygons_invalidity(polygons_all,t_polygons_shp_all)
 
     if image_equal_size is not None:
         center_polygons = get_polygon_extent_same_size(center_polygons,image_equal_size)
