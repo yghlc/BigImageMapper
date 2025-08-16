@@ -195,13 +195,10 @@ def get_sub_images_multi_regions(para_file):
         lines = f_obj.readlines()
         for line in lines:
             image_path, label_path = line.strip().split(':')
-            if os.path.isfile(image_path):
-                break
-            else:
-                image_path_new = os.path.join(subImage_dir, image_path)
-                label_path_new = os.path.join(subLabel_dir, label_path)
-                sub_image_label_str = image_path_new + ":" + label_path_new # + '\n' use "save_list_to_txt", don't need '\n' here
-                sub_image_label_str_list_new.append(sub_image_label_str)
+            image_path_new = os.path.join(subImage_dir, image_path)
+            label_path_new = os.path.join(subLabel_dir, label_path)
+            sub_image_label_str = image_path_new + ":" + label_path_new # + '\n' use "save_list_to_txt", don't need '\n' here
+            sub_image_label_str_list_new.append(sub_image_label_str)
     io_function.save_list_to_txt('sub_images_labels_list.txt',sub_image_label_str_list_new)
 
     # check black sub-images or most part of the sub-images is black (nodata)
