@@ -89,7 +89,7 @@ def create_yaml_files_from_yolov4_data(para_file):
 
 
     # configuration
-    with open(os.path.join(script_dir, 'conf_yolov8.yaml'),'r') as f_obj:
+    with open(os.path.join(script_dir, 'default_copy.yaml'),'r') as f_obj:
         conf_dict = yaml.safe_load(f_obj)
     n_conf_dict = modify_config_yaml(conf_dict, curr_dir,para_file)
     new_conf_file = os.path.join(curr_dir, 'yolov8_conf.yaml')
