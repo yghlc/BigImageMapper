@@ -85,7 +85,8 @@ def save_one_patch_yolov8_detection_json(patch_idx, patch, detections, class_nam
 
 def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_names,
                            patch_w, patch_h, overlay_x, overlay_y, batch_size=1):
-    sys.path.insert(0, ultralytics_dir)
+    if ultralytics_dir is not None:
+        sys.path.insert(0, ultralytics_dir)
     from ultralytics import YOLO
 
     height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(image_path)
@@ -176,7 +177,7 @@ def predict_remoteSensing_image(para_file, image_path, save_dir, model, network_
     overlay_y = parameters.get_digit_parameters(para_file, "inf_pixel_overlay_y", 'int')
     object_names = parameters.get_string_list_parameters(para_file, 'object_names')
 
-    ultralytics_dir = parameters.get_file_path_parameters(network_ini,'ultralytics_dir')
+    ultralytics_dir = parameters.get_file_path_parameters_None_if_absence(network_ini,'ultralytics_dir')
 
     # using the python API
     all_objects = predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,object_names,
