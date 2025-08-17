@@ -49,7 +49,7 @@ def modify_config_yaml(conf_dict, work_dir,para_file):
 
     conf_dict['name'] = expr_name
     conf_dict['project'] = work_dir
-    conf_dict['data'] = 'yolov8_data.yaml'
+    conf_dict['data'] = 'yolo_data.yaml'
 
     process_num = parameters.get_digit_parameters(para_file,'process_num','int')
     conf_dict['workers'] = process_num
@@ -80,7 +80,7 @@ def create_yaml_files_from_yolov4_data(para_file):
     with open(os.path.join(script_dir, 'data.yaml'),'r') as f_obj:
         data_dict = yaml.safe_load(f_obj)
     n_data_dict = modify_data_yaml(data_dict, curr_dir)
-    new_data_file = os.path.join(curr_dir, 'yolov8_data.yaml')
+    new_data_file = os.path.join(curr_dir, 'yolo_data.yaml')
     with open(new_data_file, 'w') as f_obj:
         out = yaml.dump(n_data_dict, f_obj,sort_keys=False)
         print('save yaml file to %s' % new_data_file)
@@ -92,7 +92,7 @@ def create_yaml_files_from_yolov4_data(para_file):
     with open(os.path.join(script_dir, 'default_copy.yaml'),'r') as f_obj:
         conf_dict = yaml.safe_load(f_obj)
     n_conf_dict = modify_config_yaml(conf_dict, curr_dir,para_file)
-    new_conf_file = os.path.join(curr_dir, 'yolov8_conf.yaml')
+    new_conf_file = os.path.join(curr_dir, 'yolo_conf.yaml')
     with open(new_conf_file, 'w') as f_obj:
         out = yaml.dump(n_conf_dict, f_obj, sort_keys=False)
         print('save yaml file to %s'%new_conf_file)

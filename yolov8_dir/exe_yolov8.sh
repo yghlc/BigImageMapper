@@ -45,7 +45,7 @@ echo "$(date): time cost of preparing training data: ${duration} seconds">>"time
 ## run within ultralytics environment
 ${eo_dir}/yolov8_dir/pre_yolov8_yaml.py ${para_file}
 ## training 
-yolo cfg=yolov8_conf.yaml
+yolo cfg=yolo_conf.yaml
 
 ### prediction
 rm -r multi_inf_results || true
