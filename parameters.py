@@ -162,7 +162,9 @@ def get_digit_parameters(parafile,name,datatype):
 
 
 def get_string_list_parameters_None_if_absence(parafile,name):
-    str_value = get_string_parameters(parafile, name)
+    str_value = get_string_parameters_None_if_absence(parafile, name)
+    if str_value is None:
+        return None
     attributes_list = []
 
     # if the list is in a txt file

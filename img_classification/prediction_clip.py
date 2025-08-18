@@ -307,14 +307,15 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
 
     # select sample for checking
     # move selection of random samples into prediction step (because after prediciton, these images will be removed)
-    class_ids_for_manu_check = parameters.get_string_list_parameters(para_file,'class_ids_for_manu_check')
-    class_ids_for_manu_check = [ int(item) for item in class_ids_for_manu_check]
-    sel_count = parameters.get_digit_parameters(para_file,'sample_num_per_class','int')
-    class_labels_txt = parameters.get_file_path_parameters(para_file,'class_labels')
-    class_id_dict = read_label_ids_local(class_labels_txt)
-    image_path_list = in_dataset.img_list
-    for c_id in class_ids_for_manu_check:
-        select_sample_for_manu_check(c_id, area_save_dir, sel_count, class_id_dict, image_path_list, res_dict)
+    class_ids_for_manu_check = parameters.get_string_list_parameters_None_if_absence(para_file,'class_ids_for_manu_check')
+    if class_ids_for_manu_check is not None:
+        class_ids_for_manu_check = [ int(item) for item in class_ids_for_manu_check]
+        sel_count = parameters.get_digit_parameters(para_file,'sample_num_per_class','int')
+        class_labels_txt = parameters.get_file_path_parameters(para_file,'class_labels')
+        class_id_dict = read_label_ids_local(class_labels_txt)
+        image_path_list = in_dataset.img_list
+        for c_id in class_ids_for_manu_check:
+            select_sample_for_manu_check(c_id, area_save_dir, sel_count, class_id_dict, image_path_list, res_dict)
 
     # remove extracted images after prediction, to release disk space
     b_rm_extracted_subImage = parameters.get_bool_parameters_None_if_absence(para_file,'b_rm_extracted_subImage')
