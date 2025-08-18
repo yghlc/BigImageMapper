@@ -42,6 +42,12 @@ def copy_one_patch_image_data(patch, entire_img_data):
     patch_data = entire_img_data[row_s:row_e, col_s:col_e, :]
     return patch_data
 
+def read_one_patch_image_data(patch, image_path):
+    img_data, nodata = raster_io.read_raster_all_bands_np(image_path, boundary=patch)
+    img_data = img_data.transpose(1, 2, 0)
+    # # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
+    img_data = img_data[..., ::-1].copy()
+    return img_data
 
 def save_one_patch_yolov8_detection_json(patch_idx, patch, detections, class_names, save_dir, b_percent=False):
     # patch (xoff,yoff ,xsize, ysize)
@@ -105,14 +111,18 @@ def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_na
 
     model = YOLO(model)
 
+    b_use_memory = True
+    if height* width > 50000*50000:  # 10000*10000 is a threshold, can be changed
+        b_use_memory = False
 
     # read the entire image
-    entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
-    entire_img_data = entire_img_data.transpose(1, 2, 0)  # to opencv format
-    # # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
-    entire_img_data = entire_img_data[..., ::-1].copy()
-    entire_height, entire_width, band_num = entire_img_data.shape
-    print("entire_height, entire_width, band_num", entire_height, entire_width, band_num)
+    if b_use_memory:
+        entire_img_data, nodata = raster_io.read_raster_all_bands_np(image_path)
+        entire_img_data = entire_img_data.transpose(1, 2, 0)  # to opencv format
+        # # RGB to BGR: Matplotlib image to OpenCV https://www.scivision.dev/numpy-image-bgr-to-rgb/
+        entire_img_data = entire_img_data[..., ::-1].copy()
+        entire_height, entire_width, band_num = entire_img_data.shape
+        print("entire_height, entire_width, band_num", entire_height, entire_width, band_num)
     if band_num not in [1, 3]:
         raise ValueError('only accept one band or three band images')
 
@@ -123,15 +133,12 @@ def predict_rs_image_yolo8(image_path, save_dir, model, ultralytics_dir,class_na
     for b_idx, a_batch_patch in enumerate(batch_patches):
         t0 = time.time()
 
-        # get width, height, and band_num of a patch, then create a darknet image.
-        # img_data, nodata = raster_io.read_raster_all_bands_np(image_path, boundary=patches_sameSize[0])
-        # img_data = img_data.transpose(1, 2, 0)
-        # height, width, band_num = img_data.shape
-        # if band_num not in [1, 3]:
-        #     raise ValueError('only accept one band or three band images')
-
         # yolov8 model can accept image with different size
-        images = [copy_one_patch_image_data(patch, entire_img_data) for patch in a_batch_patch]
+        if b_use_memory:
+            images = [copy_one_patch_image_data(patch, entire_img_data) for patch in a_batch_patch]
+        else:
+            images = [read_one_patch_image_data(patch, image_path) for patch in a_batch_patch]
+
         det_results = model(images, stream=True)  # generator of Results objects
 
         # save results
