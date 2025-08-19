@@ -398,7 +398,12 @@ def parallel_prediction_main(para_file,trained_model):
 
         area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
         area_save_dir = os.path.join(outdir, area_name_remark_time)
-        io_function.mkdir(area_save_dir)
+        inf_list_file = os.path.join(area_save_dir, '%d.txt' % area_idx)
+
+        done_indicator = '%s_done' % inf_list_file
+        if os.path.isfile(done_indicator):
+            basic.outputlogMessage('warning, %s exist, skip prediction' % done_indicator)
+            continue
 
         # parallel inference images for this area
         CUDA_VISIBLE_DEVICES = []
@@ -442,19 +447,14 @@ def parallel_prediction_main(para_file,trained_model):
             gpuid = None
             basic.outputlogMessage('%d: predict region: %s on %s' % (area_idx, area_name_remark_time, machine_name))
 
-        # run inference
-        inf_list_file = os.path.join(area_save_dir, '%d.txt' % area_idx)
-
-        done_indicator = '%s_done' % inf_list_file
-        if os.path.isfile(done_indicator):
-            basic.outputlogMessage('warning, %s exist, skip prediction' % done_indicator)
-            continue
-
         # if it already exists, then skip
         if os.path.isdir(area_save_dir) and is_file_exist_in_folder(area_save_dir):
             basic.outputlogMessage('folder of %dth region (%s) already exist, '
                                    'it has been predicted or is being predicted' % (area_idx, area_name_remark_time))
             continue
+
+        # run inference
+        io_function.mkdir(area_save_dir)
 
         with open(inf_list_file, 'w') as inf_obj:
             inf_obj.writelines(area_name_remark_time + '\n')
