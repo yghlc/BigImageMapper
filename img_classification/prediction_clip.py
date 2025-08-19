@@ -343,9 +343,16 @@ def classify_one_region(area_idx, area_ini, para_file, area_save_dir, gpuid, inf
     predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=inf_batch_size)
 
     duration = time.time() - time0
-    os.system('echo "$(date): time cost of inference for image in %s: %.2f seconds">>"time_cost.txt"' % (inf_list_file, duration))
+    # os.system('echo "$(date): time cost of inference for image in %s: %.2f seconds">>"time_cost.txt"' % (inf_list_file, duration))
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"{now_str}: time cost of inference for image in {inf_list_file}: {duration:.2f} seconds\n"
+    with open("time_cost.txt", "a") as f:
+        f.write(line)
+
     # write a file to indicate that the prediction has done.
-    os.system('echo %s > %s_done'%(inf_list_file,inf_list_file))
+    with open(done_indicator,'w') as f_obj:
+        f_obj.writelines(f"{inf_list_file}")
+    # os.system('echo %s > %s_done'%(inf_list_file,inf_list_file))
 
 def parallel_prediction_main(para_file,trained_model):
 
