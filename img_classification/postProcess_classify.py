@@ -200,13 +200,16 @@ def postProcessing_one_region(area_idx, area_ini, para_file, area_save_dir):
     #  count for each class ids
     all_prediction_count_txt = os.path.join(area_save_dir, 'prediction_count_each_class.txt')
     total_count = 0
-    with open(all_prediction_count_txt, 'w') as f_obj:
-        for key in class_id_dict.keys():
-            c_id = class_id_dict[key]
-            top1_predict_c = [ [key, res_dict[key]['confidence'][0]] for key in res_dict.keys() if res_dict[key]['pre_labels'][0] == c_id ]
-            f_obj.writelines('%s (id%d) count: %d \n'%(key, c_id, len(top1_predict_c)))
-            total_count += len(top1_predict_c)
-        f_obj.writelines('total count: %d \n' % total_count)
+    if os.path.isfile(all_prediction_count_txt) is False:
+        with open(all_prediction_count_txt, 'w') as f_obj:
+            for key in class_id_dict.keys():
+                c_id = class_id_dict[key]
+                top1_predict_c = [ [key, res_dict[key]['confidence'][0]] for key in res_dict.keys() if res_dict[key]['pre_labels'][0] == c_id ]
+                f_obj.writelines('%s (id%d) count: %d \n'%(key, c_id, len(top1_predict_c)))
+                total_count += len(top1_predict_c)
+            f_obj.writelines('total count: %d \n' % total_count)
+    else:
+        print(f'Warning, {all_prediction_count_txt} already exists')
 
 
     # select sample for checking
