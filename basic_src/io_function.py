@@ -606,6 +606,14 @@ def read_list_from_txt(file_name):
         lines = [item.strip() for item in lines]
         return lines
 
+def save_text_to_file(file_name, text):
+    with open(file_name, 'w') as f_obj:
+        f_obj.write(text + '\n')
+
+def append_text_to_file(file_name, text):
+    with open(file_name, 'a') as f_obj:
+        f_obj.write(text + '\n')
+
 def save_dict_to_txt_json(file_name, save_dict):
 
     # check key is string, int, float, bool or None,
