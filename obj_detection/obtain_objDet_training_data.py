@@ -117,7 +117,11 @@ def extract_sub_image_boxes_one_region(save_img_dir, para_file, area_ini, b_trai
                          f'{img_prj}, \n {grid_prj}, \n{polygon_box_proj}')
 
     # get bounding boxes
-    boxes_txt_list = objDet_utils.get_bounding_boxes_from_vector_file(image_path_list, train_polygon_box_shp)
+    b_ignore_edge_objects = parameters.get_bool_parameters_None_if_absence(para_file,'b_ignore_edge_objects')
+    if b_ignore_edge_objects is None:
+        b_ignore_edge_objects = False
+    boxes_txt_list = objDet_utils.get_bounding_boxes_from_vector_file(image_path_list, train_polygon_box_shp,
+                                                        b_ignore_edge_objects=b_ignore_edge_objects)
 
 
     if os.path.isfile(patch_list_txt) is False:

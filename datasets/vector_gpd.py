@@ -1726,6 +1726,41 @@ def sample_points_within_polygon(polygon, b_grid=True, max_point_count=10):
     return gpd_points_within
     # return point_list
 
+def remove_polygon_boxes_touch_edge(in_vector, bounds, save_path=None, shrink_meters=10):
+    """
+    Remove polygons/boxes that are not fully within the shrunken extent defined by `bounds`.
+    The extent is shrunk inward by `shrink_meters` before checking. Prints info about removed features.
+
+    Args:
+        in_vector (str): Input vector file path (shapefile, .gpkg, etc.).
+        bounds (tuple): (minx, miny, maxx, maxy) defining the extent.
+        save_path (str or None): Output path. If None, overwrite input.
+        shrink_meters (float): Amount to shrink the extent inward before checking.
+    """
+    if save_path is None:
+        save_path = in_vector
+
+    # Unpack bounds
+    minx, miny, maxx, maxy = bounds
+    extent_poly = box(minx, miny, maxx, maxy)
+    shrunk_extent = extent_poly.buffer(-shrink_meters)
+
+    gdf = gpd.read_file(in_vector)
+
+    # Keep only features that are fully within the shrunken extent
+    within_shrunk = gdf.geometry.within(shrunk_extent)
+
+    removed = gdf[~within_shrunk]
+    kept = gdf[within_shrunk]
+
+    # Reporting removed geometries
+    if not removed.empty:
+        print(f"Warning: removed {len(removed)} polygons/boxes close to defined extent in '{os.path.relpath(in_vector)}'")
+
+    kept.to_file(save_path)
+    return save_path
+
+
 def clip_geometries(input_path, save_path, mask, target_prj=None, format='ESRI Shapefile'):
     # If the mask is list-like with four elements (minx, miny, maxx, maxy), a faster rectangle clipping algorithm will be used
     # ref: https://geopandas.org/en/stable/docs/reference/api/geopandas.clip.html
