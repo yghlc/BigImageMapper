@@ -403,6 +403,23 @@ def is_two_bound_disjoint(box1, box2):
         return True
     return False
 
+def get_projection(file_path, format=None):
+
+    # convert the different type, to epsg, proj4, and wkt
+    gdf = gpd.read_file(file_path)
+    if format is not None:
+        if format == 'proj4':
+            return gdf.crs.to_proj4()  # string like '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs',
+        elif format == 'wkt':
+            return gdf.crs.to_wkt()  # string,  # its OGC WKT representation
+        elif format == 'epsg':
+            return gdf.crs.to_epsg()  # to epsg code, int, such as 3413
+        else:
+            raise ValueError('Unknown format: %s' % str(format))
+
+    return gdf.crs
+
+
 def get_vector_file_bounding_box(file_path):
     # return bounding box of all geometryies ((minx, miny, maxx, maxy))
     shapefile = gpd.read_file(file_path)

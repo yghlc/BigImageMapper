@@ -31,7 +31,7 @@ def merge_shape_files(file_list, save_path,b_create_id=False):
     if len(file_list) < 1:
         raise IOError("no input shapefiles")
 
-    ref_prj = get_raster_or_vector_srs_info_proj4(file_list[0])
+    ref_prj = vector_gpd.get_projection(file_list[0],format='epsg')
     if ref_prj is False:
         raise ValueError('Failed to get projection of %s'%file_list[0])
 
@@ -45,7 +45,7 @@ def merge_shape_files(file_list, save_path,b_create_id=False):
     for idx, shp_path in enumerate(file_list):
 
         # check projection
-        prj = get_raster_or_vector_srs_info_proj4(file_list[idx])
+        prj = vector_gpd.get_projection(file_list[idx],format='epsg')
         if prj != ref_prj:
             raise ValueError('Projection inconsistent: %s is different with the first one'%shp_path)
 
