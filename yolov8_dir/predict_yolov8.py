@@ -280,6 +280,15 @@ def parallel_prediction_main(para_file, trained_model):
         area_save_dir = os.path.join(outdir, area_name + '_' + area_remark + '_' + area_time)
         io_function.mkdir(area_save_dir)
 
+        img_save_dir = os.path.join(area_save_dir, 'I%d' % idx)
+        inf_list_file = os.path.join(area_save_dir, '%d.txt' % idx)
+
+        done_indicator = '%s_done' % inf_list_file
+        if os.path.isfile(done_indicator):
+            basic.outputlogMessage('warning, %s exist, skip prediction' % done_indicator)
+            idx += 1
+            continue
+
         # parallel inference images for this area
         CUDA_VISIBLE_DEVICES = []
         if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
@@ -315,14 +324,6 @@ def parallel_prediction_main(para_file, trained_model):
                 basic.outputlogMessage('%d: predict image %s on %s' % (idx, inf_img_list[idx], machine_name))
 
             # run inference
-            img_save_dir = os.path.join(area_save_dir, 'I%d' % idx)
-            inf_list_file = os.path.join(area_save_dir, '%d.txt' % idx)
-
-            done_indicator = '%s_done' % inf_list_file
-            if os.path.isfile(done_indicator):
-                basic.outputlogMessage('warning, %s exist, skip prediction' % done_indicator)
-                idx += 1
-                continue
 
             # if it already exist, then skip
             if os.path.isdir(img_save_dir) and is_file_exist_in_folder(img_save_dir):
