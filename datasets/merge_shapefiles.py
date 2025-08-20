@@ -44,6 +44,9 @@ def merge_shape_files(file_list, save_path,b_create_id=False):
 
     for idx, shp_path in enumerate(file_list):
 
+        if idx%10==0:
+            print(f"Processing {idx}/{len(file_list)}: {shp_path}")
+
         # check projection
         prj = vector_gpd.get_projection(file_list[idx],format='epsg')
         if prj != ref_prj:
