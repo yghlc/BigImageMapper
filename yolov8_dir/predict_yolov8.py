@@ -280,21 +280,21 @@ def parallel_prediction_main(para_file, trained_model):
         area_save_dir = os.path.join(outdir, area_name + '_' + area_remark + '_' + area_time)
         io_function.mkdir(area_save_dir)
 
-        img_save_dir = os.path.join(area_save_dir, 'I%d' % idx)
-        inf_list_file = os.path.join(area_save_dir, '%d.txt' % idx)
-
-        done_indicator = '%s_done' % inf_list_file
-        if os.path.isfile(done_indicator):
-            basic.outputlogMessage('warning, %s exist, skip prediction' % done_indicator)
-            idx += 1
-            continue
-
         # parallel inference images for this area
         CUDA_VISIBLE_DEVICES = []
         if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
             CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
         idx = 0
         while idx < img_count:
+
+            img_save_dir = os.path.join(area_save_dir, 'I%d' % idx)
+            inf_list_file = os.path.join(area_save_dir, '%d.txt' % idx)
+
+            done_indicator = '%s_done' % inf_list_file
+            if os.path.isfile(done_indicator):
+                basic.outputlogMessage('warning, %s exist, skip prediction' % done_indicator)
+                idx += 1
+                continue
 
             while basic.alive_process_count(sub_tasks) >= maximum_prediction_jobs:
                 print(datetime.now(),'%d jobs are running simultaneously, wait 5 seconds'%basic.alive_process_count(sub_tasks))
