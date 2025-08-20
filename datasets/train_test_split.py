@@ -33,6 +33,8 @@ def train_test_split_main(input_file,train_per,Do_shuffle,train_sample_txt,val_s
             v_obj.writelines(val_list)
             print('saved validation samples to %s' % val_list_txt)
 
+        return train_list_txt, val_list_txt
+
 def main(options, args):
 
     input_file = args[0]

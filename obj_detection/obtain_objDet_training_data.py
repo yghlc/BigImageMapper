@@ -23,9 +23,113 @@ import parameters
 import basic_src.basic as basic
 import basic_src.io_function as io_function
 import basic_src.timeTools as timeTools
+import basic_src.map_projection as map_projection
 
 import time
 import random
+
+import objDet_utils
+
+def merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts, save_path):
+    with open(save_path, 'w') as outfile:
+        for fname in image_patch_labels_list_txts:
+            with open(fname) as infile:
+                outfile.write(infile.read())
+
+
+
+
+def read_sub_image_boxes_one_region(extract_img_dir, para_file,area_ini, b_training=True):
+
+
+    return None, None, None
+
+def extract_sub_image_boxes_one_region(save_img_dir, para_file, area_ini, b_training=True):
+    '''
+     get some images and boxes (if available) from one region for object detection
+    :param save_img_dir:  save directory for the saved images
+    :param para_file: para_file
+    :param area_ini: area file
+    :param b_training: if True, will extract image for training, otherwise, will extract image for inference
+    :return: image_path_list, boxes, patch_list_txt (file_path boxes_txt)
+    '''
+
+    # extract sub-images
+    get_subImage_script = os.path.join(code_dir, 'datasets', 'get_subImages.py')
+    extract_img_dir = save_img_dir
+
+    dstnodata = parameters.get_string_parameters(para_file, 'dst_nodata')
+    if b_training:
+        buffersize = parameters.get_string_parameters(para_file, 'train_buffer_size')
+    else:
+        buffersize = parameters.get_string_parameters(para_file, 'inf_buffer_size')
+    rectangle_ext = parameters.get_string_parameters(para_file, 'b_use_rectangle')
+    process_num = parameters.get_digit_parameters(para_file, 'process_num', 'int')
+
+
+    b_keep_org_file_name = parameters.get_bool_parameters_None_if_absence(para_file, 'b_keep_org_file_name')
+    if b_keep_org_file_name is None:
+        b_keep_org_file_name = False
+
+    area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
+    patch_list_txt = os.path.join(extract_img_dir, area_name_remark_time + '_patch_list.txt')
+
+    if os.path.isfile(patch_list_txt):
+        print('%s exists, read it directly' % patch_list_txt)
+        image_path_labels = [item.split(':') for item in io_function.read_list_from_txt(patch_list_txt)]
+        image_path_list = [item[0] for item in image_path_labels]
+        image_boxes_txt_list = [item[1] for item in image_path_labels]
+        return image_path_list, image_boxes_txt_list, patch_list_txt
+
+
+    # for training
+    image_dir = parameters.get_directory(area_ini, 'input_image_dir')  # train_image_dir
+    image_or_pattern = parameters.get_string_parameters(area_ini,'input_image_or_pattern')  # train_image_or_pattern
+
+    train_grids_shp = parameters.get_file_path_parameters(area_ini,'training_grids')
+    train_polygon_box_shp = parameters.get_file_path_parameters(area_ini,'training_polygons_boxes')
+
+
+    ## extract sub-images and the bounding boxes
+    extract_done_indicator = os.path.join(extract_img_dir, 'extract_image_using_vector.done')
+    command_string = get_subImage_script + ' -b ' + str(buffersize) + ' -e ' + image_or_pattern + \
+                     ' -o ' + extract_img_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
+                     + ' ' + rectangle_ext + ' --no_label_image '
+    if b_keep_org_file_name:
+        command_string += ' --b_keep_grid_name '
+    command_string += train_grids_shp + ' ' + image_dir
+    if os.path.isfile(extract_done_indicator):
+        basic.outputlogMessage('Warning, sub-images already been extracted, read them directly')
+    else:
+        basic.os_system_exit_code(command_string)
+
+    image_path_list = io_function.get_file_list_by_pattern(extract_img_dir, 'subImages/*.tif')
+
+    if len(image_path_list) < 1:
+        raise IOError(f'No sub-images in {extract_img_dir}/subImages')
+
+    # check projection
+    img_prj = map_projection.get_raster_or_vector_srs_info_proj4(image_path_list[0])
+    grid_prj = map_projection.get_raster_or_vector_srs_info_proj4(train_grids_shp)
+    polygon_box_proj = map_projection.get_raster_or_vector_srs_info_proj4(train_polygon_box_shp)
+    if img_prj != grid_prj or img_prj != polygon_box_proj:
+        raise ValueError(f'Map projection inconsistency between images, train_grids_shp, and train_polygon_box_shp for area: {area_ini},'
+                         f'{img_prj}, \n {grid_prj}, \n{polygon_box_proj}')
+
+    # get bounding boxes
+    boxes_txt_list = objDet_utils.get_bounding_boxes_from_vector_file(image_path_list, train_polygon_box_shp)
+
+
+    if os.path.isfile(patch_list_txt) is False:
+        # save the relative path and label to file
+        image_path_box_list = ['%s:%s' % (os.path.relpath(img), os.path.relpath(box_txt) ) for img, box_txt in zip(image_path_list, boxes_txt_list)]
+        io_function.save_list_to_txt(patch_list_txt, image_path_box_list)
+
+    if os.path.isfile(extract_done_indicator) is False:
+        with open(extract_done_indicator, 'w') as f_obj:
+            f_obj.writelines('%s image extracting, complete on %s \n' % (extract_img_dir, timeTools.get_now_time_str()))
+
+    return image_path_list, boxes_txt_list, patch_list_txt
 
 
 def get_sub_images_multi_regions_for_training_YOLO(WORK_DIR,para_file):
@@ -41,7 +145,7 @@ def get_sub_images_multi_regions_for_training_YOLO(WORK_DIR,para_file):
     if training_regions is None or len(training_regions) < 1:
         raise ValueError('No training area is set in %s' % para_file)
 
-    image_patch_labels_list_txts = []
+    image_patch_boxes_list_txts = []
     training_data_dir = os.path.join(WORK_DIR, 'training_data')
     if not os.path.isdir(training_data_dir):
         io_function.mkdir(training_data_dir)
@@ -56,44 +160,42 @@ def get_sub_images_multi_regions_for_training_YOLO(WORK_DIR,para_file):
             io_function.mkdir(extract_img_dir)
         area_data_type = parameters.get_string_parameters(area_ini, 'area_data_type')
 
-        if area_data_type == 'image_patch':
+        if area_data_type == 'image_patch_boxes':
             # directly read
-
-            image_path_list, image_labels, patch_list_txt = read_sub_image_labels_one_region(extract_img_dir, para_file,
-                                                                                             area_ini, b_training=True)
-            image_patch_labels_list_txts.append(patch_list_txt)
+            image_path_list, image_labels, patch_list_txt = read_sub_image_boxes_one_region(extract_img_dir, para_file,
+                                                                    area_ini, b_training=True)
+            image_patch_boxes_list_txts.append(patch_list_txt)
 
         else:
 
             image_path_list, image_labels, patch_list_txt = \
-                extract_sub_image_labels_one_region(extract_img_dir, para_file, area_ini, b_training=True,
-                                                    b_convert_label=True)
-            image_patch_labels_list_txts.append(patch_list_txt)
+                extract_sub_image_boxes_one_region(extract_img_dir, para_file, area_ini, b_training=True)
+            image_patch_boxes_list_txts.append(patch_list_txt)
 
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
 
     # merge label list
-    save_path = class_utils.get_merged_training_data_txt(training_data_dir, expr_name, len(training_regions))
-    merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts, save_path)
+    merged_image_boxes_path = objDet_utils.get_merged_training_data_txt(training_data_dir, expr_name, len(training_regions))
+    merge_imagePatch_labels_for_multi_regions(image_patch_boxes_list_txts, merged_image_boxes_path)
 
-    a_few_shot_samp_count = parameters.get_digit_parameters_None_if_absence(para_file, 'a_few_shot_samp_count', 'int')
-    b_sep_train_valid_set_by_grids = parameters.get_bool_parameters_None_if_absence(para_file,
-                                                                                    'b_sep_train_valid_set_by_grids')
-    if b_sep_train_valid_set_by_grids is None:
-        b_sep_train_valid_set_by_grids = False
-    b_a_few_shot_training = parameters.get_bool_parameters(para_file, 'a_few_shot_training')
-    if b_a_few_shot_training and a_few_shot_samp_count is not None:
-        # backup the original file
-        save_path_all_samp = io_function.get_name_by_adding_tail(save_path, 'all')
-        io_function.copy_file_to_dst(save_path, save_path_all_samp)
-        randomly_select_k_samples_each_classes(save_path_all_samp, save_path, sample_count=a_few_shot_samp_count,
-                                               b_sep_by_grid=b_sep_train_valid_set_by_grids)
+    # split to tran and val sets
+    # split training and validation datasets
+    from datasets.train_test_split import train_test_split_main
+    training_data_per = parameters.get_digit_parameters_None_if_absence(para_file, 'training_data_per','float')
+    train_sample_txt = parameters.get_string_parameters(para_file, 'training_sample_list_txt')
+    val_sample_txt = parameters.get_string_parameters(para_file, 'validation_sample_list_txt')
+    Do_shuffle = True
+    train_sample_txt, val_sample_txt =\
+        train_test_split_main(merged_image_boxes_path, training_data_per, Do_shuffle, train_sample_txt, val_sample_txt)
+
+
+    # save to YOLO (darknet) format
+    objDet_utils.save_training_data_to_yolo_format_darknet(para_file,train_sample_txt,val_sample_txt)
+
 
     duration = time.time() - SECONDS
-    os.system(
-        'echo "$(date): time cost of getting training data (image classification): %.2f seconds">>time_cost.txt' % duration)
+    os.system('echo "$(date): time cost of getting training data (image classification): %.2f seconds">>time_cost.txt' % duration)
 
-    pass
 
 def main(options, args):
 
