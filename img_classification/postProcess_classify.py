@@ -245,7 +245,8 @@ def postProcessing_main(para_file):
 
         area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
         area_save_dir = os.path.join(res_dir, area_name_remark_time)
-        io_function.mkdir(area_save_dir)
+        if not os.path.isdir(area_save_dir):
+            io_function.mkdir(area_save_dir)
 
         # post processing
         print('%d/%d, post-processing for %s'%(area_idx, len(multi_inf_regions), area_ini))
