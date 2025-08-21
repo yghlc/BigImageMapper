@@ -14,6 +14,8 @@ import subprocess
 
 from datetime import datetime
 
+import re
+
 import json
 import urllib
 
@@ -162,6 +164,12 @@ def os_list_folder_files(top_dir):
         basic.outputlogMessage('There is no file in %s'%top_dir)
         return False
     return list_files
+
+
+def get_index_from_filename(filename):
+    # get the index for a polygon in the original file: such as 18268 in "all_composited-image_18268.tif"
+    idx = int(re.findall(r"_([0-9]+)\.", filename)[0])
+    return idx
 
 def get_file_list_by_ext(ext, folder, bsub_folder):
     """

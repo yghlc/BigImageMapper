@@ -17,11 +17,6 @@ import vector_gpd
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
-import re
-
-def get_index_from_filename(filename):
-    idx = int(re.findall(r"_([0-9]+)\.", filename)[0])
-    return idx
 
 def rename_sub_images(vector_for_extracting, img_dir,img_file_extension, pre_name, id_column, out_dir=None):
 
@@ -40,7 +35,7 @@ def rename_sub_images(vector_for_extracting, img_dir,img_file_extension, pre_nam
         raise ValueError(f'The count {len(id_list)} of IDs in {vector_for_extracting} is less than total image count: {len(file_list)}')
 
     for img in file_list:
-        img_idx = get_index_from_filename(os.path.basename(img))
+        img_idx = io_function.get_index_from_filename(os.path.basename(img))
         img_id = id_list[img_idx]
         new_file_name = f"{pre_name}_id{img_id}_{img_idx}{img_file_extension}"
         if b_copied:
