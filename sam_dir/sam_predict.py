@@ -25,7 +25,7 @@ import datasets.split_image as split_image
 import datasets.raster_io as raster_io
 import datasets.vector_gpd as vector_gpd
 
-import GPUtil
+import bim_utils
 from multiprocessing import Process
 
 import numpy as np
@@ -690,9 +690,6 @@ def parallel_segment_main(para_file):
         io_function.mkdir(area_save_dir)
 
         # parallel inference images for this area
-        CUDA_VISIBLE_DEVICES = []
-        if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
-            CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
         idx = 0
         while idx < img_count:
 
@@ -702,21 +699,8 @@ def parallel_segment_main(para_file):
                 time.sleep(60)  # wait 60 seconds, then check the count of running jobs again
 
             if b_use_multiGPUs:
-                # get available GPUs  # https://github.com/anderskm/gputil
-                # memory: orders the available GPU device ids by ascending memory usage
-                deviceIDs = GPUtil.getAvailable(order='memory', limit=100, maxLoad=0.5,
-                                                maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
-                # only use the one in CUDA_VISIBLE_DEVICES
-                if len(CUDA_VISIBLE_DEVICES) > 0:
-                    deviceIDs = [item for item in deviceIDs if item in CUDA_VISIBLE_DEVICES]
-                    basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs) +
-                                           ', among visible ones:' + str(CUDA_VISIBLE_DEVICES))
-                else:
-                    basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
+                deviceIDs = bim_utils.get_wait_available_GPU(machine_name,check_every_sec=30)
 
-                if len(deviceIDs) < 1:
-                    time.sleep(60)  # wait 60 seconds, then check the available GPUs again
-                    continue
                 # set only the first available visible
                 gpuid = deviceIDs[0]
                 basic.outputlogMessage(

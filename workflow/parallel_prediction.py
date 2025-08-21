@@ -15,7 +15,7 @@ import os, sys
 import time
 from optparse import OptionParser
 
-import GPUtil
+import bim_utils
 import datetime
 from multiprocessing import Process
 
@@ -171,27 +171,12 @@ def main(options, args):
         io_function.mkdir(area_save_dir)
 
         # parallel inference images for this area
-        CUDA_VISIBLE_DEVICES = []
-        if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
-            CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
+
         idx = 0
         while idx < img_count:
 
             if b_use_multiGPUs:
-                # get available GPUs  # https://github.com/anderskm/gputil
-                deviceIDs = GPUtil.getAvailable(order='first', limit=100, maxLoad=0.5,
-                                                maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
-                # only use the one in CUDA_VISIBLE_DEVICES
-                if len(CUDA_VISIBLE_DEVICES) > 0:
-                    deviceIDs = [ item for item in deviceIDs if item in CUDA_VISIBLE_DEVICES]
-                    basic.outputlogMessage('on ' + machine_name + ', available GPUs:'+str(deviceIDs) +
-                                           ', among visible ones:'+str(CUDA_VISIBLE_DEVICES))
-                else:
-                    basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
-
-                if len(deviceIDs) < 1:
-                    time.sleep(60)  # wait one minute, then check the available GPUs again
-                    continue
+                deviceIDs = bim_utils.get_wait_available_GPU(machine_name, check_every_sec=60)
                 # set only the first available visible
                 gpuid = deviceIDs[0]
                 basic.outputlogMessage('%d: predict image %s on GPU %d of %s' % (idx, inf_img_list[idx], gpuid, machine_name))
