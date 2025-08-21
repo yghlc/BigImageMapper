@@ -16,13 +16,14 @@ import time
 def get_wait_available_GPU(machine_name, check_every_sec=5):
     # get available GPUs  # https://github.com/anderskm/gputil
     # memory: orders the available GPU device ids by ascending memory usage
+
+    CUDA_VISIBLE_DEVICES = []
+    if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
+        CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
+
     while True:
         deviceIDs = GPUtil.getAvailable(order='memory', limit=100, maxLoad=0.5,
                                         maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
-
-        CUDA_VISIBLE_DEVICES = []
-        if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
-            CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
 
         # only use the one in CUDA_VISIBLE_DEVICES
         if len(CUDA_VISIBLE_DEVICES) > 0:
