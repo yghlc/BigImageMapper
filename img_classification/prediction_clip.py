@@ -15,19 +15,18 @@ import os.path as osp
 from optparse import OptionParser
 from datetime import datetime
 import time
-import GPUtil
 
 from PIL import Image
 
 import numpy as np
 import torch
 
-import bim_utils
 import clip
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
+import bim_utils
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 import basic_src.timeTools as timeTools

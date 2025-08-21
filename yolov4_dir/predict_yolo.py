@@ -13,12 +13,13 @@ import time
 from datetime import datetime
 from optparse import OptionParser
 
-import bim_utils
+
 from multiprocessing import Process
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
 import parameters
+import bim_utils
 
 import basic_src.io_function as io_function
 import basic_src.basic as basic
