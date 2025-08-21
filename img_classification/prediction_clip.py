@@ -21,6 +21,8 @@ from PIL import Image
 
 import numpy as np
 import torch
+
+import bim_utils
 import clip
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -415,10 +417,6 @@ def parallel_prediction_main(para_file,trained_model):
             continue
 
         # parallel inference images for this area
-        CUDA_VISIBLE_DEVICES = []
-        if 'CUDA_VISIBLE_DEVICES' in os.environ.keys():
-            CUDA_VISIBLE_DEVICES = [int(item.strip()) for item in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
-        # idx = 0
 
         while basic.alive_process_count(sub_tasks) >= maximum_prediction_jobs:
             print(datetime.now(),
@@ -426,23 +424,7 @@ def parallel_prediction_main(para_file,trained_model):
             time.sleep(30)  # wait 30 seconds, then check the count of running jobs again
 
         if b_use_multiGPUs:
-            # get available GPUs  # https://github.com/anderskm/gputil
-            # memory: orders the available GPU device ids by ascending memory usage
-            deviceIDs = GPUtil.getAvailable(order='memory', limit=100, maxLoad=0.5,
-                                            maxMemory=0.5, includeNan=False, excludeID=[], excludeUUID=[])
-            # only use the one in CUDA_VISIBLE_DEVICES
-            if len(CUDA_VISIBLE_DEVICES) > 0:
-                deviceIDs = [item for item in deviceIDs if item in CUDA_VISIBLE_DEVICES]
-                basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs) +
-                                       ', among visible ones:' + str(CUDA_VISIBLE_DEVICES))
-            else:
-                basic.outputlogMessage('on ' + machine_name + ', available GPUs:' + str(deviceIDs))
-
-            if len(deviceIDs) < 1:
-                time.sleep(60)  # wait 5 seconds, then check the available GPUs again
-                continue
-            # set only the first available visible
-            # gpuid = deviceIDs[0]
+            deviceIDs = bim_utils.get_wait_available_GPU(machine_name,check_every_sec=30)
 
             # in the case it takes long time to prepare data, tasks need to make sure task equally distributed to different gpus
             gpu_task_count = [used_gpu_ids.count(id) for id in deviceIDs]
