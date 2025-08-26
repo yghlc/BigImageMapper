@@ -109,6 +109,11 @@ def extract_sub_image_boxes_one_region(save_img_dir, para_file, area_ini, b_trai
         extract_sub_images(train_grids_shp, image_dir, buffersize, image_or_pattern, extract_img_dir, dstnodata,
                            process_num, rectangle_ext, b_keep_org_file_name)
 
+        if os.path.isfile(extract_done_indicator) is False:
+            with open(extract_done_indicator, 'w') as f_obj:
+                f_obj.writelines(
+                    '%s image extracting, complete on %s \n' % (extract_img_dir, timeTools.get_now_time_str()))
+
     image_path_list = io_function.get_file_list_by_pattern(extract_img_dir, 'subImages/*.tif')
 
     if len(image_path_list) < 1:
@@ -160,9 +165,6 @@ def extract_sub_image_boxes_one_region(save_img_dir, para_file, area_ini, b_trai
         image_path_box_list = ['%s:%s' % (os.path.relpath(img), os.path.relpath(box_txt) ) for img, box_txt in zip(image_path_list, boxes_txt_list)]
         io_function.save_list_to_txt(patch_list_txt, image_path_box_list)
 
-    if os.path.isfile(extract_done_indicator) is False:
-        with open(extract_done_indicator, 'w') as f_obj:
-            f_obj.writelines('%s image extracting, complete on %s \n' % (extract_img_dir, timeTools.get_now_time_str()))
 
     return image_path_list, boxes_txt_list, patch_list_txt
 
