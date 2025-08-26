@@ -25,6 +25,8 @@ import geopandas as gpd
 # import these two to make sure load GEOS dll before using shapely
 import shapely
 from shapely.geometry import box
+# Use make_valid if available (Shapely >= 2.0)
+from shapely.validation import make_valid
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -206,6 +208,15 @@ def clip_vector_and_remove_tiny_polygons_touch_edge(input_vector, save_path, ext
     for idx, row in gdf.iterrows():
         geom = row.geometry
         org_area = geom.area
+
+        # Clean geometry if invalid (buffer(0) or make_valid if available)
+        if not geom.is_valid:
+            try:
+                geom = make_valid(geom)
+            except ImportError:
+                # Fallback to buffer(0)
+                geom = geom.buffer(0)
+
         clipped_geom = geom.intersection(extent_poly)
         if clipped_geom.is_empty or clipped_geom.area == 0:
             continue
