@@ -176,18 +176,21 @@ def clip_vector_and_remove_tiny_polygons_touch_edge(input_vector, save_path, ext
     """
     Clip a vector file to a bounding box. For polygons that touch the edge,
     compare the clipped area to the original area. Remove if clipped area < area_thr_ratio * original area.
+    Also remove features where class_column == background_class.
 
     Args:
         input_vector (str): Path to input vector file.
         save_path (str): Path to save the output.
         extent (tuple): (minx, miny, maxx, maxy) bounding box for clipping.
         area_thr_ratio (float): Minimum allowed area ratio (0 to 1) for clipped polygons.
+        class_column (str): Name of the column containing class labels.
+        background_class (int): Value in class_column to treat as background and remove.
         format (str): OGR driver name for saving output.
 
     Returns:
         str or None: Path to saved file, or None if nothing saved.
     """
-    print(f'obtaining {save_path}')
+    print(f'obtaining {os.path.relpath(save_path)}')
     if os.path.isfile(save_path):
         print(f'Warning: {save_path} exists, skip clipping')
         return save_path
@@ -198,6 +201,7 @@ def clip_vector_and_remove_tiny_polygons_touch_edge(input_vector, save_path, ext
 
     clipped_rows = []
     removed_edge = 0
+    keep_edge = 0
     removed_bg = 0
     for idx, row in gdf.iterrows():
         geom = row.geometry
@@ -217,6 +221,8 @@ def clip_vector_and_remove_tiny_polygons_touch_edge(input_vector, save_path, ext
             removed_bg += 1
             continue
         b_touch_edge = area_ratio < 1.0
+        if b_touch_edge:
+            keep_edge += 1
         updated_row = row.copy()
         updated_row.geometry = clipped_geom
         updated_row['b_touch_edge'] = b_touch_edge
@@ -224,15 +230,18 @@ def clip_vector_and_remove_tiny_polygons_touch_edge(input_vector, save_path, ext
 
     message = ""
     if removed_edge > 0:
-        message += f"removed {removed_edge} that touch edge, "
+        message += f" removed {removed_edge} that touch edge,"
+    if keep_edge > 0:
+        message += f" kept {keep_edge} touched-edge"
+
     if removed_bg > 0:
-        message += f"removed {removed_bg} that is background"
+        message += f" removed {removed_bg} that is background"
 
     if not clipped_rows:
-        print(f"No features after clipping. " + message)
+        print(f"No features after clipping." + message)
         return None
 
-    print(f'obtained {len(clipped_rows)} features after clipping.' + removed_bg)
+    print(f'obtained {len(clipped_rows)} features after clipping.' + message)
 
     final_gdf = gpd.GeoDataFrame(clipped_rows, crs=gdf.crs)
     final_gdf.to_file(save_path, driver=format)
