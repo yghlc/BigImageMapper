@@ -298,7 +298,7 @@ def parallel_prediction_main(para_file, trained_model):
                 time.sleep(5)   # wait 5 seconds, then check the count of running jobs again
 
             if b_use_multiGPUs:
-                deviceIDs = bim_utils.get_wait_available_GPU(machine_name, check_every_sec=5)
+                deviceIDs = bim_utils.get_wait_available_GPU(machine_name, check_every_sec=1)
 
                 # set only the first available visible
                 gpuid = deviceIDs[0]
