@@ -24,6 +24,7 @@ import basic_src.basic as basic
 import basic_src.io_function as io_function
 import basic_src.timeTools as timeTools
 import basic_src.map_projection as map_projection
+import datasets.vector_gpd as vector_gpd
 
 import time
 import random
@@ -37,7 +38,17 @@ def merge_imagePatch_labels_for_multi_regions(image_patch_labels_list_txts, save
                 outfile.write(infile.read())
 
 
+def extract_sub_images(train_grids_shp,image_dir, buffersize,image_or_pattern,extract_img_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name):
 
+    get_subImage_script = os.path.join(code_dir, 'datasets', 'get_subImages.py')
+
+    command_string = get_subImage_script + ' -b ' + str(buffersize) + ' -e ' + image_or_pattern + \
+                     ' -o ' + extract_img_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
+                     + ' ' + rectangle_ext + ' --no_label_image '
+    if b_keep_org_file_name:
+        command_string += ' --b_keep_grid_name '
+    command_string += train_grids_shp + ' ' + image_dir
+    basic.os_system_exit_code(command_string)
 
 def read_sub_image_boxes_one_region(extract_img_dir, para_file,area_ini, b_training=True):
 
@@ -55,7 +66,7 @@ def extract_sub_image_boxes_one_region(save_img_dir, para_file, area_ini, b_trai
     '''
 
     # extract sub-images
-    get_subImage_script = os.path.join(code_dir, 'datasets', 'get_subImages.py')
+
     extract_img_dir = save_img_dir
 
     dstnodata = parameters.get_string_parameters(para_file, 'dst_nodata')
@@ -92,16 +103,11 @@ def extract_sub_image_boxes_one_region(save_img_dir, para_file, area_ini, b_trai
 
     ## extract sub-images and the bounding boxes
     extract_done_indicator = os.path.join(extract_img_dir, 'extract_image_using_vector.done')
-    command_string = get_subImage_script + ' -b ' + str(buffersize) + ' -e ' + image_or_pattern + \
-                     ' -o ' + extract_img_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
-                     + ' ' + rectangle_ext + ' --no_label_image '
-    if b_keep_org_file_name:
-        command_string += ' --b_keep_grid_name '
-    command_string += train_grids_shp + ' ' + image_dir
     if os.path.isfile(extract_done_indicator):
         basic.outputlogMessage('Warning, sub-images already been extracted, read them directly')
     else:
-        basic.os_system_exit_code(command_string)
+        extract_sub_images(train_grids_shp, image_dir, buffersize, image_or_pattern, extract_img_dir, dstnodata,
+                           process_num, rectangle_ext, b_keep_org_file_name)
 
     image_path_list = io_function.get_file_list_by_pattern(extract_img_dir, 'subImages/*.tif')
 
@@ -121,7 +127,32 @@ def extract_sub_image_boxes_one_region(save_img_dir, para_file, area_ini, b_trai
     if b_ignore_edge_objects is None:
         b_ignore_edge_objects = False
     boxes_txt_list = objDet_utils.get_bounding_boxes_from_vector_file(image_path_list, train_polygon_box_shp,
-                                                        b_ignore_edge_objects=b_ignore_edge_objects)
+                                                        b_ignore_edge_objects=b_ignore_edge_objects,b_save_removal=True)
+
+
+    # adding these polygons/boxes touch edges back
+    # cancelled, this is not a good approach, when getting bounding boxes, for those touch edge but more than
+    # half of the boxes/polgyons within the extent should be not removed, but keep there.
+
+
+    # b_add_edge_objects_after_removal = parameters.get_bool_parameters_None_if_absence(para_file,'b_add_edge_objects_after_removal')
+    # if b_add_edge_objects_after_removal is None:
+    #     b_add_edge_objects_after_removal = False
+    # if b_add_edge_objects_after_removal:
+    #     removal_gpkg_list = io_function.get_file_list_by_pattern(extract_img_dir, 'subImages/*_removal.gpkg')
+    #     if len(removal_gpkg_list) > 0:
+    #         save_removal_merged = os.path.join(extract_img_dir,'removal_merge.gpkg')
+    #         vector_gpd.merge_vector_files(removal_gpkg_list,save_removal_merged, format='GPKG')
+    #         geometry_vector_gpd = vector_gpd.geometries_overlap_another_group(train_polygon_box_shp,save_removal_merged)
+    #         train_polygon_box_edge_shp = os.path.join(extract_img_dir, 'train_polygon_box_touch_edge.gpkg')
+    #         geometry_vector_gpd.to_file(train_polygon_box_edge_shp)
+
+    #         ## to be completed? no, cancel approach, see above
+    #         buffersize2 = 40?
+    #         extract_img_dir2 = ?
+    #         extract_sub_images(train_polygon_box_edge_shp, image_dir, buffersize2, image_or_pattern, extract_img_dir2, dstnodata,
+    #                            process_num, rectangle_ext, b_keep_org_file_name)
+
 
 
     if os.path.isfile(patch_list_txt) is False:
@@ -155,8 +186,7 @@ def get_sub_images_multi_regions_for_training_YOLO(WORK_DIR,para_file):
         io_function.mkdir(training_data_dir)
 
     for area_idx, area_ini in enumerate(training_regions):
-        basic.outputlogMessage(
-            ' %d/%d: getting training data from region: %s' % (area_idx, len(training_regions), area_ini))
+        basic.outputlogMessage('%d/%d: getting training data from region: %s' % (area_idx+1, len(training_regions), area_ini))
         area_name_remark_time = parameters.get_area_name_remark_time(area_ini)
 
         extract_img_dir = os.path.join(training_data_dir, area_name_remark_time)

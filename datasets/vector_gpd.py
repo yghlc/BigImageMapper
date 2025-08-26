@@ -1726,7 +1726,7 @@ def sample_points_within_polygon(polygon, b_grid=True, max_point_count=10):
     return gpd_points_within
     # return point_list
 
-def remove_polygon_boxes_touch_edge(in_vector, bounds, save_path=None, shrink_meters=10):
+def remove_polygon_boxes_touch_edge(in_vector, bounds, save_path=None, shrink_meters=10, b_save_removal=False):
     """
     Remove polygons/boxes that are not fully within the shrunken extent defined by `bounds`.
     The extent is shrunk inward by `shrink_meters` before checking. Prints info about removed features.
@@ -1745,6 +1745,10 @@ def remove_polygon_boxes_touch_edge(in_vector, bounds, save_path=None, shrink_me
     extent_poly = box(minx, miny, maxx, maxy)
     shrunk_extent = extent_poly.buffer(-shrink_meters)
 
+    if shrunk_extent.is_empty:
+        print("Warning: Shrinking the extent by the specified meters produced an empty geometry. No features will be kept.")
+        return None
+
     gdf = gpd.read_file(in_vector)
 
     # Keep only features that are fully within the shrunken extent
@@ -1756,9 +1760,18 @@ def remove_polygon_boxes_touch_edge(in_vector, bounds, save_path=None, shrink_me
     # Reporting removed geometries
     if not removed.empty:
         print(f"Warning: removed {len(removed)} polygons/boxes close to defined extent in '{os.path.relpath(in_vector)}'")
+        if b_save_removal:
+            save_path_ext = os.path.splitext(save_path)
+            save_removal = save_path_ext[0] + '_removal' + save_path_ext[1]
+            removed.to_file(save_removal)
 
-    kept.to_file(save_path)
-    return save_path
+    if not kept.empty:
+        kept.to_file(save_path)
+        return save_path
+    else:
+        # if no geometry after removing
+        print("No polygons/boxes remain after removal.")
+        return None
 
 
 def clip_geometries(input_path, save_path, mask, target_prj=None, format='ESRI Shapefile'):
