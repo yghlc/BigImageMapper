@@ -117,6 +117,10 @@ def merge_shape_files(file_list, save_path, b_create_id=False):
     merged_gdfs = []
     ref_crs = gpd.read_file(file_list[0]).crs
 
+    if ref_crs is None:
+        print(f"Warning: CRS of {file_list[0]} is undefined.")
+        return False
+
     for idx, shp_path in enumerate(file_list):
         if idx % 10 == 0:
             print(f"Processing {idx+1}/{len(file_list)}: {shp_path}")
@@ -129,7 +133,7 @@ def merge_shape_files(file_list, save_path, b_create_id=False):
 
         # Check CRS
         if gdf.crs != ref_crs:
-            raise ValueError('Projection inconsistent: %s is different with the first one'%shp_path)
+            raise ValueError(f'Projection inconsistent: {shp_path} is different from the first one.')
 
         merged_gdfs.append(gdf)
 
@@ -140,8 +144,8 @@ def merge_shape_files(file_list, save_path, b_create_id=False):
     merged_gdf = gpd.GeoDataFrame(pd.concat(merged_gdfs, ignore_index=True), crs=ref_crs)
 
     if b_create_id:
-        if 'id' in merged_gdf.keys():
-            basic.outputlogMessage('warning, original "id" will be replaced by new id in the merged shapefile' )
+        if 'id' in merged_gdf.columns:
+            basic.outputlogMessage('Warning: original "id" will be replaced by new id in the merged shapefile')
         merged_gdf['id'] = range(len(merged_gdf))
 
     merged_gdf.to_file(save_path)
