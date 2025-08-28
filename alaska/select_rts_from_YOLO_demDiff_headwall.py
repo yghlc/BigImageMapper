@@ -121,7 +121,7 @@ def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path
     polys_group2 = vector_gpd.read_polygons_gpd(polys_group2_path,b_fix_invalid_polygon=False)
     print(datetime.now(), 'read %d polygons in group 2' % len(polys_group2))
 
-    shp1_prj = vector_gpd.get_projection(polys_group1_path)
+    shp1_prj = vector_gpd.get_projection(polys_group1_path,format='epsg')
     overlap_touch_gpd = vector_gpd.polygons_overlap_another_group_in_file(polys_group1, shp1_prj, polys_group2_path)
     overlap_touch_gpd.to_file(save_path)
 
