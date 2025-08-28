@@ -121,43 +121,47 @@ def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path
     polys_group2 = vector_gpd.read_polygons_gpd(polys_group2_path,b_fix_invalid_polygon=False)
     print(datetime.now(), 'read %d polygons in group 2' % len(polys_group2))
 
-    count_group1 = len(polys_group1)
-    # https://shapely.readthedocs.io/en/stable/manual.html#str-packed-r-tree
-    tree = STRtree(polys_group2)
-    select_idx = []
-    if process_num == 1:
-        for idx, subsi_buff in enumerate(polys_group1):
-            # output progress
-            if idx%1000 == 0:
-                print(datetime.now(),'%d th / %d polygons'%(idx,count_group1))
 
-            adjacent_polygons = [item for item in tree.query(subsi_buff) if
-                                 item.intersects(subsi_buff) or item.touches(subsi_buff)]
-            if len(adjacent_polygons) > 0:
-                select_idx.append(idx)
-    elif process_num > 1:
-        # end in error:
-        # struct.error: 'i' format requires -2147483648 <= number <= 2147483647
-        # could be caused by too many polygons
-        raise ValueError("has error of struct.error: 'i' format requires -2147483648 <= number <= 2147483647, "
-                         "please use process=1")
+    overlap_touch_gpd = vector_gpd.polygons_overlap_another_group_in_file(polys_group1, shp1_prj, polys_group2_path)
+    overlap_touch_gpd.to_file(save_path)
 
-        # theadPool = Pool(process_num)
-        # parameters_list = [(idx, poly, tree, count_group1) for idx, poly in enumerate(polys_group1)]
-        # results = theadPool.starmap(find_overlap_one_polygon, parameters_list)
-        # select_idx = [item for item in results if item is not None]
-        # theadPool.close()
-    else:
-        raise ValueError('wrong process number: %s'%str(process_num))
-
-
-    basic.outputlogMessage('Select %d polygons from %d ones' % (len(select_idx), count_group1))
-
-    if len(select_idx) < 1:
-        return None
-
-    # save to subset of shaepfile
-    return vector_gpd.save_shapefile_subset_as(select_idx, polys_group1_path, save_path)
+    # count_group1 = len(polys_group1)
+    # # https://shapely.readthedocs.io/en/stable/manual.html#str-packed-r-tree
+    # tree = STRtree(polys_group2)
+    # select_idx = []
+    # if process_num == 1:
+    #     for idx, subsi_buff in enumerate(polys_group1):
+    #         # output progress
+    #         if idx%1000 == 0:
+    #             print(datetime.now(),'%d th / %d polygons'%(idx,count_group1))
+    #
+    #         adjacent_polygons = [item for item in tree.query(subsi_buff) if
+    #                              item.intersects(subsi_buff) or item.touches(subsi_buff)]
+    #         if len(adjacent_polygons) > 0:
+    #             select_idx.append(idx)
+    # elif process_num > 1:
+    #     # end in error:
+    #     # struct.error: 'i' format requires -2147483648 <= number <= 2147483647
+    #     # could be caused by too many polygons
+    #     raise ValueError("has error of struct.error: 'i' format requires -2147483648 <= number <= 2147483647, "
+    #                      "please use process=1")
+    #
+    #     # theadPool = Pool(process_num)
+    #     # parameters_list = [(idx, poly, tree, count_group1) for idx, poly in enumerate(polys_group1)]
+    #     # results = theadPool.starmap(find_overlap_one_polygon, parameters_list)
+    #     # select_idx = [item for item in results if item is not None]
+    #     # theadPool.close()
+    # else:
+    #     raise ValueError('wrong process number: %s'%str(process_num))
+    #
+    #
+    # basic.outputlogMessage('Select %d polygons from %d ones' % (len(select_idx), count_group1))
+    #
+    # if len(select_idx) < 1:
+    #     return None
+    #
+    # # save to subset of shaepfile
+    # return vector_gpd.save_shapefile_subset_as(select_idx, polys_group1_path, save_path)
 
 
 def merge_polygon_for_demDiff_headwall_grids(dem_subsidence_shp, headwall_shp_list, output_dir, buffer_size=50):
