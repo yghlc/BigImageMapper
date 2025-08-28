@@ -123,7 +123,7 @@ def merge_shape_files(file_list, save_path, b_create_id=False):
 
     for idx, shp_path in enumerate(file_list):
         if idx % 10 == 0:
-            print(f"Processing {idx+1}/{len(file_list)}: {shp_path}")
+            print(f"In merge_shape_files, Processing {idx+1}/{len(file_list)}: {shp_path}")
 
         gdf = gpd.read_file(shp_path)
         # Skip empty shapefiles
