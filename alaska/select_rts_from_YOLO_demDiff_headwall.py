@@ -122,8 +122,8 @@ def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path
     print(datetime.now(), 'read %d polygons in group 2' % len(polys_group2))
 
     shp1_prj = vector_gpd.get_projection(polys_group1_path,format='epsg')
-    overlap_touch_gpd = vector_gpd.polygons_overlap_another_group_in_file(polys_group1, shp1_prj, polys_group2_path)
-    overlap_touch_gpd.to_file(save_path)
+    select_idx = vector_gpd.polygons_overlap_another_group_in_file(polys_group1, shp1_prj, polys_group2_path, b_return_idx=True)
+    # overlap_touch_gpd.to_file(save_path)
 
     # count_group1 = len(polys_group1)
     # # https://shapely.readthedocs.io/en/stable/manual.html#str-packed-r-tree
@@ -157,11 +157,11 @@ def select_polygons_overlap_others_in_group2(polys_group1_path,polys_group2_path
     #
     # basic.outputlogMessage('Select %d polygons from %d ones' % (len(select_idx), count_group1))
     #
-    # if len(select_idx) < 1:
-    #     return None
-    #
-    # # save to subset of shaepfile
-    # return vector_gpd.save_shapefile_subset_as(select_idx, polys_group1_path, save_path)
+    if len(select_idx) < 1:
+        return None
+
+    # save to subset of shaepfile
+    return vector_gpd.save_shapefile_subset_as(select_idx, polys_group1_path, save_path)
 
 
 def merge_polygon_for_demDiff_headwall_grids(dem_subsidence_shp, headwall_shp_list, output_dir, buffer_size=50):
