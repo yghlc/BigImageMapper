@@ -336,11 +336,41 @@ def test_calculate_poly_count_area_in_each_grid():
     calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector, save_path,b_poly_bounds=True)
 
 def add_columns_to_vector_files(vector_file, in_npy_list):
+    
+    column_values = {}
+    column_values['samElev_A'] = []
+    column_values['samElev_C'] = []
+    for idx, npy in enumerate(in_npy_list):
+        column_name = io_function.get_name_no_ext(npy)
+        if column_name.startswith('samE'):
+            if column_name.endswith('_A'):
+                column_values['samElev_A'].append(npy)
+            elif column_name.endswith('_C'):
+                column_values['samElev_C'].append(npy)
+            else:
+                raise ValueError(f'Not recongized column name {column_name}')            
+        else:
+            column_values[column_name] = npy
+
+    # merge the values for samElev_A and samElev_C
+    for col in ['samElev_A','samElev_C']:
+        if len(column_values[col]) > 1:
+            arrays = [np.load(npy) for npy in column_values[col]]
+            merged_array = np.sum(arrays, axis=0)
+            merged_npy = f'{col}.npy'
+            np.save(merged_npy, merged_array)
+            column_values[col] = merged_npy
+
+    # print(column_values)
+
+    # return 
+    
     data_gpd = gpd.read_file(vector_file)
 
-    for idx, npy in enumerate(in_npy_list):
-        print(datetime.now(), f'({idx+1}/{len(in_npy_list)}), adding {npy}')
-        column_name = io_function.get_name_no_ext(npy)
+    for idx, column_name in enumerate(column_values.keys()):
+        npy = column_values[column_name]
+        print(datetime.now(), f'({idx+1}/{len(column_values)}), adding {npy}')
+
         if vector_gpd.is_field_name_in_shp(vector_file, column_name):
             basic.outputlogMessage(f'warning, {column_name} already in the vector file, will replace original values')
         np_array = np.load(npy)
