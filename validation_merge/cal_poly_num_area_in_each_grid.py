@@ -275,9 +275,7 @@ def calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector,
     print(f'Add grid_id, cost {t3-t2} seconds')
 
     # Split grid into chunks
-    # grid_chunks = np.array_split(grid_gpd, n_workers)
-    indices = np.array_split(grid_gpd.index, n_workers)
-    grid_chunks = [grid_gpd.loc[idx] for idx in indices]
+    grid_chunks = np.array_split(grid_gpd, n_workers)
 
     t4 = time.time()
     print(f'Apply array split, cost {t4-t3} seconds')
@@ -389,7 +387,7 @@ if __name__ == '__main__':
                       help="the input txt contain column name and vector path (column_name, vector_path)")
 
     parser.add_option("-p", "--process_num",
-                      action="store", dest="process_num", default=16,
+                      action="store", dest="process_num",type=int, default=16,
                       help="the process number ")
 
     parser.add_option("-b", "--using_bounding_box",
