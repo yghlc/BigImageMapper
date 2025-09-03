@@ -10,6 +10,7 @@ add time: 02 September, 2025
 """
 
 import os,sys
+import time
 from optparse import OptionParser
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -252,17 +253,32 @@ def calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector,
     if column_count is None:
         return
 
+    t0 = time.time()
+
     grid_gpd = gpd.read_file(grid_vector)
     poly_gpd = gpd.read_file(in_poly_vector)
+
+    t1 = time.time()
+    print(f'Load two vector file, cost {t1-t0} seconds')
+
     if b_poly_bounds:
         poly_gpd['geometry'] = poly_gpd.bounds.apply(lambda row: box(row.minx, row.miny, row.maxx, row.maxy), axis=1)
+
+    t2 = time.time()
+    print(f'Applied bounding boxes, cost {t2-t1} seconds')
 
 
     if 'grid_id' not in grid_gpd.columns:
         grid_gpd = grid_gpd.reset_index().rename(columns={'index': 'grid_id'})
 
+    t3 = time.time()
+    print(f'Add grid_id, cost {t3-t2} seconds')
+
     # Split grid into chunks
     grid_chunks = np.array_split(grid_gpd, n_workers)
+
+    t4 = time.time()
+    print(f'Apply array split, cost {t4-t3} seconds')
 
     # Prepare processing function
     func = partial(
@@ -276,13 +292,22 @@ def calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector,
     with Pool(n_workers) as pool:
         results = pool.map(func, grid_chunks)
 
+    t5 = time.time()
+    print(f'Parallel processing, cost {t5-t4} seconds')
+
     # Concatenate all results
     final_gdf = pd.concat(results, ignore_index=True)
     # final_gdf = final_gdf.sort_values('grid_id').reset_index(drop=True)
 
+    t6 = time.time()
+    print(f'Concatenate, cost {t6-t5} seconds')
+
     # Save to file
     final_gdf.to_file(save_path)
     print(datetime.now(), f'Saved to {save_path}')
+
+    t7 = time.time()
+    print(f'Saved to file, cost {t7-t6} seconds')
 
     # return final_gdf
 
