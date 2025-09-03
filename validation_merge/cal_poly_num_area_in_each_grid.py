@@ -335,16 +335,37 @@ def test_calculate_poly_count_area_in_each_grid():
     # calculate_poly_count_area_in_each_grid_dask(grid_vector, in_poly_vector, save_path,b_poly_bounds=True)
     calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector, save_path,b_poly_bounds=True)
 
+def add_columns_to_vector_files(vector_file, in_npy_list):
+    data_gpd = gpd.read_file(vector_file)
+
+    for idx, npy in enumerate(in_npy_list):
+        print(datetime.now(), f'({idx+1}/{len(in_npy_list)}), adding {npy}')
+        column_name = io_function.get_name_no_ext(npy)
+        if vector_gpd.is_field_name_in_shp(vector_file, column_name):
+            basic.outputlogMessage(f'warning, {column_name} already in the vector file, will replace original values')
+        np_array = np.load(npy)
+        if len(np_array )!= len(data_gpd):
+            raise ValueError('the count in numpy array is differnt from these in the datafraome')
+        # add the np_array to the data_gpd as a column
+        data_gpd[column_name] = np_array
+
+    data_gpd.to_file(vector_file)
+    basic.outputlogMessage('Completed add column values')
 
 
 def main(options, args):
 
     grid_vector = args[0]
-    # in_vectors = [item for item in args[1:]]
+    in_npy_list = [item for item in args[1:]]
     # save_path = options.save_path
     save_path = grid_vector   # save the result into the orignal grid
     b_using_bounding_box = options.using_bounding_box
     process_num = options.process_num
+
+    if len(in_npy_list) > 1:
+        basic.outputlogMessage('get the npy array file from input, will add them into vector files')
+        add_columns_to_vector_files(grid_vector, in_npy_list)
+        return
 
     input_txt = options.input_txt
     in_vectors_colum_dict = {}
@@ -361,7 +382,7 @@ def main(options, args):
     # if save_path != grid_vector:
     #     print('Please ')
     #     return
-    b_save2numpy = True
+    b_save2numpy = options.b_save_2_npy
 
     # save for backup
     io_function.save_dict_to_txt_json(input_txt+'.json',in_vectors_colum_dict)
@@ -404,6 +425,11 @@ if __name__ == '__main__':
                       action="store_true", dest="using_bounding_box",default=False,
                       help="whether use the boudning boxes of polygons, this can avoid some invalid"
                            " polygons and be consistent with YOLO output")
+
+    parser.add_option("-n", "--b_save_2_npy",
+                      action="store_true", dest="b_save_2_npy",default=False,
+                      help="if set, will save the columns into numpy array, not in the origianl vector file")
+
 
 
     (options, args) = parser.parse_args()
