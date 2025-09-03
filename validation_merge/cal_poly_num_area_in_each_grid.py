@@ -39,6 +39,10 @@ def check_input_vector_files(grid_vector,in_poly_vector,column_pre_name,save_pat
     column_count = f"{column_pre_name}_C"
     column_area = f"{column_pre_name}_A"
 
+    if os.path.isfile(f"{column_count}.npy"):
+        print(f'{column_count}.npy already exist, skip calculating')
+        return None, None
+
     if os.path.isfile(save_path):
         if vector_gpd.is_field_name_in_shp(save_path,column_count):
             print(f'Column {column_count} already in {save_path}, skip calculating')
@@ -244,7 +248,7 @@ def process_grid_chunk(grid_chunk, poly_gdf, column_count, column_area):
 
 
 def calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector, save_path, column_pre_name='poly',
-                                                    b_poly_bounds=False, n_workers=16):
+                                                    b_poly_bounds=False, n_workers=16, b_save_numpy=False):
     """
     Parallel calculation of polygon count and intersection area in each grid cell using multiprocessing.
     """
@@ -303,8 +307,14 @@ def calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector,
     print(f'Concatenate, cost {t6-t5} seconds')
 
     # Save to file
-    final_gdf.to_file(save_path)
-    print(datetime.now(), f'Saved to {save_path}')
+    if b_save_numpy:
+        column_count_array = np.array(final_gdf[column_count])
+        column_area_array = np.array(final_gdf[column_area])
+        np.save(f"{column_count}.npy",column_count_array)
+        np.save(f"{column_area}.npy",column_area_array)
+    else:
+        final_gdf.to_file(save_path)
+        print(datetime.now(), f'Saved to {save_path}')
 
     t7 = time.time()
     print(f'Saved to file, cost {t7-t6} seconds')
@@ -351,7 +361,7 @@ def main(options, args):
     # if save_path != grid_vector:
     #     print('Please ')
     #     return
-
+    b_save2numpy = True
 
     # save for backup
     io_function.save_dict_to_txt_json(input_txt+'.json',in_vectors_colum_dict)
@@ -365,7 +375,7 @@ def main(options, args):
         # calculate_poly_count_area_in_each_grid(grid_vector, in_poly_vector, save_path, column_pre_name=col_name,
         #                                        b_poly_bounds=b_using_bounding_box)
         calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector, save_path, column_pre_name=col_name,
-                                               b_poly_bounds=b_using_bounding_box,n_workers=process_num)
+                                               b_poly_bounds=b_using_bounding_box,n_workers=process_num, b_save_numpy=b_save2numpy)
 
 
 
