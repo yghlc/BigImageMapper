@@ -44,6 +44,8 @@ from multiprocessing import Pool
 from packaging import version
 import networkx as nx
 
+import fiona
+
 def check_remove_None_geometries(geometries, gpd_dataframe, file_path=None):
     # Missing and empty geometries, find None geometry, then remove them
     # https://geopandas.org/en/stable/docs/user_guide/missing_empty.html
@@ -349,11 +351,19 @@ def is_field_name_in_shp(polygon_shp, field_name):
     :param field_name:
     :return:
     '''
-    shapefile = gpd.read_file(polygon_shp)
-    if field_name in shapefile.keys():
-        return True
-    else:
-        return False
+
+    # using finoa is much faster than geopanda when the file is large
+    with fiona.open(polygon_shp) as src:
+        # print("Column names:", list(src.schema['properties'].keys()))
+        # To check if 'name' exists:
+        return field_name in src.schema['properties']
+
+    # shapefile = gpd.read_file(polygon_shp, rows=0) #  Only reads schema, not data!
+    # print(field_name in shapefile.columns)
+    # if field_name in shapefile.keys():
+    #     return True
+    # else:
+    #     return False
 
 
 def read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygon = True):
