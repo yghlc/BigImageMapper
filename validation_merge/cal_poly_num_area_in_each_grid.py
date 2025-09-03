@@ -61,8 +61,8 @@ def calculate_poly_count_area_in_each_grid(grid_vector, in_poly_vector, save_pat
     if column_count is None:
         return
 
-    grid_gpd = gpd.read_file(grid_vector)
-    poly_gpd = gpd.read_file(in_poly_vector)
+    grid_gpd = gpd.read_file(grid_vector,engine="pyogrio")
+    poly_gpd = gpd.read_file(in_poly_vector,engine="pyogrio")
     if b_poly_bounds:
         poly_gpd['geometry'] = poly_gpd.bounds.apply(lambda row: box(row.minx, row.miny, row.maxx, row.maxy), axis=1)
 
@@ -255,8 +255,8 @@ def calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector,
 
     t0 = time.time()
 
-    grid_gpd = gpd.read_file(grid_vector)
-    poly_gpd = gpd.read_file(in_poly_vector)
+    grid_gpd = gpd.read_file(grid_vector,engine="pyogrio")
+    poly_gpd = gpd.read_file(in_poly_vector,engine="pyogrio")
 
     t1 = time.time()
     print(f'Load two vector file, cost {t1-t0} seconds')
