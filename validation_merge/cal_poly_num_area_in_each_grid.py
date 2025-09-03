@@ -344,6 +344,7 @@ def add_columns_to_vector_files(vector_file, in_npy_list):
         if vector_gpd.is_field_name_in_shp(vector_file, column_name):
             basic.outputlogMessage(f'warning, {column_name} already in the vector file, will replace original values')
         np_array = np.load(npy)
+        print('np_array info', np_array.shape, np_array.dtype)
         if len(np_array )!= len(data_gpd):
             raise ValueError('the count in numpy array is differnt from these in the datafraome')
         # add the np_array to the data_gpd as a column
