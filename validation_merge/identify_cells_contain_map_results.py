@@ -30,53 +30,102 @@ def read_numpy_from_file(npy_file_list,col_name):
         if os.path.basename(npy) ==  f'{col_name}.npy':
             return np.load(npy)
 
-    raise IOError(f'{col_name}.npy does not exist')
+    raise IOError(f'{col_name}.npy does not exist in the list: {npy_file_list}')
 
-def find_grid_base_on_s2_results(grid_gpd, annual_count_thr=5, npy_file_list = None):
-
-    # s2 count
-    s2_count_columns = ['s2_2018_A', 's2_2019_A', 's2_2020_A', 's2_2021_A','s2_2022_A','s2_2023_A', 's2_2024_A']
-    s2_area_columns = ['s2_2018_C', 's2_2019_C', 's2_2020_C', 's2_2021_C','s2_2022_C','s2_2023_C', 's2_2024_C']
-
+def read_count_area_array(grid_gpd,count_columns,area_columns, npy_file_list = None):
     if npy_file_list is not None:
-        count_array_list =  [read_numpy_from_file(npy_file_list, item) for item in s2_count_columns ]
-        area_array_list =  [read_numpy_from_file(npy_file_list, item) for item in s2_area_columns ]
+        count_array_list =  [read_numpy_from_file(npy_file_list, item) for item in count_columns ]
+        area_array_list =  [read_numpy_from_file(npy_file_list, item) for item in area_columns ]
     else:
-        count_array_list = [np.array(grid_gpd[item]) for item in s2_count_columns ]
-        area_array_list = [ np.array(grid_gpd[item]) for item in s2_area_columns ]
+        count_array_list = [np.array(grid_gpd[item]) for item in count_columns ]
+        area_array_list = [ np.array(grid_gpd[item]) for item in area_columns ]
 
     count_array_2d = np.vstack(count_array_list)
     area_array_2d = np.vstack(area_array_list)
+    return count_array_2d, area_array_2d
+
+def find_grid_base_on_s2_results(grid_gpd, annual_count_thr=5, area_trend_thr=0.01, npy_file_list = None):
+
+    # s2 count
+    s2_area_columns = ['s2_2018_A', 's2_2019_A', 's2_2020_A', 's2_2021_A','s2_2022_A','s2_2023_A', 's2_2024_A']
+    s2_count_columns = ['s2_2018_C', 's2_2019_C', 's2_2020_C', 's2_2021_C','s2_2022_C','s2_2023_C', 's2_2024_C']
+
+    count_array_2d, area_array_2d = read_count_area_array(grid_gpd, s2_count_columns, s2_area_columns, npy_file_list=npy_file_list)
 
     print('count_array_2d', count_array_2d.shape)
     print('area_array_2d', area_array_2d.shape)
 
     # selection based on the count
     # if 1 or more there, count a 1, otherwise, as zero
+    count_array_2d_sum = np.sum(count_array_2d,axis=0)    # sum across different years
     count_array_2d_binary = (count_array_2d > 0).astype(int)
     count_array_2d_binary_sum = np.sum(count_array_2d_binary,axis=0)    # sum across different years
-    print('count_array_2d_binary_sum', count_array_2d_binary_sum.shape)
+    print('count_array_2d_binary_sum', count_array_2d_binary_sum.shape, np.min(count_array_2d_binary_sum),
+          np.max(count_array_2d_binary_sum), np.mean(count_array_2d_binary_sum))
     b_select_on_count = count_array_2d_binary_sum  >= annual_count_thr
-    print('b_select_on_count:', )
+    print('b_select_on_count:', b_select_on_count.shape, b_select_on_count)
 
     # selection based on area changes
+    area_array_2d_sum = np.sum(area_array_2d, axis=0)  # sum across different years
+    x = np.arange(area_array_2d.shape[0])  # shape (7,)
+    # Calculate slopes (trend) per column, # trends[i] is the trend (slope) for column i
+    trends = np.polyfit(x, area_array_2d, deg=1)[0]  # shape (13304783,)
+    print('trends', trends.shape, trends)
+    b_select_on_area_trend = trends >= area_trend_thr
+    print('b_select_on_area_trend:', b_select_on_area_trend.shape, b_select_on_area_trend)
 
+    # conduct the select
+    select_idx = np.logical_and(b_select_on_count, b_select_on_area_trend)
+    if grid_gpd is None:
+        print('For testing, grid_gpd is None')
+        return None
+    # grid_gpd_sel = grid_gpd[select_idx]
+    # grid_gpd_sel['s2_occur'] = count_array_2d_binary_sum[select_idx]
+    # grid_gpd_sel['s2_area_trend'] = trends[select_idx]
+    s2_occur = count_array_2d_binary_sum[select_idx]
+    s2_area_trend = trends[select_idx]
+    s2_count_sum = count_array_2d_sum[select_idx]
+    s2_area_sum = area_array_2d_sum[select_idx]
+    basic.outputlogMessage(f'Select {len(s2_occur)} cells from {len(select_idx)} based on S2 mapping results')
+    return select_idx, s2_occur, s2_area_trend, s2_count_sum, s2_area_sum
+
+
+def find_grid_base_on_DEM_results(grid_gpd, npy_file_list = None):
+
+    # DEM
+    dem_area_columns = ['samElev_A', 'comImg_A']
+    dem_count_columns = ['samElev_C', 'comImg_C']
+
+    count_array_2d, area_array_2d = read_count_area_array(grid_gpd, dem_count_columns, dem_area_columns,
+                                                          npy_file_list=npy_file_list)
+
+    print('count_array_2d', count_array_2d.shape, np.min(count_array_2d, axis=1), np.max(count_array_2d,axis=1), np.mean(count_array_2d,axis=1) )
+    print('area_array_2d', area_array_2d.shape, np.min(area_array_2d,axis=1), np.max(area_array_2d,axis=1), np.mean(area_array_2d,axis=1))
 
 
 
 
 def test_find_grid_base_on_s2_results():
-
     npy_file_list = io_function.get_file_list_by_ext('.npy','./', bsub_folder=False)
     find_grid_base_on_s2_results(None, npy_file_list=npy_file_list)
 
-
-    pass
+def test_find_grid_base_on_DEM_results():
+    npy_file_list = io_function.get_file_list_by_ext('.npy', './', bsub_folder=False)
+    find_grid_base_on_DEM_results(None, npy_file_list=npy_file_list)
 
 
 def identify_cells_contain_true_results(grid_gpd, save_path):
 
-    find_grid_base_on_s2_results(grid_gpd)
+    # select based on sentinel-2
+    select_idx, s2_occur, s2_area_trend, s2_count_sum, s2_area_sum =\
+        find_grid_base_on_s2_results(grid_gpd)
+    select_grid_gpd = grid_gpd[select_idx]
+    select_grid_gpd['s2_occur'] = s2_occur
+    select_grid_gpd['s2_area_trend'] = s2_area_trend
+    select_grid_gpd['s2_count_sum'] = s2_count_sum
+    select_grid_gpd['s2_area_sum'] = s2_area_sum
+
+    select_grid_gpd.to_file(save_path)
 
     pass
 
@@ -93,13 +142,15 @@ def main(options, args):
     identify_cells_contain_true_results(grid_gpd, save_path)
 
 
+
     pass
 
 
 if __name__ == '__main__':
 
-    test_find_grid_base_on_s2_results()
-    sys.exit(0)
+    # test_find_grid_base_on_s2_results()
+    # test_find_grid_base_on_DEM_results()
+    # sys.exit(0)
 
     usage = "usage: %prog [options] grid_vector "
     parser = OptionParser(usage=usage, version="1.0 2025-9-4")
