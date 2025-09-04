@@ -12,7 +12,7 @@ import os,sys
 import time
 from optparse import OptionParser
 
-import numpy as np
+
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
@@ -20,13 +20,39 @@ sys.path.insert(0, code_dir)
 import basic_src.io_function as io_function
 import basic_src.basic as basic
 
+import parameters
+
+import numpy as np
+import geopandas as gpd
+
+
+
 def main(options, args):
     grid_path = args[0]
     out_dir = options.out_dir
 
+    t0 = time.time()
+    grid_gpd = gpd.read_file(grid_path)
+    t1 = time.time()
+    print(f'Loaded grid vector file, containing {len(grid_gpd)} cells, {len(grid_gpd.columns)} columns, cost {t1-t0} seconds')
+
+    mapping_res_ini = options.mapping_res_ini
+    in_vectors_colum_dict = {}
+    if mapping_res_ini is not None:
+        pass
+        # tmp_list = io_function.read_list_from_txt(input_txt)
+        # for tmp in tmp_list:
+        #     col_and_file = [item.strip() for item in tmp.split(',')]
+        #     in_vectors_colum_dict[col_and_file[0]] = col_and_file[1]
+    else:
+        print('Please set "--mapping_res_ini"')
+        return
+
+    if os.path.isdir(out_dir) is False:
+        io_function.mkdir(out_dir)
 
 
-    pass
+
 
 
 if __name__ == '__main__':
@@ -38,9 +64,9 @@ if __name__ == '__main__':
                       action="store", dest="out_dir",default="validation_data",
                       help="the output directory ")
 
-    parser.add_option("-i", "--input_txt",
-                      action="store", dest="input_txt",
-                      help="the input txt contain column name and vector path (column_name, vector_path)")
+    parser.add_option("-i", "--mapping_res_ini",
+                      action="store", dest="mapping_res_ini",
+                      help="the ini file contain mapping results and the corresponding rasters")
 
     # parser.add_option("-p", "--process_num",
     #                   action="store", dest="process_num",type=int, default=16,
