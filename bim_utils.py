@@ -45,13 +45,14 @@ def get_wait_available_GPU(machine_name, check_every_sec=5):
         return deviceIDs
 
 
-def extract_sub_images(train_grids_shp,image_dir, buffersize,image_or_pattern,extract_img_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name):
+def extract_sub_images(train_grids_shp,image_dir, buffersize,image_or_pattern,extract_img_dir,dstnodata,process_num,rectangle_ext,
+                       b_keep_org_file_name, save_format='GTIFF'):
 
     get_subImage_script = os.path.join(code_dir, 'datasets', 'get_subImages.py')
 
     command_string = get_subImage_script + ' -b ' + str(buffersize) + ' -e ' + image_or_pattern + \
                      ' -o ' + extract_img_dir + ' -n ' + str(dstnodata) + ' -p ' + str(process_num) \
-                      + ' --no_label_image '
+                      + ' -t ' + save_format + ' --no_label_image '
     if b_keep_org_file_name:
         command_string += ' --b_keep_grid_name '
     if rectangle_ext:

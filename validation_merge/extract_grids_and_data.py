@@ -25,9 +25,10 @@ import parameters
 import numpy as np
 import geopandas as gpd
 from datetime import datetime
+import re
 
 import bim_utils
-
+from utility.rename_subImages import rename_sub_images
 
 def get_mapping_shp_raster_dict(pre_names, mapping_res_ini):
     mapping_shp_raster_dict = {}
@@ -48,12 +49,19 @@ def get_mapping_shp_raster_dict(pre_names, mapping_res_ini):
 
     return mapping_shp_raster_dict
 
+def get_h3_id_in_sub_images_f(file_path):
+    ids = re.findall(r'id([0-9a-fA-F]+)_', os.path.basename(file_path))
+    return ids[0]
 
-def obtain_multi_data(grid_vector_path,mapping_shp_raster_dict,out_dir, buffersize=10, process_num=4):
+def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir, buffersize=10, process_num=4):
 
     dstnodata = 0
     rectangle_ext = True
     b_keep_org_file_name = True
+    sub_image_format = 'GTIFF'
+    img_file_extension = '.tif'
+    # sub_image_format = 'PNG'
+    # img_file_extension = '.png'
 
     # get sub-images for each raster, and the corresponding vectors
     for set_name in mapping_shp_raster_dict.keys():
@@ -65,19 +73,69 @@ def obtain_multi_data(grid_vector_path,mapping_shp_raster_dict,out_dir, buffersi
             print(f'Warning: the image dir or pattern for {set_name} is None, skip it')
             continue
         sub_image_dir = os.path.join(out_dir, set_name)
-        # print(grid_vector_path,img_dir,buffersize,img_pattern,sub_image_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name)
-        bim_utils.extract_sub_images(grid_vector_path,img_dir,buffersize,img_pattern,sub_image_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name)
+        #extract sub-images
+        bim_utils.extract_sub_images(grid_vector_path,img_dir,buffersize,img_pattern,sub_image_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name,
+                                     save_format=sub_image_format)
+
+        # rename the sub-images
+        sub_images_dir2 = os.path.join(sub_image_dir,'subImages')
+        rename_sub_images(grid_vector_path, sub_images_dir2, img_file_extension, set_name, 'h3_id_8')
         print(datetime.now(), f'Extracted sub-images for {set_name}, saved in {sub_image_dir}')
 
-        # extract the corresponding vectors
-        shp_path = mapping_shp_raster_dict[set_name][set_name+'-shp']
 
+    shp_gpd_dict = {}
+    for set_name in mapping_shp_raster_dict.keys():
+        shp_path = mapping_shp_raster_dict[set_name][set_name + '-shp']
+        if shp_path is None:
+            continue
+        io_function.is_file_exist(shp_path)
+        shp_gpd_dict[set_name] = gpd.read_file(shp_path)
 
+    # save the grids in grid_gpd to geojson format
+    vector_save_dir = out_dir
+    save_h3_id_list = []
+    for idx, row in grid_gpd.iterrows():
+        h3_id = row["h3_id_8"]
+        cell_vec_dir = os.path.join(vector_save_dir, h3_id)
+        io_function.mkdir(cell_vec_dir)
+        single_gdf = grid_gpd.iloc[[idx]]
 
+        # save the cell grids
+        cell_save_p = os.path.join(cell_vec_dir, f"h3_cell_{h3_id}.geojson")
+        single_gdf.to_file(cell_save_p, driver="GeoJSON")
+        save_h3_id_list.append(h3_id)
 
-    # organize the sub-images and vectors
+        # for shp dataset
+        for set_name in shp_gpd_dict.keys():
+            count = row[set_name+"_C"]
+            if count < 1:
+                continue
+            shp_poly_save_p = os.path.join(cell_vec_dir, f"{set_name}_{h3_id}.geojson")
+            # extract the corresponding vectors
+            overlap_touch = gpd.sjoin(shp_gpd_dict[set_name], single_gdf, how='inner', predicate='intersects')
+            # remove duplicated geometries in overlap_touch
+            overlap_touch = overlap_touch.drop_duplicates(subset=['geometry'])  # only check geometry
+            overlap_touch.to_file(shp_poly_save_p,driver="GeoJSON")
 
-    pass
+    # print(mapping_shp_raster_dict)
+
+    # organize the sub-images
+    sub_img_id_path_dict = {}
+    for set_name in mapping_shp_raster_dict.keys():
+        img_dir = mapping_shp_raster_dict[set_name][set_name + '-dir']
+        if img_dir is None:
+            continue
+        sub_image_dir = os.path.join(out_dir, set_name,'subImages')
+        sub_image_list = io_function.get_file_list_by_ext(img_file_extension,sub_image_dir,bsub_folder=False)
+        for filename in sub_image_list:
+            h3_id = get_h3_id_in_sub_images_f(filename)
+            sub_img_id_path_dict.setdefault(h3_id, []).append(filename)
+    for h3_id in sub_img_id_path_dict.keys():
+        cell_dir = os.path.join(out_dir, h3_id)
+        for img_path in sub_img_id_path_dict[h3_id]:
+            io_function.movefiletodir(img_path,cell_dir,b_verbose=False)
+
+    print(datetime.now(), f'Completed organizing sub-image')
 
 
 def main(options, args):
@@ -107,7 +165,7 @@ def main(options, args):
     if os.path.isdir(out_dir) is False:
         io_function.mkdir(out_dir)
 
-    obtain_multi_data(grid_path, mapping_shp_raster_dict, out_dir, buffersize=buffer_size)
+    obtain_multi_data(grid_gpd,grid_path, mapping_shp_raster_dict, out_dir, buffersize=buffer_size)
 
 
 

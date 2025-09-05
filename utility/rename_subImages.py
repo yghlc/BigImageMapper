@@ -25,6 +25,9 @@ def rename_sub_images(vector_for_extracting, img_dir,img_file_extension, pre_nam
         io_function.mkdir(out_dir)
         b_copied =True
 
+    if vector_gpd.is_field_name_in_shp(vector_for_extracting,id_column) is False:
+        raise ValueError(f'Column: {id_column} is not in {vector_for_extracting}')
+
     id_list = vector_gpd.read_attribute_values_list(vector_for_extracting, id_column)
     file_list = io_function.get_file_list_by_ext(img_file_extension,img_dir,bsub_folder=False)
     if len(file_list) < 1:
