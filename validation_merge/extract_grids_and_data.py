@@ -24,6 +24,7 @@ import parameters
 
 import numpy as np
 import geopandas as gpd
+from datetime import datetime
 
 import bim_utils
 
@@ -42,7 +43,7 @@ def get_mapping_shp_raster_dict(pre_names, mapping_res_ini):
                 dir_path = parameters.get_directory_None_if_absence(mapping_res_ini, ini_var_name)
                 mapping_shp_raster_dict[p_name][ini_var_name] = dir_path
             if ini_var_name.endswith('pattern'):
-                pattern = parameters.get_string_parameters(mapping_res_ini, ini_var_name)
+                pattern = parameters.get_string_parameters_None_if_absence(mapping_res_ini, ini_var_name)
                 mapping_shp_raster_dict[p_name][ini_var_name] = pattern
 
     return mapping_shp_raster_dict
@@ -52,7 +53,7 @@ def obtain_multi_data(grid_vector_path,mapping_shp_raster_dict,out_dir, buffersi
 
     dstnodata = 0
     rectangle_ext = True
-    b_keep_org_file_name = ''
+    b_keep_org_file_name = True
 
     # get sub-images for each raster, and the corresponding vectors
     for set_name in mapping_shp_raster_dict.keys():
@@ -60,10 +61,17 @@ def obtain_multi_data(grid_vector_path,mapping_shp_raster_dict,out_dir, buffersi
         # train_grids_shp,image_dir, buffersize,image_or_pattern,extract_img_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name
         img_dir = mapping_shp_raster_dict[set_name][set_name+'-dir']
         img_pattern = mapping_shp_raster_dict[set_name][set_name+'-pattern']
-        shp_path = mapping_shp_raster_dict[set_name][set_name+'-shp']
+        if img_dir is None or img_pattern is None:
+            print(f'Warning: the image dir or pattern for {set_name} is None, skip it')
+            continue
         sub_image_dir = os.path.join(out_dir, set_name)
-        print(grid_vector_path,img_dir,buffersize,img_pattern,sub_image_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name)
+        # print(grid_vector_path,img_dir,buffersize,img_pattern,sub_image_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name)
         bim_utils.extract_sub_images(grid_vector_path,img_dir,buffersize,img_pattern,sub_image_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name)
+        print(datetime.now(), f'Extracted sub-images for {set_name}, saved in {sub_image_dir}')
+
+        # extract the corresponding vectors
+        shp_path = mapping_shp_raster_dict[set_name][set_name+'-shp']
+
 
 
 
