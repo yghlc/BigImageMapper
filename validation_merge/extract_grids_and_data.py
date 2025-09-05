@@ -80,12 +80,13 @@ def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir
         #extract sub-images
         bim_utils.extract_sub_images(grid_vector_path,img_dir,buffersize,img_pattern,sub_image_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name,
                                      save_format=sub_image_format)
-        io_function.save_text_to_file(f'Complete extracting sub-images at {datetime.now()}')
 
         # rename the sub-images
         sub_images_dir2 = os.path.join(sub_image_dir,'subImages')
         rename_sub_images(grid_vector_path, sub_images_dir2, img_file_extension, set_name, 'h3_id_8')
         print(datetime.now(), f'Extracted sub-images for {set_name}, saved in {sub_image_dir}')
+
+        io_function.save_text_to_file(done_indicator, f'Complete extracting sub-images at {datetime.now()}')
 
 
     shp_gpd_dict = {}
