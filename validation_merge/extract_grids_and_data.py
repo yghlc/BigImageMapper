@@ -73,9 +73,14 @@ def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir
             print(f'Warning: the image dir or pattern for {set_name} is None, skip it')
             continue
         sub_image_dir = os.path.join(out_dir, set_name)
+        done_indicator = os.path.join(sub_image_dir,f'{set_name}.done')
+        if os.path.isfile(done_indicator):
+            print(f'Sub-images for {set_name} has been extracted, skip')
+            continue
         #extract sub-images
         bim_utils.extract_sub_images(grid_vector_path,img_dir,buffersize,img_pattern,sub_image_dir,dstnodata,process_num,rectangle_ext,b_keep_org_file_name,
                                      save_format=sub_image_format)
+        io_function.save_text_to_file(f'Complete extracting sub-images at {datetime.now()}')
 
         # rename the sub-images
         sub_images_dir2 = os.path.join(sub_image_dir,'subImages')
@@ -97,6 +102,9 @@ def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir
     for idx, row in grid_gpd.iterrows():
         h3_id = row["h3_id_8"]
         cell_vec_dir = os.path.join(vector_save_dir, h3_id)
+        if os.path.isdir(cell_vec_dir):
+            print(f'Waning, folder: {h3_id} exists, skip getting vector files')
+            continue
         io_function.mkdir(cell_vec_dir)
         single_gdf = grid_gpd.iloc[[idx]]
 
