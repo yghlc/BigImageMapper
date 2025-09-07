@@ -166,7 +166,7 @@ def convert_tif_to_png(tif, save_path, set_name):
     basic.os_system_exit_code(command_str)
 
 def convert_geojson_to_pixel_json(geojson, pixel_json, set_name, ref_image):
-
+    pixel_json = pixel_json.replace('geojson','json')
     polys = vector_gpd.read_polygons_gpd(geojson,b_fix_invalid_polygon=False)
     img_transform = raster_io.get_transform_from_file(ref_image)
 
