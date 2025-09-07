@@ -58,10 +58,10 @@ def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir
     dstnodata = 0
     rectangle_ext = True
     b_keep_org_file_name = True
-    sub_image_format = 'GTIFF'
-    img_file_extension = '.tif'
-    # sub_image_format = 'PNG'
-    # img_file_extension = '.png'
+    # sub_image_format = 'GTIFF'
+    # img_file_extension = '.tif'
+    sub_image_format = 'PNG'
+    img_file_extension = '.png'
 
     # get sub-images for each raster, and the corresponding vectors
     for set_name in mapping_shp_raster_dict.keys():
