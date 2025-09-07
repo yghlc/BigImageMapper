@@ -19,6 +19,9 @@ sys.path.insert(0, code_dir)
 
 import basic_src.io_function as io_function
 import basic_src.basic as basic
+import datasets.vector_gpd as vector_gpd
+import datasets.raster_io as raster_io
+from shapely.geometry import Polygon, MultiPolygon
 
 import parameters
 
@@ -26,6 +29,7 @@ import numpy as np
 import geopandas as gpd
 from datetime import datetime
 import re
+import json
 
 import bim_utils
 from utility.rename_subImages import rename_sub_images
@@ -58,10 +62,10 @@ def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir
     dstnodata = 0
     rectangle_ext = True
     b_keep_org_file_name = True
-    # sub_image_format = 'GTIFF'
-    # img_file_extension = '.tif'
-    sub_image_format = 'PNG'
-    img_file_extension = '.png'
+    sub_image_format = 'GTIFF'
+    img_file_extension = '.tif'
+    # sub_image_format = 'PNG'  # png dont support int16 (elevation difference)
+    # img_file_extension = '.png'
 
     # get sub-images for each raster, and the corresponding vectors
     for set_name in mapping_shp_raster_dict.keys():
@@ -146,6 +150,107 @@ def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir
 
     print(datetime.now(), f'Completed organizing sub-image')
 
+def get_set_name_from_tif(tif_path, h3_id):
+    tif_name = os.path.basename(tif_path)
+    return  tif_name.split(f'id{h3_id}')[0][:-1]
+
+def convert_tif_to_png(tif, save_path, set_name):
+    # if it elevelation differnt
+    # if set_name:
+
+    if os.path.isfile(save_path):
+        print('%s exists, skip' % save_path)
+        return
+
+    command_str = "gdal_translate -of PNG %s %s" % (tif, save_path)
+    basic.os_system_exit_code(command_str)
+
+def convert_geojson_to_pixel_json(geojson, pixel_json, set_name, ref_image):
+
+    polys = vector_gpd.read_polygons_gpd(geojson,b_fix_invalid_polygon=False)
+    img_transform = raster_io.get_transform_from_file(ref_image)
+
+    height,  width,  band_count, _ = raster_io.get_height_width_bandnum_dtype(ref_image)
+
+    Polygons = {}
+    # convert to pixel coordinates
+    for idx, poly in enumerate(polys):
+        # print('polygon:', poly, class_int)
+        object = {}
+        x, y = [], []
+        if isinstance(poly, Polygon):
+            x, y = poly.exterior.coords.xy
+        elif isinstance(poly, MultiPolygon):
+            for sub_poly in poly.geoms:  # Iterate over individual Polygons
+                x_s, y_s = sub_poly.exterior.coords.xy
+                x.extend(x_s)
+                y.extend(y_s)
+        pixel_xs, pixel_ys = raster_io.geo_xy_to_pixel_xy(x, y, img_transform)
+        # print(pixel_xs,pixel_ys)
+
+        points = [[int(xx), int(yy)] for xx, yy in zip(pixel_xs, pixel_ys)]
+        object['rings'] = points
+        object['index'] = idx
+        object['image_set'] = set_name
+        object['imageSize'] = { "width": width, "height": height }
+
+        Polygons[f'poly_{idx}'] = object
+
+    # io_function.save_dict_to_txt_json(pixel_json, Polygons)
+    json_data = json.dumps(Polygons)
+    with open(pixel_json, "w") as f_obj:
+        f_obj.write(json_data)
+
+    pass
+
+def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False):
+    h3_grid_folders = io_function.get_file_list_by_pattern(data_dir,'*')
+    h3_grid_folders = [item for item in h3_grid_folders if len(os.path.basename(item))==15 ]
+    if len(h3_grid_folders) < 1:
+        raise IOError(f'No H3 grid folder in {data_dir}')
+
+    if os.path.isdir(out_dir) is False:
+        io_function.mkdir(out_dir)
+
+    for idx, h3_f in enumerate(h3_grid_folders):
+        # print progress
+        if idx % 100 == 0:
+            print(datetime.now(),f'( {idx+1}/{len(h3_grid_folders)})Processing {h3_f}')
+
+        h3_id = os.path.basename(h3_f)
+        h3_grid_ext = os.path.join(h3_f,'h3_cell_'+h3_id+'.geojson')
+        h3_save_dir = os.path.join(out_dir,h3_id)
+        if os.path.isdir(h3_save_dir) is False:
+            io_function.mkdir(h3_save_dir)
+        tif_list = io_function.get_file_list_by_pattern(h3_f,'*.tif')
+        for tif in tif_list:
+            save_png_path = os.path.join(h3_save_dir, io_function.get_name_no_ext(tif)+'.png')
+            set_name = get_set_name_from_tif(tif, h3_id)
+            convert_tif_to_png(tif,save_png_path,set_name)
+
+            # convert the corresponding geojson
+            geojson_f = os.path.join(h3_f,f'{set_name}_{h3_id}.geojson')
+            if os.path.isfile(geojson_f):
+                geojson_f_save = os.path.join(h3_save_dir, os.path.basename(geojson_f))
+                convert_geojson_to_pixel_json(geojson_f, geojson_f_save, set_name, tif)
+                if b_rm_org_file:
+                    io_function.delete_file_or_dir(geojson_f)
+
+            # convert h3 grid
+            h3_grid_ext_save =  os.path.join(h3_save_dir, os.path.basename(io_function.get_name_by_adding_tail(h3_grid_ext,set_name)))
+            convert_geojson_to_pixel_json(h3_grid_ext, h3_grid_ext_save,set_name ,tif)
+
+            if b_rm_org_file:
+                io_function.delete_file_or_dir(tif)
+        if b_rm_org_file:
+            io_function.delete_file_or_dir(h3_grid_ext)
+
+
+def test_convert_2_web_format():
+    data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/data_multi_test')
+    out_dir = os.path.join(data_dir,'png')
+    convert_2_web_format(data_dir, out_dir, b_rm_org_file=False)
+
 
 def main(options, args):
     grid_path = args[0]
@@ -176,10 +281,15 @@ def main(options, args):
 
     obtain_multi_data(grid_gpd,grid_path, mapping_shp_raster_dict, out_dir, buffersize=buffer_size)
 
+    png_dir = os.path.join(out_dir,'png')
+    convert_2_web_format(out_dir, png_dir, b_rm_org_file=False)
 
 
 
 if __name__ == '__main__':
+    # test_convert_2_web_format()
+    # sys.exit(0)
+
     usage = "usage: %prog [options] grid_vector "
     parser = OptionParser(usage=usage, version="1.0 2025-9-4")
     parser.description = 'Introduction: extract multiple images and vector for each grid (cell) for validation '
