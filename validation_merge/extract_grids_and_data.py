@@ -155,8 +155,9 @@ def get_set_name_from_tif(tif_path, h3_id):
     return  tif_name.split(f'id{h3_id}')[0][:-1]
 
 def convert_tif_to_png(tif, save_path, set_name):
-    # if it elevelation differnt
-    # if set_name:
+    #TODO: if it elevation, need to use gdaldem
+    if set_name == "samElev":
+        return
 
     if os.path.isfile(save_path):
         print('%s exists, skip' % save_path)
