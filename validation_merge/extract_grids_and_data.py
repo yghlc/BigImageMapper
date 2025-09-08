@@ -282,7 +282,7 @@ def main(options, args):
 
     obtain_multi_data(grid_gpd,grid_path, mapping_shp_raster_dict, out_dir, buffersize=buffer_size)
 
-    png_dir = os.path.join(out_dir,'png')
+    png_dir = out_dir + '_png' #os.path.join(out_dir,'png')
     convert_2_web_format(out_dir, png_dir, b_rm_org_file=False)
 
 
