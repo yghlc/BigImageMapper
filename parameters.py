@@ -201,7 +201,18 @@ def get_area_name_remark_time(area_ini):
     return area_name_remark_time
 
 
-
+def get_Parameter_names(parafile):
+    with open(parafile,'r') as f_obj:
+        list_of_all_the_lines = f_obj.readlines()
+        parameter_names = []
+        for line in list_of_all_the_lines:
+            line = line.lstrip()
+            if line[0:1] == '#' or len(line) < 2:
+                continue
+            lineStrs = line.split('=')
+            lineStrleft = lineStrs[0].strip()  # remove ' ' from left and right
+            parameter_names.append(lineStrleft)
+        return parameter_names
 
 def test_readparamters():
     parafile = '/Users/huanglingcao/Data/offset_landsat_auto_test/para.txt'

@@ -271,8 +271,15 @@ def main(options, args):
     # remove "_A" (area) and "_C" (count), only keep these columns name end with "_A" or "_C"
     column_pre_names = [item.replace('_A','') for item in column_names if "_A" in item ]
     # column_pre_names = [item.replace('_C','') for item in column_pre_names]
-    print('column names:', column_names)
-    print('column_pre_names:', column_pre_names)
+    basic.outputlogMessage(f'column names: {column_names}')
+    basic.outputlogMessage(f'column_pre_names: {column_pre_names}')
+
+    column_pre_names_ini = sorted(list(set([item.split('-')[0] for item in parameters.get_Parameter_names(mapping_res_ini)])))
+    basic.outputlogMessage(f'column_pre_names_ini: {column_pre_names_ini}')
+    if len(column_pre_names) != len(column_pre_names_ini):
+        basic.outputlogMessage('Info, The count in "column_names" and "column_pre_names" is different, some data was not used in mapping,'
+                               'will use the column in "column_pre_names"')
+
 
     mapping_shp_raster_dict = get_mapping_shp_raster_dict(column_pre_names, mapping_res_ini)
     io_function.save_dict_to_txt_json('mapping_shp_raster_dict.json',mapping_shp_raster_dict)
