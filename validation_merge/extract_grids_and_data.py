@@ -279,6 +279,7 @@ def main(options, args):
     if len(column_pre_names) != len(column_pre_names_ini):
         basic.outputlogMessage('Info, The count in "column_names" and "column_pre_names" is different, some data was not used in mapping,'
                                'will use the column in "column_pre_names"')
+        column_pre_names = column_pre_names_ini
 
 
     mapping_shp_raster_dict = get_mapping_shp_raster_dict(column_pre_names, mapping_res_ini)
