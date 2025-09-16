@@ -34,6 +34,8 @@ import json
 import bim_utils
 from utility.rename_subImages import rename_sub_images
 
+from PIL import Image
+
 def get_mapping_shp_raster_dict(pre_names, mapping_res_ini):
     mapping_shp_raster_dict = {}
     for p_name in pre_names:
@@ -204,6 +206,37 @@ def convert_geojson_to_pixel_json(geojson, pixel_json, set_name, ref_image):
 
     pass
 
+def save_multiple_png_to_gif(png_file_list, title_list, save_path='output.gif', duration_ms=500):
+
+    if os.path.isfile(save_path):
+        print(f'GIF: {save_path} exist, skip')
+        return
+
+    png_file_list = sorted(png_file_list)
+    # draw title on the image? No. Just select sentinel 2 images
+    sel_png_file_list = []
+    for png, title in zip(png_file_list,title_list):
+        if title.startswith('s2'):  # all s2 image, including the near infrared
+            sel_png_file_list.append(png)
+    png_file_list = sel_png_file_list
+    if len(png_file_list) < 1:
+        print('Warning, no PNG files')
+        return
+
+    # Load as RGB (opaque)
+    frames_rgb = [Image.open(fn).convert("RGB") for fn in png_file_list]
+
+    # Quantize with adaptive palette + dithering
+    frames_p = [
+        im.convert("P", palette=Image.ADAPTIVE, colors=256, dither=Image.FLOYDSTEINBERG)
+        for im in frames_rgb
+    ]
+
+    # Save GIF without transparency/disposal
+    frames_p[0].save(save_path, save_all=True,append_images=frames_p[1:],duration=duration_ms,loop=0,optimize=False)
+
+
+
 def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False):
     h3_grid_folders = io_function.get_file_list_by_pattern(data_dir,'*')
     h3_grid_folders = [item for item in h3_grid_folders if len(os.path.basename(item))==15 ]
@@ -224,10 +257,15 @@ def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False):
         if os.path.isdir(h3_save_dir) is False:
             io_function.mkdir(h3_save_dir)
         tif_list = io_function.get_file_list_by_pattern(h3_f,'*.tif')
+        png_list = []
+        set_name_list = []
         for tif in tif_list:
             save_png_path = os.path.join(h3_save_dir, io_function.get_name_no_ext(tif)+'.png')
             set_name = get_set_name_from_tif(tif, h3_id)
             convert_tif_to_png(tif,save_png_path,set_name)
+            if os.path.isfile(save_png_path):
+                png_list.append(save_png_path)
+                set_name_list.append(set_name)
 
             # convert the corresponding geojson
             geojson_f = os.path.join(h3_f,f'{set_name}_{h3_id}.geojson')
@@ -243,6 +281,12 @@ def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False):
 
             if b_rm_org_file:
                 io_function.delete_file_or_dir(tif)
+
+        # save multiple png files into a gif
+        # put "z_", making sure it on the left most after sorting
+        gif_save_path = os.path.join(h3_save_dir,'z_'+h3_id+'.gif')
+        save_multiple_png_to_gif(png_list, set_name_list,gif_save_path)
+
         if b_rm_org_file:
             io_function.delete_file_or_dir(h3_grid_ext)
 
@@ -252,6 +296,12 @@ def test_convert_2_web_format():
     out_dir = os.path.join(data_dir,'png')
     convert_2_web_format(data_dir, out_dir, b_rm_org_file=False)
 
+def test_save_multiple_png_to_gif():
+    png_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/data_multi_png/880d68cb29fffff')
+    print(f'testing using pngs in {png_dir}')
+    png_list = io_function.get_file_list_by_pattern(png_dir,'*.png')
+    title_list = [os.path.basename(item)  for item in png_list]
+    save_multiple_png_to_gif(png_list,title_list)
 
 def main(options, args):
     grid_path = args[0]
@@ -297,6 +347,7 @@ def main(options, args):
 
 if __name__ == '__main__':
     # test_convert_2_web_format()
+    # test_save_multiple_png_to_gif()
     # sys.exit(0)
 
     usage = "usage: %prog [options] grid_vector "
