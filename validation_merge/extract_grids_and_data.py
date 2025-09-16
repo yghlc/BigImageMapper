@@ -34,7 +34,7 @@ import json
 import bim_utils
 from utility.rename_subImages import rename_sub_images
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 def get_mapping_shp_raster_dict(pre_names, mapping_res_ini):
     mapping_shp_raster_dict = {}
@@ -58,6 +58,10 @@ def get_mapping_shp_raster_dict(pre_names, mapping_res_ini):
 def get_h3_id_in_sub_images_f(file_path):
     ids = re.findall(r'id([0-9a-fA-F]+)_', os.path.basename(file_path))
     return ids[0]
+
+def get_year_in_file_or_str(file_path):
+    years = re.findall(r"\d{4}", os.path.basename(file_path))
+    return years[0]
 
 def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir, buffersize=10, process_num=4):
 
@@ -209,25 +213,48 @@ def convert_geojson_to_pixel_json(geojson, pixel_json, set_name, ref_image):
 
     pass
 
+def add_text(im, text, xy=(1, 1), font=None, font_size=10, fill=(255,255,255,255), stroke_fill=(0,0,0,255), stroke_width=1):
+    # im = im.convert("RGBA") # convert to "RGBA" causeing some blur areas
+    if font is None:
+        try:
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except Exception:
+            font = ImageFont.load_default()
+    draw = ImageDraw.Draw(im)
+    draw.text(xy, text, font=font, fill=fill, stroke_width=stroke_width, stroke_fill=stroke_fill)
+    return im
+
 def save_multiple_png_to_gif(png_file_list, title_list, save_path='output.gif', duration_ms=500):
 
     if os.path.isfile(save_path):
         print(f'GIF: {save_path} exist, skip')
         return
 
-    png_file_list = sorted(png_file_list)
+    # png_file_list = sorted(png_file_list)
+    # Pair, sort by the png filename, then unzip
+    pairs = sorted(zip(png_file_list, title_list), key=lambda x: x[0])
+    png_file_list, title_list = map(list, zip(*pairs))
+
     # draw title on the image? No. Just select sentinel 2 images
     sel_png_file_list = []
+    sel_title_list = []
     for png, title in zip(png_file_list,title_list):
         if title.startswith('s2'):  # all s2 image, including the near infrared
             sel_png_file_list.append(png)
+            sel_title_list.append(title)
     png_file_list = sel_png_file_list
+    title_list = sel_title_list
     if len(png_file_list) < 1:
         print('Warning, no PNG files')
         return
 
+    # print(title_list)
+    year_list = [get_year_in_file_or_str(item) for item in title_list]
+    # print('year_list',year_list)
+
     # Load as RGB (opaque)
     frames_rgb = [Image.open(fn).convert("RGB") for fn in png_file_list]
+    frames_rgb = [add_text(fn, title) for fn,title in zip(frames_rgb, year_list)]
 
     # Quantize with adaptive palette + dithering
     frames_p = [
@@ -302,8 +329,10 @@ def test_convert_2_web_format():
 def test_save_multiple_png_to_gif():
     png_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/data_multi_png/880d68cb29fffff')
     print(f'testing using pngs in {png_dir}')
-    png_list = io_function.get_file_list_by_pattern(png_dir,'*.png')
+    png_list = sorted(io_function.get_file_list_by_pattern(png_dir,'*.png'))
+    print('png_list', png_list)
     title_list = [os.path.basename(item)  for item in png_list]
+    print('title_list', title_list)
     save_multiple_png_to_gif(png_list,title_list)
 
 def main(options, args):
