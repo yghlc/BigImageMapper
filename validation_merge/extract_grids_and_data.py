@@ -239,7 +239,7 @@ def save_multiple_png_to_gif(png_file_list, title_list, save_path='output.gif', 
     sel_png_file_list = []
     sel_title_list = []
     for png, title in zip(png_file_list,title_list):
-        if title.startswith('s2'):  # all s2 image, including the near infrared
+        if title.startswith('s2_'):  # all s2 image, not including the s2nir
             sel_png_file_list.append(png)
             sel_title_list.append(title)
     png_file_list = sel_png_file_list
