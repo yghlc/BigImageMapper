@@ -287,7 +287,7 @@ def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False):
 
         # save multiple png files into a gif
         # put "z_", making sure it on the left most after sorting
-        gif_save_path = os.path.join(h3_save_dir,'z_'+h3_id+'.gif')
+        gif_save_path = os.path.join(h3_save_dir,'zGIF_'+"id"+h3_id+'.gif')
         save_multiple_png_to_gif(png_list, set_name_list,gif_save_path)
 
         if b_rm_org_file:
