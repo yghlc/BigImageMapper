@@ -160,14 +160,40 @@ def get_set_name_from_tif(tif_path, h3_id):
     tif_name = os.path.basename(tif_path)
     return  tif_name.split(f'id{h3_id}')[0][:-1]
 
+# copied and modified from ~/codes/PycharmProjects/rs_data_proc/DEMscripts/dem_diff_to_colorRelief.py
+def dem_tif_to_colorReleif(input,output,out_format='GTiff',tif_compression='lzw'):
+    # change the file extension
+    file_extension = raster_io.get_file_extension(out_format)
+    file_path, ext1 = os.path.splitext(output)
+    output = file_path + file_extension
+
+    if os.path.isfile(output):
+        basic.outputlogMessage('%s exists, skip'%output)
+        return True
+
+    color_text_file = 'dem_diff_color_5to5m.txt'
+
+    if out_format=='GTiff':
+        command_str = f'gdaldem color-relief -of {out_format} -co compress={tif_compression} -co tiled=yes -co bigtiff=if_safer '
+    else:
+        command_str = f'gdaldem color-relief -of {out_format} '
+
+    command_str +=  input + ' ' + ' %s '%color_text_file  + output
+
+    # print(command_str)
+    # res = os.system(command_str)
+    return basic.os_system_exit_code(command_str)
+
 def convert_tif_to_png(tif, save_path, set_name):
-    #TODO: if it elevation, need to use gdaldem
-    if set_name == "samElev":
-        return
 
     if os.path.isfile(save_path):
         print('%s exists, skip' % save_path)
         return
+
+    #if it elevation, need to use gdaldem
+    if set_name == "samElev":
+        return dem_tif_to_colorReleif(tif,save_path, out_format='PNG')
+
 
     command_str = "gdal_translate -of PNG %s %s" % (tif, save_path)
     basic.os_system_exit_code(command_str)
