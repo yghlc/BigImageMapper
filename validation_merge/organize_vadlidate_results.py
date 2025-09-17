@@ -22,8 +22,25 @@ import basic_src.map_projection as map_projection
 import datasets.vector_gpd as vector_gpd
 import shapely
 from shapely.strtree import STRtree
+from shapely.errors import TopologicalError # Or TopologyException
+
+import json
 
 
+def save_true_positive_to_folder(result_dir, h3_id, overlap_ratio_list=[]):
+    h3_grid_dir = os.path.join(result_dir, h3_id)
+    if os.path.isdir(h3_grid_dir) is False:
+        io_function.mkdir(h3_grid_dir)
+    validate_json = os.path.join(h3_grid_dir, f'validated_{h3_id}.json')
+    validate_dict = json.load(open(validate_json,'r')) if os.path.isfile(validate_json) else {}
+    validate_dict['h3ID'] = h3_id
+    # will overwrite if user already exists
+    validate_dict['ground_truth'] = {
+        'ValidateResult': 'TP',
+        'targetCount': len(overlap_ratio_list)
+    }
+    with open(validate_json, 'w') as f:
+        json.dump(validate_dict, f, indent=2)
 
 
 def validate_against_ground_truth(grid_vector_path, ground_truth_shp_list, result_dir, min_overlap_per=0.3):
@@ -73,14 +90,34 @@ def validate_against_ground_truth(grid_vector_path, ground_truth_shp_list, resul
         inter_or_touch_list = tree.query(grid_poly)
 
         if len(inter_or_touch_list) > 0:
-            print(inter_or_touch_list)
-            pass
-
-            validates[p_idx] = 'Yes-auto'
-            validate_count += 1
+            area_ratio_list = []
+            b_true_pos = False
+            for inter_idx in inter_or_touch_list:
+                try:
+                    overlap = grid_poly.intersection(gt_box_polygons[inter_idx])
+                    area_ratio = overlap.area / gt_box_polygons[inter_idx].area
+                except TopologicalError as e:
+                    basic.outputlogMessage(f"Caught a TopologicalError: {e}")
+                    area_ratio = 0
+                except Exception as e:  # Catch any other unexpected exceptions
+                    basic.outputlogMessage(f"Caught an unexpected exception: {e}")
+                    area_ratio = 0
+                area_ratio_list.append(area_ratio)
+                if area_ratio > min_overlap_per:
+                    b_true_pos = True
+            if b_true_pos:
+                save_true_positive_to_folder(result_dir, h3id, area_ratio_list)
 
 
 def test_validate_against_ground_truth():
+
+    grid_vector_path = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/combine_mapping_results/h3_cells_select_by_s2_result.gpkg')
+    gt_path = os.path.expanduser('~/Data/Arctic/pan_Arctic/training_boxes_sentinel-2/train_set01_boxes_poly_s2_2024_v2.shp')
+    ground_truth_shp_list = [gt_path]
+    result_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/data_multi_png')
+
+    validate_against_ground_truth(grid_vector_path, ground_truth_shp_list, result_dir, min_overlap_per=0.3)
+
     pass
 
 
@@ -103,6 +140,9 @@ def main(options, args):
 
 
 if __name__ == '__main__':
+    test_validate_against_ground_truth()
+    sys.exit(0)
+
     usage = "usage: %prog [options] grid_vector result_dir "
     parser = OptionParser(usage=usage, version="1.0 2025-09-17")
     parser.description = 'Introduction: organize validate results for h3 grids'
