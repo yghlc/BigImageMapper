@@ -79,6 +79,7 @@ def validate_against_ground_truth(grid_vector_path, ground_truth_shp_list, resul
 
         gt_shp_basename = os.path.basename(gt_shp)
         gt_box_polygons = [poly for poly, class_int in zip(geometries,train_class) if class_int==1]
+        basic.outputlogMessage(f'Read {len(gt_box_polygons)} ground truth polygons')
 
 
         # build a tree
