@@ -215,9 +215,9 @@ def save_validate_result_2_vector_file(in_vector_path, save_path,json_list):
 
     grid_gpd = gpd.read_file(in_vector_path)
     h3ID_list = grid_gpd[h3ID_column_name].to_list()
-    gt_validate = ["NA"]*len(h3ID_list)
+    gt_validate = [""]*len(h3ID_list)
     gt_count = [0]*len(h3ID_list)
-    web_validate = ["NA"]*len(h3ID_list)
+    web_validate = [""]*len(h3ID_list)
     web_count = [0]*len(h3ID_list)
 
     for idx, js_file in enumerate(json_list):
@@ -228,10 +228,14 @@ def save_validate_result_2_vector_file(in_vector_path, save_path,json_list):
             if key=='h3ID':
                 continue
             if validate_type(key) == 'email':
-                web_validate[vec_idx] += validate_dict[key]['ValidateResult'] + ','
+                if len(web_validate[vec_idx]) > 0:
+                    web_validate[vec_idx] += ','
+                web_validate[vec_idx] += validate_dict[key]['ValidateResult']
                 web_count[vec_idx] += validate_dict[key]['targetCount']
             elif validate_type(key) == 'vector_file':
-                gt_validate[vec_idx] += validate_dict[key]['ValidateResult'] +','
+                if len(gt_validate[vec_idx]) > 0:
+                    gt_validate[vec_idx] += ','
+                gt_validate[vec_idx] += validate_dict[key]['ValidateResult']
                 gt_count[vec_idx] += validate_dict[key]['targetCount']
             else:
                 raise ValueError(f'Unknown validate type in {js_file} ')
