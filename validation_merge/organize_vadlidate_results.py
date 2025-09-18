@@ -27,7 +27,7 @@ from shapely.errors import TopologicalError # Or TopologyException
 import json
 
 
-def save_true_positive_to_folder(result_dir, h3_id, overlap_ratio_list=[]):
+def save_true_positive_to_folder(result_dir, h3_id, ground_truth='ground_truth', overlap_ratio_list=[]):
     h3_grid_dir = os.path.join(result_dir, h3_id)
     if os.path.isdir(h3_grid_dir) is False:
         io_function.mkdir(h3_grid_dir)
@@ -35,7 +35,7 @@ def save_true_positive_to_folder(result_dir, h3_id, overlap_ratio_list=[]):
     validate_dict = json.load(open(validate_json,'r')) if os.path.isfile(validate_json) else {}
     validate_dict['h3ID'] = h3_id
     # will overwrite if user already exists
-    validate_dict['ground_truth'] = {
+    validate_dict[ground_truth] = {
         'ValidateResult': 'TP',
         'targetCount': len(overlap_ratio_list)
     }
@@ -61,52 +61,46 @@ def validate_against_ground_truth(grid_vector_path, ground_truth_shp_list, resul
         if g_shp_prj != grid_prj:
             raise ValueError(f'The map projection ({grid_prj} vs {g_shp_prj}) between {grid_vector_path} and {shp} is different')
 
-    # read all ground truth polygons (positive or class_int is 1)
-    gt_box_polygons = []
-    for gt_shp in ground_truth_shp_list:
-        geometries, train_class = vector_gpd.read_polygons_attributes_list(gt_shp,
-                                        'class_int',b_fix_invalid_polygon=False)
-
-        sel_polys = [poly for poly, class_int in zip(geometries,train_class) if class_int==1]
-        gt_box_polygons.extend(sel_polys)
-
-    ## save for checking
-    # save_circle_dict = {'id': [item+1 for item in range(len(geom_pos_circle_list))], "Polygon": geom_pos_circle_list}
-    # save_pd = pd.DataFrame(save_circle_dict)
-    # ref_prj = map_projection.get_raster_or_vector_srs_info_proj4(existing_data)
-    # vector_gpd.save_polygons_to_files(save_pd, 'Polygon', ref_prj, 'geom_circles.shp')
-
-    # build a tree
-    tree = STRtree(gt_box_polygons)
-
-
     grid_polygons, h3_ids = vector_gpd.read_polygons_attributes_list(grid_vector_path,'h3_id_8',
                                                                      b_fix_invalid_polygon=False)
 
-    for idx, (grid_poly, h3id) in enumerate(zip(grid_polygons, h3_ids)):
-        if idx%100 == 0:
-            print(f'Validating against ground truth progress: {idx+1}/{len(grid_polygons)}')
+    # read ground truth polygons (positive or class_int is 1) in each file, then validate them
+    # only check True Positive: the h3 grid containing ground truth polygons
+    for gt_shp in ground_truth_shp_list:
+        basic.outputlogMessage(f'Validating against the ground truth: {gt_shp}')
+        geometries, train_class = vector_gpd.read_polygons_attributes_list(gt_shp,
+                                        'class_int',b_fix_invalid_polygon=False)
 
-        inter_or_touch_list = tree.query(grid_poly)
+        gt_shp_basename = os.path.basename(gt_shp)
+        gt_box_polygons = [poly for poly, class_int in zip(geometries,train_class) if class_int==1]
 
-        if len(inter_or_touch_list) > 0:
-            area_ratio_list = []
-            b_true_pos = False
-            for inter_idx in inter_or_touch_list:
-                try:
-                    overlap = grid_poly.intersection(gt_box_polygons[inter_idx])
-                    area_ratio = overlap.area / gt_box_polygons[inter_idx].area
-                except TopologicalError as e:
-                    basic.outputlogMessage(f"Caught a TopologicalError: {e}")
-                    area_ratio = 0
-                except Exception as e:  # Catch any other unexpected exceptions
-                    basic.outputlogMessage(f"Caught an unexpected exception: {e}")
-                    area_ratio = 0
-                area_ratio_list.append(area_ratio)
-                if area_ratio > min_overlap_per:
-                    b_true_pos = True
-            if b_true_pos:
-                save_true_positive_to_folder(result_dir, h3id, area_ratio_list)
+
+        # build a tree
+        tree = STRtree(gt_box_polygons)
+
+        for idx, (grid_poly, h3id) in enumerate(zip(grid_polygons, h3_ids)):
+            if idx%100 == 0:
+                print(f'Validating against ground truth progress: {idx+1}/{len(grid_polygons)}')
+
+            inter_or_touch_list = tree.query(grid_poly)
+            if len(inter_or_touch_list) > 0:
+                area_ratio_list = []
+                b_true_pos = False
+                for inter_idx in inter_or_touch_list:
+                    try:
+                        overlap = grid_poly.intersection(gt_box_polygons[inter_idx])
+                        area_ratio = overlap.area / gt_box_polygons[inter_idx].area
+                    except TopologicalError as e:
+                        basic.outputlogMessage(f"Caught a TopologicalError: {e}")
+                        area_ratio = 0
+                    except Exception as e:  # Catch any other unexpected exceptions
+                        basic.outputlogMessage(f"Caught an unexpected exception: {e}")
+                        area_ratio = 0
+                    area_ratio_list.append(area_ratio)
+                    if area_ratio > min_overlap_per:
+                        b_true_pos = True
+                if b_true_pos:
+                    save_true_positive_to_folder(result_dir, h3id, ground_truth=gt_shp_basename, overlap_ratio_list=area_ratio_list)
 
 
 def test_validate_against_ground_truth():
