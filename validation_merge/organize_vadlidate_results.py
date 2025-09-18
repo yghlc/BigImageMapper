@@ -67,6 +67,9 @@ def validate_against_ground_truth(grid_vector_path, ground_truth_shp_list, resul
         if g_shp_prj != grid_prj:
             raise ValueError(f'The map projection ({grid_prj} vs {g_shp_prj}) between {grid_vector_path} and {shp} is different')
 
+    if grid_prj== 4326:
+        raise ValueError('Currently, not supporting EPSG4326, as it need to buffer polygons in meters')
+
     grid_polygons, h3_ids = vector_gpd.read_polygons_attributes_list(grid_vector_path,h3ID_column_name,
                                                                      b_fix_invalid_polygon=False)
 
@@ -76,6 +79,9 @@ def validate_against_ground_truth(grid_vector_path, ground_truth_shp_list, resul
         basic.outputlogMessage(f'Validating against the ground truth: {gt_shp}')
         geometries, train_class = vector_gpd.read_polygons_attributes_list(gt_shp,
                                         'class_int',b_fix_invalid_polygon=False)
+
+        # If a geometry is a Point, buffer it by 10 meters; otherwise, keep it unchanged.
+        geometries = [item.buffer(10) if item.type == 'Point' else item for item in geometries]
 
         gt_shp_basename = os.path.basename(gt_shp)
         gt_box_polygons = [poly for poly, class_int in zip(geometries,train_class) if class_int==1]
@@ -209,9 +215,9 @@ def save_validate_result_2_vector_file(in_vector_path, save_path,json_list):
 
     grid_gpd = gpd.read_file(in_vector_path)
     h3ID_list = grid_gpd[h3ID_column_name].to_list()
-    gt_validate = [""]*len(h3ID_list)
+    gt_validate = ["NA"]*len(h3ID_list)
     gt_count = [0]*len(h3ID_list)
-    web_validate = [""]*len(h3ID_list)
+    web_validate = ["NA"]*len(h3ID_list)
     web_count = [0]*len(h3ID_list)
 
     for idx, js_file in enumerate(json_list):
