@@ -30,6 +30,9 @@ from shapely.geometry import box
 from multiprocessing import Pool, cpu_count
 from functools import partial
 
+from datasets.raster_statistic import zonal_stats_multiRasters
+import datasets.raster_io as raster_io
+
 import numpy as np
 
 def check_input_vector_files(grid_vector,in_poly_vector,column_pre_name,save_path):
@@ -384,6 +387,23 @@ def add_columns_to_vector_files(vector_file, in_npy_list):
     basic.outputlogMessage('Completed add column values')
 
 
+def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
+
+    all_touched = True
+    stats_list = ['mean']
+    # only count the pixel within this range when do statistics
+    range = [0,6]
+
+    # expand the polygon when doing dem difference statistics
+    buffer_size_raster = 0
+    # tile_min_overlap = raster_io.get_xres_yres_file(rts_susceptibility_map)
+    tile_min_overlap = 0
+    zonal_stats_multiRasters(grid_vector, rts_susceptibility_map, stats=stats_list, tile_min_overlap=tile_min_overlap,
+                                prefix='susce', band=1, all_touched=all_touched, process_num=process_num,
+                                range=range, buffer=buffer_size_raster)
+
+
+
 def main(options, args):
 
     grid_vector = args[0]
@@ -396,38 +416,41 @@ def main(options, args):
     if len(in_npy_list) > 1:
         basic.outputlogMessage('get the npy array file from input, will add them into vector files')
         add_columns_to_vector_files(grid_vector, in_npy_list)
-        return
-
-    input_txt = options.input_txt
-    in_vectors_colum_dict = {}
-    if input_txt is not None:
-        tmp_list = io_function.read_list_from_txt(input_txt)
-        for tmp in tmp_list:
-            col_and_file = [item.strip() for item in tmp.split(',')]
-            # print(col_and_file)
-            in_vectors_colum_dict[col_and_file[0]] = col_and_file[1]
     else:
-        print('Please set "--input_txt"')
-        return
+        input_txt = options.input_txt
+        in_vectors_colum_dict = {}
+        if input_txt is not None:
+            tmp_list = io_function.read_list_from_txt(input_txt)
+            for tmp in tmp_list:
+                col_and_file = [item.strip() for item in tmp.split(',')]
+                # print(col_and_file)
+                in_vectors_colum_dict[col_and_file[0]] = col_and_file[1]
+        else:
+            print('Please set "--input_txt"')
+            return
 
-    # if save_path != grid_vector:
-    #     print('Please ')
-    #     return
-    b_save2numpy = options.b_save_2_npy
+        # if save_path != grid_vector:
+        #     print('Please ')
+        #     return
+        b_save2numpy = options.b_save_2_npy
 
-    # save for backup
-    io_function.save_dict_to_txt_json(input_txt+'.json',in_vectors_colum_dict)
+        # save for backup
+        io_function.save_dict_to_txt_json(input_txt+'.json',in_vectors_colum_dict)
 
-    for idx, col_name in enumerate(in_vectors_colum_dict.keys()):
-        in_poly_vector = in_vectors_colum_dict[col_name]
-        basic.outputlogMessage(f'({idx+1}/{len(in_vectors_colum_dict)}) Working on {in_vectors_colum_dict[col_name]}')
+        for idx, col_name in enumerate(in_vectors_colum_dict.keys()):
+            in_poly_vector = in_vectors_colum_dict[col_name]
+            basic.outputlogMessage(f'({idx+1}/{len(in_vectors_colum_dict)}) Working on {in_vectors_colum_dict[col_name]}')
 
-        # print(grid_vector, in_poly_vector, save_path, col_name,b_using_bounding_box)
+            # print(grid_vector, in_poly_vector, save_path, col_name,b_using_bounding_box)
 
-        # calculate_poly_count_area_in_each_grid(grid_vector, in_poly_vector, save_path, column_pre_name=col_name,
-        #                                        b_poly_bounds=b_using_bounding_box)
-        calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector, save_path, column_pre_name=col_name,
-                                               b_poly_bounds=b_using_bounding_box,n_workers=process_num, b_save_numpy=b_save2numpy)
+            # calculate_poly_count_area_in_each_grid(grid_vector, in_poly_vector, save_path, column_pre_name=col_name,
+            #                                        b_poly_bounds=b_using_bounding_box)
+            calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector, save_path, column_pre_name=col_name,
+                                                   b_poly_bounds=b_using_bounding_box,n_workers=process_num, b_save_numpy=b_save2numpy)
+
+    # adding other attributes
+    susceptibility = options.susceptibility
+    add_rts_susceptibility(susceptibility, grid_vector, process_num=process_num)
 
 
 
@@ -447,6 +470,10 @@ if __name__ == '__main__':
     parser.add_option("-i", "--input_txt",
                       action="store", dest="input_txt",
                       help="the input txt contain column name and vector path (column_name, vector_path)")
+
+    parser.add_option("-s", "--susceptibility",
+                      action="store", dest="susceptibility",
+                      help="the path the the rts susceptibility raster")
 
     parser.add_option("-p", "--process_num",
                       action="store", dest="process_num",type=int, default=16,
