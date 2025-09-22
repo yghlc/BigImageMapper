@@ -10,6 +10,11 @@ add time: 02 March, 2021
 """
 
 import os,sys
+
+# code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+code_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, code_dir)
+
 import vector_gpd
 from shapely.geometry import mapping # transform to GeJSON format
 
