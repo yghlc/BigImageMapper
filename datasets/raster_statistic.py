@@ -116,7 +116,7 @@ def zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats,
     return array_stats(out_image, stats, nodata,range=range)
 
 def zonal_stats_multiRasters(in_shp, raster_file_or_files, tile_min_overlap=None, nodata=None, band = 1, stats = None, prefix='',
-                             range=None,buffer=None, all_touched=True, process_num=1):
+                             range=None,buffer=None, all_touched=True, process_num=1, vector_format='ESRI Shapefile'):
     '''
     zonal statistic based on vectors, along multiple rasters (image tiles)
     Args:
@@ -200,7 +200,7 @@ def zonal_stats_multiRasters(in_shp, raster_file_or_files, tile_min_overlap=None
        if 'count' not in stats_backup:
             del add_attributes[prefix + '_' + 'count']
 
-    vector_gpd.add_attributes_to_shp(in_shp,add_attributes)
+    vector_gpd.add_attributes_to_shp(in_shp,add_attributes,format=vector_format)
 
 def zonal_stats_multiRasters_polygons(polygons, raster_file_or_files, tile_min_overlap=None, nodata=None, band=1, stats=None, prefix='',
                                  range=None, buffer=None, all_touched=True, process_num=1):

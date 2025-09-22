@@ -393,6 +393,7 @@ def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
     stats_list = ['mean']
     # only count the pixel within this range when do statistics
     range = [0,6]
+    save_format = 'GPKG'
 
     # expand the polygon when doing dem difference statistics
     buffer_size_raster = 0
@@ -400,7 +401,7 @@ def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
     tile_min_overlap = 0
     zonal_stats_multiRasters(grid_vector, rts_susceptibility_map, stats=stats_list, tile_min_overlap=tile_min_overlap,
                                 prefix='susce', band=1, all_touched=all_touched, process_num=process_num,
-                                range=range, buffer=buffer_size_raster)
+                                range=range, buffer=buffer_size_raster,vector_format=save_format)
 
 
 
