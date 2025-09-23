@@ -145,7 +145,17 @@ def load_training_data_from_validate_jsons(validate_json_list,save_path="valid_r
 
     io_function.save_dict_to_txt_json(save_path,valid_res_dict)
 
-    return valid_res_dict
+    # only keep TP and FP, and convert them into 1 and 0
+    valid_res_dict_int_labels = {}
+    for value, key in valid_res_dict.items():
+        if value == 'TP':
+            valid_res_dict_int_labels[key] = 1
+        elif value == 'FP':
+            valid_res_dict_int_labels[key] = 0
+        else:
+            pass
+
+    return valid_res_dict_int_labels
 
 def test_load_training_data_from_validate_jsons():
     data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/select_by_s2_result_png')
@@ -155,6 +165,81 @@ def test_load_training_data_from_validate_jsons():
 
 def auto_find_positive_grids(grid_gpd,validate_json_list):
     # using machine learning algorithm to find grid that likely contains thaw targets
+
+    validate_res_dict = load_training_data_from_validate_jsons(validate_json_list)
+
+    # 1) Prepare columns and labels
+    cols_dict = _extract_columns_as_dict(grid_gpd)
+    labels_map = validate_res_dict.get("labels", {})
+    if not labels_map:
+        raise ValueError("validate_res_dict['labels'] is empty or missing.")
+
+    # 2) Build training matrices
+    X, y, X_all, ids_all, feature_cols = _align_training_rows(cols_dict, labels_map, id_col="h3_id_8")
+
+    # 3) Train model (Random Forest preferred)
+    # Import here to avoid global dependency if user doesn't call this function
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import StratifiedKFold, cross_val_score
+
+    rf = RandomForestClassifier(
+        n_estimators=400,
+        max_depth=None,
+        min_samples_leaf=1,
+        max_features="sqrt",
+        class_weight="balanced_subsample",
+        n_jobs=-1,
+        random_state=42,
+    )
+
+    # Simple CV (optional but helpful)
+    try:
+        # Ensure at least 2 folds and not exceeding minority count
+        pos = int((y == 1).sum())
+        neg = int((y == 0).sum())
+        min_class = max(1, min(pos, neg))
+        n_splits = max(2, min(5, min_class))
+        cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+        cv_scores = cross_val_score(rf, X, y, cv=cv, scoring="f1", n_jobs=-1)
+        cv_f1_mean = float(np.mean(cv_scores))
+    except Exception:
+        cv_f1_mean = None
+
+    # Fit on all labeled data
+    rf.fit(X, y)
+
+    # 4) Predict probabilities for all rows
+    proba = rf.predict_proba(X_all)[:, 1]
+    pred_binary = (proba >= 0.5).astype(int)
+
+    # 5) Attach predictions back to grid_gpd without relying on pandas ops
+    # We assume grid_gpd behaves like a GeoDataFrame: support column assignment by name.
+    # Create/assign columns
+    grid_gpd["pred_proba_TP"] = proba
+    grid_gpd["pred_label"] = np.where(pred_binary == 1, "TP", "FP")
+
+    # 6) Return outputs similar to previous contract
+    info = {
+        "n_labeled": int(y.size),
+        "class_balance": {"neg": int((y == 0).sum()), "pos": int((y == 1).sum())},
+        "feature_cols": feature_cols,
+        "model_type": "RandomForestClassifier",
+        "model_params": {
+            "n_estimators": 400,
+            "max_depth": None,
+            "min_samples_leaf": 1,
+            "max_features": "sqrt",
+            "class_weight": "balanced_subsample",
+            "random_state": 42,
+        },
+        "threshold": 0.5,
+        "cv_f1_mean": cv_f1_mean,
+    }
+
+    return grid_gpd, rf, info
+
+
+
 
 
 
