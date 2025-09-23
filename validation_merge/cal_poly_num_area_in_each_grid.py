@@ -390,18 +390,44 @@ def add_columns_to_vector_files(vector_file, in_npy_list):
 def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
 
     all_touched = True
+    pre_name = 'susce' # rts_susceptibility_map
     stats_list = ['mean']
     # only count the pixel within this range when do statistics
     range = [0,6]
     save_format = 'GPKG'
+    column_name_list = [pre_name+'_' +item for item in stats_list]
+    npy_list = [f'{item}.npy' for item in column_name_list]
+    b_npy_exist = [ os.path.isfile(item) for item in npy_list]
 
     # expand the polygon when doing dem difference statistics
     buffer_size_raster = 0
     # tile_min_overlap = raster_io.get_xres_yres_file(rts_susceptibility_map)
     tile_min_overlap = 0
-    zonal_stats_multiRasters(grid_vector, rts_susceptibility_map, stats=stats_list, tile_min_overlap=tile_min_overlap,
+    if all(b_npy_exist):
+        # read npy files
+        basic.outputlogMessage(f'warning, {npy_list} exists, add them directly')
+        vector_gpd = gpd.read_file(grid_vector)
+
+        for column_name, npy in zip(column_name_list,npy_list):
+            np_array = np.load(npy)
+            print('np_array info', np_array.shape, np_array.dtype)
+            if len(np_array) != len(vector_gpd):
+                raise ValueError('the count in numpy array is different from these in the dataframe')
+            # add the np_array to the data_gpd as a column
+            vector_gpd[column_name] = np_array
+
+        vector_gpd.to_file(grid_vector)
+
+    else:
+        zonal_stats_multiRasters(grid_vector, rts_susceptibility_map, stats=stats_list, tile_min_overlap=tile_min_overlap,
                                 prefix='susce', band=1, all_touched=all_touched, process_num=process_num,
                                 range=range, buffer=buffer_size_raster,vector_format=save_format)
+        # save to npy files
+        vector_gpd = gpd.read_file(grid_vector)
+        for column_name in column_name_list:
+            column_values = np.array[vector_gpd[column_name]]
+            np.save(f"{column_name}.npy", column_values)
+
 
 
 
