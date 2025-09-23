@@ -24,6 +24,7 @@ import datasets.vector_gpd as vector_gpd
 from datetime import datetime
 
 import geopandas as gpd
+from collections import Counter
 
 def read_numpy_from_file(npy_file_list,col_name):
     for npy in npy_file_list:
@@ -114,6 +115,54 @@ def test_find_grid_base_on_DEM_results():
     find_grid_base_on_DEM_results(None, npy_file_list=npy_file_list)
 
 
+def load_training_data_from_validate_jsons(validate_json_list,save_path="valid_res_dict.json"):
+    valid_res_dict = {}
+    for v_file in validate_json_list:
+        data_dict = io_function.read_dict_from_txt_json(v_file)
+        res_list = []
+        h3_id = data_dict['h3ID']
+        for key in data_dict.keys():
+            if key == "h3ID":
+                continue
+            res_list.append(data_dict[key]['ValidateResult'])
+
+        if len(res_list) == 1:
+            valid_res_dict[h3_id] = res_list[0]
+        elif len(res_list) == 2:
+            if len(set(res_list)) != 1:
+                basic.outputlogMessage(f'Warning, the validation results in {v_file} from two contributors disagree, choose the first one')
+            valid_res_dict[h3_id] = res_list[0]
+        elif len(res_list) > 2:
+            if len(set(res_list)) != 1:
+                basic.outputlogMessage(f'Warning, the validation results in {v_file} from {len(res_list)} contributors disagree, '
+                                       f'choose the common')
+            # Count the occurrences of each element
+            counts = Counter(res_list)
+            value, frequency = counts.most_common(1)[0]
+            valid_res_dict[h3_id] = value
+        else:
+            raise ValueError(f'No validation results in {v_file}')
+
+    io_function.save_dict_to_txt_json(save_path,valid_res_dict)
+
+    return valid_res_dict
+
+def test_load_training_data_from_validate_jsons():
+    data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/select_by_s2_result_png')
+    json_list = io_function.get_file_list_by_pattern(data_dir,'*/validated*.json')
+    load_training_data_from_validate_jsons(json_list)
+    pass
+
+def auto_find_positive_grids(grid_gpd,validate_json_list):
+    # using machine learning algorithm to find grid that likely contains thaw targets
+
+
+
+
+
+
+    pass
+
 def identify_cells_contain_true_results(grid_gpd, save_path):
 
     # select based on sentinel-2
@@ -150,7 +199,8 @@ if __name__ == '__main__':
 
     # test_find_grid_base_on_s2_results()
     # test_find_grid_base_on_DEM_results()
-    # sys.exit(0)
+    test_load_training_data_from_validate_jsons()
+    sys.exit(0)
 
     usage = "usage: %prog [options] grid_vector "
     parser = OptionParser(usage=usage, version="1.0 2025-9-4")
