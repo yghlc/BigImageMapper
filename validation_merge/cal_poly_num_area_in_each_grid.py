@@ -393,7 +393,7 @@ def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
     pre_name = 'susce' # rts_susceptibility_map
     stats_list = ['mean']
     # only count the pixel within this range when do statistics
-    range = [0,6]
+    value_range = [0,6]
     save_format = 'GPKG'
     column_name_list = [pre_name+'_' +item for item in stats_list]
     npy_list = [f'{item}.npy' for item in column_name_list]
@@ -421,11 +421,11 @@ def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
     else:
         zonal_stats_multiRasters(grid_vector, rts_susceptibility_map, stats=stats_list, tile_min_overlap=tile_min_overlap,
                                 prefix='susce', band=1, all_touched=all_touched, process_num=process_num,
-                                range=range, buffer=buffer_size_raster,vector_format=save_format)
+                                range=value_range, buffer=buffer_size_raster,vector_format=save_format)
         # save to npy files
         vector_gpd = gpd.read_file(grid_vector)
         for column_name in column_name_list:
-            column_values = np.array[vector_gpd[column_name]]
+            column_values = np.array(vector_gpd[column_name])
             np.save(f"{column_name}.npy", column_values)
 
 
