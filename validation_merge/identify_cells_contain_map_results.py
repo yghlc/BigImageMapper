@@ -147,7 +147,7 @@ def load_training_data_from_validate_jsons(validate_json_list,save_path="valid_r
 
     # only keep TP and FP, and convert them into 1 and 0
     valid_res_dict_int_labels = {}
-    for value, key in valid_res_dict.items():
+    for key, value  in valid_res_dict.items():
         if value == 'TP':
             valid_res_dict_int_labels[key] = 1
         elif value == 'FP':
@@ -174,7 +174,7 @@ def prepare_training_data(grid_gpd, validate_res_dict,feature_pre_names,id_col):
     feature_cols = []
     for col_name in grid_gpd.columns:
         # col_name start with one of the pre_name
-        if not col_name.startswith(feature_pre_names):
+        if not col_name.startswith(tuple(feature_pre_names)):
             continue
         feature_cols.append(col_name)
         data_np = np.array(grid_gpd[col_name])
@@ -182,7 +182,7 @@ def prepare_training_data(grid_gpd, validate_res_dict,feature_pre_names,id_col):
             # Replace NaN values with zero
             data_np[np.isnan(data_np)] = 0
         features_np_list.append(data_np)
-    features_np_2d = np.vstack(features_np_list)
+    features_np_2d = np.stack(features_np_list,axis=1)  # shape (n_samples, )
     print('features_np_2d shape:', features_np_2d.shape)
 
     # prepare training data
@@ -191,14 +191,23 @@ def prepare_training_data(grid_gpd, validate_res_dict,feature_pre_names,id_col):
     # train_h3_ids = []
     for h_id in validate_res_dict.keys():
         # train_h3_ids.append(h_id)
+        row_idx = np.where(h3_id_np == h_id)[0]    # 
+        if row_idx.size == 0:
+        # skip if not found
+            continue
+        # print(row_idx)
+        row_idx_int = int(row_idx[0])
+        train_features.append(features_np_2d[row_idx_int,:])
+        # ensure 2D row shape
         train_labels.append(validate_res_dict[h_id])
-        row_idx = np.where(h3_id_np == h_id)
-        train_features.append(features_np_2d[row_idx,:])
 
-    train_features_2d = np.vstack(train_features)
+    train_features_2d = np.stack(train_features)
+    train_labels_1d = np.array(train_labels)
+    print('train_features_2d shape:', train_features_2d.shape)
+    print('train_labels_1d shape:', train_labels_1d.shape)
 
     #  X, y, X_all, ids_all, feature_cols
-    return train_features_2d, train_labels, features_np_2d, h3_id_np, feature_cols
+    return train_features_2d, train_labels_1d, features_np_2d, h3_id_np, feature_cols
 
 
 
@@ -212,6 +221,8 @@ def auto_find_positive_grids(grid_gpd,validate_json_list):
     # using machine learning algorithm to find grid that likely contains thaw targets
 
     validate_res_dict = load_training_data_from_validate_jsons(validate_json_list)
+    if len(validate_res_dict) < 10:
+        raise ValueError(f'Only {len(validate_res_dict)} labeled samples, not enough to train a model')
 
     column_pre_names = ['s2', 'samElev', 'comImg', 'susce']
     X, y, X_all, ids_all, feature_cols = prepare_training_data(grid_gpd, validate_res_dict, column_pre_names,'h3_id_8')
@@ -296,9 +307,13 @@ def identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir=None
         if train_data_dir is None:
             raise ValueError("train_data_dir is not set")
         validate_json_list = io_function.get_file_list_by_pattern(train_data_dir,'*/validated*.json')
+        if len(validate_json_list) < 1:
+            raise ValueError(f'No validated*.json files in {train_data_dir}')
+        basic.outputlogMessage(f'Found {len(validate_json_list)} validated*.json files in {train_data_dir}')
         select_idx, grid_gpd, rf, info = auto_find_positive_grids(grid_gpd, validate_json_list)
         select_grid_gpd = grid_gpd[select_idx]
         select_grid_gpd.to_file(save_path)
+        basic.outputlogMessage(f'Saved {len(select_grid_gpd)} selected cells to {save_path}')
 
         io_function.save_dict_to_txt_json('random_forest_info.json',info)
 
