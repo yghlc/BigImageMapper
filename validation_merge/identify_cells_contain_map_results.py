@@ -157,6 +157,51 @@ def load_training_data_from_validate_jsons(validate_json_list,save_path="valid_r
 
     return valid_res_dict_int_labels
 
+def extract_columns_as_dict(grid_gpd):
+
+    column_pre_names = ['s2','samElev','comImg','susce']
+    for col_name in grid_gpd.columns:
+        # col_name start with one of the pre_name
+        if not col_name.startswith(column_pre_names):
+            continue
+
+def prepare_training_data(grid_gpd, validate_res_dict,feature_pre_names,id_col):
+
+    # read data into numpy array
+    h3_id_np = np.array(grid_gpd[id_col])
+
+    features_np_list = []
+    feature_cols = []
+    for col_name in grid_gpd.columns:
+        # col_name start with one of the pre_name
+        if not col_name.startswith(feature_pre_names):
+            continue
+        feature_cols.append(col_name)
+        data_np = np.array(grid_gpd[col_name])
+        if col_name.startswith('susce'):
+            # Replace NaN values with zero
+            data_np[np.isnan(data_np)] = 0
+        features_np_list.append(data_np)
+    features_np_2d = np.vstack(features_np_list)
+    print('features_np_2d shape:', features_np_2d.shape)
+
+    # prepare training data
+    train_features = []
+    train_labels = []
+    # train_h3_ids = []
+    for h_id in validate_res_dict.keys():
+        # train_h3_ids.append(h_id)
+        train_labels.append(validate_res_dict[h_id])
+        row_idx = np.where(h3_id_np == h_id)
+        train_features.append(features_np_2d[row_idx,:])
+
+    train_features_2d = np.vstack(train_features)
+
+    #  X, y, X_all, ids_all, feature_cols
+    return train_features_2d, train_labels, features_np_2d, h3_id_np, feature_cols
+
+
+
 def test_load_training_data_from_validate_jsons():
     data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/select_by_s2_result_png')
     json_list = io_function.get_file_list_by_pattern(data_dir,'*/validated*.json')
@@ -168,14 +213,8 @@ def auto_find_positive_grids(grid_gpd,validate_json_list):
 
     validate_res_dict = load_training_data_from_validate_jsons(validate_json_list)
 
-    # 1) Prepare columns and labels
-    cols_dict = _extract_columns_as_dict(grid_gpd)
-    labels_map = validate_res_dict.get("labels", {})
-    if not labels_map:
-        raise ValueError("validate_res_dict['labels'] is empty or missing.")
-
-    # 2) Build training matrices
-    X, y, X_all, ids_all, feature_cols = _align_training_rows(cols_dict, labels_map, id_col="h3_id_8")
+    column_pre_names = ['s2', 'samElev', 'comImg', 'susce']
+    X, y, X_all, ids_all, feature_cols = prepare_training_data(grid_gpd, validate_res_dict, column_pre_names,'h3_id_8')
 
     # 3) Train model (Random Forest preferred)
     # Import here to avoid global dependency if user doesn't call this function
@@ -211,6 +250,7 @@ def auto_find_positive_grids(grid_gpd,validate_json_list):
     # 4) Predict probabilities for all rows
     proba = rf.predict_proba(X_all)[:, 1]
     pred_binary = (proba >= 0.5).astype(int)
+    select_idx = proba >= 0.5
 
     # 5) Attach predictions back to grid_gpd without relying on pandas ops
     # We assume grid_gpd behaves like a GeoDataFrame: support column assignment by name.
@@ -236,36 +276,41 @@ def auto_find_positive_grids(grid_gpd,validate_json_list):
         "cv_f1_mean": cv_f1_mean,
     }
 
-    return grid_gpd, rf, info
+    return select_idx, grid_gpd, rf, info
 
 
+def identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir=None, method='s2_area_count'):
 
+    if method.lower() == 's2_area_count':
+        # select based on sentinel-2
+        select_idx, s2_occur, s2_area_trend, s2_count_sum, s2_area_sum =\
+            find_grid_base_on_s2_results(grid_gpd)
+        select_grid_gpd = grid_gpd[select_idx]
+        select_grid_gpd['s2_occur'] = s2_occur
+        select_grid_gpd['s2_area_trend'] = s2_area_trend
+        select_grid_gpd['s2_count_sum'] = s2_count_sum
+        select_grid_gpd['s2_area_sum'] = s2_area_sum
 
+        select_grid_gpd.to_file(save_path)
+    elif method.lower() == 'random_forest':
+        if train_data_dir is None:
+            raise ValueError("train_data_dir is not set")
+        validate_json_list = io_function.get_file_list_by_pattern(train_data_dir,'*/validated*.json')
+        select_idx, grid_gpd, rf, info = auto_find_positive_grids(grid_gpd, validate_json_list)
+        select_grid_gpd = grid_gpd[select_idx]
+        select_grid_gpd.to_file(save_path)
 
+        io_function.save_dict_to_txt_json('random_forest_info.json',info)
 
-
-
-
-    pass
-
-def identify_cells_contain_true_results(grid_gpd, save_path):
-
-    # select based on sentinel-2
-    select_idx, s2_occur, s2_area_trend, s2_count_sum, s2_area_sum =\
-        find_grid_base_on_s2_results(grid_gpd)
-    select_grid_gpd = grid_gpd[select_idx]
-    select_grid_gpd['s2_occur'] = s2_occur
-    select_grid_gpd['s2_area_trend'] = s2_area_trend
-    select_grid_gpd['s2_count_sum'] = s2_count_sum
-    select_grid_gpd['s2_area_sum'] = s2_area_sum
-
-    select_grid_gpd.to_file(save_path)
-
-    pass
+    else:
+        raise ValueError('Unknown method for identifying cells')
 
 def main(options, args):
     grid_path = args[0]
     save_path = options.save_path
+    train_data_dir = options.train_data_dir
+    method = options.method
+
 
     t0 = time.time()
     grid_gpd = gpd.read_file(grid_path)
@@ -273,7 +318,7 @@ def main(options, args):
     print(f'Loaded grid vector file, containing {len(grid_gpd)} cells, {len(grid_gpd.columns)} columns, cost {t1-t0} seconds')
     print('column names:', grid_gpd.columns.to_list())
 
-    identify_cells_contain_true_results(grid_gpd, save_path)
+    identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir, method)
 
 
 
@@ -284,8 +329,8 @@ if __name__ == '__main__':
 
     # test_find_grid_base_on_s2_results()
     # test_find_grid_base_on_DEM_results()
-    test_load_training_data_from_validate_jsons()
-    sys.exit(0)
+    # test_load_training_data_from_validate_jsons()
+    # sys.exit(0)
 
     usage = "usage: %prog [options] grid_vector "
     parser = OptionParser(usage=usage, version="1.0 2025-9-4")
@@ -299,17 +344,15 @@ if __name__ == '__main__':
                       action="store", dest="input_txt",
                       help="the input txt contain column name and vector path (column_name, vector_path)")
 
-    # parser.add_option("-p", "--process_num",
-    #                   action="store", dest="process_num",type=int, default=16,
-    #                   help="the process number ")
+    parser.add_option("-m", "--method",
+                      action="store", dest="method",
+                      help="the method to identify cell containing positive results, including: s2_area_count, random_forest, etc")
 
-    # parser.add_option("-b", "--using_bounding_box",
-    #                   action="store_true", dest="using_bounding_box",default=False,
-    #                   help="whether use the boudning boxes of polygons, this can avoid some invalid"
-    #                        " polygons and be consistent with YOLO output")
+    parser.add_option("-d", "--train_data_dir",
+                      action="store", dest="train_data_dir",
+                      help="the the folder containing the */validated*.json ")
 
-
-
+# train_data_dir
 
     (options, args) = parser.parse_args()
     # print(options.no_label_image)
