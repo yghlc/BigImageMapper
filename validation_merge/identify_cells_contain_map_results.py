@@ -226,6 +226,7 @@ def auto_find_positive_grids(grid_gpd,validate_json_list):
 
     column_pre_names = ['s2', 'samElev', 'comImg', 'susce']
     X, y, X_all, ids_all, feature_cols = prepare_training_data(grid_gpd, validate_res_dict, column_pre_names,'h3_id_8')
+    basic.outputlogMessage('completed: preparing training data')
 
     # 3) Train model (Random Forest preferred)
     # Import here to avoid global dependency if user doesn't call this function
@@ -254,14 +255,17 @@ def auto_find_positive_grids(grid_gpd,validate_json_list):
         cv_f1_mean = float(np.mean(cv_scores))
     except Exception:
         cv_f1_mean = None
+    basic.outputlogMessage('completed: Simple cross-validation')
 
     # Fit on all labeled data
     rf.fit(X, y)
+    basic.outputlogMessage('completed: training a random forest model')
 
     # 4) Predict probabilities for all rows
     proba = rf.predict_proba(X_all)[:, 1]
     pred_binary = (proba >= 0.5).astype(int)
     select_idx = proba >= 0.5
+    basic.outputlogMessage('completed: prediction')
 
     # 5) Attach predictions back to grid_gpd without relying on pandas ops
     # We assume grid_gpd behaves like a GeoDataFrame: support column assignment by name.
