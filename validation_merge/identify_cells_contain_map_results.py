@@ -168,7 +168,11 @@ def extract_columns_as_dict(grid_gpd):
 def prepare_training_data(grid_gpd, validate_res_dict,feature_pre_names,id_col):
 
     # read data into numpy array
-    h3_id_np = np.array(grid_gpd[id_col])
+    h3_id_np = np.array(grid_gpd[id_col]).astype(str)
+    # print(h3_id_np.dtype)# .astype(str)
+    h3_id_np_uniq, h3_id_inv = np.unique(h3_id_np, return_inverse=True)
+    if len(h3_id_np) != len(h3_id_np_uniq):
+        raise ValueError('there are repeat element in h3_id in numpy array')
 
     features_np_list = []
     feature_cols = []
@@ -182,29 +186,60 @@ def prepare_training_data(grid_gpd, validate_res_dict,feature_pre_names,id_col):
             # Replace NaN values with zero
             data_np[np.isnan(data_np)] = 0
         features_np_list.append(data_np)
-    features_np_2d = np.stack(features_np_list,axis=1)  # shape (n_samples, )
+    features_np_2d = np.stack(features_np_list,axis=1)  # shape (n_samples, n_features)
     print('features_np_2d shape:', features_np_2d.shape)
 
     # prepare training data
-    train_features = []
-    train_labels = []
-    # train_h3_ids = []
-    for h_id in validate_res_dict.keys():
-        # train_h3_ids.append(h_id)
-        row_idx = np.where(h3_id_np == h_id)[0]    # 
-        if row_idx.size == 0:
-        # skip if not found
-            continue
-        # print(row_idx)
-        row_idx_int = int(row_idx[0])
-        train_features.append(features_np_2d[row_idx_int,:])
-        # ensure 2D row shape
-        train_labels.append(validate_res_dict[h_id])
+    # using numpy, not for-loop
+    # compare the results with produced by for-loop, they are the same but in different orders
+    label_keys = np.array(list(validate_res_dict.keys()), dtype=str)
+    label_keys_uniq = np.unique(label_keys)
+    if len(label_keys) != len(label_keys_uniq):
+        raise ValueError('there are repeat elements of h3_id in validate_res_dict')
+    # intersect1d will sort h3_id_np_uniq and label_keys
+    overlap, idx_h3_id, idx_l = np.intersect1d(h3_id_np_uniq, label_keys,return_indices=True)
+    fill_value = -9999
+    labels_for_unique = np.full(h3_id_np_uniq.shape, fill_value, dtype=int)
+    # print(np.array([int(validate_res_dict[k]) for k in label_keys[idx_l]], dtype=int))
+    labels_for_unique[idx_h3_id] = np.array([int(validate_res_dict[k]) for k in label_keys[idx_l]], dtype=int)
+    # print(labels_for_unique,labels_for_unique.shape)
+    row_labels = labels_for_unique[h3_id_inv]
+    mask = row_labels != fill_value
+    train_features_2d = features_np_2d[mask,:]
+    train_labels_1d = row_labels[mask]
+    train_h3_ids = h3_id_np[mask]
 
-    train_features_2d = np.stack(train_features)
-    train_labels_1d = np.array(train_labels)
+
+    # # # using for-loop
+    # train_features = []
+    # train_labels = []
+    # train_h3_ids = []
+    # for h_id in validate_res_dict.keys():
+    #     row_idx = np.where(h3_id_np == h_id)[0]    #
+    #     if row_idx.size == 0:
+    #     # skip if not found
+    #         continue
+    #     # print(row_idx)
+    #     train_h3_ids.append(h_id)
+    #     row_idx_int = int(row_idx[0])
+    #     train_features.append(features_np_2d[row_idx_int,:])
+    #     # ensure 2D row shape
+    #     train_labels.append(validate_res_dict[h_id])
+    #     # # print out for checking
+    #     # if h_id=='8802f2d461fffff':
+    #     #     print(f"{h_id}: label: {validate_res_dict[h_id]}, features {features_np_2d[row_idx_int,:]}")
+    # train_features_2d = np.stack(train_features)
+    # train_labels_1d = np.array(train_labels)
+    # train_h3_ids = np.array(train_h3_ids)
+
+
     print('train_features_2d shape:', train_features_2d.shape)
     print('train_labels_1d shape:', train_labels_1d.shape)
+    print('train_h3_ids shape:', train_h3_ids.shape)
+    # save for checking
+    # np.save("train_features_2d.npy",train_features_2d)
+    # np.save("train_labels_1d.npy",train_labels_1d)
+    # np.save("train_h3_ids.npy",train_h3_ids)
 
     #  X, y, X_all, ids_all, feature_cols
     return train_features_2d, train_labels_1d, features_np_2d, h3_id_np, feature_cols
@@ -217,7 +252,97 @@ def test_load_training_data_from_validate_jsons():
     load_training_data_from_validate_jsons(json_list)
     pass
 
-def auto_find_positive_grids(grid_gpd,validate_json_list):
+def train_randomforest_with_hyperpara_search(X, y, out_json_path="rf_hyperparam_search_results.json"):
+    """
+    Train a RandomForest with hyperparameter search and save results.
+    - Uses RandomizedSearchCV with StratifiedKFold and F1 scoring.
+    - Saves all candidates' params and scores plus the best params/score to JSON.
+    Returns:
+        best_model: fitted RandomForestClassifier with best params
+        cv_f1_mean: float, best cross-validated F1 score
+    """
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV
+    from sklearn.metrics import make_scorer, f1_score
+
+    # Base model (some params tuned)
+    base_rf = RandomForestClassifier(
+        n_estimators=300,    # will be overridden by search
+        max_depth=None,      # tuned
+        min_samples_leaf=1,  # tuned
+        max_features="sqrt", # tuned
+        class_weight="balanced_subsample",
+        n_jobs=-1,
+        random_state=42,
+    )
+
+    # CV folds based on minority class count
+    pos = int((y == 1).sum())
+    neg = int((y == 0).sum())
+    min_class = max(1, min(pos, neg))
+    n_splits = max(2, min(5, min_class))
+    cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+
+    # Search space
+    param_dist = {
+        "n_estimators": [200, 300, 400, 600],
+        "max_depth": [None, 6, 10, 16, 24],
+        "min_samples_leaf": [1, 2, 4, 8],
+        "max_features": ["sqrt", "log2", 0.5, 0.7, None],
+        "min_samples_split": [2, 4, 8, 16],
+        "bootstrap": [True, False],
+    }
+
+    scorer = make_scorer(f1_score, average="binary")
+
+    total_grid = int(np.prod([len(v) for v in param_dist.values()]))
+    n_iter = min(30, total_grid)
+
+    search = RandomizedSearchCV(
+        estimator=base_rf,
+        param_distributions=param_dist,
+        n_iter=n_iter,
+        scoring=scorer,
+        n_jobs=-1,
+        cv=cv,
+        verbose=0,
+        random_state=42,
+        refit=True,
+        return_train_score=False,
+    )
+
+    search.fit(X, y)
+    best_model = search.best_estimator_
+    cv_f1_mean = float(search.best_score_) if search.best_score_ is not None else None
+
+    # Collect full results
+    cv_results = search.cv_results_
+    # Build a compact list of all tried params with their mean/std test scores
+    all_trials = []
+    for i in range(len(cv_results["params"])):
+        all_trials.append({
+            "rank_test_score": int(cv_results["rank_test_score"][i]),
+            "mean_test_score": float(cv_results["mean_test_score"][i]),
+            "std_test_score": float(cv_results["std_test_score"][i]),
+            "params": cv_results["params"][i],
+        })
+
+    out_payload = {
+        "cv_n_splits": n_splits,
+        "scoring": "f1",
+        "n_iter": int(n_iter),
+        "best_score": cv_f1_mean,
+        "best_params": search.best_params_,
+        "all_trials": all_trials,
+    }
+
+    # Save to JSON
+    io_function.save_dict_to_txt_json(out_json_path,out_payload)
+
+    return best_model, cv_f1_mean
+
+
+def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0.5):
     # using machine learning algorithm to find grid that likely contains thaw targets
 
     validate_res_dict = load_training_data_from_validate_jsons(validate_json_list)
@@ -229,49 +354,11 @@ def auto_find_positive_grids(grid_gpd,validate_json_list):
     basic.outputlogMessage('completed: preparing training data')
 
     # 3) Train model (Random Forest preferred)
-    # Import here to avoid global dependency if user doesn't call this function
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.model_selection import StratifiedKFold, cross_val_score
-
-    rf = RandomForestClassifier(
-        n_estimators=400,
-        max_depth=None,
-        min_samples_leaf=1,
-        max_features="sqrt",
-        class_weight="balanced_subsample",
-        n_jobs=-1,
-        random_state=42,
-    )
-
-    # Simple CV (optional but helpful)
-    try:
-        # Ensure at least 2 folds and not exceeding minority count
-        pos = int((y == 1).sum())
-        neg = int((y == 0).sum())
-        min_class = max(1, min(pos, neg))
-        n_splits = max(2, min(5, min_class))
-        cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
-        cv_scores = cross_val_score(rf, X, y, cv=cv, scoring="f1", n_jobs=-1)
-        cv_f1_mean = float(np.mean(cv_scores))
-    except Exception:
-        cv_f1_mean = None
-    basic.outputlogMessage('completed: Simple cross-validation')
-
-    # Fit on all labeled data
-    rf.fit(X, y)
-    basic.outputlogMessage('completed: training a random forest model')
+    rf, cv_f1_mean = train_randomforest_with_hyperpara_search(X,y)
 
     # 4) Predict probabilities for all rows
     proba = rf.predict_proba(X_all)[:, 1]
-    pred_binary = (proba >= 0.5).astype(int)
-    select_idx = proba >= 0.5
     basic.outputlogMessage('completed: prediction')
-
-    # 5) Attach predictions back to grid_gpd without relying on pandas ops
-    # We assume grid_gpd behaves like a GeoDataFrame: support column assignment by name.
-    # Create/assign columns
-    grid_gpd["pred_proba_TP"] = proba
-    grid_gpd["pred_label"] = np.where(pred_binary == 1, "TP", "FP")
 
     # 6) Return outputs similar to previous contract
     info = {
@@ -290,8 +377,28 @@ def auto_find_positive_grids(grid_gpd,validate_json_list):
         "threshold": 0.5,
         "cv_f1_mean": cv_f1_mean,
     }
+    io_function.save_dict_to_txt_json('random_forest_info.json', info)
 
-    return select_idx, grid_gpd, rf, info
+    # save to file
+    threoshold_list = [proba_thr] if isinstance(proba_thr,float) else proba_thr
+    for threoshold in threoshold_list:
+
+        if len(threoshold_list) > 1:
+            save_path_tmp = io_function.get_name_by_adding_tail(save_path,f'{threoshold}')
+        else:
+            save_path_tmp = save_path
+
+        pred_binary = (proba >= threoshold).astype(int)
+        select_idx = proba >= threoshold
+
+        # Create/assign columns
+        grid_gpd["pred_proba_TP"] = proba
+        grid_gpd["pred_label"] = np.where(pred_binary == 1, "TP", "FP")
+
+        select_grid_gpd = grid_gpd[select_idx]
+        select_grid_gpd.to_file(save_path_tmp)
+        basic.outputlogMessage(f'Saved {len(select_grid_gpd)} selected cells to {save_path_tmp}')
+
 
 
 def identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir=None, method='s2_area_count'):
@@ -314,12 +421,9 @@ def identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir=None
         if len(validate_json_list) < 1:
             raise ValueError(f'No validated*.json files in {train_data_dir}')
         basic.outputlogMessage(f'Found {len(validate_json_list)} validated*.json files in {train_data_dir}')
-        select_idx, grid_gpd, rf, info = auto_find_positive_grids(grid_gpd, validate_json_list)
-        select_grid_gpd = grid_gpd[select_idx]
-        select_grid_gpd.to_file(save_path)
-        basic.outputlogMessage(f'Saved {len(select_grid_gpd)} selected cells to {save_path}')
 
-        io_function.save_dict_to_txt_json('random_forest_info.json',info)
+        prob_thr = [0.5,0.6,0.7,0.8,0.9]
+        auto_find_positive_grids(grid_gpd, validate_json_list, save_path,proba_thr=prob_thr)
 
     else:
         raise ValueError('Unknown method for identifying cells')
