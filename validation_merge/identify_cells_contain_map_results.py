@@ -341,6 +341,108 @@ def train_randomforest_with_hyperpara_search(X, y, out_json_path="rf_hyperparam_
 
     return best_model, cv_f1_mean
 
+def rf_feature_importance(model, feature_cols, top_k=None):
+    importances = model.feature_importances_
+    order = np.argsort(importances)[::-1]
+    if top_k is not None:
+        order = order[:top_k]
+    out = {feature_cols[i]: float(importances[i]) for i in order}
+    return out
+
+
+def rf_permutation_importance(model, X, y, feature_cols, n_repeats=10, random_state=42):
+    # Use oob_score_ if enabled, otherwise compute on the training set
+    from sklearn.inspection import permutation_importance
+
+    r = permutation_importance(
+        model, X, y,
+        scoring="f1",
+        n_repeats=n_repeats,
+        random_state=random_state,
+        n_jobs=-1
+    )
+    means = r.importances_mean
+    stds = r.importances_std
+    order = np.argsort(means)[::-1]
+    out = {feature_cols[i]: {"mean": float(means[i]), "std": float(stds[i])} for i in order}
+    return out
+
+def rf_shap_importance(model, X, feature_cols, sample_size=2000, random_state=42, positive_class=1):
+    """
+        Returns a dict: {feature_name: mean_abs_shap} ordered by descending mean |SHAP|.
+        For binary classification, uses SHAP values for the positive class by default.
+    """
+
+    import shap
+
+    if X.shape[0] > sample_size:
+        rng = np.random.default_rng(random_state)
+        idx = rng.choice(X.shape[0], size=sample_size, replace=False)
+        X_use = X[idx]
+    else:
+        X_use = X
+
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_use)
+
+    # Select class if classification returns a list
+    if isinstance(shap_values, list):
+        classes_ = getattr(model, "classes_", None)
+        if positive_class is None:
+            sv = shap_values[-1]
+        elif classes_ is not None and positive_class in classes_:
+            class_idx = int(np.where(classes_ == positive_class)[0][0])
+            sv = shap_values[class_idx]
+        else:
+            sv = shap_values[-1]
+    else:
+        sv = shap_values
+
+    # Ensure sv is at least 2D: (n_samples, n_features, [maybe extra axes])
+    sv = np.array(sv)
+
+    # If sv has more than 2 dims, collapse all axes except the last feature axis and the sample axis.
+    # Common shapes:
+    # - (n_samples, n_features) -> keep
+    # - (n_samples, n_features, K) -> average over axis=2
+    # - (K, n_samples, n_features) -> average over axis=0
+    if sv.ndim == 3:
+        # Decide which axis is features: usually the last axis is features
+        # Check which axis equals n_features inferred from feature_cols length
+        n_features = len(feature_cols)
+        if sv.shape[-1] == n_features:
+            # (n_samples, n_features, K) -> mean over K
+            sv = sv.mean(axis=2)
+        elif sv.shape[1] == n_features:
+            # (K, n_features, n_samples) or (K, n_samples, n_features)
+            # Most common is (K, n_samples, n_features) for per-tree outputs
+            if sv.shape[-1] == n_features:
+                # (K, n_samples, n_features) -> mean over K
+                sv = sv.mean(axis=0)
+            else:
+                # (K, n_features, n_samples) -> move features to last, then mean K
+                sv = sv.transpose(0, 2, 1).mean(axis=0)
+        else:
+            # Fallback: mean across the first axis
+            sv = sv.mean(axis=0)
+
+    elif sv.ndim > 3:
+        # Collapse all leading axes except the last two (samples, features)
+        while sv.ndim > 2:
+            # Average the first axis until we get 2D
+            sv = sv.mean(axis=0)
+
+    # Now sv should be (n_samples, n_features)
+    if sv.ndim != 2 or sv.shape[1] != len(feature_cols):
+        raise ValueError(f"Unexpected SHAP values shape {sv.shape}; expected (_, {len(feature_cols)})")
+
+    mean_abs = np.abs(sv).mean(axis=0)  # shape: (n_features,)
+    order = np.argsort(mean_abs)[::-1].astype(int)
+
+    # print('order:', order)
+    out = {feature_cols[i]: float(mean_abs[i]) for i in order}
+    return out
+
 
 def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0.5):
     # using machine learning algorithm to find grid that likely contains thaw targets
@@ -355,6 +457,21 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
 
     # 3) Train model (Random Forest preferred)
     rf, cv_f1_mean = train_randomforest_with_hyperpara_search(X,y)
+    basic.outputlogMessage('completed: preparing training with hyper-parameters searching')
+
+    ############ checking the importance of each feature #########
+    # 1) Impurity-based
+    impurity_rank = rf_feature_importance(rf, feature_cols, top_k=20)
+    io_function.save_dict_to_txt_json('feature_importance_rank_impurity.json',impurity_rank)
+    # 2) Permutation-based (slower)
+    perm_rank = rf_permutation_importance(rf, X, y, feature_cols, n_repeats=10)
+    io_function.save_dict_to_txt_json('feature_importance_rank_permutation.json', perm_rank)
+    # 3) SHAP-based (slower)
+    shap_rank = rf_shap_importance(rf, X, feature_cols,sample_size=5000)
+    # print(shap_rank)
+    io_function.save_dict_to_txt_json('feature_importance_rank_shap.json', shap_rank)
+    basic.outputlogMessage('completed: sorting of feature importance')
+    ######################################################################
 
     # 4) Predict probabilities for all rows
     proba = rf.predict_proba(X_all)[:, 1]
