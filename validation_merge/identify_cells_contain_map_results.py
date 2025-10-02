@@ -478,7 +478,7 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
 
     # 3) Train model (Random Forest preferred)
     rf, cv_f1_mean = train_randomforest_with_hyperpara_search(X,y)
-    basic.outputlogMessage('completed: preparing training with hyper-parameters searching')
+    basic.outputlogMessage('completed: training with hyper-parameters searching')
 
     ############ checking the importance of each feature #########
     # 1) Impurity-based
@@ -491,7 +491,7 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
     shap_rank = rf_shap_importance(rf, X, feature_cols,sample_size=5000)
     # print(shap_rank)
     io_function.save_dict_to_txt_json('feature_importance_rank_shap.json', shap_rank)
-    basic.outputlogMessage('completed: sorting of feature importance')
+    basic.outputlogMessage('completed: sorting feature importance')
     ######################################################################
 
     # 4) Predict probabilities for all rows
@@ -504,15 +504,6 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
         "class_balance": {"neg": int((y == 0).sum()), "pos": int((y == 1).sum())},
         "feature_cols": feature_cols,
         "model_type": "RandomForestClassifier",
-        "model_params": {
-            "n_estimators": 400,
-            "max_depth": None,
-            "min_samples_leaf": 1,
-            "max_features": "sqrt",
-            "class_weight": "balanced_subsample",
-            "random_state": 42,
-        },
-        "threshold": 0.5,
         "cv_f1_mean": cv_f1_mean,
     }
     io_function.save_dict_to_txt_json('random_forest_info.json', info)
