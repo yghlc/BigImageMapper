@@ -45,26 +45,25 @@ def read_count_area_array(grid_gpd,count_columns,area_columns, npy_file_list = N
     area_array_2d = np.vstack(area_array_list)
     return count_array_2d, area_array_2d
 
-def find_grid_base_on_s2_results(grid_gpd, annual_count_thr=5, area_trend_thr=0.01, npy_file_list = None):
-
+def calculate_s2_detection_occur_trend(grid_gpd,npy_file_list = None):
     # s2 count
-    s2_area_columns = ['s2_2018_A', 's2_2019_A', 's2_2020_A', 's2_2021_A','s2_2022_A','s2_2023_A', 's2_2024_A']
-    s2_count_columns = ['s2_2018_C', 's2_2019_C', 's2_2020_C', 's2_2021_C','s2_2022_C','s2_2023_C', 's2_2024_C']
+    s2_area_columns = ['s2_2018_A', 's2_2019_A', 's2_2020_A', 's2_2021_A', 's2_2022_A', 's2_2023_A', 's2_2024_A']
+    s2_count_columns = ['s2_2018_C', 's2_2019_C', 's2_2020_C', 's2_2021_C', 's2_2022_C', 's2_2023_C', 's2_2024_C']
 
-    count_array_2d, area_array_2d = read_count_area_array(grid_gpd, s2_count_columns, s2_area_columns, npy_file_list=npy_file_list)
+    count_array_2d, area_array_2d = read_count_area_array(grid_gpd, s2_count_columns, s2_area_columns,
+                                                          npy_file_list=npy_file_list)
 
     print('count_array_2d', count_array_2d.shape)
     print('area_array_2d', area_array_2d.shape)
 
-    # selection based on the count
+    # calcuate the occurence of detection in each year
     # if 1 or more there, count a 1, otherwise, as zero
-    count_array_2d_sum = np.sum(count_array_2d,axis=0)    # sum across different years
+    count_array_2d_sum = np.sum(count_array_2d, axis=0)  # sum across different years
     count_array_2d_binary = (count_array_2d > 0).astype(int)
-    count_array_2d_binary_sum = np.sum(count_array_2d_binary,axis=0)    # sum across different years
+    count_array_2d_binary_sum = np.sum(count_array_2d_binary, axis=0)  # sum across different years
     print('count_array_2d_binary_sum', count_array_2d_binary_sum.shape, np.min(count_array_2d_binary_sum),
           np.max(count_array_2d_binary_sum), np.mean(count_array_2d_binary_sum))
-    b_select_on_count = count_array_2d_binary_sum  >= annual_count_thr
-    print('b_select_on_count:', b_select_on_count.shape, b_select_on_count)
+
 
     # selection based on area changes
     area_array_2d_sum = np.sum(area_array_2d, axis=0)  # sum across different years
@@ -72,6 +71,19 @@ def find_grid_base_on_s2_results(grid_gpd, annual_count_thr=5, area_trend_thr=0.
     # Calculate slopes (trend) per column, # trends[i] is the trend (slope) for column i
     trends = np.polyfit(x, area_array_2d, deg=1)[0]  # shape (13304783,)
     print('trends', trends.shape, trends)
+
+    return count_array_2d_binary_sum, trends, count_array_2d_sum, area_array_2d_sum
+
+
+def find_grid_base_on_s2_results(grid_gpd, annual_count_thr=5, area_trend_thr=0.01, npy_file_list = None):
+
+    count_array_2d_binary_sum, trends,count_array_2d_sum, area_array_2d_sum \
+        = calculate_s2_detection_occur_trend(grid_gpd, npy_file_list=npy_file_list)
+
+    # selection based on the count
+    b_select_on_count = count_array_2d_binary_sum  >= annual_count_thr
+    print('b_select_on_count:', b_select_on_count.shape, b_select_on_count)
+
     b_select_on_area_trend = trends >= area_trend_thr
     print('b_select_on_area_trend:', b_select_on_area_trend.shape, b_select_on_area_trend)
 
@@ -446,6 +458,9 @@ def rf_shap_importance(model, X, feature_cols, sample_size=2000, random_state=42
 
 def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0.5):
     # using machine learning algorithm to find grid that likely contains thaw targets
+
+    count_array_2d_binary_sum, trends,count_array_2d_sum, area_array_2d_sum \
+        = calculate_s2_detection_occur_trend(grid_gpd, npy_file_list=npy_file_list)
 
     validate_res_dict = load_training_data_from_validate_jsons(validate_json_list)
     if len(validate_res_dict) < 10:
