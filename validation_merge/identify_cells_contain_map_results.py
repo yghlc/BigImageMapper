@@ -376,7 +376,8 @@ def rf_permutation_importance(model, X, y, feature_cols, n_repeats=10, random_st
     means = r.importances_mean
     stds = r.importances_std
     order = np.argsort(means)[::-1]
-    out = {feature_cols[i]: {"mean": float(means[i]), "std": float(stds[i])} for i in order}
+    # out = {feature_cols[i]: {"mean": float(means[i]), "std": float(stds[i])} for i in order}
+    out = {feature_cols[i]:  float(means[i]) for i in order}
     return out
 
 def rf_shap_importance(model, X, feature_cols, sample_size=2000, random_state=42, positive_class=1):
@@ -459,8 +460,13 @@ def rf_shap_importance(model, X, feature_cols, sample_size=2000, random_state=42
 def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0.5):
     # using machine learning algorithm to find grid that likely contains thaw targets
 
-    count_array_2d_binary_sum, trends,count_array_2d_sum, area_array_2d_sum \
-        = calculate_s2_detection_occur_trend(grid_gpd, npy_file_list=npy_file_list)
+    if 's2_occur' in grid_gpd.columns and 's2_area_trend' in grid_gpd.columns:
+        pass
+    else:
+        count_array_2d_binary_sum, trends,count_array_2d_sum, area_array_2d_sum \
+        = calculate_s2_detection_occur_trend(grid_gpd, npy_file_list=None)
+        grid_gpd['s2_occur'] = count_array_2d_binary_sum
+        grid_gpd['s2_area_trend'] = trends
 
     validate_res_dict = load_training_data_from_validate_jsons(validate_json_list)
     if len(validate_res_dict) < 10:
