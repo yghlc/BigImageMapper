@@ -365,6 +365,7 @@ def main(options, args):
     grid_path = args[0]
     out_dir = options.out_dir
     buffer_size= options.buffer_size
+    process_num= options.process_num
 
     mapping_res_ini = options.mapping_res_ini
     if mapping_res_ini is None:
@@ -396,7 +397,7 @@ def main(options, args):
     if os.path.isdir(out_dir) is False:
         io_function.mkdir(out_dir)
 
-    obtain_multi_data(grid_gpd,grid_path, mapping_shp_raster_dict, out_dir, buffersize=buffer_size)
+    obtain_multi_data(grid_gpd,grid_path, mapping_shp_raster_dict, out_dir, buffersize=buffer_size,process_num=process_num)
 
     png_dir = out_dir + '_png' #os.path.join(out_dir,'png')
     convert_2_web_format(out_dir, png_dir, b_rm_org_file=False)
@@ -424,9 +425,9 @@ if __name__ == '__main__':
                       action="store", dest="buffer_size", type=float, default='50',
                       help="the buffer size (in meters) for extracting sub-images")
 
-    # parser.add_option("-p", "--process_num",
-    #                   action="store", dest="process_num",type=int, default=16,
-    #                   help="the process number ")
+    parser.add_option("-p", "--process_num",
+                      action="store", dest="process_num",type=int, default=4,
+                      help="the process number for extracting sub-images")
 
     # parser.add_option("-b", "--using_bounding_box",
     #                   action="store_true", dest="using_bounding_box",default=False,
