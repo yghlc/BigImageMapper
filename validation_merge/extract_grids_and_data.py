@@ -250,7 +250,7 @@ def add_text(im, text, xy=(1, 1), font=None, font_size=10, fill=(255,255,255,255
     draw.text(xy, text, font=font, fill=fill, stroke_width=stroke_width, stroke_fill=stroke_fill)
     return im
 
-def save_multiple_png_to_gif(png_file_list, title_list, save_path='output.gif', duration_ms=500):
+def save_multiple_png_to_gif(png_file_list, title_list, save_path='output.gif', start_str='s2_', duration_ms=500):
 
     if os.path.isfile(save_path):
         print(f'GIF: {save_path} exist, skip')
@@ -265,7 +265,7 @@ def save_multiple_png_to_gif(png_file_list, title_list, save_path='output.gif', 
     sel_png_file_list = []
     sel_title_list = []
     for png, title in zip(png_file_list,title_list):
-        if title.startswith('s2_'):  # all s2 image, not including the s2nir
+        if title.startswith(start_str):   # select specific images
             sel_png_file_list.append(png)
             sel_title_list.append(title)
     png_file_list = sel_png_file_list
@@ -339,9 +339,17 @@ def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False):
                 io_function.delete_file_or_dir(tif)
 
         # save multiple png files into a gif
+
+        gif_save_path_l7 = os.path.join(h3_save_dir, 'xGIF_' + 'id' + h3_id + '.gif')
+        save_multiple_png_to_gif(png_list, set_name_list, save_path=gif_save_path_l7, start_str='l7_') # select landsat7
+
+        gif_save_path_l8 = os.path.join(h3_save_dir, 'yGIF_' + 'id' + h3_id + '.gif')
+        save_multiple_png_to_gif(png_list, set_name_list, save_path=gif_save_path_l8, start_str='l8_') # select landsat8
+
         # put "z_", making sure it on the left most after sorting
-        gif_save_path = os.path.join(h3_save_dir,'zGIF_'+"id"+h3_id+'.gif')
-        save_multiple_png_to_gif(png_list, set_name_list,gif_save_path)
+        gif_save_path_s2 = os.path.join(h3_save_dir,'zGIF_'+'id'+h3_id+'.gif')
+        save_multiple_png_to_gif(png_list, set_name_list,save_path=gif_save_path_s2,start_str='s2_') #all s2 image, not including s2nir
+
 
         if b_rm_org_file:
             io_function.delete_file_or_dir(h3_grid_ext)
