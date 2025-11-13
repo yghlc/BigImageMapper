@@ -38,7 +38,9 @@ def copy_merge_validated_json(work_dir, h3_id, res_json_path):
         if org_dict['h3ID'] != new_dict['h3ID']:
             raise ValueError(f'The h3 ID in {save_json_path} and {res_json_path} is different')
         for key in new_dict.keys():
-            org_dict[key] = new_dict[key]  # will replace the existing values
+            if key in org_dict.keys():
+                continue   # Don't replace existing values; the same user may have changed them
+            org_dict[key] = new_dict[key]  # Add new keys from new_dict
         io_function.save_dict_to_txt_json(save_json_path,org_dict)
 
     else:
