@@ -50,8 +50,10 @@ def copy_validation_res(work_dir, result_dir):
     # copy validation results from result_dir to the work_dir
     work_h3_folders = get_h3_folder(work_dir)
     res_h3_folders = get_h3_folder(result_dir)
+    res_validate_json_files = io_function.get_file_list_by_pattern(result_dir,'*/validated_*.json')
     basic.outputlogMessage(f'To copy validation json files from {result_dir}')
-    basic.outputlogMessage(f'work_dir: {len(work_h3_folders)} h3 folders, result_dir: {len(res_h3_folders)} h3 folders')
+    basic.outputlogMessage(f'work_dir: {len(work_h3_folders)} h3 folders, result_dir: {len(res_h3_folders)} h3 folders,'
+                           f' {len(res_validate_json_files)} validated json files')
 
     cp_merge_count = 0
 
@@ -74,7 +76,8 @@ def main(options, args):
     basic.outputlogMessage(f'Data for validation are in {validate_dir}')
     basic.outputlogMessage(f'There are {len(other_results_dir)} folder potentially contain validation results, will copy them：')
     for tmp in other_results_dir:
-        basic.outputlogMessage(tmp)
+        print(tmp)
+    print('')   # start a new line
 
     for res_dir in other_results_dir:
         copy_validation_res(validate_dir, res_dir)
