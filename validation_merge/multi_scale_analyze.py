@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Filename: multi_scale_analyze.py 
 """
-introduction:
+introduction: convert and analyze results of H3 Grids at different scales
 
 authors: Huang Lingcao
 email:huanglingcao@gmail.com
