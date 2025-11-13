@@ -266,6 +266,11 @@ def save_multiple_png_to_gif(png_file_list, title_list, save_path='output.gif', 
     sel_title_list = []
     for png, title in zip(png_file_list,title_list):
         if title.startswith(start_str):   # select specific images
+            # calculate entropy, ignore these with very small entropy (0.5)
+            valid_per, entropy = raster_io.get_valid_percent_shannon_entropy(png, log_base=10)
+            if entropy < 0.5:
+                print(f'warning, entropy for {os.path.basename(png)} is {entropy}, ignore it for gif construction')
+                continue
             sel_png_file_list.append(png)
             sel_title_list.append(title)
     png_file_list = sel_png_file_list
@@ -361,13 +366,19 @@ def test_convert_2_web_format():
     convert_2_web_format(data_dir, out_dir, b_rm_org_file=False)
 
 def test_save_multiple_png_to_gif():
-    png_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/data_multi_png/880d68cb29fffff')
+    # png_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/data_multi_png/880d68cb29fffff')
+
+    png_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/select_by_rf_09_v3_png/8802f04ed7fffff')
     print(f'testing using pngs in {png_dir}')
     png_list = sorted(io_function.get_file_list_by_pattern(png_dir,'*.png'))
     print('png_list', png_list)
     title_list = [os.path.basename(item)  for item in png_list]
     print('title_list', title_list)
-    save_multiple_png_to_gif(png_list,title_list)
+    # start_str = 's2_' # s2 images, not including s2nir
+    start_str = 'l7_' # l7 images
+    # start_str = 'l8_' # l8 images
+
+    save_multiple_png_to_gif(png_list,title_list,save_path='output.gif', start_str=start_str)
 
 def main(options, args):
     grid_path = args[0]
