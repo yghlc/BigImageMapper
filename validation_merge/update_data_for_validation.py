@@ -43,7 +43,7 @@ def copy_merge_validated_json(work_dir, h3_id, res_json_path):
 
     else:
         # copy the file
-        io_function.copy_file_to_dst(res_json_path,save_json_path,b_verbose=True)
+        io_function.copy_file_to_dst(res_json_path,save_json_path,b_verbose=False)
 
 
 def copy_validation_res(work_dir, result_dir):
@@ -53,6 +53,8 @@ def copy_validation_res(work_dir, result_dir):
     basic.outputlogMessage(f'To copy validation json files from {result_dir}')
     basic.outputlogMessage(f'work_dir: {len(work_h3_folders)} h3 folders, result_dir: {len(res_h3_folders)} h3 folders')
 
+    cp_merge_count = 0
+
     h3_ids = [ os.path.basename(item) for item in work_h3_folders]
     for idx, h3_id in enumerate(h3_ids):
         h3_folder_in_res = os.path.join(result_dir,h3_id)
@@ -61,7 +63,9 @@ def copy_validation_res(work_dir, result_dir):
             validate_json = os.path.join(h3_folder_in_res,f'validated_{h3_id}.json')
             if os.path.isfile(validate_json):
                 copy_merge_validated_json(work_dir,h3_id, validate_json)
+                cp_merge_count += 1
 
+    basic.outputlogMessage(f'Copy or merge {cp_merge_count} validated json files')
 
 
 def main(options, args):
