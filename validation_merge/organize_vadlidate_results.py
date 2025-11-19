@@ -250,6 +250,56 @@ def save_validate_result_2_vector_file(in_vector_path, save_path,json_list):
     grid_gpd.to_file(save_path)
     print(f'saved to {save_path}')
 
+def copy_png_files_for_checking(grid_path,val_result_dir):
+    values = vector_gpd.read_attribute_values_list_2d(grid_path,['h3_id_8','GT_Valid','Web_Valid'])
+    h3_id_8_list, GT_Valid_list, Web_Valid = values
+    print(f'Record count for h3_id_8_list, GT_Valid_list, Web_Valid is'
+          f' {len(h3_id_8_list)}, {len(GT_Valid_list)}, {len(Web_Valid)}')
+
+    base_name = os.path.basename(val_result_dir)
+    png_save_dir = base_name + '_select_pngs'
+    io_function.mkdir(png_save_dir)
+
+    all_valid_res_dict = {}
+    # conduct statistics
+    for idx, (h3ID, gt_v, web_v) in enumerate(zip(h3_id_8_list, GT_Valid_list, Web_Valid)):
+        valid_str = gt_v + web_v
+        if len(valid_str) < 1:
+            continue
+        # print(valid_str)
+        valid_values = sorted(list(set(valid_str.strip().split(','))))
+        valid_values_str = '-'.join(valid_values)
+        # print(valid_values_str)
+        all_valid_res_dict.setdefault(valid_values_str, []).append(h3ID)
+        # testing
+        # if idx > 100:
+        #     break
+
+    io_function.save_dict_to_txt_json(f'{base_name}_valid_res_dict.txt',all_valid_res_dict)
+    for key, h3IDs in all_valid_res_dict.items():
+        print(key)
+        print(f'Valid result: {key}, count: {len(h3IDs)}')
+    # copy pngs files
+    copy_file_name_pattern = ['s2_*.png','zGIF_*.gif']
+    for f_pattern in copy_file_name_pattern:
+        for key, h3IDs in all_valid_res_dict.items():
+            one_type_png_save_dir = os.path.join(png_save_dir,key)
+            if os.path.isdir(one_type_png_save_dir) is False:
+                io_function.mkdir(one_type_png_save_dir)
+            for h3_id in h3IDs:
+                org_h3_folder = os.path.join(val_result_dir,h3_id)
+                h3_folder = os.path.join(one_type_png_save_dir, h3_id)
+                if os.path.isdir(h3_folder) is False:
+                    io_function.mkdir(h3_folder)
+                cp_file_list = io_function.get_file_list_by_pattern(org_h3_folder,f_pattern)
+                if len(cp_file_list) < 1:
+                    print(f'Warning, no files in {org_h3_folder}, with pattern: {f_pattern}')
+                for cp_file in cp_file_list:
+                    io_function.copyfiletodir(cp_file,h3_folder,b_verbose=False)
+
+    print(datetime.now(), 'Copy png files Done')
+
+
 
 def main(options, args):
     grid_path = args[0]
@@ -270,6 +320,8 @@ def main(options, args):
     else:
         print(f'No validation json files in the sub-folders of {val_result_dir}')
 
+    # copy pngs for checking and valiation
+    copy_png_files_for_checking(grid_path, val_result_dir)
 
 
 
