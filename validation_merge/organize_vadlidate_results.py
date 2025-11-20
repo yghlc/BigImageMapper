@@ -263,18 +263,20 @@ def copy_png_files_for_checking(grid_path,val_result_dir):
     all_valid_res_dict = {}
     # conduct statistics
     for idx, (h3ID, gt_v, web_v) in enumerate(zip(h3_id_8_list, GT_Valid_list, Web_Valid)):
-        valid_str = gt_v + web_v
-        if len(valid_str) < 1:
+        valid_values = gt_v.strip().split(',') + web_v.strip().split(',')
+        valid_values = [item for item in valid_values if len(item) > 0] # "remove empty str"
+        if len(valid_values) < 1:
             continue
-        # print(valid_str)
-        valid_values = sorted(list(set(valid_str.strip().split(','))))
+        # print('valid_values:',valid_values)
+        valid_values = sorted(list(set(valid_values))) # unique values, sorted
         valid_values_str = '-'.join(valid_values)
-        # print(valid_values_str)
+        # print('valid_values_str:',valid_values_str)
         all_valid_res_dict.setdefault(valid_values_str, []).append(h3ID)
-        # testing
+        ## testing
         # if idx > 100:
         #     break
 
+    # sys.exit(0)
     io_function.save_dict_to_txt_json(f'{base_name}_valid_res_dict.txt',all_valid_res_dict)
     for key, h3IDs in all_valid_res_dict.items():
         print(key)
