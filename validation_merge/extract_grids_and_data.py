@@ -63,7 +63,8 @@ def get_year_in_file_or_str(file_path):
     years = re.findall(r"\d{4}", os.path.basename(file_path))
     return years[0]
 
-def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir, buffersize=10, process_num=4):
+def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir, buffersize=10, process_num=4,
+                      b_get_subImg_only=False):
 
     dstnodata = 0
     rectangle_ext = True
@@ -98,6 +99,9 @@ def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir
 
         io_function.save_text_to_file(done_indicator, f'Complete extracting sub-images at {datetime.now()}')
 
+    if b_get_subImg_only:
+        print(print(datetime.now(), f'Only getting sub-images {b_get_subImg_only}, skip getting polygons and organize into h3 folders'))
+        return
 
     shp_gpd_dict = {}
     for set_name in mapping_shp_raster_dict.keys():
@@ -385,11 +389,14 @@ def main(options, args):
     out_dir = options.out_dir
     buffer_size= options.buffer_size
     process_num= options.process_num
+    b_extract_subImg_only = options.b_extract_subImg_only
 
     mapping_res_ini = options.mapping_res_ini
     if mapping_res_ini is None:
         print('Please set "--mapping_res_ini"')
         return
+
+    print('b_extract_subImg_only:', b_extract_subImg_only)
 
     t0 = time.time()
     grid_gpd = gpd.read_file(grid_path)
@@ -416,7 +423,8 @@ def main(options, args):
     if os.path.isdir(out_dir) is False:
         io_function.mkdir(out_dir)
 
-    obtain_multi_data(grid_gpd,grid_path, mapping_shp_raster_dict, out_dir, buffersize=buffer_size,process_num=process_num)
+    obtain_multi_data(grid_gpd,grid_path, mapping_shp_raster_dict, out_dir, buffersize=buffer_size,
+                      process_num=process_num,b_get_subImg_only=b_extract_subImg_only)
 
     png_dir = out_dir + '_png' #os.path.join(out_dir,'png')
     convert_2_web_format(out_dir, png_dir, b_rm_org_file=False)
@@ -447,6 +455,10 @@ if __name__ == '__main__':
     parser.add_option("-p", "--process_num",
                       action="store", dest="process_num",type=int, default=4,
                       help="the process number for extracting sub-images")
+
+    parser.add_option("-e", "--b_extract_subImg_only",
+                      action="store_true", dest="b_extract_subImg_only",default=False,
+                      help="if set, will only extract sub-images, not organizing them into h3 id folder and getting polygons")
 
     # parser.add_option("-b", "--using_bounding_box",
     #                   action="store_true", dest="using_bounding_box",default=False,
