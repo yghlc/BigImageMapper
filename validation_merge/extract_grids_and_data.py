@@ -35,6 +35,7 @@ import bim_utils
 from utility.rename_subImages import rename_sub_images
 
 from PIL import Image, ImageDraw, ImageFont
+from multiprocessing import Pool
 
 def get_mapping_shp_raster_dict(pre_names, mapping_res_ini):
     mapping_shp_raster_dict = {}
@@ -301,8 +302,57 @@ def save_multiple_png_to_gif(png_file_list, title_list, save_path='output.gif', 
     frames_p[0].save(save_path, save_all=True,append_images=frames_p[1:],duration=duration_ms,loop=0,optimize=False)
 
 
+def convert_2_web_format_one_h3_grid(h3_f,out_dir,b_rm_org_file):
 
-def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False):
+    h3_id = os.path.basename(h3_f)
+    h3_grid_ext = os.path.join(h3_f, 'h3_cell_' + h3_id + '.geojson')
+    h3_save_dir = os.path.join(out_dir, h3_id)
+    if os.path.isdir(h3_save_dir) is False:
+        io_function.mkdir(h3_save_dir)
+    tif_list = io_function.get_file_list_by_pattern(h3_f, '*.tif')
+    png_list = []
+    set_name_list = []
+    for tif in tif_list:
+        save_png_path = os.path.join(h3_save_dir, io_function.get_name_no_ext(tif) + '.png')
+        set_name = get_set_name_from_tif(tif, h3_id)
+        convert_tif_to_png(tif, save_png_path, set_name)
+        if os.path.isfile(save_png_path):
+            png_list.append(save_png_path)
+            set_name_list.append(set_name)
+
+        # convert the corresponding geojson
+        geojson_f = os.path.join(h3_f, f'{set_name}_{h3_id}.geojson')
+        if os.path.isfile(geojson_f):
+            geojson_f_save = os.path.join(h3_save_dir, os.path.basename(geojson_f))
+            convert_geojson_to_pixel_json(geojson_f, geojson_f_save, set_name, tif)
+            if b_rm_org_file:
+                io_function.delete_file_or_dir(geojson_f)
+
+        # convert h3 grid
+        h3_grid_ext_save = os.path.join(h3_save_dir,
+                                        os.path.basename(io_function.get_name_by_adding_tail(h3_grid_ext, set_name)))
+        convert_geojson_to_pixel_json(h3_grid_ext, h3_grid_ext_save, set_name, tif)
+
+        if b_rm_org_file:
+            io_function.delete_file_or_dir(tif)
+
+    # save multiple png files into a gif
+
+    gif_save_path_l7 = os.path.join(h3_save_dir, 'xGIF_' + 'id' + h3_id + '.gif')
+    save_multiple_png_to_gif(png_list, set_name_list, save_path=gif_save_path_l7, start_str='l7_')  # select landsat7
+
+    gif_save_path_l8 = os.path.join(h3_save_dir, 'yGIF_' + 'id' + h3_id + '.gif')
+    save_multiple_png_to_gif(png_list, set_name_list, save_path=gif_save_path_l8, start_str='l8_')  # select landsat8
+
+    # put "z_", making sure it on the left most after sorting
+    gif_save_path_s2 = os.path.join(h3_save_dir, 'zGIF_' + 'id' + h3_id + '.gif')
+    save_multiple_png_to_gif(png_list, set_name_list, save_path=gif_save_path_s2,
+                             start_str='s2_')  # all s2 image, not including s2nir
+
+    if b_rm_org_file:
+        io_function.delete_file_or_dir(h3_grid_ext)
+
+def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False, process_num=1):
     h3_grid_folders = io_function.get_file_list_by_pattern(data_dir,'*')
     h3_grid_folders = [item for item in h3_grid_folders if len(os.path.basename(item))==15 ]
     if len(h3_grid_folders) < 1:
@@ -311,57 +361,19 @@ def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False):
     if os.path.isdir(out_dir) is False:
         io_function.mkdir(out_dir)
 
-    for idx, h3_f in enumerate(h3_grid_folders):
-        # print progress
-        if idx % 100 == 0:
-            print(datetime.now(),f'( {idx+1}/{len(h3_grid_folders)})Processing {h3_f}')
-
-        h3_id = os.path.basename(h3_f)
-        h3_grid_ext = os.path.join(h3_f,'h3_cell_'+h3_id+'.geojson')
-        h3_save_dir = os.path.join(out_dir,h3_id)
-        if os.path.isdir(h3_save_dir) is False:
-            io_function.mkdir(h3_save_dir)
-        tif_list = io_function.get_file_list_by_pattern(h3_f,'*.tif')
-        png_list = []
-        set_name_list = []
-        for tif in tif_list:
-            save_png_path = os.path.join(h3_save_dir, io_function.get_name_no_ext(tif)+'.png')
-            set_name = get_set_name_from_tif(tif, h3_id)
-            convert_tif_to_png(tif,save_png_path,set_name)
-            if os.path.isfile(save_png_path):
-                png_list.append(save_png_path)
-                set_name_list.append(set_name)
-
-            # convert the corresponding geojson
-            geojson_f = os.path.join(h3_f,f'{set_name}_{h3_id}.geojson')
-            if os.path.isfile(geojson_f):
-                geojson_f_save = os.path.join(h3_save_dir, os.path.basename(geojson_f))
-                convert_geojson_to_pixel_json(geojson_f, geojson_f_save, set_name, tif)
-                if b_rm_org_file:
-                    io_function.delete_file_or_dir(geojson_f)
-
-            # convert h3 grid
-            h3_grid_ext_save =  os.path.join(h3_save_dir, os.path.basename(io_function.get_name_by_adding_tail(h3_grid_ext,set_name)))
-            convert_geojson_to_pixel_json(h3_grid_ext, h3_grid_ext_save,set_name ,tif)
-
-            if b_rm_org_file:
-                io_function.delete_file_or_dir(tif)
-
-        # save multiple png files into a gif
-
-        gif_save_path_l7 = os.path.join(h3_save_dir, 'xGIF_' + 'id' + h3_id + '.gif')
-        save_multiple_png_to_gif(png_list, set_name_list, save_path=gif_save_path_l7, start_str='l7_') # select landsat7
-
-        gif_save_path_l8 = os.path.join(h3_save_dir, 'yGIF_' + 'id' + h3_id + '.gif')
-        save_multiple_png_to_gif(png_list, set_name_list, save_path=gif_save_path_l8, start_str='l8_') # select landsat8
-
-        # put "z_", making sure it on the left most after sorting
-        gif_save_path_s2 = os.path.join(h3_save_dir,'zGIF_'+'id'+h3_id+'.gif')
-        save_multiple_png_to_gif(png_list, set_name_list,save_path=gif_save_path_s2,start_str='s2_') #all s2 image, not including s2nir
-
-
-        if b_rm_org_file:
-            io_function.delete_file_or_dir(h3_grid_ext)
+    if process_num == 1:
+        for idx, h3_f in enumerate(h3_grid_folders):
+            # print progress
+            if idx % 100 == 0:
+                print(datetime.now(),f'( {idx+1}/{len(h3_grid_folders)})Processing {h3_f}')
+            convert_2_web_format_one_h3_grid(h3_f, out_dir, b_rm_org_file)
+    elif process_num > 1:
+        theadPool = Pool(process_num)
+        parameters_list = [(h3_f, out_dir, b_rm_org_file) for idx, h3_f in enumerate(h3_grid_folders)]
+        results = theadPool.starmap(convert_2_web_format_one_h3_grid, parameters_list)
+        theadPool.close()
+    else:
+        raise ValueError(f'Invalid process_num: {process_num}')
 
 
 def test_convert_2_web_format():
@@ -427,7 +439,7 @@ def main(options, args):
                       process_num=process_num,b_get_subImg_only=b_extract_subImg_only)
 
     png_dir = out_dir + '_png' #os.path.join(out_dir,'png')
-    convert_2_web_format(out_dir, png_dir, b_rm_org_file=False)
+    convert_2_web_format(out_dir, png_dir, b_rm_org_file=False,process_num=process_num)
 
 
 
