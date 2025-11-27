@@ -349,6 +349,11 @@ def convert_2_web_format_one_h3_grid(h3_f,out_dir,b_rm_org_file):
     save_multiple_png_to_gif(png_list, set_name_list, save_path=gif_save_path_s2,
                              start_str='s2_')  # all s2 image, not including s2nir
 
+    # put "zn_", making sure it on the left most after sorting
+    gif_save_path_s2 = os.path.join(h3_save_dir, 'znGIF_' + 'id' + h3_id + '.gif')
+    save_multiple_png_to_gif(png_list, set_name_list, save_path=gif_save_path_s2,
+                             start_str='s2nir_')    # for s2nir, near-infrared
+
     if b_rm_org_file:
         io_function.delete_file_or_dir(h3_grid_ext)
 
