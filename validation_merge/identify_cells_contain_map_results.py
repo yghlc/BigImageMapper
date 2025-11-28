@@ -261,7 +261,7 @@ def prepare_training_data(grid_gpd, validate_res_dict,feature_pre_names,id_col):
 def test_load_training_data_from_validate_jsons():
     data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/select_by_s2_result_png')
     json_list = io_function.get_file_list_by_pattern(data_dir,'*/validated*.json')
-    load_training_data_from_validate_jsons(json_list)
+    load_training_data_from_validate_jsons(json_list, save_path='test_valid_res_dict.json')
     pass
 
 def train_randomforest_with_hyperpara_search(X, y, out_json_path="rf_hyperparam_search_results.json"):
@@ -468,7 +468,9 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
         grid_gpd['s2_occur'] = count_array_2d_binary_sum
         grid_gpd['s2_area_trend'] = trends
 
-    validate_res_dict = load_training_data_from_validate_jsons(validate_json_list)
+    save_file_basename = os.path.basename(save_path)
+    validate_json_list_file = save_file_basename + '_valid_res_dict.json'
+    validate_res_dict = load_training_data_from_validate_jsons(validate_json_list, save_path=validate_json_list_file)
     if len(validate_res_dict) < 10:
         raise ValueError(f'Only {len(validate_res_dict)} labeled samples, not enough to train a model')
 
@@ -477,20 +479,21 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
     basic.outputlogMessage('completed: preparing training data')
 
     # 3) Train model (Random Forest preferred)
-    rf, cv_f1_mean = train_randomforest_with_hyperpara_search(X,y)
+    rf_hp_search_save_path = save_file_basename + "_rf_hyperparam_search_results.json"
+    rf, cv_f1_mean = train_randomforest_with_hyperpara_search(X,y,out_json_path=rf_hp_search_save_path)
     basic.outputlogMessage('completed: training with hyper-parameters searching')
 
     ############ checking the importance of each feature #########
     # 1) Impurity-based
     impurity_rank = rf_feature_importance(rf, feature_cols, top_k=20)
-    io_function.save_dict_to_txt_json('feature_importance_rank_impurity.json',impurity_rank)
+    io_function.save_dict_to_txt_json(save_file_basename+'_feature_importance_rank_impurity.json',impurity_rank)
     # 2) Permutation-based (slower)
     perm_rank = rf_permutation_importance(rf, X, y, feature_cols, n_repeats=10)
-    io_function.save_dict_to_txt_json('feature_importance_rank_permutation.json', perm_rank)
+    io_function.save_dict_to_txt_json(save_file_basename+'_feature_importance_rank_permutation.json', perm_rank)
     # 3) SHAP-based (slower)
     shap_rank = rf_shap_importance(rf, X, feature_cols,sample_size=5000)
     # print(shap_rank)
-    io_function.save_dict_to_txt_json('feature_importance_rank_shap.json', shap_rank)
+    io_function.save_dict_to_txt_json(save_file_basename+'_feature_importance_rank_shap.json', shap_rank)
     basic.outputlogMessage('completed: sorting feature importance')
     ######################################################################
 
@@ -506,7 +509,7 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
         "model_type": "RandomForestClassifier",
         "cv_f1_mean": cv_f1_mean,
     }
-    io_function.save_dict_to_txt_json('random_forest_info.json', info)
+    io_function.save_dict_to_txt_json(save_file_basename+'_random_forest_info.json', info)
 
     # save to file
     threoshold_list = [proba_thr] if isinstance(proba_thr,float) else proba_thr
@@ -530,7 +533,8 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
 
 
 
-def identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir=None, method='s2_area_count'):
+def identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir=None,
+                            train_file_pattern='*/validated*.json', method='s2_area_count'):
 
     if method.lower() == 's2_area_count':
         # select based on sentinel-2
@@ -546,7 +550,7 @@ def identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir=None
     elif method.lower() == 'random_forest':
         if train_data_dir is None:
             raise ValueError("train_data_dir is not set")
-        validate_json_list = io_function.get_file_list_by_pattern(train_data_dir,'*/validated*.json')
+        validate_json_list = io_function.get_file_list_by_pattern(train_data_dir,train_file_pattern)
         if len(validate_json_list) < 1:
             raise ValueError(f'No validated*.json files in {train_data_dir}')
         basic.outputlogMessage(f'Found {len(validate_json_list)} validated*.json files in {train_data_dir}')
@@ -602,7 +606,12 @@ if __name__ == '__main__':
 
     parser.add_option("-d", "--train_data_dir",
                       action="store", dest="train_data_dir",
-                      help="the the folder containing the */validated*.json ")
+                      help="the the folder containing the validated*.json, specific as follows ")
+
+    parser.add_option("-p", "--train_file_pattern",
+                      action="store", dest="train_file_pattern", default="8*/validated*.json",
+                      help="the train file patterns ")
+
 
 # train_data_dir
 
