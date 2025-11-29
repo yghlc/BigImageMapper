@@ -468,7 +468,7 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
         grid_gpd['s2_occur'] = count_array_2d_binary_sum
         grid_gpd['s2_area_trend'] = trends
 
-    save_file_basename = os.path.basename(save_path)
+    save_file_basename = io_function.get_name_no_ext(save_path)
     validate_json_list_file = save_file_basename + '_valid_res_dict.json'
     validate_res_dict = load_training_data_from_validate_jsons(validate_json_list, save_path=validate_json_list_file)
     if len(validate_res_dict) < 10:
