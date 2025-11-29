@@ -26,6 +26,7 @@ from datetime import datetime
 import geopandas as gpd
 from collections import Counter
 import csv
+import itertools
 
 def read_numpy_from_file(npy_file_list,col_name):
     for npy in npy_file_list:
@@ -159,6 +160,48 @@ def merge_validation_from_users(validate_json_list,save_path="valid_res_dict.jso
     io_function.save_dict_to_txt_json(save_path,valid_res_dict)
     return valid_res_dict
 
+
+def analyze_disagree_user_input(disagree_user_input_dict,output_csv="disagreement_matrix.csv"):
+    # Step 1: Gather all users
+    users = set()
+    for h3, cat_dict in disagree_user_input_dict.items():
+        for cat, user_list in cat_dict.items():
+            for user_dict in user_list:
+                users.update(user_dict.keys())
+    users = sorted(users)
+
+    # Step 2: Initialize disagreement matrix
+    disagree_matrix = {u1: {u2: 0 for u2 in users} for u1 in users}
+
+    # Step 3: For each h3_id, check user category assignments
+    for h3, cat_dict in disagree_user_input_dict.items():
+        user2cat = {}
+        for cat, user_list in cat_dict.items():
+            for user_dict in user_list:
+                for user in user_dict:
+                    user2cat[user] = cat
+        # Compare each pair of users
+        for u1, u2 in itertools.combinations(user2cat.keys(), 2):
+            if user2cat[u1] != user2cat[u2]:
+                disagree_matrix[u1][u2] += 1
+                disagree_matrix[u2][u1] += 1  # symmetric
+
+    # Step 4: Write to CSV
+    with open(output_csv, "w", newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        header = ["User"] + users
+        writer.writerow(header)
+        for u1 in users:
+            row = [u1] + [disagree_matrix[u1][u2] for u2 in users]
+            writer.writerow(row)
+
+    print(f"Disagreement matrix saved to '{output_csv}'")
+
+    # Optionally, return the matrix for further use
+    return disagree_matrix
+
+
+
 def merge_validation_from_users_weight(validate_json_list,user_weight='valid_user_weight.csv', save_path="valid_res_dict.json"):
     valid_res_dict = {}
     if os.path.isfile(user_weight) is False:
@@ -167,6 +210,7 @@ def merge_validation_from_users_weight(validate_json_list,user_weight='valid_use
     # read user weight
     user_weight_dict = {}
     all_user_input_dict = {}
+    disagree_user_input_dict = {}
     with open(user_weight, mode='r', encoding='utf-8-sig') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -202,6 +246,8 @@ def merge_validation_from_users_weight(validate_json_list,user_weight='valid_use
                     max_val_weight = val_sum_weight
                     value = val_key
             valid_res_dict[h3_id] =  value
+            basic.outputlogMessage(f'Warning, {h3_id} contain disagreement inputs from different users ')
+            disagree_user_input_dict[h3_id] = user_input_dict
         else:
             raise ValueError(f'No validation results in {v_file}')
 
@@ -210,6 +256,10 @@ def merge_validation_from_users_weight(validate_json_list,user_weight='valid_use
     io_function.save_dict_to_txt_json(save_path,valid_res_dict)
     all_user_input_dict_save = io_function.get_name_by_adding_tail(save_path,'allUsersInput')
     io_function.save_dict_to_txt_json(all_user_input_dict_save,all_user_input_dict)
+    disagree_user_input_dict_save = io_function.get_name_by_adding_tail(save_path,'disagreeUsersInput')
+    io_function.save_dict_to_txt_json(disagree_user_input_dict_save,disagree_user_input_dict)
+    analyze_disagree_user_input(disagree_user_input_dict)
+
     return valid_res_dict
 
 def load_training_data_from_validate_jsons(validate_json_list,save_path="valid_res_dict.json"):
