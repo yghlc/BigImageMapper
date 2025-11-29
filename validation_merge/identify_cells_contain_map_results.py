@@ -566,6 +566,7 @@ def main(options, args):
     save_path = options.save_path
     train_data_dir = options.train_data_dir
     method = options.method
+    train_file_pattern = options.train_file_pattern
 
 
     t0 = time.time()
@@ -574,7 +575,7 @@ def main(options, args):
     print(f'Loaded grid vector file, containing {len(grid_gpd)} cells, {len(grid_gpd.columns)} columns, cost {t1-t0} seconds')
     print('column names:', grid_gpd.columns.to_list())
 
-    identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir, method)
+    identify_cells_contain_true_results(grid_gpd, save_path, train_data_dir=train_data_dir, train_file_pattern=train_file_pattern,method=method)
 
 
 
