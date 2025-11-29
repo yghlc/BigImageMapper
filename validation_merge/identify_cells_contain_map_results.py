@@ -25,6 +25,7 @@ from datetime import datetime
 
 import geopandas as gpd
 from collections import Counter
+import csv
 
 def read_numpy_from_file(npy_file_list,col_name):
     for npy in npy_file_list:
@@ -127,7 +128,7 @@ def test_find_grid_base_on_DEM_results():
     find_grid_base_on_DEM_results(None, npy_file_list=npy_file_list)
 
 
-def load_training_data_from_validate_jsons(validate_json_list,save_path="valid_res_dict.json"):
+def merge_validation_from_users(validate_json_list,save_path="valid_res_dict.json"):
     valid_res_dict = {}
     for v_file in validate_json_list:
         data_dict = io_function.read_dict_from_txt_json(v_file)
@@ -156,6 +157,66 @@ def load_training_data_from_validate_jsons(validate_json_list,save_path="valid_r
             raise ValueError(f'No validation results in {v_file}')
 
     io_function.save_dict_to_txt_json(save_path,valid_res_dict)
+    return valid_res_dict
+
+def merge_validation_from_users_weight(validate_json_list,user_weight='valid_user_weight.csv', save_path="valid_res_dict.json"):
+    valid_res_dict = {}
+    if os.path.isfile(user_weight) is False:
+        raise IOError(f'{user_weight} not exists')
+
+    # read user weight
+    user_weight_dict = {}
+    all_user_input_dict = {}
+    with open(user_weight, mode='r', encoding='utf-8-sig') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # print(row)
+            user_weight_dict[row['user_name']] = float(row['weight'])
+
+    io_function.save_dict_to_txt_json(io_function.get_name_no_ext(user_weight)+'.json', user_weight_dict)
+    # print(user_weight_dict)
+    # sys.exit(0)
+
+
+    for v_file in validate_json_list:
+        data_dict = io_function.read_dict_from_txt_json(v_file)
+        user_input_dict = {}
+        h3_id = data_dict['h3ID']
+        for key in data_dict.keys():    # key is the user_name
+            if key == "h3ID":
+                continue
+            user_input_dict.setdefault(data_dict[key]['ValidateResult'],[]).append({key:user_weight_dict[key]})
+
+        # print(user_input_dict)
+        # print(len(user_input_dict))
+
+        if len(user_input_dict) == 1:
+            valid_res_dict[h3_id] = list(user_input_dict.keys())[0] # if only one results, or multple result but agree, then
+        elif len(user_input_dict) > 1:
+            # calculate the result based on weight
+            max_val_weight = 0
+            value = 'TP'
+            for val_key in user_input_dict:
+                val_sum_weight = sum([ list(i_dict.values())[0] for i_dict in user_input_dict[val_key]])
+                if val_sum_weight > max_val_weight:
+                    max_val_weight = val_sum_weight
+                    value = val_key
+            valid_res_dict[h3_id] =  value
+        else:
+            raise ValueError(f'No validation results in {v_file}')
+
+        all_user_input_dict[h3_id] = user_input_dict
+
+    io_function.save_dict_to_txt_json(save_path,valid_res_dict)
+    all_user_input_dict_save = io_function.get_name_by_adding_tail(save_path,'allUsersInput')
+    io_function.save_dict_to_txt_json(all_user_input_dict_save,all_user_input_dict)
+    return valid_res_dict
+
+def load_training_data_from_validate_jsons(validate_json_list,save_path="valid_res_dict.json"):
+
+    # merge validation results from different user by rules
+    # valid_res_dict = merge_validation_from_users(validate_json_list,save_path=save_path)
+    valid_res_dict = merge_validation_from_users_weight(validate_json_list,save_path=save_path)
 
     # only keep TP and FP, and convert them into 1 and 0
     valid_res_dict_int_labels = {}
@@ -259,9 +320,14 @@ def prepare_training_data(grid_gpd, validate_res_dict,feature_pre_names,id_col):
 
 
 def test_load_training_data_from_validate_jsons():
-    data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/select_by_s2_result_png')
-    json_list = io_function.get_file_list_by_pattern(data_dir,'*/validated*.json')
-    load_training_data_from_validate_jsons(json_list, save_path='test_valid_res_dict.json')
+    # data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/select_by_s2_result_png')
+    # json_list = io_function.get_file_list_by_pattern(data_dir,'*/validated*.json')
+
+    data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/validated_json/valid_json_files_20251128')
+    json_list = io_function.get_file_list_by_pattern(data_dir,'validated_*.json')
+
+    save_valid_res_dict = 'test_valid_res_dict.json'
+    load_training_data_from_validate_jsons(json_list, save_path=save_valid_res_dict)
     pass
 
 def train_randomforest_with_hyperpara_search(X, y, out_json_path="rf_hyperparam_search_results.json"):
@@ -586,8 +652,8 @@ if __name__ == '__main__':
 
     # test_find_grid_base_on_s2_results()
     # test_find_grid_base_on_DEM_results()
-    # test_load_training_data_from_validate_jsons()
-    # sys.exit(0)
+    test_load_training_data_from_validate_jsons()
+    sys.exit(0)
 
     usage = "usage: %prog [options] grid_vector "
     parser = OptionParser(usage=usage, version="1.0 2025-9-4")
