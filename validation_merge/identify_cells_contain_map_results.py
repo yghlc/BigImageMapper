@@ -258,7 +258,9 @@ def merge_validation_from_users_weight(validate_json_list,user_weight='valid_use
     io_function.save_dict_to_txt_json(all_user_input_dict_save,all_user_input_dict)
     disagree_user_input_dict_save = io_function.get_name_by_adding_tail(save_path,'disagreeUsersInput')
     io_function.save_dict_to_txt_json(disagree_user_input_dict_save,disagree_user_input_dict)
-    analyze_disagree_user_input(disagree_user_input_dict)
+    disagree_save = io_function.get_name_by_adding_tail(save_path,'disagreeMatrix')
+    disagree_save = disagree_save.replace('.json','.csv')
+    analyze_disagree_user_input(disagree_user_input_dict, output_csv=disagree_save)
 
     return valid_res_dict
 
@@ -702,8 +704,8 @@ if __name__ == '__main__':
 
     # test_find_grid_base_on_s2_results()
     # test_find_grid_base_on_DEM_results()
-    test_load_training_data_from_validate_jsons()
-    sys.exit(0)
+    # test_load_training_data_from_validate_jsons()
+    # sys.exit(0)
 
     usage = "usage: %prog [options] grid_vector "
     parser = OptionParser(usage=usage, version="1.0 2025-9-4")
