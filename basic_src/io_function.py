@@ -724,9 +724,13 @@ def write_metadata(key, value, filename=None):
     save_dict_to_txt_json(filename,meta_dict)
 
 def create_soft_link(src, dst):
-    # print(os.path.exists(dst))
-    # print(os.path.islink(dst))
-    abs_src = os.path.abspath(src)
+    # Resolve src if it is a symlink
+    if os.path.islink(src):
+        # Follow the symlink to its final target
+        abs_src = os.path.realpath(src)
+        # print(f'Source {src} is a symlink, resolving to {abs_src}')
+    else:
+        abs_src = os.path.abspath(src)
     if os.path.exists(dst):
         print(f'Warning: {dst} exists, skipping')
         return
