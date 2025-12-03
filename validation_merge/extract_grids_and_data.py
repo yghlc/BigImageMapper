@@ -401,12 +401,51 @@ def test_save_multiple_png_to_gif():
 
     save_multiple_png_to_gif(png_list,title_list,save_path='output.gif', start_str=start_str)
 
+
+def avoid_extracting_sub_images_json(out_dir,existing_dir,grid_path):
+    if existing_dir is None:
+        return None
+    if os.path.isdir(out_dir) is False:
+        io_function.mkdir(out_dir)
+
+    # print(existing_dir)
+
+    grid_gpd = gpd.read_file(grid_path)
+    h3_id_list = grid_gpd['h3_id_8']
+    index_new = []
+    for idx, h3_id in enumerate(h3_id_list):
+        h3_folder_old = os.path.join(existing_dir, h3_id)
+        h3_folder_new = os.path.join(out_dir, h3_id)
+        if os.path.isdir(h3_folder_old):
+            # create a soft link
+            io_function.create_soft_link(h3_folder_old,h3_folder_new)
+        else:
+            index_new.append(idx)
+
+    existing_count = len(h3_id_list) - len(index_new)
+    basic.outputlogMessage(f'In total {len(h3_id_list)} h3 folders, {existing_count} exists, will extract {len(index_new)} ones')
+
+    if len(index_new) == len(h3_id_list):
+        # all are new, do nothing
+        return None
+    elif len(index_new) > 0:
+        # save
+        new_grid_path = os.path.join(out_dir, os.path.basename(io_function.get_name_by_adding_tail(grid_path,'new')))
+        v_format = vector_gpd.guess_file_format_extension(new_grid_path)
+        vector_gpd.save_shapefile_subset_as(index_new,grid_gpd,new_grid_path,format=v_format)
+        return new_grid_path
+    else:
+        # len(index_new)  == 0
+        basic.outputlogMessage(f'All h3 folder already exists')
+        sys.exit(0)
+
 def main(options, args):
     grid_path = args[0]
     out_dir = options.out_dir
     buffer_size= options.buffer_size
     process_num= options.process_num
     b_extract_subImg_only = options.b_extract_subImg_only
+    existing_dir = options.existing_dir
 
     mapping_res_ini = options.mapping_res_ini
     if mapping_res_ini is None:
@@ -414,6 +453,12 @@ def main(options, args):
         return
 
     print('b_extract_subImg_only:', b_extract_subImg_only)
+
+    check_res = avoid_extracting_sub_images_json(out_dir,existing_dir,grid_path)
+    if check_res is not None:
+        print(f'use the new grid vector: {check_res}')
+        grid_path = check_res
+    # sys.exit(0) # for testing
 
     t0 = time.time()
     grid_gpd = gpd.read_file(grid_path)
@@ -476,6 +521,11 @@ if __name__ == '__main__':
     parser.add_option("-e", "--b_extract_subImg_only",
                       action="store_true", dest="b_extract_subImg_only",default=False,
                       help="if set, will only extract sub-images, not organizing them into h3 id folder and getting polygons")
+
+    parser.add_option("", "--existing_dir",
+                      action="store", dest="existing_dir",
+                      help="the directory containing existing h3 folder (sub-images and jsonf files inside). "
+                           "To avoid exacting the same sub-images and json files, just create a soft-link in the out_dir ")
 
     # parser.add_option("-b", "--using_bounding_box",
     #                   action="store_true", dest="using_bounding_box",default=False,
