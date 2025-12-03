@@ -12,7 +12,6 @@ import os,sys
 import time
 from optparse import OptionParser
 
-from numpy.ma.core import ravel
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
