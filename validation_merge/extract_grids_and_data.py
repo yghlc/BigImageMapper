@@ -365,25 +365,30 @@ def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False, process_num=1, 
     if os.path.isdir(out_dir) is False:
         io_function.mkdir(out_dir)
 
-    if existing_dir is not None:
-        if os.path.isdir(existing_dir) is False:
-            raise IOError(f'{existing_dir} not existing')
-        h3_grid_folders_new_list = []
-        existing_count = 0
-        for idx, h3_f in enumerate(h3_grid_folders):
-            h3_id = os.path.basename(h3_f)
-            h3_folder_old = os.path.join(existing_dir, h3_id)
-            h3_folder_new = os.path.join(out_dir, h3_id)
-            if os.path.isdir(h3_folder_old):
-                # create a soft link
-                io_function.create_soft_link(h3_folder_old, h3_folder_new)
-                existing_count += 1
-            else:
-                h3_grid_folders_new_list.append(h3_f)
+    # # create soft link, but Django cannot get file outside "MEDIA_ROOT", so cancel
+    # if existing_dir is not None:
+    #     if os.path.isdir(existing_dir) is False:
+    #         raise IOError(f'{existing_dir} not existing')
+    #     h3_grid_folders_new_list = []
+    #     existing_count = 0
+    #     for idx, h3_f in enumerate(h3_grid_folders):
+    #         h3_id = os.path.basename(h3_f)
+    #         h3_folder_old = os.path.join(existing_dir, h3_id)
+    #         h3_folder_new = os.path.join(out_dir, h3_id)
+    #         if os.path.isdir(h3_folder_old):
+    #             # create a soft link
+    #             io_function.create_soft_link(h3_folder_old, h3_folder_new)
+    #             existing_count += 1
+    #         else:
+    #             h3_grid_folders_new_list.append(h3_f)
+    #
+    #     basic.outputlogMessage(f'In total {len(h3_grid_folders)} h3 folders, {existing_count} exists, '
+    #                            f'will convert {len(h3_grid_folders_new_list)} ones')
+    #     h3_grid_folders = h3_grid_folders_new_list
 
-        basic.outputlogMessage(f'In total {len(h3_grid_folders)} h3 folders, {existing_count} exists, '
-                               f'will convert {len(h3_grid_folders_new_list)} ones')
-        h3_grid_folders = h3_grid_folders_new_list
+    # copy existing png files, to save time for converting png ???  copy the entire folder is complicated
+
+
 
 
     if process_num == 1:
