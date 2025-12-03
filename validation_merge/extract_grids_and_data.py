@@ -432,7 +432,7 @@ def avoid_extracting_sub_images_json(out_dir,existing_dir,grid_path):
         # save
         new_grid_path = os.path.join(out_dir, os.path.basename(io_function.get_name_by_adding_tail(grid_path,'new')))
         v_format = vector_gpd.guess_file_format_extension(new_grid_path)
-        vector_gpd.save_shapefile_subset_as(index_new,grid_gpd,new_grid_path,format=v_format)
+        vector_gpd.save_shapefile_subset_as(index_new,grid_path,new_grid_path,format=v_format)
         return new_grid_path
     else:
         # len(index_new)  == 0
