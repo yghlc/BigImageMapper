@@ -12,7 +12,7 @@ import os,sys
 import time
 from optparse import OptionParser
 
-
+from numpy.ma.core import ravel
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
@@ -357,7 +357,7 @@ def convert_2_web_format_one_h3_grid(h3_f,out_dir,b_rm_org_file):
     if b_rm_org_file:
         io_function.delete_file_or_dir(h3_grid_ext)
 
-def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False, process_num=1):
+def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False, process_num=1, existing_dir=None):
     h3_grid_folders = io_function.get_file_list_by_pattern(data_dir,'*')
     h3_grid_folders = [item for item in h3_grid_folders if len(os.path.basename(item))==15 ]
     if len(h3_grid_folders) < 1:
@@ -365,6 +365,27 @@ def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False, process_num=1):
 
     if os.path.isdir(out_dir) is False:
         io_function.mkdir(out_dir)
+
+    if existing_dir is not None:
+        if os.path.isdir(existing_dir) is False:
+            raise IOError(f'{existing_dir} not existing')
+        h3_grid_folders_new_list = []
+        existing_count = 0
+        for idx, h3_f in enumerate(h3_grid_folders):
+            h3_id = os.path.basename(h3_f)
+            h3_folder_old = os.path.join(existing_dir, h3_id)
+            h3_folder_new = os.path.join(out_dir, h3_id)
+            if os.path.isdir(h3_folder_old):
+                # create a soft link
+                io_function.create_soft_link(h3_folder_old, h3_folder_new)
+                existing_count += 1
+            else:
+                h3_grid_folders_new_list.append(h3_f)
+
+        basic.outputlogMessage(f'In total {len(h3_grid_folders)} h3 folders, {existing_count} exists, '
+                               f'will convert {len(h3_grid_folders_new_list)} ones')
+        h3_grid_folders = h3_grid_folders_new_list
+
 
     if process_num == 1:
         for idx, h3_f in enumerate(h3_grid_folders):
@@ -489,7 +510,8 @@ def main(options, args):
                       process_num=process_num,b_get_subImg_only=b_extract_subImg_only)
 
     png_dir = out_dir + '_png' #os.path.join(out_dir,'png')
-    convert_2_web_format(out_dir, png_dir, b_rm_org_file=False,process_num=process_num)
+    png_existing_dir = existing_dir + '_png' if existing_dir is not None else None
+    convert_2_web_format(out_dir, png_dir, b_rm_org_file=False,process_num=process_num,existing_dir=png_existing_dir)
 
 
 
