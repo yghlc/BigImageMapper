@@ -377,7 +377,7 @@ def add_columns_to_vector_files(vector_file, in_npy_list):
         if vector_gpd.is_field_name_in_shp(vector_file, column_name):
             basic.outputlogMessage(f'warning, {column_name} already in the vector file, will replace original values')
         np_array = np.load(npy)
-        print('np_array info', np_array.shape, np_array.dtype)
+        print('np_array shape and dtype:', np_array.shape, np_array.dtype)
         if len(np_array )!= len(data_gpd):
             raise ValueError('the count in numpy array is differnt from these in the datafraome')
         # add the np_array to the data_gpd as a column
@@ -413,7 +413,7 @@ def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
                 basic.outputlogMessage(f'warning, {column_name} already in the vector file, will replace original values')
 
             np_array = np.load(npy)
-            print('np_array info', np_array.shape, np_array.dtype)
+            print('np_array shape and dtype:', np_array.shape, np_array.dtype)
             if len(np_array) != len(data_gpd):
                 raise ValueError('the count in numpy array is different from these in the dataframe')
             # add the np_array to the data_gpd as a column
@@ -431,7 +431,24 @@ def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
             column_values = np.array(data_gpd[column_name])
             np.save(f"{column_name}.npy", column_values)
 
+def sum_a_group_of_columns(grid_vector, col_name_prefix_list, suffix, save_path):
+    data_gpd = gpd.read_file(grid_vector)
+    sum_array = None
+    for col_name_p in col_name_prefix_list:
+        column_name = f"{col_name_p}_{suffix}"
+        if column_name not in data_gpd.columns:
+            raise ValueError(f'Column {column_name} not in {grid_vector}')
+        column_values = np.array(data_gpd[column_name])
+        if sum_array is None:
+            sum_array = column_values
+        else:
+            sum_array += column_values
 
+    # add the sum_array to data_gpd
+    sum_column_name = f"{suffix}_sum"
+    data_gpd[sum_column_name] = sum_array
+    data_gpd.to_file(save_path)
+    basic.outputlogMessage(f'saved summed column {sum_column_name} to {save_path}')
 
 
 def main(options, args):
@@ -477,6 +494,9 @@ def main(options, args):
             #                                        b_poly_bounds=b_using_bounding_box)
             calculate_poly_count_area_in_each_grid_parallel(grid_vector, in_poly_vector, save_path, column_pre_name=col_name,
                                                    b_poly_bounds=b_using_bounding_box,n_workers=process_num, b_save_numpy=b_save2numpy)
+        # sum all columns end with "_C"
+        sum_a_group_of_columns(grid_vector, list(in_vectors_colum_dict.keys()), 'C', save_path)
+
 
     # adding other attributes
     susceptibility = options.susceptibility
