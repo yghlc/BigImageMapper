@@ -84,10 +84,35 @@ def test_convert_h3_cells_to_lower_scale():
     convert_h3_cells_to_lower_scale(child_h3_cells_vector,child_res,parent_res, parent_h3_cells_vector)
 
 
-def main():
-    test_convert_h3_cells_to_lower_scale()
+def main(options, args):
+    # test_convert_h3_cells_to_lower_scale()
+    child_h3_cells_vector = args[0]     # high_res_cells
+    child_res = options.h3_high_res
+    parent_h3_cells_vector = args[1]    # low_res_cells
+    parent_res = options.h3_low_res
+
+    convert_h3_cells_to_lower_scale(child_h3_cells_vector, child_res, parent_res, parent_h3_cells_vector)
+
     pass
 
 
 if __name__ == '__main__':
-    main()
+    usage = "usage: %prog [options] high_res_cells  low_res_cells"
+    parser = OptionParser(usage=usage, version="1.0 2025-12-6")
+    parser.description = 'Introduction: convert h3 grid to lower resolution for analysis'
+
+    parser.add_option("-h", "--h3_high_res",
+                      action="store", dest="h3_high_res", type=int,default=8,
+                      help="the resolution for the H3 grid cells at high resolution")
+
+    parser.add_option("-l", "--h3_low_res",
+                      action="store", dest="h3_low_res", type=int,default=3,
+                      help="the resolution for the H3 grid cells at low resolution")
+
+
+    (options, args) = parser.parse_args()
+    # if len(sys.argv) < 2:
+    #     parser.print_help()
+    #     sys.exit(2)
+
+    main(options, args)
