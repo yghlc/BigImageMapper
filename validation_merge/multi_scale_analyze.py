@@ -101,11 +101,11 @@ if __name__ == '__main__':
     parser = OptionParser(usage=usage, version="1.0 2025-12-6")
     parser.description = 'Introduction: convert h3 grid to lower resolution for analysis'
 
-    parser.add_option("-h", "--h3_high_res",
+    parser.add_option("", "--h3_high_res",
                       action="store", dest="h3_high_res", type=int,default=8,
                       help="the resolution for the H3 grid cells at high resolution")
 
-    parser.add_option("-l", "--h3_low_res",
+    parser.add_option("", "--h3_low_res",
                       action="store", dest="h3_low_res", type=int,default=3,
                       help="the resolution for the H3 grid cells at low resolution")
 
