@@ -29,6 +29,16 @@ def merge_attributes(child_cells_path,attribute_name,parent_child_idx):
     return parent_values
 
 
+def get_attribute_name_list(vector_path, attribute_suffix):
+    # using geopandas to read all column names
+    all_field_names = vector_gpd.read_attribute_name_list(vector_path)
+
+    attribute_name_list = []
+    for field in all_field_names:
+        if field.endswith(attribute_suffix):
+            attribute_name_list.append(field)
+    return attribute_name_list
+
 def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_cells):
 
     # link parent to children
@@ -54,7 +64,9 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
     io_function.save_dict_to_txt_json('parent_child_idx_dict.txt',parent_child_idx)
 
     # add attributes
-    attribute_name_list = ['comImg_C', 's2_occur']
+    # attribute_name_list = ['comImg_C', 's2_occur']
+    endwiths_suffix = ('_C','_A')
+    attribute_name_list = get_attribute_name_list(in_h3_cells,endwiths_suffix)
     add_attributes = {}
     for att in attribute_name_list:
         values = merge_attributes(in_h3_cells,att,parent_child_idx)

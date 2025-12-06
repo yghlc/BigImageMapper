@@ -365,6 +365,16 @@ def is_field_name_in_shp(polygon_shp, field_name):
     # else:
     #     return False
 
+def read_attribute_name_list(polygon_shp):
+    '''
+    read all attribute names from a shapefile
+    :param polygon_shp:
+    :return: a list of attribute names
+    '''
+    # using finoa is much faster than geopanda when the file is large
+    with fiona.open(polygon_shp) as src:
+        return list(src.schema['properties'].keys())    
+
 
 def read_polygons_attributes_list(polygon_shp, field_nameS, b_fix_invalid_polygon = True):
     '''
