@@ -16,9 +16,12 @@ deeplabforRS =  os.path.expanduser('~/codes/PycharmProjects/DeeplabforRS')
 sys.path.insert(0, deeplabforRS)
 import basic_src.io_function as io_function
 
-import vector_gpd
-
 import h3
+
+import pandas as pd
+import geopandas as gpd
+import vector_gpd
+import geo_index_h3 as geo_h3
 
 def merge_attributes(child_cells_path,attribute_name,parent_child_idx):
     child_values = vector_gpd.read_attribute_values_list(child_cells_path,attribute_name)
@@ -49,19 +52,46 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
 
     # initiate the dict using h3_id_parent_list
     parent_child_idx = {}
+    parent_child_h3_ids = {}
     for h3_id in h3_id_parent_list:
         parent_child_idx[h3_id] = []
+        parent_child_h3_ids[h3_id] = []
+
+    new_parent_ids = []
 
     for idx, child_id in enumerate(h3_id_child_list):
         parent_id = h3.cell_to_parent(child_id,lower_res)
         if parent_id in parent_child_idx.keys():
             parent_child_idx[parent_id].append(idx)
+            parent_child_h3_ids[parent_id].append(child_id)
             # print(parent_id)
         else:
-            print(f'warning, {parent_id} is not in the original parent id list')
-            pass
+            print(f'warning, {parent_id} is not in the original parent id list, will create it')
+            parent_child_idx[parent_id] = []
+            parent_child_idx[parent_id].append(idx)
+            new_parent_ids.append(parent_id)
+            parent_child_h3_ids[parent_id] = []
+            parent_child_h3_ids[parent_id].append(child_id)
 
     io_function.save_dict_to_txt_json('parent_child_idx_dict.txt',parent_child_idx)
+    io_function.save_dict_to_txt_json('parent_child_h3_ids_dict.txt',parent_child_h3_ids)
+
+    # create a new file if there are new parent ids
+    if len(new_parent_ids) >0:
+        lower_h3_cells_new = io_function.get_name_by_adding_tail(lower_h3_cells,'new')
+        print(f'warning adding {len(new_parent_ids)} new parent h3 cells and save to {lower_h3_cells_new}')
+
+        original_lower_cells_gpd = gpd.read_file(lower_h3_cells)  
+        epsg_str = original_lower_cells_gpd.crs                 # to check 'EPSG:4326'
+        print(f'original lower cells crs: {epsg_str}')
+
+        new_cells_gpd = geo_h3.get_polygon_of_h3_cell(new_parent_ids, map_prj=epsg_str,h3_id_col_name=f'h3_id_{lower_res}')
+        
+        # merge original and new
+        merged_gpd = gpd.GeoDataFrame(pd.concat([original_lower_cells_gpd, new_cells_gpd], ignore_index=True))
+        merged_gpd.to_file(lower_h3_cells_new, driver=vector_gpd.guess_file_format_extension(lower_h3_cells_new))
+
+        lower_h3_cells = lower_h3_cells_new
 
     # add attributes
     # attribute_name_list = ['comImg_C', 's2_occur']
