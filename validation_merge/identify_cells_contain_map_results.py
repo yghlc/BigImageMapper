@@ -280,7 +280,7 @@ def load_training_data_from_validate_jsons(validate_json_list,save_path="valid_r
         else:
             pass
 
-    return valid_res_dict_int_labels
+    return valid_res_dict_int_labels, valid_res_dict
 
 def extract_columns_as_dict(grid_gpd):
 
@@ -588,7 +588,7 @@ def auto_find_positive_grids(grid_gpd,validate_json_list, save_path, proba_thr=0
 
     save_file_basename = io_function.get_name_no_ext(save_path)
     validate_json_list_file = save_file_basename + '_valid_res_dict.json'
-    validate_res_dict = load_training_data_from_validate_jsons(validate_json_list, save_path=validate_json_list_file)
+    validate_res_dict, _ = load_training_data_from_validate_jsons(validate_json_list, save_path=validate_json_list_file)
     if len(validate_res_dict) < 10:
         raise ValueError(f'Only {len(validate_res_dict)} labeled samples, not enough to train a model')
 
