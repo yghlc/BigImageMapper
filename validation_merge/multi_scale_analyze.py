@@ -95,7 +95,7 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
 
     # add attributes
     # attribute_name_list = ['comImg_C', 's2_occur']
-    endwiths_suffix = ('_C','_A')
+    endwiths_suffix = ('_C','_A','_sum')
     attribute_name_list = get_attribute_name_list(in_h3_cells,endwiths_suffix)
     add_attributes = {}
     for att in attribute_name_list:
