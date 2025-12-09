@@ -322,7 +322,7 @@ def main(options, args):
     else:
         print(f'No validation json files in the sub-folders of {val_result_dir}')
 
-    # copy pngs for checking and valiation
+    # copy pngs for checking and validation
     copy_png_files_for_checking(grid_path, val_result_dir)
 
 
