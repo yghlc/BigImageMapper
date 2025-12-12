@@ -30,8 +30,7 @@ from shapely.geometry import box
 from multiprocessing import Pool, cpu_count
 from functools import partial
 
-from datasets.raster_statistic import zonal_stats_multiRasters
-import datasets.raster_io as raster_io
+# import datasets.raster_io as raster_io
 
 import numpy as np
 
@@ -389,6 +388,8 @@ def add_columns_to_vector_files(vector_file, in_npy_list):
 
 def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
 
+    from datasets.raster_statistic import zonal_stats_multiRasters
+
     all_touched = True
     pre_name = 'susce' # rts_susceptibility_map
     stats_list = ['mean']
@@ -500,7 +501,8 @@ def main(options, args):
 
     # adding other attributes
     susceptibility = options.susceptibility
-    add_rts_susceptibility(susceptibility, grid_vector, process_num=process_num)
+    if susceptibility is not None:
+        add_rts_susceptibility(susceptibility, grid_vector, process_num=process_num)
 
 
 
