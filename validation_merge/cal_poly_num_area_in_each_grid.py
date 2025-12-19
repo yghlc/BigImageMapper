@@ -439,6 +439,11 @@ def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
             np.save(f"{column_name}.npy", column_values)
 
 def sum_a_group_of_columns(grid_vector, col_name_prefix_list, suffix, save_path):
+    sum_column_name = f"{suffix}_sum"
+    if vector_gpd.is_field_name_in_shp(grid_vector, sum_column_name):
+        print(f'Column {sum_column_name} already in {grid_vector}, skip calculating')
+        return
+
     data_gpd = gpd.read_file(grid_vector)
     sum_array = None
     exclude_list = [f'samE{item:02d}' for item in range(0,19)]
@@ -457,7 +462,6 @@ def sum_a_group_of_columns(grid_vector, col_name_prefix_list, suffix, save_path)
             sum_array += column_values
 
     # add the sum_array to data_gpd
-    sum_column_name = f"{suffix}_sum"
     data_gpd[sum_column_name] = sum_array
     data_gpd.to_file(save_path)
     basic.outputlogMessage(f'saved summed column {sum_column_name} to {save_path}')
