@@ -467,40 +467,64 @@ def sum_a_group_of_columns(grid_vector, col_name_prefix_list, suffix, save_path)
     basic.outputlogMessage(f'saved summed column {sum_column_name} to {save_path}')
 
 
-def add_permafrost_extent(permafrost_extent, grid_vector, process_num=8):
+def process_chunk(chunk,perma_gdf):
+    # Perform spatial join
+    joined = gpd.sjoin(chunk, perma_gdf[['geometry', 'GRIDCODE']], how='left', predicate='intersects')
+    # Get max GRIDCODE per grid cell
+    max_code = (
+        joined.groupby('grid_idx')['GRIDCODE']
+        .max()
+        .fillna(0)
+        .astype(int)
+        .reindex(chunk['grid_idx'])
+        .tolist()
+    )
+    return max_code
+
+def add_permafrost_extent(permafrost_extent, grid_vector, process_num=8, chunk_size=10000):
+    from concurrent.futures import ProcessPoolExecutor
+
     # check projection
     vec_prj = vector_gpd.get_projection(grid_vector)
     ext_prj = vector_gpd.get_projection(permafrost_extent)
     if vec_prj != ext_prj:
         raise ValueError(f'Map projection inconsistent between {grid_vector} and {permafrost_extent}')
 
-    h3_grids = vector_gpd.read_polygons_gpd(grid_vector, b_fix_invalid_polygon=False)
-    h3_grids_perm_ext = [0] * len(h3_grids)
-    # GRIDCODE: 1 is Isol, 2 is Spora, 3 is Discon, 4 is contin
-    perma_ext, ext_code = vector_gpd.read_polygons_attributes_list(permafrost_extent, 'GRIDCODE',
-                                                                   b_fix_invalid_polygon=True)
+    # Read permafrost polygons, ensure GeoDataFrame
+    perma_gdf, ext_code = vector_gpd.read_polygons_attributes_list(permafrost_extent, 'GRIDCODE', b_fix_invalid_polygon=True)
+    if not isinstance(perma_gdf, gpd.GeoDataFrame):
+        perma_gdf = gpd.GeoDataFrame({'geometry': perma_gdf, 'GRIDCODE': ext_code})
+    else:
+        perma_gdf['GRIDCODE'] = ext_code
 
-    # For efficiency, build GeoSeries
-    if not isinstance(h3_grids, gpd.GeoSeries):
-        h3_grids = gpd.GeoSeries(h3_grids)
-    if not isinstance(perma_ext, gpd.GeoSeries):
-        perma_ext = gpd.GeoSeries(perma_ext)
+    # Read grid polygons, ensure GeoDataFrame
+    grid_gdf = gpd.read_file(grid_vector, engine="pyogrio")
+    grid_gdf = grid_gdf.reset_index(drop=True)
+    grid_gdf['grid_idx'] = grid_gdf.index
 
-    # For each grid cell, check overlaps with permafrost polygons
-    for i, grid_poly in tqdm(enumerate(h3_grids), total=len(h3_grids), desc="Assigning permafrost extent"):
-        overlap_codes = []
-        for j, perma_poly in enumerate(perma_ext):
-            if grid_poly.intersects(perma_poly):
-                overlap_codes.append(ext_code[j])
-        if overlap_codes:
-            # Assign the *highest* code (most continuous permafrost)
-            h3_grids_perm_ext[i] = max(overlap_codes)
-        else:
-            # No permafrost
-            h3_grids_perm_ext[i] = 0
+    # Split grid into chunks
+    num_chunks = int(np.ceil(len(grid_gdf) / chunk_size))
+    chunks = [
+        grid_gdf.iloc[i * chunk_size: (i + 1) * chunk_size].copy()
+        for i in range(num_chunks)
+    ]
 
-    # add h3_grids_perm_ext to grid_vector
-    vector_gpd.add_attributes_to_shp(grid_vector,{'perm_ext':h3_grids_perm_ext},format='GPKG')
+    # Prepare arguments list for starmap
+    # Need to use a helper function to pass both chunk and perma_gdf
+    from functools import partial
+    process_func = partial(process_chunk, perma_gdf=perma_gdf)
+
+    # Run in parallel with progress bar
+    with ProcessPoolExecutor(max_workers=process_num) as executor:
+        results = []
+        for result in tqdm(executor.map(process_func, chunks), total=len(chunks), desc="Processing chunks"):
+            results.append(result)
+
+    # Flatten results
+    max_code = [item for sublist in results for item in sublist]
+
+    # Write back to shapefile/geopackage
+    vector_gpd.add_attributes_to_shp(grid_vector, {'perm_ext': max_code}, format='GPKG')
 
 
 
@@ -561,7 +585,7 @@ def main(options, args):
     perm_extent = options.perm_extent
     # add permafrost extent
     if perm_extent is not None:
-        add_permafrost_extent(perm_extent,grid_vector)
+        add_permafrost_extent(perm_extent,grid_vector,process_num=process_num)
 
 
 
