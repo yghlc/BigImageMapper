@@ -441,7 +441,12 @@ def add_rts_susceptibility(rts_susceptibility_map, grid_vector, process_num=8):
 def sum_a_group_of_columns(grid_vector, col_name_prefix_list, suffix, save_path):
     data_gpd = gpd.read_file(grid_vector)
     sum_array = None
+    exclude_list = [f'samE{item:02d}' for item in range(0,19)]
     for col_name_p in col_name_prefix_list:
+        # if samE00_C samElev_C
+        if col_name_p in exclude_list:
+            print(f'ignore {col_name_p}')
+            continue
         column_name = f"{col_name_p}_{suffix}"
         if column_name not in data_gpd.columns:
             raise ValueError(f'Column {column_name} not in {grid_vector}')
