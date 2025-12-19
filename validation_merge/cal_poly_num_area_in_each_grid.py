@@ -50,6 +50,11 @@ def check_input_vector_files(grid_vector,in_poly_vector,column_pre_name,save_pat
         if vector_gpd.is_field_name_in_shp(save_path,column_count):
             print(f'Column {column_count} already in {save_path}, skip calculating')
             return None, None
+        if column_pre_name.startswith('samE'):
+            if vector_gpd.is_field_name_in_shp(save_path, 'samElev_C'):
+                print(f'Column {column_count} (sum to samElev_C) already in {save_path}, skip calculating')
+                return None, None
+
 
     grid_prj = vector_gpd.get_projection(grid_vector)
     in_poly_proj = vector_gpd.get_projection(in_poly_vector)
