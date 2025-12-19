@@ -33,6 +33,7 @@ from functools import partial
 # import datasets.raster_io as raster_io
 
 import numpy as np
+from tqdm import tqdm  # For progress bar
 
 def check_input_vector_files(grid_vector,in_poly_vector,column_pre_name,save_path):
     io_function.is_file_exist(grid_vector)
@@ -452,6 +453,45 @@ def sum_a_group_of_columns(grid_vector, col_name_prefix_list, suffix, save_path)
     basic.outputlogMessage(f'saved summed column {sum_column_name} to {save_path}')
 
 
+def add_permafrost_extent(permafrost_extent, grid_vector, process_num=8):
+    # check projection
+    vec_prj = vector_gpd.get_projection(grid_vector)
+    ext_prj = vector_gpd.get_projection(permafrost_extent)
+    if vec_prj != ext_prj:
+        raise ValueError(f'Map projection inconsistent between {grid_vector} and {permafrost_extent}')
+
+    h3_grids = vector_gpd.read_polygons_gpd(grid_vector, b_fix_invalid_polygon=False)
+    h3_grids_perm_ext = [0] * len(h3_grids)
+    # GRIDCODE: 1 is Isol, 2 is Spora, 3 is Discon, 4 is contin
+    perma_ext, ext_code = vector_gpd.read_polygons_attributes_list(permafrost_extent, 'GRIDCODE',
+                                                                   b_fix_invalid_polygon=True)
+
+    # For efficiency, build GeoSeries
+    if not isinstance(h3_grids, gpd.GeoSeries):
+        h3_grids = gpd.GeoSeries(h3_grids)
+    if not isinstance(perma_ext, gpd.GeoSeries):
+        perma_ext = gpd.GeoSeries(perma_ext)
+
+    # For each grid cell, check overlaps with permafrost polygons
+    for i, grid_poly in tqdm(enumerate(h3_grids), total=len(h3_grids), desc="Assigning permafrost extent"):
+        overlap_codes = []
+        for j, perma_poly in enumerate(perma_ext):
+            if grid_poly.intersects(perma_poly):
+                overlap_codes.append(ext_code[j])
+        if overlap_codes:
+            # Assign the *highest* code (most continuous permafrost)
+            h3_grids_perm_ext[i] = max(overlap_codes)
+        else:
+            # No permafrost
+            h3_grids_perm_ext[i] = 0
+
+    # add h3_grids_perm_ext to grid_vector
+    vector_gpd.add_attributes_to_shp(grid_vector,{'perm_ext':h3_grids_perm_ext},format='GPKG')
+
+
+
+
+
 def main(options, args):
 
     grid_vector = args[0]
@@ -504,6 +544,11 @@ def main(options, args):
     if susceptibility is not None:
         add_rts_susceptibility(susceptibility, grid_vector, process_num=process_num)
 
+    perm_extent = options.perm_extent
+    # add permafrost extent
+    if perm_extent is not None:
+        add_permafrost_extent(perm_extent,grid_vector)
+
 
 
 if __name__ == '__main__':
@@ -526,6 +571,10 @@ if __name__ == '__main__':
     parser.add_option("-s", "--susceptibility",
                       action="store", dest="susceptibility",
                       help="the path the the rts susceptibility raster")
+
+    parser.add_option("-e", "--perm_extent",
+                      action="store", dest="perm_extent",
+                      help="the path the shapefile or permafrost extent")
 
     parser.add_option("-p", "--process_num",
                       action="store", dest="process_num",type=int, default=16,
