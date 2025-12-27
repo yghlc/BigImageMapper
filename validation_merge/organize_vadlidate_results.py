@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # Filename: organize_vadlidate_results.py 
 """
-introduction: (1) validate the h3 grid against with exist grouth truth
-(2) copy the validate results in the h3 folder into the orignal h3 grid vector files
+introduction: (1) validate the h3 grid against with exist ground truth
+(2) copy the validate results in the h3 folder into the original h3 grid vector files
 
 authors: Huang Lingcao
 email:huanglingcao@gmail.com
