@@ -94,6 +94,11 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
         
         # merge original and new
         merged_gpd = gpd.GeoDataFrame(pd.concat([original_lower_cells_gpd, new_cells_gpd], ignore_index=True))
+
+        # when saving to gpkg, if the file exist, the old file will be kept as a lyaer, causing problem later.
+        # so, removed it before saving
+        if os.path.isfile(save_path) and save_path.endswith('.gpkg'):
+            io_function.delete_file_or_dir(save_path)
         merged_gpd.to_file(save_path, driver=vector_gpd.guess_file_format_extension(save_path))
 
 
