@@ -82,11 +82,9 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
     io_function.save_dict_to_txt_json('parent_child_idx_dict.txt',parent_child_idx)
     io_function.save_dict_to_txt_json('parent_child_h3_ids_dict.txt',parent_child_h3_ids)
 
-    # create a new file if there are new parent ids
+    # add to the file if there are new parent ids
     if len(new_parent_ids) >0:
-        # create a new file and saved to current directory
-        lower_h3_cells_new = os.path.basename(io_function.get_name_by_adding_tail(lower_h3_cells,'new'))
-        print(f'warning adding {len(new_parent_ids)} new parent h3 cells and save to {lower_h3_cells_new}')
+        print(f'warning adding {len(new_parent_ids)} new parent h3 cells and save to {save_path}')
 
         original_lower_cells_gpd = gpd.read_file(lower_h3_cells)  
         epsg_str = original_lower_cells_gpd.crs                 # to check 'EPSG:4326'
@@ -96,10 +94,8 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
         
         # merge original and new
         merged_gpd = gpd.GeoDataFrame(pd.concat([original_lower_cells_gpd, new_cells_gpd], ignore_index=True))
-        merged_gpd.to_file(lower_h3_cells_new, driver=vector_gpd.guess_file_format_extension(lower_h3_cells_new))
+        merged_gpd.to_file(save_path, driver=vector_gpd.guess_file_format_extension(save_path))
 
-        # copy and replace the old file
-        io_function.copy_file_to_dst(lower_h3_cells_new, save_path, overwrite=True, b_verbose=True)
 
     # add attributes
     # attribute_name_list = ['comImg_C', 's2_occur']
