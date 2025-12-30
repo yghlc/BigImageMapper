@@ -42,7 +42,11 @@ def get_attribute_name_list(vector_path, attribute_suffix):
             attribute_name_list.append(field)
     return attribute_name_list
 
-def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_cells):
+def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_cells, save_path=None):
+
+    # if save path is not set, then save to lower_h3_cells
+    if save_path is None:
+        save_path = lower_h3_cells
 
     # link parent to children
     h3_id_child_list = vector_gpd.read_attribute_values_list(in_h3_cells,f'h3_id_{input_res}')
@@ -78,7 +82,8 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
 
     # create a new file if there are new parent ids
     if len(new_parent_ids) >0:
-        lower_h3_cells_new = io_function.get_name_by_adding_tail(lower_h3_cells,'new')
+        # create a new file and saved to current directory
+        lower_h3_cells_new = os.path.basename(io_function.get_name_by_adding_tail(lower_h3_cells,'new'))
         print(f'warning adding {len(new_parent_ids)} new parent h3 cells and save to {lower_h3_cells_new}')
 
         original_lower_cells_gpd = gpd.read_file(lower_h3_cells)  
@@ -102,8 +107,8 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
         values = merge_attributes(in_h3_cells,att,parent_child_idx)
         add_attributes[att] = values
 
-    save_format = vector_gpd.guess_file_format_extension(lower_h3_cells)
-    vector_gpd.add_attributes_to_shp(lower_h3_cells, add_attributes,format=save_format)
+    save_format = vector_gpd.guess_file_format_extension(save_path)
+    vector_gpd.add_attributes_to_shp(save_path, add_attributes,format=save_format)
 
 
 
@@ -132,8 +137,10 @@ def main(options, args):
     child_res = options.h3_high_res
     parent_h3_cells_vector = args[1]    # low_res_cells
     parent_res = options.h3_low_res
+    save_path = options.save_path
 
-    convert_h3_cells_to_lower_scale(child_h3_cells_vector, child_res, parent_res, parent_h3_cells_vector)
+    convert_h3_cells_to_lower_scale(child_h3_cells_vector, child_res, parent_res,
+                                    parent_h3_cells_vector, save_path=save_path)
 
     pass
 
@@ -150,6 +157,10 @@ if __name__ == '__main__':
     parser.add_option("", "--h3_low_res",
                       action="store", dest="h3_low_res", type=int,default=3,
                       help="the resolution for the H3 grid cells at low resolution")
+
+    parser.add_option("-s", "--save_path",
+                      action="store", dest="save_path", type=str,
+                      help="the path to save the result")
 
 
     (options, args) = parser.parse_args()
