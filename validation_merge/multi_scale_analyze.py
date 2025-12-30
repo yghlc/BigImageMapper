@@ -98,7 +98,8 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
         merged_gpd = gpd.GeoDataFrame(pd.concat([original_lower_cells_gpd, new_cells_gpd], ignore_index=True))
         merged_gpd.to_file(lower_h3_cells_new, driver=vector_gpd.guess_file_format_extension(lower_h3_cells_new))
 
-        lower_h3_cells = lower_h3_cells_new
+        # copy and replace the old file
+        io_function.copy_file_to_dst(lower_h3_cells_new, save_path, overwrite=True, b_verbose=True)
 
     # add attributes
     # attribute_name_list = ['comImg_C', 's2_occur']
