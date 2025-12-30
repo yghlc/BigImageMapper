@@ -48,7 +48,7 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
     if save_path is None:
         save_path = lower_h3_cells
     else:
-        io_function.copy_file_to_dst(lower_h3_cells,save_path,b_verbose=True)
+        io_function.copy_file_to_dst(lower_h3_cells,save_path,overwrite=True,b_verbose=True)
 
     # link parent to children
     h3_id_child_list = vector_gpd.read_attribute_values_list(in_h3_cells,f'h3_id_{input_res}')
