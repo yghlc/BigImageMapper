@@ -112,8 +112,8 @@ def convert_h3_cells_to_lower_scale(in_h3_cells,input_res,lower_res, lower_h3_ce
         add_attributes[att] = values
 
     # add child count: h3_id_{lower_res}
-    h3_id_child_count_list = [len(item) for item in parent_child_h3_ids]
-    add_attributes[f'h3_id_{lower_res}_C'] = h3_id_child_count_list
+    h3_id_child_count_list = [len(item) for item in parent_child_h3_ids.values()]
+    add_attributes[f'h3_id_{input_res}_C'] = h3_id_child_count_list
 
     save_format = vector_gpd.guess_file_format_extension(save_path)
     vector_gpd.add_attributes_to_shp(save_path, add_attributes,format=save_format)
