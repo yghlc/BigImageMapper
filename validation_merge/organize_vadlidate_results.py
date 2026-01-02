@@ -43,7 +43,9 @@ def save_true_positive_to_folder(result_dir, h3_id, ground_truth='ground_truth',
     # will overwrite if user already exists
     validate_dict[ground_truth] = {
         'ValidateResult': 'TP',
-        'targetCount': len(overlap_ratio_list)
+        'targetCount': len(overlap_ratio_list),
+        'saved_time': datetime.now().isoformat()
+
     }
     with open(validate_json, 'w') as f:
         json.dump(validate_dict, f, indent=2)
