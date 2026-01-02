@@ -66,8 +66,12 @@ def merge_prompts_same_type_into_one(prompts_txt_list, save_path=None):
     prompt_point_txt_list = [item for item in all_vector_list if item.endswith('point.shp')]
     prompt_box_txt_list = [item for item in all_vector_list if item.endswith('box.shp')]
 
-    vector_gpd.merge_vector_files(prompt_point_txt_list,prompt_point_path)
-    vector_gpd.merge_vector_files(prompt_box_txt_list, prompt_box_path)
+    # vector_gpd.merge_vector_files(prompt_point_txt_list,prompt_point_path)
+    # vector_gpd.merge_vector_files(prompt_box_txt_list, prompt_box_path)
+
+    # using geopandas, to avoid long args for "ogrmerge.py", causing errors.
+    vector_gpd.merge_vector_files_geopandas(prompt_point_txt_list,prompt_point_path)
+    vector_gpd.merge_vector_files_geopandas(prompt_box_txt_list, prompt_box_path)
 
     io_function.save_list_to_txt(save_path,[os.path.basename(prompt_point_path), os.path.basename(prompt_box_path)])
     return save_path
