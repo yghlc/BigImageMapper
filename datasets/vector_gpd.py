@@ -1588,12 +1588,16 @@ def merge_vector_files(file_list, save_path,format='ESRI Shapefile'):
     basic.os_system_exit_code(command_string)
 
 def merge_vector_files_geopandas(file_list, save_path,format='ESRI Shapefile'):
+    if os.path.isfile(save_path):
+        print(f'{save_path} exists, skip merge_vector_files_geopandas')
+        return
     # Read each shapefile into a GeoDataFrame and store in a list
     gdfs = [gpd.read_file(shp) for shp in file_list]
     # Concatenate all GeoDataFrames
     merged_gdf = gpd.GeoDataFrame(pd.concat(gdfs, ignore_index=True))
     # Save to a new shapefile
     merged_gdf.to_file(save_path,driver=format)
+    basic.outputlogMessage(f'Saved to {save_path}')
 
 def merge_shape_files(file_list, save_path):
 
