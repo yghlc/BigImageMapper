@@ -253,6 +253,8 @@ def save_validate_result_2_vector_file(in_vector_path, save_path,json_list):
 def copy_png_files_for_checking(grid_path,val_result_dir):
     values = vector_gpd.read_attribute_values_list_2d(grid_path,['h3_id_8','GT_Valid','Web_Valid'])
     h3_id_8_list, GT_Valid_list, Web_Valid = values
+    if h3_id_8_list is None or GT_Valid_list is None or Web_Valid is None:
+        return
     print(f'Record count for h3_id_8_list, GT_Valid_list, Web_Valid is'
           f' {len(h3_id_8_list)}, {len(GT_Valid_list)}, {len(Web_Valid)}')
 
