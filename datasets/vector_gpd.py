@@ -1889,7 +1889,8 @@ def geometries_overlap_another_group(input_shp, ref_shp, how='intersection'):
     # overlap_touch = gpd.overlay(group1, group2, how=how)
 
     # Perform spatial join to find overlapping or touching geometries
-    overlap_touch = gpd.sjoin(group1, group2, how='inner', op='intersects')
+    # overlap_touch = gpd.sjoin(group1, group2, how='inner', op='intersects')
+    overlap_touch = gpd.sjoin(group1, group2, how='inner', predicate='intersects') # change to predicate for new geopandas, Jan 3, 2026
 
     # remove duplicated geometries in overlap_touch
     overlap_touch = overlap_touch.drop_duplicates(subset=['geometry'])    # only check geometry
