@@ -115,8 +115,8 @@ def read_raster_data_img_list(idx, polygon, image_tiles, img_tile_polygons, noda
 def zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=None,range=None,
                             band = 1,all_touched=True, tile_min_overlap=None):
 
-    out_image = read_raster_data_img_list(idx, polygon, image_tiles, img_tile_polygons, nodata=None,
-                              band=1, all_touched=True, tile_min_overlap=None)
+    out_image = read_raster_data_img_list(idx, polygon, image_tiles, img_tile_polygons, nodata=nodata,
+                              band=band, all_touched=all_touched, tile_min_overlap=tile_min_overlap)
     # do calculation
     return array_stats(out_image, stats, nodata,range=range)
 
