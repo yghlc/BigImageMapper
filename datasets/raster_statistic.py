@@ -72,10 +72,8 @@ def array_stats(in_array, stats, nodata,range=None):
 
     return out_value_dict
 
-
-def zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=None,range=None,
+def read_raster_data_img_list(idx, polygon, image_tiles, img_tile_polygons, nodata=None,
                             band = 1,all_touched=True, tile_min_overlap=None):
-
     overlap_index = vector_gpd.get_poly_index_within_extent(img_tile_polygons, polygon,min_overlap_area=tile_min_overlap)
     image_list = [image_tiles[item] for item in overlap_index]
 
@@ -109,9 +107,16 @@ def zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats,
 
     else:
         basic.outputlogMessage('warning, cannot find raster for %d (start=0) polygon'%idx)
-        # return None           # dont return None, we cause error, let array_stats handle the empty array
+        # return None           # dont return None, we cause error, let array_stats or other functions to handle the empty array
         out_image = np.array([])
 
+    return out_image
+
+def zonal_stats_one_polygon(idx, polygon, image_tiles, img_tile_polygons, stats, nodata=None,range=None,
+                            band = 1,all_touched=True, tile_min_overlap=None):
+
+    out_image = read_raster_data_img_list(idx, polygon, image_tiles, img_tile_polygons, nodata=None,
+                              band=1, all_touched=True, tile_min_overlap=None)
     # do calculation
     return array_stats(out_image, stats, nodata,range=range)
 
