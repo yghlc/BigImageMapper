@@ -118,6 +118,10 @@ def inf_results_gpkg_to_shapefile(curr_dir,img_idx, area_save_dir, test_id):
     # img_idx_txt = os.path.join(img_save_dir,'../', '%d.txt' % img_idx)
     ref_raster = io_function.read_list_from_txt(img_idx_txt)[0]
     ref_raster = os.path.abspath(ref_raster)
+    if os.path.isfile(ref_raster) is False:
+        basic.outputlogMessage(f'Warning {ref_raster} not exists, try to find it using relative path.\n'
+                               f' Please set absolute path in the area ini files to avoid this issue. ')
+        ref_raster = os.path.join(curr_dir, io_function.read_list_from_txt(img_idx_txt)[0])
     height, width, band_num, date_type = raster_io.get_height_width_bandnum_dtype(ref_raster)
 
     # to shapefile
