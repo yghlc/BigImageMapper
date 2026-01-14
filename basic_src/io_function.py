@@ -9,10 +9,12 @@ add time: 04 May, 2016
 """
 
 import os,shutil
-import basic_src.basic as basic
+# import basic_src.basic as basic
+import basic
 import subprocess
 
 from datetime import datetime
+import time
 
 import re
 
@@ -258,9 +260,29 @@ def get_file_list_by_pattern(folder,pattern):
 
     return file_list
 
+def get_drive_or_first_directory(dir):
+    # input: /hdd10Tc/hlc/ArcticDEM_tmp_dir
+    # output: /hdd10Tc
+    rel = os.path.realpath(dir)
+    parts = rel.split(os.sep)
+    if len(parts) > 1:
+        return os.sep + parts[1]
+    else:
+        return os.sep
+
 def get_free_disk_space_GB(dir):
     total, used, free = shutil.disk_usage(dir)  # output in bytes
     return free/(1000*1000*1000)    # convert to GB
+
+def wait_until_enough_disk_space(work_dir, min_disk_GB=50, max_wait_second=60*60*24):
+    free_GB = get_free_disk_space_GB(work_dir)
+    total_wait_time = 0
+    disk_name = get_drive_or_first_directory(work_dir)
+    while free_GB < min_disk_GB and total_wait_time < max_wait_second:
+        basic.outputlogMessage(f'The free disk ({disk_name}) space: ({free_GB}) GB is less than {min_disk_GB} GB, wait 60 seconds')
+        time.sleep(60)
+        total_wait_time += 60
+        free_GB = get_free_disk_space_GB(work_dir)
 
 def get_absolute_path(path):
     return os.path.abspath(path)
@@ -738,5 +760,12 @@ def create_soft_link(src, dst):
         raise IOError(f'The soft link {dst} exists, but the dst not existing')
     os.symlink(abs_src, dst)
 
+
+def test_wait_until_enough_disk_space():
+    workdir = '/Users/huanglingcao'
+    wait_until_enough_disk_space(workdir, min_disk_GB=500)
+
 if __name__=='__main__':
+    test_wait_until_enough_disk_space()
+
     pass
