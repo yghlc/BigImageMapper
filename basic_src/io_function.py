@@ -9,8 +9,10 @@ add time: 04 May, 2016
 """
 
 import os,shutil
-# import basic_src.basic as basic
-import basic
+try:
+    import basic_src.basic as basic
+except ImportError:
+    import basic
 import subprocess
 
 from datetime import datetime
