@@ -375,11 +375,28 @@ def test_load_training_data_from_validate_jsons():
     # data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/select_by_s2_result_png')
     # json_list = io_function.get_file_list_by_pattern(data_dir,'*/validated*.json')
 
-    data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/validated_json/valid_json_files_20251128')
-    json_list = io_function.get_file_list_by_pattern(data_dir,'validated_*.json')
+    # data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/validated_json/valid_json_files_20251128')
+    # json_list = io_function.get_file_list_by_pattern(data_dir,'validated_*.json')
 
-    save_valid_res_dict = 'test_valid_res_dict.json'
-    load_training_data_from_validate_jsons(json_list, save_path=save_valid_res_dict)
+    # save_valid_res_dict = 'test_valid_res_dict.json'
+    # load_training_data_from_validate_jsons(json_list, save_path=save_valid_res_dict)
+
+    # statistic on the validation results
+    data_dir = os.path.expanduser('~/Data/rts_ArcticDEM_mapping/validation/validated_json')
+    json_dir_list = sorted(io_function.get_file_list_by_pattern(data_dir,'valid_json_files_????????'))
+    print('json_dir_list:', json_dir_list)
+    for j_dir in json_dir_list:
+        json_list = io_function.get_file_list_by_pattern(j_dir,'validated_*.json')
+        pre_name = os.path.basename(j_dir)
+        validate_json_list_file = pre_name + '_valid_res_dict.json'
+        valid_res_dict_int, valid_res_dict = load_training_data_from_validate_jsons(json_list, save_path=validate_json_list_file)
+        # statistic on valid_res_dict for different values
+        counter = Counter(valid_res_dict.values())
+        print(f'Statistic for {pre_name}: {counter}')
+        # break
+
+
+
     pass
 
 def train_randomforest_with_hyperpara_search(X, y, out_json_path="rf_hyperparam_search_results.json"):
