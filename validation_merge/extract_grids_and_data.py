@@ -462,7 +462,8 @@ def avoid_extracting_sub_images_json(out_dir,existing_dir,grid_path):
     else:
         # len(index_new)  == 0
         basic.outputlogMessage(f'All h3 folder already exists')
-        sys.exit(0)
+        # sys.exit(0)   # don't quit, because still need to convert to png
+        return 'getPNG_files_only'
 
 def main(options, args):
     grid_path = args[0]
@@ -479,7 +480,14 @@ def main(options, args):
 
     print('b_extract_subImg_only:', b_extract_subImg_only)
 
+    png_dir = out_dir + '_png' #os.path.join(out_dir,'png')
+    png_existing_dir = existing_dir + '_png' if existing_dir is not None else None
+
     check_res = avoid_extracting_sub_images_json(out_dir,existing_dir,grid_path)
+    if check_res == 'getPNG_files_only':
+        convert_2_web_format(out_dir, png_dir, b_rm_org_file=False, process_num=process_num, existing_dir=png_existing_dir)
+        return
+
     if check_res is not None:
         print(f'use the new grid vector: {check_res}')
         grid_path = check_res
@@ -513,8 +521,7 @@ def main(options, args):
     obtain_multi_data(grid_gpd,grid_path, mapping_shp_raster_dict, out_dir, buffersize=buffer_size,
                       process_num=process_num,b_get_subImg_only=b_extract_subImg_only)
 
-    png_dir = out_dir + '_png' #os.path.join(out_dir,'png')
-    png_existing_dir = existing_dir + '_png' if existing_dir is not None else None
+    # convert to png files
     convert_2_web_format(out_dir, png_dir, b_rm_org_file=False,process_num=process_num,existing_dir=png_existing_dir)
 
 
