@@ -114,6 +114,7 @@ def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir
     # save the grids in grid_gpd to geojson format
     vector_save_dir = out_dir
     save_h3_id_list = []
+    col_name_exist_dict = {}
     for idx, row in grid_gpd.iterrows():
         h3_id = row["h3_id_8"]
         cell_vec_dir = os.path.join(vector_save_dir, h3_id)
@@ -130,7 +131,16 @@ def obtain_multi_data(grid_gpd, grid_vector_path,mapping_shp_raster_dict,out_dir
 
         # for shp dataset
         for set_name in shp_gpd_dict.keys():
-            count = row[set_name+"_C"]
+            col_name = set_name+"_C"
+            # check column exists
+            if col_name_exist_dict.get(col_name,True) is False:
+                continue
+            if col_name not in row.index:
+                basic.outputlogMessage(f"Warning: Column '{col_name}' not in the vector file. Skipping this set.")
+                col_name_exist_dict[col_name] = False
+                continue
+
+            count = row[col_name]
             if count < 1:
                 continue
             shp_poly_save_p = os.path.join(cell_vec_dir, f"{set_name}_{h3_id}.geojson")
