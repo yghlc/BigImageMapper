@@ -7,6 +7,7 @@ __pycache__/
 *.png
 *.jpg
 *.JPEG
+*.jpeg
 *.csv
 test.sh
 *.xlsx
