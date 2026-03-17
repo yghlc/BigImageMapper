@@ -192,7 +192,7 @@ def main():
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train','val']}
     class_names = image_datasets['train'].classes
 
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device(torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu")
 
     # test, show some images
     # show_some_images(dataloaders,class_names)
