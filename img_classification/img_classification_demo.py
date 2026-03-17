@@ -184,7 +184,8 @@ def main():
             transforms.Normalize(img_mean, img_std)])
     }
 
-    data_dir = os.path.expanduser('~/Data/image_classification/hymenoptera_data')
+    # data_dir = os.path.expanduser('~/Data/image_classification/hymenoptera_data')
+    data_dir = os.path.expanduser('hymenoptera_data')
     image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir,x), data_transforms[x]) for x in ['train','val']}
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4, shuffle=True, num_workers = 4)
                    for x in ['train','val']}
