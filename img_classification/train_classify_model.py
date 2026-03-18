@@ -139,7 +139,9 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
     # simple data resize and normalization for both training and validtion. (no data augmentation) 
-    data_transform = transforms.Compose([transforms.Resize(224),
+    # this may crop some info at the edge, but avoid different image size. 
+    data_transform = transforms.Compose([transforms.Resize(256),
+                                         transforms.CenterCrop(224),
                                          transforms.ToTensor(),
                                          transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                          ])
@@ -188,17 +190,43 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
     model_type = parameters.get_string_parameters(network_ini, 'model_type')
     num_epochs = parameters.get_digit_parameters(network_ini,'train_epoch_num', 'int')
 
-    model_ft = models.resnet18(weights='IMAGENET1K_V1')
+    if model_type == 'resnet18':
+        model_ft = models.resnet18(weights='IMAGENET1K_V1')
+    elif model_type == 'resnet34':
+        model_ft = models.resnet34(weights='IMAGENET1K_V1')
+    elif model_type == 'resnet50':
+        model_ft = models.resnet50(weights='IMAGENET1K_V1')
+    elif model_type == 'resnet101':
+        model_ft = models.resnet101(weights='IMAGENET1K_V1')
+    elif model_type == 'resnet152':
+        model_ft = models.resnet152(weights='IMAGENET1K_V1')
+    elif model_type == 'wide_resnet50_2':
+        model_ft = models.wide_resnet50_2(weights='IMAGENET1K_V1')
+    elif model_type == 'wide_resnet101_2':
+        model_ft = models.wide_resnet101_2(weights='IMAGENET1K_V1')
+    elif model_type == 'inception_v3':
+        model_ft = models.inception_v3(weights='IMAGENET1K_V1')
+    else:
+        raise ValueError('Unsupport model_type: {model_type}')
+
+
     num_ftrs = model_ft.fc.in_features
     model_ft.fc = nn.Linear(num_ftrs, len(class_names))
     model_ft = model_ft.to(device)
     criterion = nn.CrossEntropyLoss()
 
+    learning_rate = parameters.get_digit_parameters(network_ini,'base_learning_rate', 'float') # 0.001
+    momentum = parameters.get_digit_parameters(network_ini,'momentum', 'float') # 0.9
+    step_size = parameters.get_digit_parameters(network_ini,'step_size', 'int') #7
+    gamma = parameters.get_digit_parameters(network_ini,'gamma', 'float') # 0.1
+
+    # print('debuging: learning_rate, momentum, step_size, gamma', learning_rate, momentum, step_size, gamma)
+
     # Observe that all parameters are being optimized
-    optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
+    optimizer_ft = optim.SGD(model_ft.parameters(), lr=learning_rate, momentum=momentum)
 
     # Decay LR by a factor of 0.1 every 7 epochs
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=step_size, gamma=gamma)
 
     model_ft = run_training(train_save_dir, network_ini, dataloaders, dataset_sizes,device, 
                             model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=num_epochs)
