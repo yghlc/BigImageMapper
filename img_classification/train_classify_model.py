@@ -58,7 +58,7 @@ def run_training(work_dir, network_ini, dataloaders,dataset_sizes,device, model,
             running_corrects = 0
 
             # Iterate over data.
-            for inputs, labels in dataloaders[phase]:
+            for inputs, labels, _ in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
@@ -119,10 +119,10 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
     # simple data resize and normalization for both training and validtion. (no data augmentation) 
-    data_transform = transforms.Compose(transforms.Resize(224),
+    data_transform = transforms.Compose([transforms.Resize(224),
                                          transforms.ToTensor(),
                                          transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-                                         )
+                                         ])
     # # Data augmentation and normalization for training
     # # Just normalization for validation
     # data_transforms = {
@@ -154,6 +154,8 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
 
 
     image_datasets = {'train': train_dataset, 'val': valid_dataset}
+    # image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir,x), data_transforms[x]) for x in ['train','val']}
+
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size,
                                              shuffle=True, num_workers=num_workers) for x in ['train', 'val']}
     
@@ -203,8 +205,7 @@ def cnn_train_main(para_file, pre_train_model='', train_data_txt='', b_a_few_sho
         raise IOError('File %s not exists in current folder: %s' % (para_file, os.getcwd()))
 
     WORK_DIR = os.getcwd()
-    train_a_cnn_model(WORK_DIR, para_file, pre_train_model=pre_train_model,train_data_txt=train_data_txt,
-                    b_a_few_shot=b_a_few_shot,gpu_num=gpu_num)
+    train_a_cnn_model(WORK_DIR, para_file, pre_train_model=pre_train_model,train_data_txt=train_data_txt,gpu_num=gpu_num)
 
     duration = time.time() - SECONDS
     os.system('echo "$(date): time cost of training: %.2f seconds">>time_cost.txt' % duration)
