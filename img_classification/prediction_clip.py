@@ -21,7 +21,6 @@ from PIL import Image
 import numpy as np
 import torch
 
-import clip
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, code_dir)
@@ -531,6 +530,9 @@ def main(options, args):
     # test_classification_ucm(model, preprocess)
 
 if __name__ == '__main__':
+    
+    import clip
+
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2024-01-22")
     parser.description = 'Introduction: run prediction in parallel using clip '

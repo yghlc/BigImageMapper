@@ -26,8 +26,8 @@ from datetime import timedelta
 from prediction_clip import prepare_dataset, run_prediction, calculate_top_k_accuracy
 # from generate_pseudo_labels import generate_pseudo_labels
 import class_utils
+from class_utils import create_training_data_from_txt,prepare_training_data
 
-import clip
 import torch.nn as nn
 import torch.optim as optim
 
@@ -58,57 +58,6 @@ def evaluate(model, test_loader, device, prompt,class_count=10):
 
     return top1_accuray, top5_accuray
 
-def create_training_data_from_txt(para_file, train_data_txt, preprocess, test=False):
-    '''
-    read and create training data from a txt file
-    :param para_file:
-    :param train_data_txt:
-    :param preprocess:
-    :param test:
-    :return:
-    '''
-
-    class_labels = parameters.get_file_path_parameters(para_file, 'class_labels')
-    image_path_labels = [item.split() for item in io_function.read_list_from_txt(train_data_txt)]
-    image_path_list = [item[0] for item in image_path_labels]  # it's already absolute path
-    image_labels = [int(item[1]) for item in image_path_labels]
-    train_dataset = class_utils.RSPatchDataset(image_path_list, image_labels, label_txt=class_labels,
-                                               transform=preprocess, test=test)
-    return train_dataset
-
-def prepare_training_data(WORK_DIR, para_file, transform, test=False):
-
-    training_regions = parameters.get_string_list_parameters_None_if_absence(para_file,'training_regions')
-    if training_regions is None or len(training_regions) < 1:
-        raise ValueError('No training area is set in %s'%para_file)
-
-    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
-    training_data_dir = class_utils.get_training_data_dir(WORK_DIR)
-    merged_training_data_txt = class_utils.get_merged_training_data_txt(training_data_dir, expr_name,len(training_regions))
-    merged_training_data_txt_all = io_function.get_name_by_adding_tail(merged_training_data_txt,'all')
-    merged_training_data_txt_notSel = io_function.get_name_by_adding_tail(merged_training_data_txt,'notSel')
-    merged_training_data_txt_valid = io_function.get_name_by_adding_tail(merged_training_data_txt,'valid')
-    valid_dataset = None
-
-    if os.path.isfile(merged_training_data_txt):
-        in_dataset = create_training_data_from_txt(para_file,merged_training_data_txt,transform,test=test)
-    else:
-        in_dataset = None
-        basic.outputlogMessage('Please run img_classification/get_organize_training_data.py first to prepare and organize the training data')
-
-    # if os.path.isfile(merged_training_data_txt_all):
-    #     valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_all, transform, test=test)
-
-    # use *valid.txt for validation, if does not exist, use *notSel.txt, else, use all.txt
-    if os.path.isfile(merged_training_data_txt_valid):
-        valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_valid, transform, test=test)
-    elif os.path.isfile(merged_training_data_txt_notSel):
-        valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_notSel, transform, test=test)
-    else:
-        valid_dataset = create_training_data_from_txt(para_file, merged_training_data_txt_all, transform, test=test)
-
-
-    return in_dataset, valid_dataset
 
 def convert_models_to_fp32(model):
     for p in model.parameters():
@@ -502,6 +451,9 @@ def main(options, args):
 
 
 if __name__ == '__main__':
+
+    import clip
+
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2024-01-24")
     parser.description = 'Introduction: fine-tune the clip model using custom data'
