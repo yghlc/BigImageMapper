@@ -209,6 +209,11 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
     else:
         raise ValueError('Unsupport model_type: {model_type}')
 
+    b_train_final_layer_only = parameters.get_bool_parameters_None_if_absence(network_ini,'b_train_final_layer_only')
+    if b_train_final_layer_only is True:
+        for param in model_ft.parameters():
+            param.requires_grad = False
+
 
     num_ftrs = model_ft.fc.in_features
     model_ft.fc = nn.Linear(num_ftrs, len(class_names))
