@@ -30,11 +30,26 @@ sys.path.insert(0, code_dir)
 import parameters
 import basic_src.basic as basic
 import basic_src.io_function as io_function
+import basic_src.timeTools as timeTools
 
 from class_utils import create_training_data_from_txt,prepare_training_data
 
+import logging
+logger = logging.getLogger("Model")
+
+def log_string(str):
+    logger.info(str)
+    print(str)
+
 
 def run_training(work_dir, network_ini, dataloaders,dataset_sizes,device, model, criterion, optimizer, scheduler, num_epochs=25):
+
+    # setting logger
+    logger.setLevel(logging.INFO)
+    file_handler = logging.FileHandler('%s/%s.txt' % (work_dir, 'train_log-%s-%s' % ('',timeTools.get_now_time_str())))
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
     t0 = time.time()
     # Create a temporary directory to save training checkpoints
@@ -44,8 +59,9 @@ def run_training(work_dir, network_ini, dataloaders,dataset_sizes,device, model,
     best_acc = 0.0
 
     for epoch in range(num_epochs):
-        print(f'Epoch {epoch}/{num_epochs - 1}')
-        print('-' * 10)
+        t1 = time.time()
+        log_string(f'Training Epoch {epoch+1}/{num_epochs}')
+        log_string('-' * 10)
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
@@ -86,21 +102,25 @@ def run_training(work_dir, network_ini, dataloaders,dataset_sizes,device, model,
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
 
-            print(f'{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
+            log_string(f'{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 torch.save(model.state_dict(), best_model_params_path)
 
-        # print()
+        # log_string('\n')
 
-        time_elapsed = time.time() - t0
-        print(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
-        print(f'Best val Acc: {best_acc:4f}')
+        time_elapsed = time.time() - t1
+        log_string(f'Time cost in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
+        log_string(f'Best val Acc: {best_acc:4f}\n')
 
         # load best model weights
         model.load_state_dict(torch.load(best_model_params_path, weights_only=True))
+
+    log_string('\n')
+    time_elapsed = time.time() - t0
+    log_string(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
     return model
 
