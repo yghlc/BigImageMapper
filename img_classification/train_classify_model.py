@@ -12,6 +12,7 @@ import os,sys
 from optparse import OptionParser
 import time
 from datetime import datetime
+import gc
 
 import torch
 import torch.nn as nn
@@ -116,11 +117,17 @@ def run_training(work_dir, network_ini, dataloaders,dataset_sizes,device, model,
         log_string(f'Best val Acc: {best_acc:4f}\n')
 
         # load best model weights
-        model.load_state_dict(torch.load(best_model_params_path, weights_only=True))
+        state_dict = torch.load(best_model_params_path, weights_only=True)
+        model.load_state_dict(state_dict)
+        del state_dict
 
     log_string('\n')
     time_elapsed = time.time() - t0
     log_string(f'Training complete in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
+
+    # Clean up GPU memory before returning
+    if str(device) != "cpu":
+        torch.cuda.empty_cache()
 
     return model
 
@@ -248,6 +255,18 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
 
     io_function.copy_file_to_dst(para_file, bak_para_ini,overwrite=True)
     io_function.copy_file_to_dst(network_ini, bak_network_ini,overwrite=True)
+
+    # Clean up GPU memory after training
+    if device != "cpu":
+        model_ft = model_ft.cpu()  # Move model to CPU
+        del model_ft
+        del dataloaders
+        del criterion
+        del optimizer_ft
+        del exp_lr_scheduler
+        
+        torch.cuda.empty_cache()  # Clear GPU cache
+        gc.collect()  # Force garbage collection
 
 
 def cnn_train_main(para_file, pre_train_model='', train_data_txt='', b_a_few_shot=False, gpu_num=1):
