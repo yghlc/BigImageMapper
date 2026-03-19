@@ -377,13 +377,13 @@ def predict_remoteSensing_data_cnn(para_file, area_idx, area_ini, area_save_dir,
         for data in tqdm(test_loader):
             inputs, labels, _ = data
             inputs = inputs.to(device)
-            if targets.ndim > 1:
-                targets = targets.to(device).squeeze()
+            if labels.ndim > 1:
+                labels = labels.to(device).squeeze()
             else:
-                targets = targets.to(device)
+                labels = labels.to(device)
 
-            if targets.ndim == 0:
-                basic.outputlogMessage(f"error: targets.ndim == 0, ndim: {targets.ndim}, size: {targets.size()}, value: {targets.tolist()}")
+            if labels.ndim == 0:
+                basic.outputlogMessage(f"error: labels.ndim == 0, ndim: {labels.ndim}, size: {labels.size()}, value: {labels.tolist()}")
                 continue
 
             outputs = model(inputs)
@@ -421,7 +421,7 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     if model_type in clip_model_types:
         in_dataset, res_dict = predict_remoteSensing_data_clip(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=batch_size)
     elif model_type in cnnNet_model_types:
-        predict_remoteSensing_data_cnn(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=batch_size)
+        in_dataset, res_dict = predict_remoteSensing_data_cnn(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=batch_size)
     else:
         raise ValueError('Unknown model type: %s, only accept: %s for CLIP and %s for CNN models'
                          %(model_type, ', '.join(clip_model_types), ', '.join(cnnNet_model_types)))
