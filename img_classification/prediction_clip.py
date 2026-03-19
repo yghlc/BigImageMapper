@@ -249,6 +249,8 @@ def run_prediction(model, test_loader,prompt, device):
 
 def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=16):
 
+    # need to import clip here or at the begining of the file, otherwise it will cause error when using multiprocessing to run prediction
+    import clip
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load(model_type,device=device)
 
