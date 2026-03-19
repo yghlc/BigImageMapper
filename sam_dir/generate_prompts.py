@@ -231,6 +231,7 @@ def extract_prompts_from_dem_diff(area_ini, prompt_type, prompt_save_folder, max
         for res in results:
             prompt_save_list.append(res)
         theadPool.close()
+        theadPool.join()    # wait for worker processes to exit
     else:
         raise ValueError('Wrong process number %s ' % str(process_num))
 

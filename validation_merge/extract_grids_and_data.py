@@ -412,6 +412,7 @@ def convert_2_web_format(data_dir, out_dir, b_rm_org_file=False, process_num=1, 
         parameters_list = [(h3_f, out_dir, b_rm_org_file) for idx, h3_f in enumerate(h3_grid_folders)]
         results = theadPool.starmap(convert_2_web_format_one_h3_grid, parameters_list)
         theadPool.close()
+        theadPool.join()    # wait for worker processes to exit
     else:
         raise ValueError(f'Invalid process_num: {process_num}')
 

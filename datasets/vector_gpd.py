@@ -1452,6 +1452,7 @@ def build_adjacent_map_of_polygons(polygons_list, process_num = 1):
                 ad_matrix[j, i] = 1  # also need the low part of matrix, or later polygon can not find previous neighbours
         # close it, to avoid error: OSError: [Errno 24] Too many open files
         theadPool.close()
+        theadPool.join()    # wait for worker processes to exit
     else:
         raise ValueError('wrong process_num: %d'%process_num)
 
