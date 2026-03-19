@@ -528,7 +528,8 @@ def get_one_sub_image_label(idx,center_polygon, class_int, polygons_all,class_in
     with rasterio.open(save_path, "w", **out_meta) as dest:
         dest.write(out_image)
 
-
+    # close the dataset
+    src.close()
 
     # return image_array, label_array
     return 1, 1
@@ -661,6 +662,7 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
 
             if sub_image_label_str is not None:
                 list_txt_obj.writelines(sub_image_label_str)
+        list_txt_obj.close()
     elif proc_num > 1:
 
         parameters_list = [
@@ -668,17 +670,25 @@ def get_sub_images_and_labels(t_polygons_shp, t_polygons_shp_all, bufferSize, im
                             img_tile_boxes,dstnodata,brectangle, b_label,polygons_all,class_labels_all,b_keep_org_file_name,
                             out_format,h3_filename,c_lat_lon_list[idx][0],c_lat_lon_list[idx][1])
             for idx, (c_polygon, c_class_int) in enumerate(zip(center_polygons, class_labels))]
-        theadPool = Pool(proc_num)  # multi processes
-        results = theadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
+        
+        # change to with to avoid Incomplete Process Pool Cleanup
+        with Pool(proc_num) as threadPool:
+            results = threadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
         for res in results:
             if res is not None:
                 list_txt_obj.writelines(res)
-        theadPool.close()
+        list_txt_obj.close()
+        # threadPool = Pool(proc_num)  # multi processes
+        # results = threadPool.starmap(get_one_sub_image_label_parallel, parameters_list)  # need python3
+        # for res in results:
+        #     if res is not None:
+        #         list_txt_obj.writelines(res)
+        # threadPool.close()
     else:
         raise ValueError('Wrong process number: %s'%(proc_num))
 
 
-    list_txt_obj.close()
+    # list_txt_obj.close()
     test = 1
 
 
