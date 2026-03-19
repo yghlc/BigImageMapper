@@ -23,6 +23,63 @@ import basic_src.basic as basic
 import datasets.vector_gpd as vector_gpd
 import parameters
 
+from torchvision import transforms, models
+
+clip_model_types = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'RN50x64', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L/14@336px']
+cnnNet_model_types = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'wide_resnet50_2', 'wide_resnet101_2', 'inception_v3']
+
+def get_data_transforms():
+        # simple data resize and normalization for both training and validtion. (no data augmentation) 
+    # this may crop some info at the edge, but avoid different image size. 
+    data_transform = transforms.Compose([transforms.Resize(256),
+                                         transforms.CenterCrop(224),
+                                         transforms.ToTensor(),
+                                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                                         ])
+    # # Data augmentation and normalization for training
+    # # Just normalization for validation
+    # data_transforms = {
+    #     'train': transforms.Compose([
+    #         transforms.RandomResizedCrop(224),
+    #         transforms.RandomHorizontalFlip(),
+    #         transforms.ToTensor(),
+    #         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    #     ]),
+    #     'val': transforms.Compose([
+    #         transforms.Resize(256),
+    #         transforms.CenterCrop(224),
+    #         transforms.ToTensor(),
+    #         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    #     ]),
+    # }
+
+    return data_transform
+
+
+def load_cnn_models(model_type, pre_weights='IMAGENET1K_V1'):
+    # load a modle with pretrain 
+
+    if model_type == 'resnet18':
+        model_ft = models.resnet18(weights=pre_weights)
+    elif model_type == 'resnet34':
+        model_ft = models.resnet34(weights=pre_weights)
+    elif model_type == 'resnet50':
+        model_ft = models.resnet50(weights=pre_weights)
+    elif model_type == 'resnet101':
+        model_ft = models.resnet101(weights=pre_weights)
+    elif model_type == 'resnet152':
+        model_ft = models.resnet152(weights=pre_weights)
+    elif model_type == 'wide_resnet50_2':
+        model_ft = models.wide_resnet50_2(weights=pre_weights)
+    elif model_type == 'wide_resnet101_2':
+        model_ft = models.wide_resnet101_2(weights=pre_weights)
+    elif model_type == 'inception_v3':
+        model_ft = models.inception_v3(weights=pre_weights)
+    else:
+        raise ValueError('Unsupport model_type: {model_type}')
+    
+    return model_ft
+
 class RSVectorDataset(Dataset):
     pass
 

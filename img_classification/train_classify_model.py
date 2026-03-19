@@ -33,7 +33,7 @@ import basic_src.basic as basic
 import basic_src.io_function as io_function
 import basic_src.timeTools as timeTools
 
-from class_utils import create_training_data_from_txt,prepare_training_data
+from class_utils import create_training_data_from_txt,prepare_training_data, get_data_transforms, load_cnn_models
 
 import logging
 logger = logging.getLogger("Model")
@@ -145,29 +145,7 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
     batch_size = parameters.get_digit_parameters(network_ini, 'batch_size', 'int')
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
-    # simple data resize and normalization for both training and validtion. (no data augmentation) 
-    # this may crop some info at the edge, but avoid different image size. 
-    data_transform = transforms.Compose([transforms.Resize(256),
-                                         transforms.CenterCrop(224),
-                                         transforms.ToTensor(),
-                                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-                                         ])
-    # # Data augmentation and normalization for training
-    # # Just normalization for validation
-    # data_transforms = {
-    #     'train': transforms.Compose([
-    #         transforms.RandomResizedCrop(224),
-    #         transforms.RandomHorizontalFlip(),
-    #         transforms.ToTensor(),
-    #         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    #     ]),
-    #     'val': transforms.Compose([
-    #         transforms.Resize(256),
-    #         transforms.CenterCrop(224),
-    #         transforms.ToTensor(),
-    #         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    #     ]),
-    # }
+    data_transform = get_data_transforms()
 
 
     if os.path.isfile(train_data_txt):
@@ -197,24 +175,7 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
     model_type = parameters.get_string_parameters(network_ini, 'model_type')
     num_epochs = parameters.get_digit_parameters(network_ini,'train_epoch_num', 'int')
 
-    if model_type == 'resnet18':
-        model_ft = models.resnet18(weights='IMAGENET1K_V1')
-    elif model_type == 'resnet34':
-        model_ft = models.resnet34(weights='IMAGENET1K_V1')
-    elif model_type == 'resnet50':
-        model_ft = models.resnet50(weights='IMAGENET1K_V1')
-    elif model_type == 'resnet101':
-        model_ft = models.resnet101(weights='IMAGENET1K_V1')
-    elif model_type == 'resnet152':
-        model_ft = models.resnet152(weights='IMAGENET1K_V1')
-    elif model_type == 'wide_resnet50_2':
-        model_ft = models.wide_resnet50_2(weights='IMAGENET1K_V1')
-    elif model_type == 'wide_resnet101_2':
-        model_ft = models.wide_resnet101_2(weights='IMAGENET1K_V1')
-    elif model_type == 'inception_v3':
-        model_ft = models.inception_v3(weights='IMAGENET1K_V1')
-    else:
-        raise ValueError('Unsupport model_type: {model_type}')
+    model_ft = load_cnn_models(model_type)
 
     b_train_final_layer_only = parameters.get_bool_parameters_None_if_absence(network_ini,'b_train_final_layer_only')
     if b_train_final_layer_only is True:
