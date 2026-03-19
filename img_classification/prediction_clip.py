@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-# Filename: zeroshort_classify_clip.py 
+# Filename: prediction_clip.py 
 """
-introduction:
+introduction: run image classification using CLIP or other CNN models, with parallel processing for multiple inference regions
 
 authors: Huang Lingcao
 email:huanglingcao@gmail.com
@@ -20,6 +20,7 @@ from PIL import Image
 
 import numpy as np
 import torch
+import torch.nn as nn
 
 
 code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -34,6 +35,7 @@ from multiprocessing import Process
 # import torch.multiprocessing as Process
 
 from class_utils import RSPatchDataset, get_accuracy_log_path
+from class_utils import clip_model_types, cnnNet_model_types, get_data_transforms, load_cnn_models
 from get_organize_training_data import extract_sub_image_labels_one_region, read_sub_image_labels_one_region, read_label_ids_local
 from postProcess_classify import select_sample_for_manu_check
 
@@ -247,11 +249,13 @@ def run_prediction(model, test_loader,prompt, device):
     return pre_probs, gts
 
 
-def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=16):
+def predict_remoteSensing_data_clip(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=16):
 
     # need to import clip here or at the begining of the file, otherwise it will cause error when using multiprocessing to run prediction
     import clip
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # train our model on an `accelerator, such as CUDA, MPS, MTIA, or XPU.
+    device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
+
     model, preprocess = clip.load(model_type,device=device)
 
     # load trained model
@@ -259,6 +263,8 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
         checkpoint = torch.load(open(trained_model, 'rb'), map_location="cpu")
         model.load_state_dict(checkpoint['state_dict'])
         basic.outputlogMessage(f'Loaded trained model: {trained_model}')
+    else:
+        basic.outputlogMessage(f'Warning, No trained model provided at {trained_model}, skip loading model and run prediction with initialized model')
 
     if device == "cpu":
         model.eval()
@@ -316,6 +322,111 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
     top5_acc_save_path = os.path.join(area_save_dir, 'top5_accuracy.txt')
     calculate_top_k_accuracy(top_labels_5, ground_truths, save_path=top5_acc_save_path, k=save_k)
 
+    return in_dataset, res_dict
+
+
+def predict_remoteSensing_data_cnn(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=16):
+
+       # train our model on an `accelerator, such as CUDA, MPS, MTIA, or XPU.
+    device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
+    data_transform = get_data_transforms()
+
+    # run image classification
+    inf_extract_img_dir = parameters.get_directory_None_if_absence(para_file,'inf_extract_img_dir')
+    if inf_extract_img_dir is not None:
+        inf_extract_img_dir = os.path.join(inf_extract_img_dir, os.path.basename(area_save_dir))
+    inf_image_dir = parameters.get_directory(area_ini, 'inf_image_dir')
+    inf_image_or_pattern = parameters.get_string_parameters(area_ini, 'inf_image_or_pattern')
+    in_dataset = prepare_dataset(para_file, area_ini,area_save_dir,inf_image_dir, inf_image_or_pattern,
+                                 transform=data_transform,test=True,extract_img_dir=inf_extract_img_dir)
+    if len(in_dataset) < 1:
+        print('No images for prediction')
+        return
+
+    class_names = in_dataset.classes
+
+    # load the model 
+    model = load_cnn_models(model_type) 
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs, len(class_names))
+    model = model.to(device)
+
+    # load the trained model
+    if os.path.isfile(trained_model):
+        state_dict = torch.load(trained_model, map_location=device, weights_only=True)
+        basic.outputlogMessage(f'Loaded trained model: {trained_model}')
+        model.load_state_dict(state_dict)
+        del state_dict
+    else:
+        basic.outputlogMessage(f'Warning, No trained model provided at {trained_model}, skip loading model and run prediction with initialized model')
+
+
+    model.eval()
+
+
+    #  read num_workers from para_file
+    num_workers = parameters.get_digit_parameters(para_file,'process_num','int')
+    test_loader = torch.utils.data.DataLoader(
+        in_dataset,
+        batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, pin_memory=True)
+
+    pre_probs = []
+    ground_truths = []
+    with torch.no_grad():
+        for data in tqdm(test_loader):
+            inputs, labels, _ = data
+            inputs = inputs.to(device)
+            if targets.ndim > 1:
+                targets = targets.to(device).squeeze()
+            else:
+                targets = targets.to(device)
+
+            if targets.ndim == 0:
+                basic.outputlogMessage(f"error: targets.ndim == 0, ndim: {targets.ndim}, size: {targets.size()}, value: {targets.tolist()}")
+                continue
+
+            outputs = model(inputs)
+
+            
+            pre_probs.append(outputs)    # .cpu().numpy()
+            ground_truths.append(labels)             #.cpu().numpy()
+
+    # pre_probs = np.concatenate(pre_probs, 0)     # for numpy array
+    pre_probs = torch.cat(pre_probs, 0)               # for tensor
+    ground_truths = torch.cat(ground_truths, 0)               # for tensor
+
+
+
+    save_path = os.path.join(area_save_dir, os.path.basename(area_save_dir)+'-classify_results.json' )
+    save_k = min(5, len(in_dataset.classes))
+    res_dict, _ = save_prediction_results(in_dataset,pre_probs, save_path, k=save_k)
+
+    top_probs_1, top_labels_1 = pre_probs.cpu().topk(1, dim=-1)
+
+    # output accuracy
+    # top1 accuracy
+    top1_acc_save_path = os.path.join(area_save_dir, 'top1_accuracy.txt' )
+    calculate_top_k_accuracy(top_labels_1, ground_truths, save_path=top1_acc_save_path, k=1)
+
+
+    return in_dataset, res_dict
+
+
+
+def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=16):
+
+
+    # using CLIP for predction
+    if model_type in clip_model_types:
+        in_dataset, res_dict = predict_remoteSensing_data_clip(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=batch_size)
+    elif model_type in cnnNet_model_types:
+        predict_remoteSensing_data_cnn(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=batch_size)
+    else:
+        raise ValueError('Unknown model type: %s, only accept: %s for CLIP and %s for CNN models'
+                         %(model_type, ', '.join(clip_model_types), ', '.join(cnnNet_model_types)))
+    
+
     # select sample for checking
     # move selection of random samples into prediction step (because after prediciton, these images will be removed)
     class_ids_for_manu_check = parameters.get_string_list_parameters_None_if_absence(para_file,'class_ids_for_manu_check')
@@ -365,7 +476,7 @@ def classify_one_region(area_idx, area_ini, para_file, area_save_dir, gpuid, inf
 
 def parallel_prediction_main(para_file,trained_model):
 
-    print("CLIP prediction using the trained model ") # (run parallel if using multiple GPUs)
+    print("run image classification using the trained model ") # (run parallel if using multiple GPUs)
     machine_name = os.uname()[1]
     start_time = datetime.now()
 
