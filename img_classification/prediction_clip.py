@@ -289,7 +289,7 @@ def predict_remoteSensing_data_clip(para_file, area_idx, area_ini, area_save_dir
                                  transform=preprocess,test=True,extract_img_dir=inf_extract_img_dir)
     if len(in_dataset) < 1:
         print('No images for prediction')
-        return
+        return None, None
     clip_prompt = parameters.get_string_parameters(para_file,'clip_prompt')
 
     #  read num_workers from para_file
@@ -426,6 +426,9 @@ def predict_remoteSensing_data(para_file, area_idx, area_ini, area_save_dir,mode
         raise ValueError('Unknown model type: %s, only accept: %s for CLIP and %s for CNN models'
                          %(model_type, ', '.join(clip_model_types), ', '.join(cnnNet_model_types)))
     
+
+    if in_dataset is None or res_dict is None:
+        return 
 
     # select sample for checking
     # move selection of random samples into prediction step (because after prediciton, these images will be removed)
