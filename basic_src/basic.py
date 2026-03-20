@@ -102,6 +102,7 @@ def exec_command_args_list_one_file(args_list,output,b_verbose=True):
         if os.path.isfile(output):
             return output
         else:
+            outputlogMessage(output_commandString_from_args_list(args_list))
             outputlogMessage('return codes: '+ str(returncode))
             return False
 

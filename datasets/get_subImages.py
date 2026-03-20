@@ -262,7 +262,7 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
     :param save_path: save path
     :param brectangle: if brectangle is True, crop the raster using bounds, else, use the polygon
     :param b_keep_org_file_name: if True, will keep the file name from the original image
-    :return: True is successful, False otherwise
+    :return: File path string if successful, False otherwise
     '''
     img_resx, img_resy = raster_io.get_xres_yres_file(image_tile_list[0])
     # find the images which the center polygon overlap (one or two images)
@@ -302,7 +302,6 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
                              "nodata":dstnodata})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
             with rasterio.open(save_path, "w", **out_meta) as dest:
                 dest.write(out_image)
-        pass
     else:
         # for the case it overlap more than one raster, need to produce a mosaic
         tmp_saved_files = []
@@ -351,7 +350,8 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
             mosaic_args_list = ['gdal_merge.py', '-o', save_path,'-n',str(dstnodata),'-a_nodata',str(dstnodata)]
             mosaic_args_list.extend(tmp_saved_files)
             if basic.exec_command_args_list_one_file(mosaic_args_list,save_path,b_verbose=False) is False:
-                raise IOError('error, obtain a mosaic (%s) failed'%save_path)
+                basic.outputlogMessage('FATAL ERROR: Failed to obtain a mosaic for %s. Exiting program.'%save_path)
+                sys.exit(1)
 
         # # for test
         # if idx==13:
@@ -576,8 +576,13 @@ def get_one_sub_image_label_parallel(idx,c_polygon, bufferSize,pre_name, pre_nam
     # if h3_filename:
     #     subimg_saved_path = os.path.join(saved_dir, geo_index_h3.get_folder_file_save_path())
 
-    subimg_saved_path =  get_sub_image(idx, expansion_polygon, image_tile_list, img_tile_boxes, subimg_saved_path,
-                                       dstnodata, brectangle,b_keep_org_file_name,out_format=out_format)
+    try:
+        subimg_saved_path =  get_sub_image(idx, expansion_polygon, image_tile_list, img_tile_boxes, subimg_saved_path,
+                                           dstnodata, brectangle,b_keep_org_file_name,out_format=out_format)
+    except Exception as e:
+        basic.outputlogMessage('FATAL ERROR processing %dth polygon: %s. Exiting program.' % (idx, str(e)))
+        sys.exit(1)
+    
     if subimg_saved_path is False:
         basic.outputlogMessage('Warning, skip the %dth polygon' % idx)
         return None
