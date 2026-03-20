@@ -37,9 +37,8 @@ def outputlogMessage(message):
     timestr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime() )
     outstr = timestr +': '+ message
     print(outstr)
-    f=open(logfile,'a')
-    f.writelines(outstr+'\n')
-    f.close()
+    with open(logfile,'a') as f:
+        f.writelines(outstr+'\n')
 
 def stop_and_outputlogMessage(message):
     """
@@ -47,8 +46,8 @@ def stop_and_outputlogMessage(message):
     :param message:the message string need to be output
     :return:None
     """
-    assert False
     outputlogMessage(message)
+    assert False
 
 
 def output_commandString_from_args_list(args_list):
