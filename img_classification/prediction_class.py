@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Filename: prediction_clip.py 
+# Filename: prediction_class.py 
 """
 introduction: run image classification using CLIP or other CNN models, with parallel processing for multiple inference regions
 

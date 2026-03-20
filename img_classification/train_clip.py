@@ -23,7 +23,7 @@ import basic_src.timeTools as timeTools
 import basic_src.basic as basic
 from datetime import timedelta
 
-from prediction_clip import prepare_dataset, run_prediction, calculate_top_k_accuracy
+from prediction_class import prepare_dataset, run_prediction, calculate_top_k_accuracy
 # from generate_pseudo_labels import generate_pseudo_labels
 import class_utils
 from class_utils import create_training_data_from_txt,prepare_training_data

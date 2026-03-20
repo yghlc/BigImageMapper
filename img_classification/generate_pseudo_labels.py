@@ -18,7 +18,7 @@ import basic_src.io_function as io_function
 import parameters
 
 import class_utils
-from prediction_clip import prepare_dataset, run_prediction, calculate_top_k_accuracy
+from prediction_class import prepare_dataset, run_prediction, calculate_top_k_accuracy
 from train_clip import prepare_training_data, log_string
 
 import torch
