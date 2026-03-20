@@ -341,7 +341,7 @@ def predict_remoteSensing_data_cnn(para_file, area_idx, area_ini, area_save_dir,
                                  transform=data_transform,test=True,extract_img_dir=inf_extract_img_dir)
     if len(in_dataset) < 1:
         print('No images for prediction')
-        return
+        return None, None
 
     class_names = in_dataset.classes
 
