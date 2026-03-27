@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# Filename: fine_tune_PrithviEO.py
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 introduction:
 
@@ -9,10 +9,12 @@ add time: 08 July, 2025
 """
 
 import os,sys
+from optparse import OptionParser
+
 import numpy as np
 import torch
 
-import terratorch
+# import terratorch
 from terratorch.datamodules import Landslide4SenseNonGeoDataModule
 from terratorch.datasets import Landslide4SenseNonGeo
 from terratorch.tasks import SemanticSegmentationTask
@@ -28,8 +30,18 @@ import matplotlib.pyplot as plt
 import h5py
 
 All_BANDS = Landslide4SenseNonGeo.all_band_names
+rgb_bands = Landslide4SenseNonGeo.rgb_bands
+from terratorch.datamodules import GenericNonGeoClassificationDataModule
 
-def get_data_module(data_dir, image_bands, batch_size=16,num_workers=8):
+
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+import parameters
+import basic_src.basic as basic
+import basic_src.io_function as io_function
+import basic_src.timeTools as timeTools
+
+def get_data_module(data_dir, image_bands, batch_size=16, num_workers=8, task_type='segmentation'):
 
     transforms = [
         albumentations.Resize(224, 224),
@@ -43,15 +55,35 @@ def get_data_module(data_dir, image_bands, batch_size=16,num_workers=8):
         albumentations.pytorch.transforms.ToTensorV2(),
     ]
 
-    data_module = Landslide4SenseNonGeoDataModule(
-        batch_size=batch_size,
-        bands=image_bands,
-        data_root=data_dir,
-        train_transform=train_transforms,
-        val_transforms=transforms,
-        test_transforms=transforms,
-        num_workers=num_workers,
-    )
+    if task_type == 'segmentation':
+
+        data_module = Landslide4SenseNonGeoDataModule(
+            batch_size=batch_size,
+            bands=image_bands,
+            data_root=data_dir,
+            train_transform=train_transforms,
+            val_transforms=transforms,
+            test_transforms=transforms,
+            num_workers=num_workers,
+        )
+    elif task_type == 'classification':
+        # TypeError: GenericNonGeoClassificationDataModule.__init__() missing 6 required positional arguments: '
+        # train_data_root', 'val_data_root', 'test_data_root', 'means', 'stds', and 'num_classes'
+        data_module = GenericNonGeoClassificationDataModule(
+            batch_size=batch_size,
+            bands=image_bands,
+            data_root=data_dir,
+            train_transform=train_transforms,
+            val_transforms=transforms,
+            test_transforms=transforms,
+            num_workers=num_workers,
+            train_data_root=os.path.join(data_dir, 'train'),
+            val_data_root=os.path.join(data_dir, 'val'),
+            test_data_root=os.path.join(data_dir, 'test'),
+            means=[0.485, 0.456, 0.406],  # ImageNet means for RGB channels, adjust if using different bands
+            stds=[0.229, 0.224, 0.225],   # ImageNet stds for RGB channels adjust if using different bands
+            num_classes=2,  # Adjust based on your dataset
+        )
 
     return data_module
 
@@ -282,18 +314,80 @@ def test_predict_PrithviEO_for_segment():
 
     predict_PrithviEO_for_segment(dl_model, image_path, image_bands, ckpt_path=None)
 
-    
+def fine_tune_PrithviEO_for_classification(WORK_DIR, para_file, pre_train_model=None, train_data_txt=None):
 
-    pass
+    # load training data
+    from rsBigModel_utils import prepare_train_val_data_folder
+
+    data_dir = prepare_train_val_data_folder(WORK_DIR,para_file)
+
+    # load models
+    data_module = get_data_module(data_dir, image_bands=rgb_bands, batch_size=16, num_workers=8, task_type='classification')
+    print(data_module)
 
 
-def main():
+    # load training settings
 
-    test_fine_tune_PrithviEO_for_segment()
-    # test_predict_PrithviEO_for_segment()
 
-    pass
+    # train the model
+
+    # save the model and output logs
+
+
+def fine_tune_PrithviEO_main(para_file, pre_train_model=None, train_data_txt=None, task_type=None):
+
+    WORK_DIR = os.getcwd()
+    if task_type == 'classification':
+        fine_tune_PrithviEO_for_classification(WORK_DIR,para_file, pre_train_model=pre_train_model, train_data_txt=train_data_txt)
+    elif task_type == 'segmentation':
+        test_fine_tune_PrithviEO_for_segment()
+    else:
+        basic.outputlogMessage(f'Unsupport task type: {task_type}')
+
+
+def main(options, args):
+
+    para_file = args[0]
+    pre_train_model = options.pretrain_model
+    train_data_txt = options.train_data_txt
+    task_type = options.task_type
+
+    fine_tune_PrithviEO_main(para_file,pre_train_model=pre_train_model,train_data_txt=train_data_txt, task_type=task_type)
+
 
 
 if __name__ == '__main__':
-    main()
+
+    # test_fine_tune_PrithviEO_for_segment()
+    # test_predict_PrithviEO_for_segment()
+    # sys.exit(0)
+
+
+
+    usage = "usage: %prog [options] para_file"
+    parser = OptionParser(usage=usage, version="1.0 2024-01-24")
+    parser.description = 'Introduction: fine-tune the PrithviEO models using custom data'
+
+    parser.add_option("-m", "--pretrain_model",
+                      action="store", dest="pretrain_model",default='',
+                      help="the pre-trained model")
+
+    parser.add_option("-t", "--train_data_txt",
+                      action="store", dest="train_data_txt",default='',
+                      help="the training dataset saved in txt")
+    
+    parser.add_option("", "--task_type",
+                      action="store", dest="task_type",default='',
+                      help="the task type, should be one of 'classification', 'segmentation', etc ")
+
+    # parser.add_option("-f", "--b_a_few_shot",
+    #                   action="store_true", dest="b_a_few_shot", default=False,
+    #                   help="if set, will force to run a few shot training, ignoring the the setting in ini files")
+
+
+    (options, args) = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
+    main(options, args)
