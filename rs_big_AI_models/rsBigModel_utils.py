@@ -195,7 +195,8 @@ def get_data_transforms(be_normalzed=True, mean=[0.485, 0.456, 0.406], std=[0.22
         data_transform = transforms.Compose([transforms.Resize(256),
                                          transforms.CenterCrop(224),
                                          transforms.ToTensor(),
-                                         transforms.Normalize([0, 0, 0], [1, 1, 1])  # No normalization, just convert to [0, 1] 
+                                         transforms.Normalize(mean, std)
+                                        #  transforms.Normalize([0, 0, 0], [1, 1, 1])  # No normalization, just convert to [0, 1] 
                                          ])
 
     return data_transform
