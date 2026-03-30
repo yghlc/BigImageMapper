@@ -60,6 +60,9 @@ def fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=Non
         train_txt, valid_txt = prepare_train_val_txt(WORK_DIR, para_file)
     # print(f'train_txt: {train_txt}')
     # print(f'valid_txt: {valid_txt}')
+    if train_txt is None or valid_txt is None:
+        log_string('Error: training txt files are not prepared. Please run img_classification/get_organize_training_data.py first to prepare and organize the training data')
+        return False
 
     fit_ckpt_path = None
     if pre_train_model is not None and len(pre_train_model) > 0:
@@ -230,9 +233,25 @@ def test_fine_tune_rsBigModel_classification():
     para_file = 'main_para_exp15.ini'
     pre_train_model = None
     train_data_txt = None
-    fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=pre_train_model, train_data_txt=train_data_txt)
+    # fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=pre_train_model, train_data_txt=train_data_txt)
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
 
+    # test with different epoch  numbers
+    for epoch in range(10, 500, 20):
+        new_exp_name = f'exp15_Epo{epoch}'
+        if os.path.isdir(os.path.join(WORK_DIR, new_exp_name)):
+            print(f"Directory {new_exp_name} already exists, skipping epoch {epoch}")
+            continue
 
+        # update the epoch number in the network ini file
+        network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+        parameters.write_Parameters_file(network_ini, 'train_epoch_num', epoch)
+        fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=pre_train_model, train_data_txt=train_data_txt)
+
+        # move and backup the results
+        
+        os.system(f"mv {expr_name} {new_exp_name}")
+        os.system(f'rm {os.path.join(WORK_DIR, new_exp_name)}/*.ckpt')  # remove the checkpoint files to save space
 
 def fine_tune_rsBigModel_main(para_file, pre_train_model=None, train_data_txt=None, task_type=None):
     '''
@@ -265,8 +284,8 @@ def main(options, args):
 
 if __name__ == "__main__":
 
-    # test_fine_tune_rsBigModel_classification()
-    # sys.exit(0)
+    test_fine_tune_rsBigModel_classification()
+    sys.exit(0)
 
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2026-03-26")

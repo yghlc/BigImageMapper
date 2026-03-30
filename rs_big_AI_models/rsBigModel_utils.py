@@ -227,6 +227,7 @@ def prepare_train_val_txt(WORK_DIR, para_file):
     else:
         train_txt = None
         basic.outputlogMessage('Please run img_classification/get_organize_training_data.py first to prepare and organize the training data')
+        return None, None
 
     # use *valid.txt for validation, if does not exist, use *notSel.txt, else, use all.txt
     if os.path.isfile(merged_training_data_txt_valid):
