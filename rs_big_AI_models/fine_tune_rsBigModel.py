@@ -184,7 +184,19 @@ def fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=Non
     test_dataset = data_module.test_dataset
     print(f"Number of samples in the test dataset: {len(test_dataset)}")
     # Evaluate the model on the test set
-    _ = trainer.test(model=model, datamodule=data_module)
+    test_results = trainer.test(model=model, datamodule=data_module)
+    # save to a file
+    test_accuracy_file = os.path.join(train_save_dir, f"{expr_name}_test_accuracy.txt")
+    with open(test_accuracy_file, 'w') as f:
+        if len(test_results) > 0:
+            metrics = test_results[0]
+            for key, value in metrics.items():
+                if isinstance(value, torch.Tensor):
+                    value = value.item()
+                f.write(f"{key}: {value}\n")
+        else:
+            f.write("No test metrics were returned by trainer.test().\n")
+
     ###########################################################################
 
 
