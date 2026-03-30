@@ -48,26 +48,38 @@ def fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=Non
     batch_size = parameters.get_digit_parameters(network_ini, 'batch_size', 'int')
     num_workers = parameters.get_digit_parameters(para_file, 'process_num', 'int')
 
-    data_transform = get_data_transforms(be_normalzed=False) # the input already 0-255, just convert to 0-1, but not normalized to mean/std.
+    data_transform = get_data_transforms(be_normalzed=True)  # use default RGB normalization for pretrained backbones
     class_labels_txt = parameters.get_file_path_parameters(para_file, 'class_labels')
     # print(class_labels_txt)
 
     # image_path_list, image_labels, label_txt = 'label.txt', transform=None, split: str = 'train'
-    train_txt, valid_txt = prepare_train_val_txt(WORK_DIR, para_file)
+    if train_data_txt is not None and len(train_data_txt) > 0:
+        train_txt = train_data_txt
+        valid_txt = train_data_txt   # or require a separate valid txt
+    else:
+        train_txt, valid_txt = prepare_train_val_txt(WORK_DIR, para_file)
     # print(f'train_txt: {train_txt}')
     # print(f'valid_txt: {valid_txt}')
+
+    fit_ckpt_path = None
+    if pre_train_model is not None and len(pre_train_model) > 0:
+        if os.path.isfile(pre_train_model) is False:
+            raise ValueError('pre_train_model does not exist: %s' % pre_train_model)
+        fit_ckpt_path = pre_train_model
+        log_string('Resume training from checkpoint: %s' % pre_train_model)
 
     # ---------------------------------------------------------------------------
     # Building the TerraTorch training pipeline
     # ---------------------------------------------------------------------------
     # Next, the TerraTorch training pipeline for this classification task is built.
     # We initialize a new datamodule using the full UCMerced dataset.
+    basic.outputlogMessage('Warning, the training and validation txt files are the same, so the accuracy is the validation accuracy.')
     data_module = RSPatchTxtModule(
         batch_size=batch_size,
         num_workers=num_workers,
         train_txt=train_txt,
         valid_txt=valid_txt,
-        test_txt=None,
+        test_txt=valid_txt,  # use the validation set for testing as well since we don't have a separate test set
         label_txt=class_labels_txt,
         transforms=data_transform
     )
@@ -95,7 +107,7 @@ def fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=Non
 
 
     # train our model on an `accelerator, such as CUDA, MPS, MTIA, or XPU.
-    device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
+    # device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
     model_type = parameters.get_string_parameters(network_ini, 'model_type')
     num_epochs = parameters.get_digit_parameters(network_ini,'train_epoch_num', 'int')
 
@@ -118,7 +130,7 @@ def fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=Non
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         dirpath=f"{train_save_dir}/",
         filename=f"best-val-{model_type}",
-        save_weights_only=True,
+        save_weights_only=False, # also save the optimizer state, epoch, etc. for resuming training
         monitor="val/loss",
         mode="min", 
     )
@@ -163,20 +175,17 @@ def fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=Non
         freeze_backbone=b_freeze_backbone,
     )
 
-    # Start training
-    trainer.fit(model, datamodule=data_module)
+    # Start training)
+    trainer.fit(model, datamodule=data_module, ckpt_path=fit_ckpt_path)
 
-
-    # run on the best checkpoint on the validation set to get the final performance metrics
-    best_model_path = checkpoint_callback.best_model_path
-    print(f"Best model checkpoint path: {best_model_path}")
-    # Prepare the validation split
-    data_module.setup("validate")
-
-    val_dataset = data_module.val_dataset
-    print(f"Number of samples in the validation dataset: {len(val_dataset)}")
-    # Evaluate the model on the validation set
-    _ = trainer.validate(model=model, datamodule=data_module)
+    ###########################################################################
+    # Prepare the test split
+    data_module.setup("test")
+    test_dataset = data_module.test_dataset
+    print(f"Number of samples in the test dataset: {len(test_dataset)}")
+    # Evaluate the model on the test set
+    _ = trainer.test(model=model, datamodule=data_module)
+    ###########################################################################
 
 
     # copy and back up parameter files
@@ -188,9 +197,19 @@ def fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=Non
     io_function.copy_file_to_dst(network_ini, bak_network_ini,overwrite=True)
 
     # Clean up GPU memory after training
-    if device != "cpu":
-        torch.cuda.empty_cache()  # Clear GPU cache
-        gc.collect()  # Force garbage collection
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect()
+
+
+def test_fine_tune_rsBigModel_classification():
+    # change dir
+    WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
+    os.chdir(WORK_DIR)
+    para_file = 'main_para_exp15.ini'
+    pre_train_model = None
+    train_data_txt = None
+    fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=pre_train_model, train_data_txt=train_data_txt)
 
 
 
@@ -224,6 +243,10 @@ def main(options, args):
 
 
 if __name__ == "__main__":
+
+    # test_fine_tune_rsBigModel_classification()
+    # sys.exit(0)
+
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2026-03-26")
     parser.description = 'Introduction: fine-tune the RS big models using custom data'

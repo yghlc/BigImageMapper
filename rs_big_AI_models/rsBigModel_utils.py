@@ -74,14 +74,23 @@ class RSPatchTxtDataset(NonGeoClassificationDataset):
         self.img_list = []
         self.labels = []
 
-        # tmp = item.rsplit(',', 1)  # Split into two parts using the last comma
-        label_list = [[item.rsplit(',', 1)[0], int(item.rsplit(',', 1)[1])] for item in io_function.read_list_from_txt(label_txt)]
-        # arr_t = np.array(label_list).T
-        label_list = np.array(label_list).T.tolist()    # switch the row and column
-        self.transforms = transforms
+        # # tmp = item.rsplit(',', 1)  # Split into two parts using the last comma
+        # label_list = [[item.rsplit(',', 1)[0], int(item.rsplit(',', 1)[1])] for item in io_function.read_list_from_txt(label_txt)]
+        # # arr_t = np.array(label_list).T
+        # label_list = np.array(label_list).T.tolist()    # switch the row and column
+        # self.classes = label_list[0]
 
-        self.classes = label_list[0]
+        label_items = []
+        for item in io_function.read_list_from_txt(label_txt):
+            name, idx = item.rsplit(',', 1)
+            label_items.append((int(idx), name.strip()))
+
+        label_items = sorted(label_items, key=lambda x: x[0])
+        self.classes = [name for _, name in label_items]
+
         # print(f'classes: {self.classes}')
+
+        self.transforms = transforms
 
         with open(split_txt) as f:
             for fn in f:
@@ -91,6 +100,9 @@ class RSPatchTxtDataset(NonGeoClassificationDataset):
                 # Split from the right once to preserve image paths with spaces.
                 img_path, label = line.rsplit(maxsplit=1)
                 self.img_list.append(img_path)
+                label_int = int(label)
+                if label_int < 0 or label_int >= len(self.classes):
+                    raise ValueError(f'Label index {label_int} is out of bounds for classes: {self.classes}')
                 self.labels.append(int(label))
 
 
@@ -114,19 +126,12 @@ class RSPatchTxtDataset(NonGeoClassificationDataset):
         # tensor = tensor.permute((2, 0, 1))
         # label = torch.tensor(label)
 
-        if self.transforms is None:
-            # Keep output consistent with TorchGeo's default tensor image shape CxHxW.
+        if self.transforms is not None:
+            im = self.transforms(im)
+        else:
             im = transforms.ToTensor()(im)
 
         samples = {'image': im, 'label': torch.tensor(label), 'filename': im_path}
-
-        if self.transforms is not None:
-            try:
-                # TorchGeo-style transform: accepts and returns a sample dict.
-                samples = self.transforms(samples)
-            except Exception:
-                # Fallback for torchvision image-only transforms.
-                samples['image'] = self.transforms(samples['image'])
 
         return samples
     
@@ -191,12 +196,10 @@ def get_data_transforms(be_normalzed=True, mean=[0.485, 0.456, 0.406], std=[0.22
                                              transforms.Normalize(mean, std)
                                              ])
     else:
-        # just convert to tensor, but not normalized to mean/std, since the input is already 0-255, just convert to 0-1.
+        # just convert to tensor, but not normalized to mean/std,
         data_transform = transforms.Compose([transforms.Resize(256),
                                          transforms.CenterCrop(224),
                                          transforms.ToTensor(),
-                                         transforms.Normalize(mean, std)
-                                        #  transforms.Normalize([0, 0, 0], [1, 1, 1])  # No normalization, just convert to [0, 1] 
                                          ])
 
     return data_transform
