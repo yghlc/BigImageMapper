@@ -197,6 +197,15 @@ def fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=Non
         else:
             f.write("No test metrics were returned by trainer.test().\n")
 
+        # output the number of samples for each class in the test split
+        f.write("\nTest class counts (ground truth):\n")
+        if hasattr(test_dataset, 'labels') and hasattr(test_dataset, 'classes'):
+            class_counts = np.bincount(test_dataset.labels, minlength=len(test_dataset.classes))
+            for class_name, count in zip(test_dataset.classes, class_counts):
+                f.write(f"{class_name}: {int(count)}\n")
+        else:
+            f.write("Class count information is unavailable for this dataset type.\n")
+
     ###########################################################################
 
 
