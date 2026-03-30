@@ -73,7 +73,7 @@ def fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=Non
     # ---------------------------------------------------------------------------
     # Next, the TerraTorch training pipeline for this classification task is built.
     # We initialize a new datamodule using the full UCMerced dataset.
-    basic.outputlogMessage('Warning, the training and validation txt files are the same, so the accuracy is the validation accuracy.')
+    basic.outputlogMessage('Warning, the test and validation txt files are the same, so the accuracy is the validation accuracy.')
     data_module = RSPatchTxtModule(
         batch_size=batch_size,
         num_workers=num_workers,
