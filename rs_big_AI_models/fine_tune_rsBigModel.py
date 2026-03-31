@@ -338,8 +338,8 @@ def main(options, args):
 
 if __name__ == "__main__":
 
-    test_fine_tune_rsBigModel_classification()
-    sys.exit(0)
+    # test_fine_tune_rsBigModel_classification()
+    # sys.exit(0)
 
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2026-03-26")

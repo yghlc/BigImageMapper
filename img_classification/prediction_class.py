@@ -41,21 +41,7 @@ from postProcess_classify import select_sample_for_manu_check
 
 from tqdm import tqdm
 
-def is_file_exist_in_folder(folder):
-    """
-    Check if the folder contains any non-hidden files.
-    Returns False if the folder doesn't exist.
-    """
-    if not os.path.isdir(folder):
-        return False
-    for entry in os.listdir(folder):
-        # Ignore hidden files and directories
-        if entry.startswith('.'):
-            continue
-        full_path = os.path.join(folder, entry)
-        if os.path.isfile(full_path):
-            return True
-    return False
+from bim_utils import is_file_exist_in_folder
 
 def calculate_top_k_accuracy(predict_labels,ground_truths, save_path=None, k=5):
     if torch.is_tensor(ground_truths):

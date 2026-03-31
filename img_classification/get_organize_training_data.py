@@ -24,6 +24,9 @@ import basic_src.timeTools as timeTools
 import time
 import random
 
+code_dir2 = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, code_dir2)
+
 import class_utils
 
 global_slump_class_id_shp={'thawslump':1, 'others':0}

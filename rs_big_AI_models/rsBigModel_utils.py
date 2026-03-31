@@ -33,6 +33,8 @@ from torchgeo.datasets import UCMerced
 from torchvision import transforms
 import torch
 
+from img_classification.get_organize_training_data import extract_sub_image_labels_one_region, read_sub_image_labels_one_region
+
 ## define RSPatchTxtDataset and RSPatchTxtModule for training with custom data, which is organized in txt file with image path and label, e.g.,
 # /path/to/image1.jpg 0
 # /path/to/image2.jpg 1
@@ -101,6 +103,10 @@ class RSPatchTxtDataset(NonGeoClassificationDataset):
                 img_path, label = line.rsplit(maxsplit=1)
                 self.img_list.append(img_path)
                 label_int = int(label)
+                if label_int == -1:
+                    # -1 is used to indicate unknown or missing labels, used during prediction.
+                    self.labels.append(-1)
+                    continue
                 if label_int < 0 or label_int >= len(self.classes):
                     raise ValueError(f'Label index {label_int} is out of bounds for classes: {self.classes}')
                 self.labels.append(int(label))
@@ -315,7 +321,27 @@ def prepare_train_val_data_folder(WORK_DIR, para_file):
 
     return training_data_dir
 
+def prepare_dataset_for_classify(para_file, area_ini, area_save_dir, test = False, extract_img_dir=None, training_poly_shp=None):
+    area_data_type = parameters.get_string_parameters(area_ini,'area_data_type')
 
+    class_labels = parameters.get_file_path_parameters(para_file,'class_labels')
+    if extract_img_dir is None:
+        extract_img_dir = os.path.join(os.getcwd(),'image_patches', os.path.basename(area_save_dir))
+    if os.path.isdir(extract_img_dir) is False:
+        io_function.mkdir(extract_img_dir)
+
+    if area_data_type == 'image_patch':
+        image_path_list, image_labels, patch_list_txt =  read_sub_image_labels_one_region(extract_img_dir,para_file,area_ini,b_training= not test)
+        # input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
+
+    elif area_data_type == 'image_vector':
+        image_path_list, image_labels, patch_list_txt = extract_sub_image_labels_one_region(extract_img_dir,para_file,area_ini,b_training= not test)
+        # input_data = RSPatchDataset(image_path_list, image_labels, label_txt=class_labels, transform=transform, test = test)
+    else:
+        raise ValueError(f'Unknown area data type: {area_data_type}, only accept: image_patch and image_vector')
+
+    basic.outputlogMessage('read %d images for prediction'%len(image_path_list))
+    return patch_list_txt
 
 def main():
     pass

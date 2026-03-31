@@ -60,6 +60,23 @@ def extract_sub_images(train_grids_shp,image_dir, buffersize,image_or_pattern,ex
     command_string += train_grids_shp + ' ' + image_dir
     basic.os_system_exit_code(command_string)
 
+
+def is_file_exist_in_folder(folder):
+    """
+    Check if the folder contains any non-hidden files.
+    Returns False if the folder doesn't exist.
+    """
+    if not os.path.isdir(folder):
+        return False
+    for entry in os.listdir(folder):
+        # Ignore hidden files and directories
+        if entry.startswith('.'):
+            continue
+        full_path = os.path.join(folder, entry)
+        if os.path.isfile(full_path):
+            return True
+    return False
+
 def rename_sub_images():
     pass
 
