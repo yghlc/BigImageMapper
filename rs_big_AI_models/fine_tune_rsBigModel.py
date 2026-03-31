@@ -253,6 +253,40 @@ def test_fine_tune_rsBigModel_classification():
         os.system(f"mv {expr_name} {new_exp_name}")
         os.system(f'rm {os.path.join(WORK_DIR, new_exp_name)}/*.ckpt')  # remove the checkpoint files to save space
 
+    ########################################################################
+    # plot the F1 score vs epoch curve
+    import matplotlib.pyplot as plt
+    accuracy_txt_list = io_function.get_file_list_by_pattern(WORK_DIR, 'exp15_Epo*/exp*_test_accuracy.txt')
+    epoch_list = []
+    accuracy_list = []
+    for accuracy_txt in accuracy_txt_list:
+        epoch_str = accuracy_txt.split('Epo')[1].split('/')[0]
+        epoch_list.append(int(epoch_str))
+        with open(accuracy_txt, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.startswith('test/F1_Score'):
+                    accuracy = float(line.split(':')[1].strip())
+                    accuracy_list.append(accuracy)
+                    break
+    # sorted by epoch
+    epoch_list, accuracy_list = zip(*sorted(zip(epoch_list, accuracy_list)))
+    # print(f'Epoch list: {epoch_list}')
+    # print(f'Accuracy list: {accuracy_list}')
+    # plot the accuracy vs epoch curve
+    plt.figure()
+    # just plot a scatter plot, since the accuracy may not be monotonic with epoch, and we only have a few points
+    # plt.scatter(epoch_list, accuracy_list, marker='o')
+    plt.plot(epoch_list, accuracy_list, marker='o')
+    plt.xlabel('Epoch')
+    plt.ylabel('Test F1 Score')
+    plt.title('Test F1 Score vs Epoch')
+    plt.grid(True)
+    # plt.show()
+    plt.savefig(os.path.join(WORK_DIR, 'f1_score_vs_epoch.png'))
+    print('Finished plotting F1 score vs epoch curve, saved to f1_score_vs_epoch.png')
+    ################################################################################################
+
 def fine_tune_rsBigModel_main(para_file, pre_train_model=None, train_data_txt=None, task_type=None):
     '''
     fine-tune the rsBigModel for a specific task, e.g., image classification, object detection, semantic segmentation, etc.
