@@ -258,30 +258,50 @@ def test_fine_tune_rsBigModel_classification():
     import matplotlib.pyplot as plt
     accuracy_txt_list = io_function.get_file_list_by_pattern(WORK_DIR, 'exp15_Epo*/exp*_test_accuracy.txt')
     epoch_list = []
-    accuracy_list = []
     for accuracy_txt in accuracy_txt_list:
         epoch_str = accuracy_txt.split('Epo')[1].split('/')[0]
         epoch_list.append(int(epoch_str))
+
+    # sorted accuracy_txt_list by epoch
+    accuracy_txt_list = [x for _, x in sorted(zip(epoch_list, accuracy_txt_list))]
+
+    f1_scores_list = []
+    c1_accuracy_list = []
+    c0_accuracy_list = []
+    for accuracy_txt in accuracy_txt_list:
         with open(accuracy_txt, 'r') as f:
             lines = f.readlines()
             for line in lines:
                 if line.startswith('test/F1_Score'):
-                    accuracy = float(line.split(':')[1].strip())
-                    accuracy_list.append(accuracy)
-                    break
+                    f1_score = float(line.split(':')[1].strip())
+                    f1_scores_list.append(f1_score)
+                    # break
+                elif line.startswith('test/Class_Accuracy_1'):
+                    c1_accuracy = float(line.split(':')[1].strip())
+                    c1_accuracy_list.append(c1_accuracy)
+                elif line.startswith('test/Class_Accuracy_0'):
+                    c0_accuracy = float(line.split(':')[1].strip())
+                    c0_accuracy_list.append(c0_accuracy)
+                else:
+                    pass
+                    
     # sorted by epoch
-    epoch_list, accuracy_list = zip(*sorted(zip(epoch_list, accuracy_list)))
+    epoch_list, f1_scores_list = zip(*sorted(zip(epoch_list, f1_scores_list)))
     # print(f'Epoch list: {epoch_list}')
-    # print(f'Accuracy list: {accuracy_list}')
-    # plot the accuracy vs epoch curve
+    # print(f'F1 scores list: {f1_scores_list}')
+    # plot the F1 score vs epoch curve
     plt.figure()
-    # just plot a scatter plot, since the accuracy may not be monotonic with epoch, and we only have a few points
-    # plt.scatter(epoch_list, accuracy_list, marker='o')
-    plt.plot(epoch_list, accuracy_list, marker='o')
+    # just plot a scatter plot, since the F1 score may not be monotonic with epoch, and we only have a few points
+    # plt.scatter(epoch_list, f1_scores_list, marker='o')
+    plt.plot(epoch_list, f1_scores_list, marker='o', label='F1 Score')
+    plt.plot(epoch_list, c1_accuracy_list, marker='+', label='Class 1 Accuracy')
+    plt.plot(epoch_list, c0_accuracy_list, marker='x', label='Class 0 Accuracy')
+
     plt.xlabel('Epoch')
     plt.ylabel('Test F1 Score')
     plt.title('Test F1 Score vs Epoch')
     plt.grid(True)
+    plt.legend()
     # plt.show()
     plt.savefig(os.path.join(WORK_DIR, 'f1_score_vs_epoch.png'))
     print('Finished plotting F1 score vs epoch curve, saved to f1_score_vs_epoch.png')
