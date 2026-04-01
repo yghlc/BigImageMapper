@@ -317,10 +317,10 @@ def test_train_a_cnn_model():
             lines = f.readlines()
             for line in lines:
                 if line.startswith('class: 1'):
-                    c1_accuracy = float(line.split(':')[3].strip())
+                    c1_accuracy = float(line.split(':')[3].strip())/100.0
                     c1_accuracy_list.append(c1_accuracy)
                 elif line.startswith('class: 0'):
-                    c0_accuracy = float(line.split(':')[3].strip())
+                    c0_accuracy = float(line.split(':')[3].strip())/100.0   
                     c0_accuracy_list.append(c0_accuracy)
                 else:
                     pass
