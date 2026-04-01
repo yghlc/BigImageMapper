@@ -34,6 +34,7 @@ import basic_src.io_function as io_function
 import basic_src.timeTools as timeTools
 
 from class_utils import create_training_data_from_txt,prepare_training_data, get_data_transforms, load_cnn_models
+from prediction_class import run_prediction_cnn, calculate_top_k_accuracy
 
 import logging
 logger = logging.getLogger("Model")
@@ -167,6 +168,20 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
                                              shuffle=True, num_workers=num_workers) for x in ['train', 'val']}
     
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
+    basic.outputlogMessage(f'dataset_sizes: {dataset_sizes}')
+    # output the count of each class in the training dataset and validation dataset
+    class_counts = {}
+    for set_name in ['train', 'val']:
+        class_counts[set_name] = {}
+        for _, labels, _ in dataloaders[set_name]:
+            for label in labels:
+                label = label.item()
+                if label in class_counts[set_name]:
+                    class_counts[set_name][label] += 1
+                else:
+                    class_counts[set_name][label] = 1 
+    basic.outputlogMessage(f'Class counts in training dataset: {class_counts}')
+
     class_names = image_datasets['train'].classes
 
 
@@ -206,6 +221,18 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
 
 
     # run_training(work_dir, network_ini, dataloaders,dataset_sizes,device, model, criterion, optimizer, scheduler, num_epochs=25)
+
+
+    # evaluate the model on the validation set 
+    ###########################################################################
+    pre_probs, ground_truths = run_prediction_cnn(model_ft, dataloaders['val'], device)
+
+    top_probs_1, top_labels_1 = pre_probs.cpu().topk(1, dim=-1)
+    # top1 accuracy
+    top1_acc_save_path = os.path.join(train_save_dir, f'{expr_name}_top1_accuracy.txt' )
+    calculate_top_k_accuracy(top_labels_1, ground_truths, save_path=top1_acc_save_path, k=1)
+
+    ###########################################################################
 
 
 

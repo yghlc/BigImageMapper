@@ -196,6 +196,7 @@ def prepare_dataset(para_file, area_ini, area_save_dir, image_dir, image_or_patt
     return input_data
 
 def run_prediction(model, test_loader,prompt, device):
+    # run prediction for CLIP model, return the predicted probabilities and ground truths
 
     model.eval()
     model.float()
@@ -310,6 +311,34 @@ def predict_remoteSensing_data_clip(para_file, area_idx, area_ini, area_save_dir
 
     return in_dataset, res_dict
 
+def run_prediction_cnn(model, test_loader, device):
+    # run prediction for CNN models, return the predicted probabilities and ground truths
+    pre_probs = []
+    ground_truths = []
+    with torch.no_grad():
+        for data in tqdm(test_loader):
+            inputs, labels, _ = data
+            inputs = inputs.to(device)
+            if labels.ndim > 1:
+                labels = labels.to(device).squeeze()
+            else:
+                labels = labels.to(device)
+
+            if labels.ndim == 0:
+                basic.outputlogMessage(f"error: labels.ndim == 0, ndim: {labels.ndim}, size: {labels.size()}, value: {labels.tolist()}")
+                continue
+
+            outputs = model(inputs)
+
+            
+            pre_probs.append(outputs)    # .cpu().numpy()
+            ground_truths.append(labels)             #.cpu().numpy()
+
+    # pre_probs = np.concatenate(pre_probs, 0)     # for numpy array
+    pre_probs = torch.cat(pre_probs, 0)               # for tensor
+    ground_truths = torch.cat(ground_truths, 0)               # for tensor
+
+    return pre_probs, ground_truths
 
 def predict_remoteSensing_data_cnn(para_file, area_idx, area_ini, area_save_dir,model_type, trained_model, batch_size=16):
 
@@ -357,31 +386,7 @@ def predict_remoteSensing_data_cnn(para_file, area_idx, area_ini, area_save_dir,
         batch_size=batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=True)
 
-    pre_probs = []
-    ground_truths = []
-    with torch.no_grad():
-        for data in tqdm(test_loader):
-            inputs, labels, _ = data
-            inputs = inputs.to(device)
-            if labels.ndim > 1:
-                labels = labels.to(device).squeeze()
-            else:
-                labels = labels.to(device)
-
-            if labels.ndim == 0:
-                basic.outputlogMessage(f"error: labels.ndim == 0, ndim: {labels.ndim}, size: {labels.size()}, value: {labels.tolist()}")
-                continue
-
-            outputs = model(inputs)
-
-            
-            pre_probs.append(outputs)    # .cpu().numpy()
-            ground_truths.append(labels)             #.cpu().numpy()
-
-    # pre_probs = np.concatenate(pre_probs, 0)     # for numpy array
-    pre_probs = torch.cat(pre_probs, 0)               # for tensor
-    ground_truths = torch.cat(ground_truths, 0)               # for tensor
-
+    pre_probs, ground_truths = run_prediction_cnn(model, test_loader, device)
 
 
     save_path = os.path.join(area_save_dir, os.path.basename(area_save_dir)+'-classify_results.json' )
