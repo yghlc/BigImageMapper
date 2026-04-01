@@ -238,7 +238,7 @@ def test_fine_tune_rsBigModel_classification():
 
     # test with different epoch  numbers
     for epoch in range(10, 500, 20):
-        new_exp_name = f'exp15_Epo{epoch}'
+        new_exp_name = f'{expr_name}_Epo{epoch}'
         if os.path.isdir(os.path.join(WORK_DIR, new_exp_name)):
             print(f"Directory {new_exp_name} already exists, skipping epoch {epoch}")
             continue
@@ -256,7 +256,7 @@ def test_fine_tune_rsBigModel_classification():
     ########################################################################
     # plot the F1 score vs epoch curve
     import matplotlib.pyplot as plt
-    accuracy_txt_list = io_function.get_file_list_by_pattern(WORK_DIR, 'exp15_Epo*/exp*_test_accuracy.txt')
+    accuracy_txt_list = io_function.get_file_list_by_pattern(WORK_DIR, f'{expr_name}_Epo*/exp*_test_accuracy.txt')
     epoch_list = []
     for accuracy_txt in accuracy_txt_list:
         epoch_str = accuracy_txt.split('Epo')[1].split('/')[0]
@@ -265,10 +265,13 @@ def test_fine_tune_rsBigModel_classification():
     # sorted accuracy_txt_list by epoch
     accuracy_txt_list = [x for _, x in sorted(zip(epoch_list, accuracy_txt_list))]
 
+    epoch_list = []  # as accuracy_txt_list has been sorted by epoch, we can re-extract the epoch number to make sure the order is correct
     f1_scores_list = []
     c1_accuracy_list = []
     c0_accuracy_list = []
     for accuracy_txt in accuracy_txt_list:
+        epoch_str = accuracy_txt.split('Epo')[1].split('/')[0]
+        epoch_list.append(int(epoch_str))
         with open(accuracy_txt, 'r') as f:
             lines = f.readlines()
             for line in lines:
@@ -286,7 +289,7 @@ def test_fine_tune_rsBigModel_classification():
                     pass
                     
     # sorted by epoch
-    epoch_list, f1_scores_list = zip(*sorted(zip(epoch_list, f1_scores_list)))
+    # epoch_list, f1_scores_list = zip(*sorted(zip(epoch_list, f1_scores_list)))
     # print(f'Epoch list: {epoch_list}')
     # print(f'F1 scores list: {f1_scores_list}')
     # plot the F1 score vs epoch curve

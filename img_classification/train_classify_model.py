@@ -48,6 +48,12 @@ def run_training(work_dir, network_ini, dataloaders,dataset_sizes,device, model,
 
     # setting logger
     logger.setLevel(logging.INFO)
+    # Remove and close existing FileHandlers
+    for handler in logger.handlers[:]:
+        if isinstance(handler, logging.FileHandler):
+            print(f'Removing existing log file handler: {handler.baseFilename}')
+            logger.removeHandler(handler)
+            handler.close()
     file_handler = logging.FileHandler('%s/%s.txt' % (work_dir, 'train_log-%s-%s' % ('',timeTools.get_now_time_str())))
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
@@ -257,6 +263,87 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
         gc.collect()  # Force garbage collection
 
 
+
+def test_train_a_cnn_model():
+    WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
+    os.chdir(WORK_DIR)
+    para_file = 'main_para_exp14.ini'
+    pre_train_model = ""
+    train_data_txt = ""
+    gpu_num = 1
+
+    # train_a_cnn_model(WORK_DIR, para_file, pre_train_model=pre_train_model,train_data_txt=train_data_txt,gpu_num=gpu_num)
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+
+     # test with different epoch  numbers
+    for epoch in range(10, 500, 20):
+    # for epoch in range(10, 100, 20):
+        new_exp_name = f'{expr_name}_Epo{epoch}'
+        if os.path.isdir(os.path.join(WORK_DIR, new_exp_name)):
+            print(f"Directory {new_exp_name} already exists, skipping epoch {epoch}")
+            continue
+
+        # update the epoch number in the network ini file
+        network_ini = parameters.get_string_parameters(para_file, 'network_setting_ini')
+        parameters.write_Parameters_file(network_ini, 'train_epoch_num', epoch)
+
+        train_a_cnn_model(WORK_DIR, para_file, pre_train_model=pre_train_model,train_data_txt=train_data_txt,gpu_num=gpu_num)
+
+        # move and backup the results
+        os.system(f"mv {expr_name} {new_exp_name}")
+        os.system(f'rm {os.path.join(WORK_DIR, new_exp_name)}/*.pt')  # remove the checkpoint files to save space
+
+    ########################################################################
+    # plot the F1 score vs epoch curve
+    import matplotlib.pyplot as plt
+    accuracy_txt_list = io_function.get_file_list_by_pattern(WORK_DIR, f'{expr_name}_Epo*/exp*_top1_accuracy.txt')
+    epoch_list = []
+    for accuracy_txt in accuracy_txt_list:
+        epoch_str = accuracy_txt.split('Epo')[1].split('/')[0]
+        epoch_list.append(int(epoch_str))
+
+    # sorted accuracy_txt_list by epoch
+    accuracy_txt_list = [x for _, x in sorted(zip(epoch_list, accuracy_txt_list))]
+    for txt in accuracy_txt_list:
+        print(txt)
+
+    epoch_list = []  # as accuracy_txt_list has been sorted by epoch, we can re-extract the epoch number to make sure the order is correct
+    c1_accuracy_list = []
+    c0_accuracy_list = []
+    for accuracy_txt in accuracy_txt_list:
+        epoch_str = accuracy_txt.split('Epo')[1].split('/')[0]
+        epoch_list.append(int(epoch_str))
+        with open(accuracy_txt, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.startswith('class: 1'):
+                    c1_accuracy = float(line.split(':')[3].strip())
+                    c1_accuracy_list.append(c1_accuracy)
+                elif line.startswith('class: 0'):
+                    c0_accuracy = float(line.split(':')[3].strip())
+                    c0_accuracy_list.append(c0_accuracy)
+                else:
+                    pass
+                    
+    # print(f'Epoch list: {epoch_list}')
+    # print(f'F1 scores list: {c1_accuracy_list}')
+    # plot the F1 score vs epoch curve
+    plt.figure()
+    # just plot a scatter plot, since the F1 score may not be monotonic with epoch, and we only have a few points
+    # plt.scatter(epoch_list, f1_scores_list, marker='o')
+    plt.plot(epoch_list, c1_accuracy_list, marker='+', label='Class 1 Accuracy')
+    plt.plot(epoch_list, c0_accuracy_list, marker='x', label='Class 0 Accuracy')
+
+    plt.xlabel('Epoch')
+    plt.ylabel('Validation Accuracy')
+    plt.title('Validation Accuracy vs Epoch')
+    plt.grid(True)
+    plt.legend()
+    # plt.show()
+    plt.savefig(os.path.join(WORK_DIR, f'{expr_name}_validation_accuracy_vs_epoch.png'))
+    print(f'Finished plotting Validation Accuracy vs epoch curve, saved to {expr_name}_validation_accuracy_vs_epoch.png')
+    ############################################################################################
+
 def cnn_train_main(para_file, pre_train_model='', train_data_txt='', b_a_few_shot=False, gpu_num=1):
     print(datetime.now(),"train CNN models for image classification")
     SECONDS = time.time()
@@ -283,6 +370,10 @@ def main(options, args):
 
 
 if __name__ == "__main__":
+
+    test_train_a_cnn_model()
+    sys.exit(0)
+
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2024-01-24")
     parser.description = 'Introduction: fine-tune the clip model using custom data'
