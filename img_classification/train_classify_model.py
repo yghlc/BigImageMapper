@@ -310,6 +310,7 @@ def test_train_a_cnn_model():
     epoch_list = []  # as accuracy_txt_list has been sorted by epoch, we can re-extract the epoch number to make sure the order is correct
     c1_accuracy_list = []
     c0_accuracy_list = []
+    top1_accuracy_list = []
     for accuracy_txt in accuracy_txt_list:
         epoch_str = accuracy_txt.split('Epo')[1].split('/')[0]
         epoch_list.append(int(epoch_str))
@@ -322,9 +323,15 @@ def test_train_a_cnn_model():
                 elif line.startswith('class: 0'):
                     c0_accuracy = float(line.split(':')[3].strip())/100.0   
                     c0_accuracy_list.append(c0_accuracy)
+                elif line.startswith('top 1 accuracy'):
+                    top1_accuracy = float(line.split(':')[2].strip())/100.0
+                    top1_accuracy_list.append(top1_accuracy)
                 else:
                     pass
                     
+    print('mean for c1_accuracy_list', np.mean(c1_accuracy_list))
+    print('mean for c0_accuracy_list', np.mean(c0_accuracy_list))
+    print('mean for top1_accuracy_list', np.mean(top1_accuracy_list))
     # print(f'Epoch list: {epoch_list}')
     # print(f'F1 scores list: {c1_accuracy_list}')
     # plot the F1 score vs epoch curve
@@ -333,6 +340,7 @@ def test_train_a_cnn_model():
     # plt.scatter(epoch_list, f1_scores_list, marker='o')
     plt.plot(epoch_list, c1_accuracy_list, marker='+', label='Class 1 Accuracy')
     plt.plot(epoch_list, c0_accuracy_list, marker='x', label='Class 0 Accuracy')
+    plt.plot(epoch_list, top1_accuracy_list, marker='o', label='Top 1 Accuracy')
 
     plt.xlabel('Epoch')
     plt.ylabel('Validation Accuracy')
@@ -371,8 +379,8 @@ def main(options, args):
 
 if __name__ == "__main__":
 
-    test_train_a_cnn_model()
-    sys.exit(0)
+    # test_train_a_cnn_model()
+    # sys.exit(0)
 
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2024-01-24")
