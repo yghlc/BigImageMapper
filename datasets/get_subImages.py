@@ -252,6 +252,29 @@ def get_save_file_path(saved_dir, pre_name,tail_name, b_label, lat=None,lon=None
         subimg_saved_path = os.path.join(saved_dir, mid_dir, pre_name + tail_name)
         return subimg_saved_path
 
+def save_sub_image(out_meta,out_format,height,width, out_transform, out_image, dstnodata, save_path,
+                   tif_compression='ZSTD'):
+    # out_meta = src.meta.copy()
+    # print('debuging out_format', out_format, tif_compression)
+    if out_format.upper() == 'GTIFF':
+        out_meta.update({"driver": out_format,
+                        "height": height,
+                        "width": width,
+                        "transform": out_transform,
+                        "nodata":dstnodata,
+                        "compress": tif_compression,
+                        "tiled": True}
+                        )  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+    else:
+        out_meta.update({"driver": out_format,
+                        "height": height,
+                        "width": width,
+                        "transform": out_transform,
+                        "nodata":dstnodata})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+    
+    with rasterio.open(save_path, "w", **out_meta) as dest:
+        dest.write(out_image)
+
 def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save_path, dstnodata, brectangle, b_keep_org_file_name,
                   out_format='GTiff'):
     '''
@@ -295,13 +318,14 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
 
             # test: save it to disk
             out_meta = src.meta.copy()
-            out_meta.update({"driver": out_format,
-                             "height": out_image.shape[1],
-                             "width": out_image.shape[2],
-                             "transform": out_transform,
-                             "nodata":dstnodata})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
-            with rasterio.open(save_path, "w", **out_meta) as dest:
-                dest.write(out_image)
+            save_sub_image(out_meta,out_format,out_image.shape[1],out_image.shape[2], out_transform, out_image, dstnodata, save_path)
+            # out_meta.update({"driver": out_format,
+            #                  "height": out_image.shape[1],
+            #                  "width": out_image.shape[2],
+            #                  "transform": out_transform,
+            #                  "nodata":dstnodata})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+            # with rasterio.open(save_path, "w", **out_meta) as dest:
+            #     dest.write(out_image)
     else:
         # for the case it overlap more than one raster, need to produce a mosaic
         tmp_saved_files = []
@@ -331,13 +355,14 @@ def get_sub_image(idx,selected_polygon, image_tile_list, image_tile_bounds, save
                 tmp_saved = os.path.splitext(save_path)[0] +'_%d'%k_img + os.path.splitext(save_path)[1]
                 # test: save it to disk
                 out_meta = src.meta.copy()
-                out_meta.update({"driver": out_format,
-                                 "height": out_image.shape[1],
-                                 "width": out_image.shape[2],
-                                 "transform": out_transform,
-                                 "nodata":dstnodata})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
-                with rasterio.open(tmp_saved, "w", **out_meta) as dest:
-                    dest.write(out_image)
+                save_sub_image(out_meta,out_format,out_image.shape[1],out_image.shape[2], out_transform, out_image, dstnodata, tmp_saved)
+                # out_meta.update({"driver": out_format,
+                #                  "height": out_image.shape[1],
+                #                  "width": out_image.shape[2],
+                #                  "transform": out_transform,
+                #                  "nodata":dstnodata})  # note that, the saved image have a small offset compared to the original ones (~0.5 pixel)
+                # with rasterio.open(tmp_saved, "w", **out_meta) as dest:
+                #     dest.write(out_image)
                 tmp_saved_files.append(tmp_saved)
         if len(tmp_saved_files) < 1:
             basic.outputlogMessage('Warning, %dth polygon overlap multiple image tiles, but all are black or white, please check ' % idx)
