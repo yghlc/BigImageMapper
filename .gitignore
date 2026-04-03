@@ -18,6 +18,27 @@ working_dir
 *.tar.gz
 .DS_Store
 
+*.cpt
+*.gmt
+*.sif
+*.json
+
+
+# ignore these on MacOS
+deeplabBased/nvidia_ubuntu21.10-tf1-py3.def
+img_classification/sing_container/runIn_sing.sh
+multiArea_test/test_img_augment.sh
+sam_dir/331_fine_tune_SAM_mito.ipynb
+sam_dir/fine_tune_sam_ipynb.py
+sam_dir/test_PIL_array.ipynb
+sam_dir/test_sam_everything.ipynb
+sam_dir/test_sam_prompt.ipynb
+utility/ray_example.py
+validation_merge/check_geopandas_env.py
+validation_merge/compare_two_vector_file.py
+web-validation/tif_2_png_json.sh
+yolov4_dir/yolov4_obj.cfg
+yolov4_dir/yolov4_obj_oneband.cfg
 
 # Pycharm folder
 .idea
