@@ -307,8 +307,8 @@ def test_fine_tune_rsBigModel_classification():
     plt.grid(True)
     plt.legend()
     # plt.show()
-    plt.savefig(os.path.join(WORK_DIR, 'f1_score_vs_epoch.png'))
-    print('Finished plotting F1 score vs epoch curve, saved to f1_score_vs_epoch.png')
+    plt.savefig(os.path.join(WORK_DIR, f'{expr_name}_f1_score_vs_epoch.png'))
+    print(f'Finished plotting F1 score vs epoch curve, saved to {expr_name}_f1_score_vs_epoch.png')
     ################################################################################################
 
 def fine_tune_rsBigModel_main(para_file, pre_train_model=None, train_data_txt=None, task_type=None):
