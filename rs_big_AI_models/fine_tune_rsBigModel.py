@@ -230,7 +230,8 @@ def test_fine_tune_rsBigModel_classification():
     # change dir
     WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
     os.chdir(WORK_DIR)
-    para_file = 'main_para_exp15.ini'
+    # para_file = 'main_para_exp15.ini'
+    para_file = 'main_para_exp16.ini'  # set b_freeze_backbone = No
     pre_train_model = None
     train_data_txt = None
     # fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=pre_train_model, train_data_txt=train_data_txt)
@@ -275,14 +276,14 @@ def test_fine_tune_rsBigModel_classification():
         with open(accuracy_txt, 'r') as f:
             lines = f.readlines()
             for line in lines:
-                if line.startswith('test/F1_Score'):
+                if line.startswith('test/F1_Score') or line.startswith('test/Multiclass_F1_Score'):
                     f1_score = float(line.split(':')[1].strip())
                     f1_scores_list.append(f1_score)
                     # break
-                elif line.startswith('test/Class_Accuracy_1'):
+                elif line.startswith('test/Class_Accuracy_1') or line.startswith('test/multiclassaccuracy_1'):
                     c1_accuracy = float(line.split(':')[1].strip())
                     c1_accuracy_list.append(c1_accuracy)
-                elif line.startswith('test/Class_Accuracy_0'):
+                elif line.startswith('test/Class_Accuracy_0') or line.startswith('test/multiclassaccuracy_0'):
                     c0_accuracy = float(line.split(':')[1].strip())
                     c0_accuracy_list.append(c0_accuracy)
                 else:
