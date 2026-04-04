@@ -271,6 +271,48 @@ def output_statistic_info(shp_file_list,output_xlsx=None):
     return stats_df
 
 
+def copy_manu_validated_res_2_new_prediction(pred_shp_list, manu_validated_shp_list, key_column="polyID"):
+    # after obtianing the prediction resutls using a differnt method, 
+    # we don't want to do the validation again, so copy the validated results in manu_validated_shp to the new prediction shapefiles
+    # and only kept these validated results for further analysis
+
+    # load all manu_validated_shp_list, and combine them into one geodataframe and remove duplicates
+    manu_gdfs = [gpd.read_file(shp) for shp in manu_validated_shp_list]
+    combined_manu_gdf = gpd.GeoDataFrame(pd.concat(manu_gdfs, ignore_index=True)).drop_duplicates(subset=key_column)
+    # save for checking
+    print(f'the number of combined manu validated records: {len(combined_manu_gdf)}')
+    combined_manu_gdf.to_file('combined_manu_validated.gpkg', driver='GPKG')
+
+    for pre_shp in pred_shp_list:
+        print(f'copying validated results to {os.path.basename(pre_shp)}')
+
+        # read the prediction shapefile
+        pred_gdf = gpd.read_file(pre_shp)
+
+        # copy the validate and remark columns from combined_manu_gdf to pred_gdf
+        pred_gdf = pred_gdf.merge(combined_manu_gdf[[key_column, "validate", "remark"]], on=key_column, how="left")
+
+        # only keep the records in pred_gdf that have a match in combined_manu_gdf based on the key_column
+        matched_gdf = pred_gdf[pred_gdf[key_column].isin(combined_manu_gdf[key_column])]
+        print(f'found {len(matched_gdf)} matched validated records in {os.path.basename(pre_shp)}')
+
+        # save the matched records to a new shapefile
+        output_shp = io_function.get_name_by_adding_tail(pre_shp, 'validated')
+        matched_gdf.to_file(output_shp)
+        print(f"Saved matched validated records to: {os.path.basename(output_shp)}")
+
+
+def test_copy_manu_validated_res_2_new_prediction():
+    word_dir = os.path.expanduser('~/Data/slump_demdiff_classify/cnn_rsModel_classify/merge_classify_result_cnn')
+    os.chdir(word_dir)
+    pred_shp_list = ['classID1_occur6_040309.shp','classID1_occur7_040309.shp']
+
+    manu_dir = os.path.expanduser('~/Data/slump_demdiff_classify/clip_classify/merge_classify_result_v2')
+    manu_validated_shp_list = ['classID1_occur7_012110_Sel_merge_validated_U.gpkg','classID1_occur6_012110_Sel_merge_validated_U.gpkg']
+    manu_validated_shp_list = [os.path.join(manu_dir,item) for item in manu_validated_shp_list]
+
+    copy_manu_validated_res_2_new_prediction(pred_shp_list, manu_validated_shp_list, key_column="polyID")
+
 
 
 def main(options, args):
@@ -300,7 +342,8 @@ def main(options, args):
 
 if __name__ == '__main__':
     # test_validate_against_existing_results()
-    # sys.exit(0)
+    test_copy_manu_validated_res_2_new_prediction()
+    sys.exit(0)
 
     usage = "usage: %prog [options] random1.shp random2.shp random3.shp ... "
     parser = OptionParser(usage=usage, version="1.0 2025-01-20")
