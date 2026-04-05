@@ -366,9 +366,9 @@ def test_different_training_sample_count(expr_name,WORK_DIR,para_file,pre_train_
 
 
 def test_train_a_cnn_model():
-    WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
-    os.chdir(WORK_DIR)
-    para_file = 'main_para_exp14.ini'
+    # WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
+    # os.chdir(WORK_DIR)
+    # para_file = 'main_para_exp14.ini'
     pre_train_model = ""
     train_data_txt = ""
     gpu_num = 1
