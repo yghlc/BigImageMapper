@@ -382,8 +382,11 @@ def test_train_a_cnn_model():
     # plot_accuracy_vs_epoch_number(expr_name,WORK_DIR)
 
     ### test on different training samples
-    WORK_DIR= os.path.expanduser("~/Data/slump_demdiff_classify/cnn_rsModel_classify_exp14R1")
-    os.chdir(WORK_DIR)
+    if os.path.isfile('run_train.sh'):
+        WORK_DIR = os.getcwd()
+    else:
+        WORK_DIR= os.path.expanduser("~/Data/slump_demdiff_classify/cnn_rsModel_classify_exp14R1")
+        os.chdir(WORK_DIR)
     para_file = 'main_para_exp14R1.ini'
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
     test_different_training_sample_count(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num)
