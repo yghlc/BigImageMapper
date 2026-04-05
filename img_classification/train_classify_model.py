@@ -282,14 +282,14 @@ def test_different_epoch_numbers(expr_name,WORK_DIR,para_file,pre_train_model,tr
         os.system(f"mv {expr_name} {new_exp_name}")
         os.system(f'rm {os.path.join(WORK_DIR, new_exp_name)}/*.pt')  # remove the checkpoint files to save space
 
-def plot_accuracy_vs_epoch_number(expr_name,WORK_DIR):
+def plot_accuracy_vs_epoch_number(expr_name,WORK_DIR, folder_pattern="Epo"):
     ########################################################################
     # plot the F1 score vs epoch curve
     import matplotlib.pyplot as plt
-    accuracy_txt_list = io_function.get_file_list_by_pattern(WORK_DIR, f'{expr_name}_Epo*/exp*_top1_accuracy.txt')
+    accuracy_txt_list = io_function.get_file_list_by_pattern(WORK_DIR, f'{expr_name}_{folder_pattern}*/exp*_top1_accuracy.txt')
     epoch_list = []
     for accuracy_txt in accuracy_txt_list:
-        epoch_str = accuracy_txt.split('Epo')[1].split('/')[0]
+        epoch_str = accuracy_txt.split(f'{folder_pattern}')[1].split('/')[0]
         epoch_list.append(int(epoch_str))
 
     # sorted accuracy_txt_list by epoch
@@ -302,7 +302,7 @@ def plot_accuracy_vs_epoch_number(expr_name,WORK_DIR):
     c0_accuracy_list = []
     top1_accuracy_list = []
     for accuracy_txt in accuracy_txt_list:
-        epoch_str = accuracy_txt.split('Epo')[1].split('/')[0]
+        epoch_str = accuracy_txt.split(f'{folder_pattern}')[1].split('/')[0]
         epoch_list.append(int(epoch_str))
         with open(accuracy_txt, 'r') as f:
             lines = f.readlines()
@@ -332,14 +332,14 @@ def plot_accuracy_vs_epoch_number(expr_name,WORK_DIR):
     plt.plot(epoch_list, c0_accuracy_list, marker='x', label='Class 0 Accuracy')
     plt.plot(epoch_list, top1_accuracy_list, marker='o', label='Top 1 Accuracy')
 
-    plt.xlabel('Epoch')
+    plt.xlabel(f'{folder_pattern}')
     plt.ylabel('Validation Accuracy')
-    plt.title('Validation Accuracy vs Epoch')
+    plt.title(f'Validation Accuracy vs {folder_pattern}')
     plt.grid(True)
     plt.legend()
     # plt.show()
-    plt.savefig(os.path.join(WORK_DIR, f'{expr_name}_validation_accuracy_vs_epoch.png'))
-    print(f'Finished plotting Validation Accuracy vs epoch curve, saved to {expr_name}_validation_accuracy_vs_epoch.png')
+    plt.savefig(os.path.join(WORK_DIR, f'{expr_name}_validation_accuracy_vs_{folder_pattern}.png'))
+    print(f'Finished plotting Validation Accuracy vs {folder_pattern} curve, saved to {expr_name}_validation_accuracy_vs_{folder_pattern}.png')
     ############################################################################################
 
 
@@ -371,7 +371,7 @@ def test_train_a_cnn_model():
         WORK_DIR = os.getcwd()
     else:
         # WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
-        WORK_DIR= os.path.expanduser("~/Data/slump_demdiff_classify/cnn_rsModel_classify_exp14R1")
+        WORK_DIR= os.path.expanduser("~/Data/slump_demdiff_classify/cnn_rsModel_classify_exp14R1") # for testiing differrent sample numbers
         os.chdir(WORK_DIR)
 
     # para_file = 'main_para_exp14.ini'
@@ -391,6 +391,7 @@ def test_train_a_cnn_model():
     para_file = 'main_para_exp14R1.ini'
     expr_name = parameters.get_string_parameters(para_file, 'expr_name')
     test_different_training_sample_count(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num)
+    plot_accuracy_vs_epoch_number(expr_name,WORK_DIR, folder_pattern="Sample")
 
     
 
