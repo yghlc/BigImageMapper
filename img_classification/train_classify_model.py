@@ -263,19 +263,8 @@ def train_a_cnn_model(WORK_DIR, para_file, pre_train_model='',train_data_txt='',
         gc.collect()  # Force garbage collection
 
 
-
-def test_train_a_cnn_model():
-    WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
-    os.chdir(WORK_DIR)
-    para_file = 'main_para_exp14.ini'
-    pre_train_model = ""
-    train_data_txt = ""
-    gpu_num = 1
-
-    # train_a_cnn_model(WORK_DIR, para_file, pre_train_model=pre_train_model,train_data_txt=train_data_txt,gpu_num=gpu_num)
-    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
-
-     # test with different epoch  numbers
+def test_different_epoch_numbers(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num):
+    # test with different epoch  numbers
     for epoch in range(10, 500, 20):
     # for epoch in range(10, 100, 20):
         new_exp_name = f'{expr_name}_Epo{epoch}'
@@ -293,6 +282,7 @@ def test_train_a_cnn_model():
         os.system(f"mv {expr_name} {new_exp_name}")
         os.system(f'rm {os.path.join(WORK_DIR, new_exp_name)}/*.pt')  # remove the checkpoint files to save space
 
+def plot_accuracy_vs_epoch_number(expr_name,WORK_DIR):
     ########################################################################
     # plot the F1 score vs epoch curve
     import matplotlib.pyplot as plt
@@ -352,6 +342,54 @@ def test_train_a_cnn_model():
     print(f'Finished plotting Validation Accuracy vs epoch curve, saved to {expr_name}_validation_accuracy_vs_epoch.png')
     ############################################################################################
 
+
+def test_different_training_sample_count(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num):
+    # test with different sample counts
+    for sam_count in range(10, 1000, 10):
+        new_exp_name = f'{expr_name}_Sample{sam_count}'
+        if os.path.isdir(os.path.join(WORK_DIR, new_exp_name)):
+            print(f"Directory {new_exp_name} already exists, skipping sample count {sam_count}")
+            continue
+
+        # update the sample count in the network ini file
+        parameters.write_Parameters_file(para_file, 'a_few_shot_samp_count', sam_count)
+
+        # generate the training data with the specified sample count
+        os.system("rm -r training_data")
+        os.system(f"python ~/codes/PycharmProjects/BigImageMapper/img_classification/get_organize_training_data.py {para_file}")
+
+        train_a_cnn_model(WORK_DIR, para_file, pre_train_model=pre_train_model,train_data_txt=train_data_txt,gpu_num=gpu_num)
+
+        # move and backup the results
+        os.system(f"mv {expr_name} {new_exp_name}")
+        os.system(f'rm {os.path.join(WORK_DIR, new_exp_name)}/*.pt')  # remove the checkpoint files to save space
+
+
+def test_train_a_cnn_model():
+    WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
+    os.chdir(WORK_DIR)
+    para_file = 'main_para_exp14.ini'
+    pre_train_model = ""
+    train_data_txt = ""
+    gpu_num = 1
+    
+    # train_a_cnn_model(WORK_DIR, para_file, pre_train_model=pre_train_model,train_data_txt=train_data_txt,gpu_num=gpu_num)
+
+
+    
+    ### test_different_epoch_numbers(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num)
+    # expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    # plot_accuracy_vs_epoch_number(expr_name,WORK_DIR)
+
+    ### test on different training samples
+    WORK_DIR= os.path.expanduser("~/Data/slump_demdiff_classify/cnn_rsModel_classify_exp14R1")
+    os.chdir(WORK_DIR)
+    para_file = 'main_para_exp14R1.ini'
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    test_different_training_sample_count(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num)
+
+    
+
 def cnn_train_main(para_file, pre_train_model='', train_data_txt='', b_a_few_shot=False, gpu_num=1):
     print(datetime.now(),"train CNN models for image classification")
     SECONDS = time.time()
@@ -379,8 +417,8 @@ def main(options, args):
 
 if __name__ == "__main__":
 
-    # test_train_a_cnn_model()
-    # sys.exit(0)
+    test_train_a_cnn_model()
+    sys.exit(0)
 
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2024-01-24")
