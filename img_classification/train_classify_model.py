@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Introduction: to train a image classification model (CNN-based) for the image classification task
@@ -377,8 +377,8 @@ def test_train_a_cnn_model():
     if os.path.isfile('run_train.sh'):
         WORK_DIR = os.getcwd()
     else:
-        # WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
-        WORK_DIR= os.path.expanduser("~/Data/slump_demdiff_classify/cnn_rsModel_classify_exp14R1") # for testiing differrent sample numbers
+        WORK_DIR=  os.path.expanduser("~/Data/slump_demdiff_classify/cnn_rsModel_classify")
+        # WORK_DIR= os.path.expanduser("~/Data/slump_demdiff_classify/cnn_rsModel_classify_exp14R1") # for testiing differrent sample numbers
         os.chdir(WORK_DIR)
 
     # para_file = 'main_para_exp14.ini'
@@ -390,15 +390,17 @@ def test_train_a_cnn_model():
 
 
     
-    ### test_different_epoch_numbers(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num)
-    # expr_name = parameters.get_string_parameters(para_file, 'expr_name')
-    # plot_accuracy_vs_epoch_number(expr_name,WORK_DIR)
+    ### test on different epoch numbers
+    para_file = 'main_para_exp14.ini'
+    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    test_different_epoch_numbers(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num)
+    plot_accuracy_vs_epoch_number(expr_name,WORK_DIR,folder_pattern="Epo")
 
     ### test on different training samples
-    para_file = 'main_para_exp14R1.ini'
-    expr_name = parameters.get_string_parameters(para_file, 'expr_name')
-    test_different_training_sample_count(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num)
-    plot_accuracy_vs_epoch_number(expr_name,WORK_DIR, folder_pattern="Sample")
+    # para_file = 'main_para_exp14R1.ini'
+    # expr_name = parameters.get_string_parameters(para_file, 'expr_name')
+    # test_different_training_sample_count(expr_name,WORK_DIR,para_file,pre_train_model,train_data_txt,gpu_num)
+    # plot_accuracy_vs_epoch_number(expr_name,WORK_DIR, folder_pattern="Sample")
 
     
 
@@ -429,8 +431,8 @@ def main(options, args):
 
 if __name__ == "__main__":
 
-    test_train_a_cnn_model()
-    sys.exit(0)
+    # test_train_a_cnn_model()
+    # sys.exit(0)
 
     usage = "usage: %prog [options] para_file"
     parser = OptionParser(usage=usage, version="1.0 2024-01-24")

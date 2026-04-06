@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Introduction: fine-tune the Geospatial Foundation Models (GFMs) or rsBigModel for a specific task, e.g., 
@@ -230,8 +230,8 @@ def test_fine_tune_rsBigModel_classification():
     # change dir
     WORK_DIR= "/home/hlc/Data/slump_demdiff_classify/cnn_rsModel_classify"
     os.chdir(WORK_DIR)
-    # para_file = 'main_para_exp15.ini'
-    para_file = 'main_para_exp16.ini'  # set b_freeze_backbone = No
+    para_file = 'main_para_exp15.ini'
+    # para_file = 'main_para_exp16.ini'  # set b_freeze_backbone = No
     pre_train_model = None
     train_data_txt = None
     # fine_tune_rsBigModel_classification(WORK_DIR, para_file, pre_train_model=pre_train_model, train_data_txt=train_data_txt)
@@ -268,6 +268,7 @@ def test_fine_tune_rsBigModel_classification():
 
     epoch_list = []  # as accuracy_txt_list has been sorted by epoch, we can re-extract the epoch number to make sure the order is correct
     f1_scores_list = []
+    top1_accuracy_list = []
     c1_accuracy_list = []
     c0_accuracy_list = []
     for accuracy_txt in accuracy_txt_list:
@@ -286,9 +287,19 @@ def test_fine_tune_rsBigModel_classification():
                 elif line.startswith('test/Class_Accuracy_0') or line.startswith('test/multiclassaccuracy_0'):
                     c0_accuracy = float(line.split(':')[1].strip())
                     c0_accuracy_list.append(c0_accuracy)
+                elif line.startswith('test/Accuracy_Micro') or line.startswith('test/Overall_Accuracy'):
+                    top1_accuracy = float(line.split(':')[1].strip())
+                    top1_accuracy_list.append(top1_accuracy)
                 else:
                     pass
                     
+    # save epoch_list, c0_accuracy_list, c1_accuracy_list, and top1_accuracy_list to a excel file for later analysis
+    import pandas as pd
+    df = pd.DataFrame({'epochs': epoch_list, 'top1_acc_c1': c1_accuracy_list, 'top1_acc_c0': c0_accuracy_list, 
+                       'f1_score': f1_scores_list, 'top_1_accuracy': top1_accuracy_list})
+    df.to_excel(os.path.join(WORK_DIR, f'{expr_name}_Epo_accuracy.xlsx'), index=False)
+    print(f'Saved accuracy data to {expr_name}_Epo_accuracy.xlsx')
+
     # sorted by epoch
     # epoch_list, f1_scores_list = zip(*sorted(zip(epoch_list, f1_scores_list)))
     # print(f'Epoch list: {epoch_list}')
