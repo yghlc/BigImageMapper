@@ -332,6 +332,13 @@ def plot_accuracy_vs_epoch_number(expr_name,WORK_DIR, folder_pattern="Epo"):
     plt.plot(epoch_list, c0_accuracy_list, marker='x', label='Class 0 Accuracy')
     plt.plot(epoch_list, top1_accuracy_list, marker='o', label='Top 1 Accuracy')
 
+    # save epoch_list, c0_accuracy_list, c1_accuracy_list, and top1_accuracy_list to a excel file for later analysis
+    import pandas as pd
+    df = pd.DataFrame({f'{folder_pattern}': epoch_list, 'Class 1 Accuracy': c1_accuracy_list, 'Class 0 Accuracy': c0_accuracy_list, 'Top 1 Accuracy': top1_accuracy_list})
+    df.to_excel(os.path.join(WORK_DIR, f'{expr_name}_{folder_pattern}_accuracy.xlsx'), index=False)
+    print(f'Saved accuracy data to {expr_name}_{folder_pattern}_accuracy.xlsx')
+
+
     plt.xlabel(f'{folder_pattern}')
     plt.ylabel('Validation Accuracy')
     plt.title(f'Validation Accuracy vs {folder_pattern}')
