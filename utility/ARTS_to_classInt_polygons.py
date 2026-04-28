@@ -197,6 +197,7 @@ def save_group_merged_polygons(group_list, geom_circle_list,id_list, train_class
 
 
 def ARTS_to_classInt_polygons(input,output,buff_radius=500):
+    print(datetime.now(), 'the input is:', input)
     # read the existing data, convert to points
     geometries, train_class = vector_gpd.read_polygons_attributes_list(input, 'TrainClass',
                                                                        b_fix_invalid_polygon=True)
@@ -211,9 +212,11 @@ def ARTS_to_classInt_polygons(input,output,buff_radius=500):
     # sys.exit(0)
     geometries = convert_MultiPolygon_to_polygons(geometries, train_class)
     # sys.exit(0)
+    print(f'after converting MultiPolygon to Polygon, {len(geometries)} features remains')
 
     # merge polygons with the same UID
     m_geometries, m_train_classes, m_uIDs = merge_geometry_with_the_same_UID(geometries,train_class, uID_list)
+    print(f'after merging geometries with the same UID, {len(m_geometries)} features remains')
 
     train_class_int = [1 if tclass == 'Positive' else 0 for tclass in m_train_classes ]
     geom_centrioid_list = [vector_gpd.get_polygon_centroid(item) for item in m_geometries]
@@ -225,6 +228,7 @@ def ARTS_to_classInt_polygons(input,output,buff_radius=500):
     save_polyons_attributes = {'Polygons':geom_circle_list, 'id': id_list, 'UID':m_uIDs, 'class_int':train_class_int}
     wkt_string = map_projection.get_raster_or_vector_srs_info_proj4(input)
     save_to_a_gpkg_file(save_polyons_attributes,wkt_string, output)
+    print(f'saved the {len(geom_circle_list)} buffer circles to {output}')
 
 
     # group overlap circles and merged them, for slilitating
