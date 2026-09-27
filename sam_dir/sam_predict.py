@@ -254,6 +254,97 @@ def group_prompt_points_boxes(points_pixel_list, class_values, group_ids,input_b
 
     return group_prompts_all
 
+def normalize_prompts_for_predict(points, p_labels, boxes, sam_version='1'):
+    """
+    Normalize prompt shapes for SAM1 or SAM2.
+
+    Assumption:
+        One group = one object prompt.
+        A group can have multiple points.
+        A group should use at most one box.
+
+    SAM1 expects:
+        points:   (N, 2)
+        p_labels: (N,)
+        box:      (4,)
+
+    SAM2 expects:
+        points:   (1, N, 2)
+        p_labels: (1, N)
+        box:      (1, 4)
+    """
+
+    if points is not None:
+        points = np.asarray(points, dtype=np.float32)
+        if points.size == 0:
+            points = None
+
+    if p_labels is not None:
+        p_labels = np.asarray(p_labels, dtype=np.int32)
+        if p_labels.size == 0:
+            p_labels = None
+
+    if boxes is not None:
+        boxes = np.asarray(boxes, dtype=np.float32)
+        if boxes.size == 0:
+            boxes = None
+
+    # Normalize points/labels
+    if points is not None:
+        if points.ndim == 1:
+            points = points[None, :]  # (2,) -> (1, 2)
+
+        if p_labels is None:
+            raise ValueError("point_coords is provided but point_labels is None")
+
+        if p_labels.ndim == 0:
+            p_labels = p_labels[None]  # scalar -> (1,)
+
+        if len(points) != len(p_labels):
+            raise ValueError(
+                f"points and p_labels length mismatch: "
+                f"points={points.shape}, p_labels={p_labels.shape}"
+            )
+
+    # Normalize boxes
+    if boxes is not None:
+        if boxes.ndim == 1:
+            # already one box: (4,)
+            pass
+        elif boxes.ndim == 2:
+            if boxes.shape[0] == 1:
+                # one box stored as (1, 4)
+                boxes = boxes[0]
+            else:
+                # Less invasive behavior:
+                # for one group, use the first box and warn.
+                print(
+                    f"Warning: one group has multiple boxes {boxes.shape}; "
+                    f"using the first box only."
+                )
+                boxes = boxes[0]
+        else:
+            raise ValueError(f"Unexpected boxes shape: {boxes.shape}")
+
+    if sam_version == '2':
+        # SAM2 wants batched prompt dimensions.
+        if points is not None:
+            points = points[None, :, :]     # (N, 2) -> (1, N, 2)
+            p_labels = p_labels[None, :]    # (N,) -> (1, N)
+
+        if boxes is not None:
+            boxes = boxes[None, :]          # (4,) -> (1, 4)
+
+    elif sam_version == '1':
+        # SAM1 predict() wants unbatched one-group prompts.
+        # points: (N, 2), labels: (N,), box: (4,)
+        pass
+
+    else:
+        raise ValueError(f"Unknown SAM version: {sam_version}")
+
+    return points, p_labels, boxes
+
 def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch_h, overlay_x, overlay_y,
                         batch_size=1, min_area=10, max_area=40000, prompts=None, finetune_m=None,sam_version='1', valid_img_extent=None):
 
@@ -433,7 +524,7 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
                 b_labels = np.array(a_group_prompt['b_class']) if 'b_class' in a_group_prompt.keys() else None
 
                 # for each group, usually, only have one box, but may have multiple points
-                if np.sum(b_labels) == 0:   # 0 is background, we don't need boxes for background
+                if b_labels is not None and np.sum(b_labels) == 0:   # 0 is background, we don't need boxes for background
                     boxes = None
 
                 # if all the labels are 0 (background), then ignore this group
@@ -445,6 +536,8 @@ def segment_rs_image_sam(image_path, save_dir, model, model_type, patch_w, patch
                 if points is not None and len(points) < 2:
                     b_multimask = True
                 # b_multimask = True if len(points) < 2 and boxes is None else False
+                 # Normalize shapes for SAM1/SAM2
+                points, p_labels, boxes = normalize_prompts_for_predict(points, p_labels, boxes, sam_version=sam_version)
                 # for the case only use box, b_multimask is also False in the example.
                 masks, scores, logits = mask_generator.predict(
                     point_coords=points,
