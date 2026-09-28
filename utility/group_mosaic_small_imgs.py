@@ -115,7 +115,8 @@ def main(options, args):
     reference_grids_shp = options.reference_grids_shp # if not None, to use reference grid
 
     if b_h3_grid:  
-        group_mosaic_by_h3_grid(small_img_dir, save_dir, low_h3_res=8, high_h3_res=4)
+        high_h3_resolution = options.ref_h3_resolution
+        group_mosaic_by_h3_grid(small_img_dir, save_dir, low_h3_res=8, high_h3_res=high_h3_resolution)
 
      
 
@@ -132,7 +133,10 @@ if __name__ == "__main__":
     parser.add_option("-g", "--b_h3_grid",
                     action="store_true", dest="b_h3_grid", default=False,
                     help="if set, it means H3 IDs are in filenames, and the H3 grid system will be used")
-
+    
+    parser.add_option("-l", "--ref_h3_resolution",
+                    action="store", dest="ref_h3_resolution", type=int, default=4,
+                    help="the reference (higher) resolution of H3 grids")
 
 
     (options, args) = parser.parse_args()
