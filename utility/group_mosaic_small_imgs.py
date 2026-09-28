@@ -87,7 +87,8 @@ def group_mosaic_by_h3_grid(small_img_dir, save_dir, low_h3_res=8, high_h3_res=4
     h3_id_file_group = {}
     for idx_h3_id, img_path in zip(small_img_h3_id_list, small_img_list):
         parent_id = geo_index_h3.get_h3_parent(idx_h3_id,high_h3_res)
-        h3_id_file_group.setdefault(parent_id, []).append(img_path)
+        # change to absolution path, otherwise, may end in error in later steps
+        h3_id_file_group.setdefault(parent_id, []).append(os.path.abspath(img_path)) 
 
     # save h3_id_file_group to txt
     h3_id_file_group_txt = os.path.join(save_dir,f'h3_{high_h3_res}_id_file_group.txt')
@@ -100,7 +101,7 @@ def group_mosaic_by_h3_grid(small_img_dir, save_dir, low_h3_res=8, high_h3_res=4
 
         if len(img_paths) < 2:
             # create a soft link
-            os.symlink(os.path.abspath(img_paths[0]), vrt_path)
+            os.symlink(img_paths[0], vrt_path)
         else:
             no_data = raster_io.get_nodata(img_paths[0])
             mosaics_images_vrt(img_paths,vrt_path,nodata=no_data, resampling_method='average')
