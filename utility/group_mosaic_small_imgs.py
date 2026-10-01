@@ -106,6 +106,18 @@ def group_mosaic_by_h3_grid(small_img_dir, save_dir, low_h3_res=8, high_h3_res=4
             no_data = raster_io.get_nodata(img_paths[0])
             mosaics_images_vrt(img_paths,vrt_path,nodata=no_data, resampling_method='average')
 
+    # save the parent h3 grids into gpkg file
+    parent_id_list = list(h3_id_file_group.keys())
+    epsg_str = raster_io.get_projection(small_img_list[0])
+    print('epsg_str:', epsg_str) # output something like "EPSG:3413"
+    save_gpkg_path = os.path.join(save_dir,f'{os.path.basename(save_dir)}_h3_{high_h3_res}.gpkg')
+    parent_cells_gpd = geo_index_h3.get_polygon_of_h3_cell(parent_id_list, map_prj=epsg_str,h3_id_col_name=f'h3_id_{high_h3_res}')
+    
+    # when saving to gpkg, if the file exist, the old file will be kept as a lyaer, causing problem later.
+    # so, removed it before saving
+    if os.path.isfile(save_gpkg_path) and save_gpkg_path.endswith('.gpkg'):
+        io_function.delete_file_or_dir(save_gpkg_path)
+    parent_cells_gpd.to_file(save_gpkg_path, driver=vector_gpd.guess_file_format_extension(save_gpkg_path))
 
 
 
