@@ -105,7 +105,7 @@ def group_polygons_into_h3_grids(input_vector, save_dir, min_count_per_group=200
         h3_id = group["h3_id"].iloc[0]
         resolution = group["_h3_resolution"].iloc[0]
         
-        filename = f"h3_res{resolution}_{h3_id}_g{idx+1}_{len(group)}s.gpkg"
+        filename = f"g{idx:03d}_{len(group)}s_h3_res{resolution}_{h3_id}.gpkg"
         output_path = os.path.join(save_dir, filename)
         if os.path.isfile(output_path):
             print(f"Warning: {output_path} already exists, skip, remove it if needed.")
@@ -118,7 +118,7 @@ def group_polygons_into_h3_grids(input_vector, save_dir, min_count_per_group=200
 
 
         group.to_file(output_path, driver="GPKG", layer="polygons")
-        print(f"Saved group {idx+1} with {len(group)} polygons to {output_path}")
+        print(f"Saved group {idx} with {len(group)} polygons to {output_path}")
         output_files.append(str(output_path))
 
     print(f'save {len(output_files)} files into {save_dir}')
