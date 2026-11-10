@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Introduction: 
+for some mapping or detection results, we may do not have ground truth to calculate the number of 
+false negatives (missing detection),  To understand missing detection, we can check existing polygons 
+and see how many of them were missed in the detection or mapping results. 
+This script is used to check missing detection results.
+
+Author: Huang Lingcao
+Email: huanglingcao@gmail.com
+Created: 2026-11-09
+"""
+
+import os, sys
+from optparse import OptionParser
+
+import pandas as pd
+
+code_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.insert(0, code_dir)
+# import parameters
+import basic_src.basic as basic
+import basic_src.io_function as io_function
+import basic_src.map_projection as map_projection
+import datasets.vector_gpd as vector_gpd
+import shapely
+from shapely.strtree import STRtree
+
+
+def check_missing_results(existing_data, mapping_results, buffer_size=500, b_existing_center=True, save_path=None):
+    """
+    check the missing detection results by comparing the existing data and mapping results
+    :param existing_data: the existing data, a shapefile
+    :param mapping_results: the mapping or detection results, a shapefile
+    :param buffer_size: the buffer size for the existing data in meters
+    :param b_existing_center: if set, will get the use the gemetric center for buffering
+    :param save_path: the file path for saving the results
+    :return:
+    """
+
+    # check if existing_data and mapping_results have the same mappping projections
+    existing_prj = map_projection.get_raster_or_vector_srs_info_epsg(existing_data)
+    mapping_prj = map_projection.get_raster_or_vector_srs_info_epsg(mapping_results)
+
+
+    #TODO: this block need to improve, currently, it only read data from "ARTS_main_dataset_v.2.1.0.gpkg", 
+    # and only read the geometric center then buffering. 
+    # read the existing data, convert to points
+    geometries, train_class = vector_gpd.read_polygons_attributes_list(existing_data,'TrainClass',b_fix_invalid_polygon=False)
+    print(f'read {len(geometries)} features')
+    geometries_pos = [item for item, tclass in zip(geometries,train_class) if tclass=='Positive']
+    print(f'read {len(geometries_pos)} positive features')
+    # print(geometries_pos[0])
+    geom_pos_centrioid_list = [ vector_gpd.get_polygon_centroid(item) for item in geometries_pos]
+    print(f'read {len(geom_pos_centrioid_list)} point features')
+    geom_pos_circle_list = [item.buffer(buffer_size) for item in geom_pos_centrioid_list]
+
+
+    if existing_prj != mapping_prj:
+        # raise ValueError(f'the map projection is different between {existing_data} and {mapping_results}')
+        basic.outputlogMessage(f'Warning, repoject the shapefile {os.path.basename(mapping_results)} to {existing_prj}')
+        in_geometries = vector_gpd.read_shape_gpd_to_NewPrj(mapping_results,existing_prj)
+    else:
+        in_geometries = vector_gpd.read_polygons_gpd(mapping_results, b_fix_invalid_polygon=False)
+
+    # build a tree
+    tree = STRtree(in_geometries)
+
+    # check each one in existing data, if it is in the mapping results
+    b_overlap = []
+    for idx, geom in enumerate(geom_pos_circle_list):
+        inter_or_touch_list =  tree.query(geom)
+        # print(inter_or_touch_list)
+        if len(inter_or_touch_list) > 0:
+            b_overlap.append(True)
+        else:
+            b_overlap.append(False)
+
+    # output brief information
+    num_total = len(geom_pos_circle_list)
+    num_overlap = sum(b_overlap)
+    num_missing = num_total - num_overlap
+    basic.outputlogMessage(f'the total number of existing data is {num_total}, '
+                           f'the number of missing detection is {num_missing}({num_missing/num_total*100:.2f}%), '
+                           f'the number of overlap is {num_overlap}({num_overlap/num_total*100:.2f}%)')
+
+    # output the results
+    if save_path is None:
+        existing_name = io_function.get_name_no_ext(existing_data)
+        mapping_name = io_function.get_name_no_ext(mapping_results)
+        save_path = existing_name + '_vs_' + mapping_name + '_missing.gpkg'
+
+    # save b_overlap and geom_pos_circle_list to gpkg file, with the existing prj
+    save_pd = pd.DataFrame({'Polygon': geom_pos_circle_list, 'overlap': b_overlap})
+    vector_gpd.save_polygons_to_files(save_pd, 'Polygon', existing_prj, save_path,format='GPKG')
+
+
+
+    pass
+
+def main(options, args):
+    existing_data = args[0]
+    mapping_results = args[1]
+    buffer_size = options.buffer_size
+    b_existing_center = options.b_existing_center
+    save_path = options.save_path
+
+    check_missing_results(existing_data, mapping_results, buffer_size=buffer_size, b_existing_center=b_existing_center, save_path=save_path)
+
+
+
+
+    pass
+
+
+if __name__ == "__main__":
+
+    usage = "usage: %prog [options] existing_data.shp mapping_results.shp "
+    parser = OptionParser(usage=usage, version="1.0 2026-11-09")
+    parser.description = 'Introduction: check the missing detection results by comparing the existing data and mapping results'
+
+    parser.add_option("-s", "--save_path",
+                      action="store", dest="save_path",
+                      help="the file path for saving the results")
+
+    parser.add_option("-b", "--buffer_size",
+                      action="store", dest="buffer_size",
+                      help="the buffer size for the existing data in meters, the default is 500", type=float, default=500)
+
+    parser.add_option("-c", "--b_existing_center",
+                      action="store_true", dest="b_existing_center",default=False,
+                      help="if set, will get the use the gemetric center for buffering")
+
+
+
+
+    (options, args) = parser.parse_args()
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
+    main(options, args)
+
