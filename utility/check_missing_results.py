@@ -77,13 +77,6 @@ def check_missing_results(existing_data, mapping_results, buffer_size=500, b_exi
         else:
             b_overlap.append(False)
 
-    # output brief information
-    num_total = len(geom_pos_circle_list)
-    num_overlap = sum(b_overlap)
-    num_missing = num_total - num_overlap
-    basic.outputlogMessage(f'the total number of existing data is {num_total}, '
-                           f'the number of missing detection is {num_missing}({num_missing/num_total*100:.2f}%), '
-                           f'the number of overlap is {num_overlap}({num_overlap/num_total*100:.2f}%)')
 
     # output the results
     if save_path is None:
@@ -94,6 +87,14 @@ def check_missing_results(existing_data, mapping_results, buffer_size=500, b_exi
     # save b_overlap and geom_pos_circle_list to gpkg file, with the existing prj
     save_pd = pd.DataFrame({'Polygon': geom_pos_circle_list, 'overlap': b_overlap})
     vector_gpd.save_polygons_to_files(save_pd, 'Polygon', existing_prj, save_path,format='GPKG')
+
+    # output brief information
+    num_total = len(geom_pos_circle_list)
+    num_overlap = sum(b_overlap)
+    num_missing = num_total - num_overlap
+    basic.outputlogMessage(f'the total number is {num_total}, '
+                           f'missing: {num_missing}({num_missing/num_total*100:.2f}%), '
+                           f'overlaping: {num_overlap}({num_overlap/num_total*100:.2f}%), saved to {save_path}')
 
 
 
