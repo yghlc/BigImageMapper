@@ -28,7 +28,7 @@ import shapely
 from shapely.strtree import STRtree
 
 
-def check_missing_results(existing_data, mapping_results, buffer_size=500, b_existing_center=True, save_path=None):
+def check_missing_results(existing_data, mapping_results, buffer_size=500, b_existing_center=True, save_path=None, extent_shp=None):
     """
     check the missing detection results by comparing the existing data and mapping results
     :param existing_data: the existing data, a shapefile
@@ -36,6 +36,7 @@ def check_missing_results(existing_data, mapping_results, buffer_size=500, b_exi
     :param buffer_size: the buffer size for the existing data in meters
     :param b_existing_center: if set, will get the use the gemetric center for buffering
     :param save_path: the file path for saving the results
+    :param extent_shp: the extent shapefile to limit the analysis area
     :return:
     """
 
@@ -51,6 +52,25 @@ def check_missing_results(existing_data, mapping_results, buffer_size=500, b_exi
     print(f'read {len(geometries)} features')
     geometries_pos = [item for item, tclass in zip(geometries,train_class) if tclass=='Positive']
     print(f'read {len(geometries_pos)} positive features')
+
+    # filter out the features outside the extent shapefile
+    if extent_shp is not None:
+        extent_prj = map_projection.get_raster_or_vector_srs_info_epsg(extent_shp)
+        if extent_prj != existing_prj:
+            raise ValueError(f'the map projection is different between {existing_data} and {extent_shp}')
+
+        extent_geoms = vector_gpd.read_polygons_gpd(extent_shp, b_fix_invalid_polygon=False)
+        if len(extent_geoms) < 1:
+            raise ValueError(f'the extent shapefile {extent_shp} has no features')
+        ext_tree = STRtree(extent_geoms)
+        filtered_geometries_pos = []
+        for idx, geom in enumerate(geometries_pos):
+            in_extent_list =  ext_tree.query(geom)
+            if len(in_extent_list) > 0:
+                filtered_geometries_pos.append(geom)
+        print(f'after filtering by extent, {len(filtered_geometries_pos)} features left')
+        geometries_pos = filtered_geometries_pos
+
     # print(geometries_pos[0])
     geom_pos_centrioid_list = [ vector_gpd.get_polygon_centroid(item) for item in geometries_pos]
     print(f'read {len(geom_pos_centrioid_list)} point features')
@@ -106,8 +126,9 @@ def main(options, args):
     buffer_size = options.buffer_size
     b_existing_center = options.b_existing_center
     save_path = options.save_path
+    extent_shp = options.extent_shp
 
-    check_missing_results(existing_data, mapping_results, buffer_size=buffer_size, b_existing_center=b_existing_center, save_path=save_path)
+    check_missing_results(existing_data, mapping_results, buffer_size=buffer_size, b_existing_center=b_existing_center, save_path=save_path, extent_shp=extent_shp)
 
 
 
@@ -133,7 +154,9 @@ if __name__ == "__main__":
                       action="store_true", dest="b_existing_center",default=False,
                       help="if set, will get the use the gemetric center for buffering")
 
-
+    parser.add_option("-e", "--extent_shp",
+                      action="store", dest="extent_shp",
+                      help="the extent shapefile to limit the analysis area")
 
 
     (options, args) = parser.parse_args()
