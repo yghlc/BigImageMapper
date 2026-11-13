@@ -48,10 +48,15 @@ def check_missing_results(existing_data, mapping_results, buffer_size=500, b_exi
     #TODO: this block need to improve, currently, it only read data from "ARTS_main_dataset_v.2.1.0.gpkg", 
     # and only read the geometric center then buffering. 
     # read the existing data, convert to points
-    geometries, train_class = vector_gpd.read_polygons_attributes_list(existing_data,'TrainClass',b_fix_invalid_polygon=False)
-    print(f'read {len(geometries)} features')
-    geometries_pos = [item for item, tclass in zip(geometries,train_class) if tclass=='Positive']
-    print(f'read {len(geometries_pos)} positive features')
+    if os.path.basename(existing_data).startswith('ARTS'):
+        print('Assuming the existing data is ARTS dataset, will read the geometric center of the polygons')
+        geometries, train_class = vector_gpd.read_polygons_attributes_list(existing_data,'TrainClass',b_fix_invalid_polygon=False)
+        print(f'read {len(geometries)} features')
+        geometries_pos = [item for item, tclass in zip(geometries,train_class) if tclass=='Positive']
+        print(f'read {len(geometries_pos)} positive features')
+    else:
+        geometries_pos = vector_gpd.read_polygons_gpd(existing_data, b_fix_invalid_polygon=False)
+        print(f'read {len(geometries_pos)} features')
 
     # filter out the features outside the extent shapefile
     if extent_shp is not None:
